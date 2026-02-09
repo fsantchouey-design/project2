@@ -6,6 +6,7 @@
       <a href="/admin/landing" class="btn btn-primary btn-sm">Images</a>
       <a href="/admin/specialists" class="btn btn-secondary btn-sm">Specialists</a>
       <a href="/admin/video" class="btn btn-secondary btn-sm">Video</a>
+      <a href="/admin/pricing" class="btn btn-secondary btn-sm">Pricing</a>
       <a href="/admin/messages" class="btn btn-secondary btn-sm">Messages</a>
     </div>
   </div>
@@ -29,10 +30,6 @@
         icon: 'palette',
         description: 'Style cards that scroll horizontally in the "Explore Our Design Styles" carousel.'
       },
-      'Gallery': {
-        icon: 'layout-grid',
-        description: 'Images displayed in the left & right sliding columns beside the gallery video. Upload your best showcase photos here.'
-      },
       'Features': {
         icon: 'zap',
         description: 'Before / After images shown in the main feature card.'
@@ -43,7 +40,7 @@
       }
     };
 
-    const sectionOrder = ['Hero', 'Gallery', 'Styles Slider', 'Features', 'Showcase'];
+    const sectionOrder = ['Hero', 'Styles Slider', 'Features', 'Showcase'];
     const orderedSections = sectionOrder.filter(s => sections[s]);
     // Add any extra sections not in our order
     Object.keys(sections).forEach(s => { if (!orderedSections.includes(s)) orderedSections.push(s); });

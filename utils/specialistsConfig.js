@@ -36,6 +36,9 @@ const mergeSpecialistsConfig = (storedConfig) => {
   return {
     imageUrl: storedConfig.imageUrl || defaultSpecialistsConfig.imageUrl,
     imageAlt: storedConfig.imageAlt || defaultSpecialistsConfig.imageAlt,
+    videoUrl: storedConfig.videoUrl || '',
+    videoPublicId: storedConfig.videoPublicId || '',
+    mediaType: storedConfig.mediaType || 'image',
     categories: storedConfig.categories && storedConfig.categories.length > 0
       ? storedConfig.categories
       : defaultSpecialistsConfig.categories

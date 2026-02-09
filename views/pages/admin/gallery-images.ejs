@@ -1,0 +1,137 @@
+<div class="page-container admin-landing">
+  <div class="page-header">
+    <h1>Gallery Side Images</h1>
+    <p class="text-muted">Upload images for the left & right sliding columns in the gallery section. These create an engaging showcase.</p>
+    <div style="margin-top: 12px; display: flex; gap: 8px;">
+      <a href="/admin/landing" class="btn btn-secondary btn-sm">Landing Images</a>
+      <a href="/admin/gallery-images" class="btn btn-primary btn-sm">Gallery Side Images</a>
+      <a href="/admin/specialists" class="btn btn-secondary btn-sm">Specialists</a>
+      <a href="/admin/video" class="btn btn-secondary btn-sm">Gallery Video</a>
+      <a href="/admin/messages" class="btn btn-secondary btn-sm">Messages</a>
+    </div>
+  </div>
+
+  <div class="admin-sections-list">
+    <!-- Left Column Images -->
+    <div class="admin-section-group">
+      <div class="admin-section-header">
+        <div class="admin-section-title">
+          <i data-lucide="arrow-up"></i>
+          <h2>Left Column (Slides Up)</h2>
+          <span class="admin-section-count">3 images</span>
+        </div>
+        <p class="admin-section-desc">These images slide upward in the left column beside the gallery video.</p>
+      </div>
+
+      <div class="admin-asset-grid">
+        <% leftImages.forEach(asset => { %>
+          <div class="admin-asset-card">
+            <div class="admin-asset-preview">
+              <img src="<%= asset.url %>" alt="<%= asset.alt %>">
+            </div>
+            <div class="admin-asset-body">
+              <div class="admin-asset-meta">
+                <h3><%= asset.label %></h3>
+                <p class="text-muted">Key: <code><%= asset.key %></code></p>
+              </div>
+              <form action="/admin/landing/<%= asset.key %>" method="POST" enctype="multipart/form-data" class="admin-asset-form">
+                <label class="form-label">Replace image</label>
+                <input type="file" name="image" class="form-input" accept="image/*">
+
+                <label class="form-label">Alt text</label>
+                <input type="text" name="alt" class="form-input" value="<%= asset.alt %>">
+
+                <button type="submit" class="btn btn-primary btn-sm">
+                  <i data-lucide="save"></i>
+                  Save
+                </button>
+              </form>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+
+    <!-- Right Column Images -->
+    <div class="admin-section-group">
+      <div class="admin-section-header">
+        <div class="admin-section-title">
+          <i data-lucide="arrow-down"></i>
+          <h2>Right Column (Slides Down)</h2>
+          <span class="admin-section-count">3 images</span>
+        </div>
+        <p class="admin-section-desc">These images slide downward in the right column beside the gallery video.</p>
+      </div>
+
+      <div class="admin-asset-grid">
+        <% rightImages.forEach(asset => { %>
+          <div class="admin-asset-card">
+            <div class="admin-asset-preview">
+              <img src="<%= asset.url %>" alt="<%= asset.alt %>">
+            </div>
+            <div class="admin-asset-body">
+              <div class="admin-asset-meta">
+                <h3><%= asset.label %></h3>
+                <p class="text-muted">Key: <code><%= asset.key %></code></p>
+              </div>
+              <form action="/admin/landing/<%= asset.key %>" method="POST" enctype="multipart/form-data" class="admin-asset-form">
+                <label class="form-label">Replace image</label>
+                <input type="file" name="image" class="form-input" accept="image/*">
+
+                <label class="form-label">Alt text</label>
+                <input type="text" name="alt" class="form-input" value="<%= asset.alt %>">
+
+                <button type="submit" class="btn btn-primary btn-sm">
+                  <i data-lucide="save"></i>
+                  Save
+                </button>
+              </form>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+
+    <!-- Preview Section -->
+    <div class="admin-section-group">
+      <div class="admin-section-header">
+        <div class="admin-section-title">
+          <i data-lucide="eye"></i>
+          <h2>Preview Layout</h2>
+        </div>
+        <p class="admin-section-desc">See how your images will appear in the gallery section. Visit the homepage to see them in action!</p>
+      </div>
+
+      <div style="padding: 24px; background: var(--bg-tertiary, #f8fafc); border-radius: 16px; text-align: center;">
+        <div style="display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 16px; max-width: 1200px; margin: 0 auto;">
+          <!-- Left Preview -->
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <% leftImages.forEach(asset => { %>
+              <img src="<%= asset.url %>" alt="<%= asset.alt %>" style="width: 100%; height: 120px; object-fit: cover; border-radius: 12px;">
+            <% }) %>
+          </div>
+
+          <!-- Center (Video placeholder) -->
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; font-weight: 600;">
+            Gallery Video<br>
+            <small style="font-size: 14px; font-weight: 400; opacity: 0.8;">(manage in Gallery Video tab)</small>
+          </div>
+
+          <!-- Right Preview -->
+          <div style="display: flex; flex-direction: column; gap: 8px;">
+            <% rightImages.forEach(asset => { %>
+              <img src="<%= asset.url %>" alt="<%= asset.alt %>" style="width: 100%; height: 120px; object-fit: cover; border-radius: 12px;">
+            <% }) %>
+          </div>
+        </div>
+        <div style="margin-top: 16px;">
+          <a href="/" target="_blank" class="btn btn-outline btn-sm">
+            <i data-lucide="external-link"></i>
+            View on Homepage
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

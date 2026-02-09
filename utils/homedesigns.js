@@ -3,50 +3,102 @@
  * Documentation: https://api.homedesigns.ai/homedesignsai-api-documentation
  */
 
-const API_URL = process.env.HOMEDESIGNS_API_URL || 'https://api.homedesigns.ai';
+const API_URL = process.env.HOMEDESIGNS_API_URL || 'https://homedesigns.ai/api/v2';
 const API_TOKEN = process.env.HOMEDESIGNS_API_TOKEN;
 
 /**
  * Generate a design using HomeDesigns.AI API
+ * API uses queue system: 1) POST to start, 2) Poll status endpoint, 3) Get result
  */
 const generateDesign = async (options) => {
   const {
     imageUrl,
     roomType,
     style,
-    mode = 'interior', // interior, exterior, garden
+    mode = 'Interior', // Interior, Exterior, Garden
     quality = 'standard' // standard, hd, ultra
   } = options;
 
   try {
-    const response = await fetch(`${API_URL}/v1/generate`, {
+    // Step 1: Download the image and convert to form data
+    const imageResponse = await fetch(imageUrl);
+    if (!imageResponse.ok) {
+      throw new Error('Failed to fetch image');
+    }
+    const imageBuffer = await imageResponse.arrayBuffer();
+    const imageBlob = new Blob([imageBuffer], { type: 'image/jpeg' });
+
+    // Step 2: Create form data
+    const FormData = require('form-data');
+    const formData = new FormData();
+    formData.append('image', imageBlob, 'room.jpg');
+    formData.append('design_type', mode);
+    formData.append('ai_intervention', 'Mid');
+    formData.append('no_design', '1');
+    formData.append('design_style', style);
+    if (mode === 'Interior') {
+      formData.append('room_type', roomType);
+    }
+
+    // Step 3: Submit generation request
+    const response = await fetch(`${API_URL}/beautiful_redesign`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${API_TOKEN}`,
-        'Content-Type': 'application/json'
+        'x-api-key': API_TOKEN,
+        ...formData.getHeaders()
       },
-      body: JSON.stringify({
-        image_url: imageUrl,
-        room_type: roomType,
-        design_style: style,
-        mode: mode,
-        output_quality: quality
-      })
+      body: formData
     });
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'API request failed');
+      const errorText = await response.text();
+      throw new Error(`API request failed: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    return {
-      success: true,
-      imageUrl: data.output_url,
-      thumbnailUrl: data.thumbnail_url,
-      generationId: data.generation_id,
-      creditsUsed: data.credits_used
-    };
+    const queueId = data.queue_id;
+
+    if (!queueId) {
+      throw new Error('No queue_id returned from API');
+    }
+
+    // Step 4: Poll status endpoint
+    let attempts = 0;
+    const maxAttempts = 60; // 60 attempts * 2 seconds = 2 minutes max
+    
+    while (attempts < maxAttempts) {
+      await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
+      
+      const statusResponse = await fetch(`${API_URL}/beautiful_redesign/status_check/${queueId}`, {
+        headers: {
+          'x-api-key': API_TOKEN
+        }
+      });
+
+      if (!statusResponse.ok) {
+        throw new Error('Status check failed');
+      }
+
+      const statusData = await statusResponse.json();
+      
+      if (statusData.status === 'SUCCESS') {
+        // Get the first generated image
+        const outputUrl = statusData.output_url || (statusData.generated_images && statusData.generated_images[0]);
+        return {
+          success: true,
+          imageUrl: outputUrl,
+          thumbnailUrl: outputUrl,
+          generationId: queueId,
+          creditsUsed: 1
+        };
+      } else if (statusData.status === 'FAILED' || statusData.status === 'ERROR') {
+        throw new Error(statusData.message || 'Generation failed');
+      }
+      
+      attempts++;
+    }
+
+    throw new Error('Generation timeout - exceeded 2 minutes');
   } catch (error) {
     console.error('HomeDesigns API Error:', error);
     return {

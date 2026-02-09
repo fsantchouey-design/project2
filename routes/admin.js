@@ -12,11 +12,57 @@ const {
   mergeLandingAssetsForAdmin
 } = require('../utils/landingAssets');
 const { mergeSpecialistsConfig, defaultSpecialistsConfig } = require('../utils/specialistsConfig');
+const multer = require('multer');
+const path = require('path');
+
+// Video upload configuration (used for gallery video AND specialists video)
+const videoStorage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, 'public/uploads/landing'),
+  filename: (req, file, cb) => cb(null, 'gallery-video-' + Date.now() + path.extname(file.originalname))
+});
+const uploadVideo = multer({
+  storage: videoStorage,
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
+  fileFilter: (req, file, cb) => {
+    const ok = /mp4|webm|mov|avi/.test(path.extname(file.originalname).toLowerCase());
+    cb(ok ? null : new Error('Video files only'), ok);
+  }
+});
 const PricingConfig = require('../models/PricingConfig');
 const { mergePricingConfig, defaultPricingConfig } = require('../utils/pricingConfig');
 
 router.get('/', (req, res) => {
   res.redirect('/admin/landing');
+});
+
+// Gallery Side Images - Dedicated page for side column images
+router.get('/gallery-images', async (req, res) => {
+  try {
+    const assets = await LandingAsset.find({});
+    const mergedAssets = mergeLandingAssetsForAdmin(assets);
+
+    // Filter images for left and right columns
+    const leftImages = mergedAssets.filter(asset => 
+      ['galleryHouse2', 'galleryHouse3', 'galleryAfterHouse'].includes(asset.key)
+    );
+    
+    const rightImages = mergedAssets.filter(asset => 
+      ['galleryHouse4', 'galleryAfterLiving', 'galleryHouse1'].includes(asset.key)
+    );
+
+    res.render('pages/admin/gallery-images', {
+      title: 'Gallery Side Images - Admin',
+      layout: 'layouts/minimal',
+      extraStyles: ['/css/dashboard.css'],
+      activePage: 'admin-gallery-images',
+      leftImages,
+      rightImages
+    });
+  } catch (err) {
+    console.error('Admin gallery images error:', err);
+    req.flash('error_msg', 'Unable to load gallery images.');
+    res.redirect('/admin/landing');
+  }
 });
 
 // Landing Page Assets
@@ -128,6 +174,7 @@ router.post('/specialists/image', uploadLandingImages.single('image'), async (re
       }
       config.imageUrl = getLandingImageUrl(req.file);
       config.imagePublicId = req.file.filename || req.file.public_id;
+      config.mediaType = 'image';
     }
 
     config.updatedAt = new Date();
@@ -138,6 +185,76 @@ router.post('/specialists/image', uploadLandingImages.single('image'), async (re
   } catch (err) {
     console.error('Update specialists image error:', err);
     req.flash('error_msg', 'Unable to update specialists image.');
+    res.redirect('/admin/specialists');
+  }
+});
+
+// Video upload for specialists section
+router.post('/specialists/video', uploadVideo.single('video'), async (req, res) => {
+  try {
+    let config = await SpecialistsConfig.findOne({});
+    if (!config) {
+      config = new SpecialistsConfig(defaultSpecialistsConfig);
+    }
+
+    if (req.file) {
+      // Delete old video if exists
+      if (config.videoPublicId) {
+        try {
+          const fs = require('fs');
+          const oldPath = path.join(__dirname, '..', 'public', 'uploads', 'landing', config.videoPublicId);
+          if (fs.existsSync(oldPath)) {
+            fs.unlinkSync(oldPath);
+          }
+        } catch (deleteErr) {
+          console.error('Error deleting old video:', deleteErr);
+        }
+      }
+
+      config.videoUrl = '/uploads/landing/' + req.file.filename;
+      config.videoPublicId = req.file.filename;
+      config.mediaType = 'video';
+    }
+
+    config.updatedAt = new Date();
+    await config.save();
+
+    req.flash('success_msg', 'Specialists video updated.');
+    res.redirect('/admin/specialists');
+  } catch (err) {
+    console.error('Update specialists video error:', err);
+    req.flash('error_msg', 'Unable to update specialists video.');
+    res.redirect('/admin/specialists');
+  }
+});
+
+// Delete video
+router.post('/specialists/video/delete', async (req, res) => {
+  try {
+    const config = await SpecialistsConfig.findOne({});
+    if (config && config.videoPublicId) {
+      try {
+        const fs = require('fs');
+        const videoPath = path.join(__dirname, '..', 'public', 'uploads', 'landing', config.videoPublicId);
+        if (fs.existsSync(videoPath)) {
+          fs.unlinkSync(videoPath);
+        }
+      } catch (deleteErr) {
+        console.error('Error deleting video file:', deleteErr);
+      }
+
+      config.videoUrl = '';
+      config.videoPublicId = '';
+      config.mediaType = 'image';
+      config.updatedAt = new Date();
+      await config.save();
+
+      req.flash('success_msg', 'Specialists video removed. Image is now active.');
+    }
+    res.redirect('/admin/specialists');
+  } catch (err) {
+    console.error('Delete specialists video error:', err);
+    req.flash('error_msg', 'Unable to delete video.');
     res.redirect('/admin/specialists');
   }
 });
@@ -184,22 +301,6 @@ router.post('/specialists/options', async (req, res) => {
 // Gallery Video
 // ==========================================
 const GalleryVideo = require('../models/GalleryVideo');
-const multer = require('multer');
-const path = require('path');
-
-// Video upload (local – Cloudinary free doesn't support video well)
-const videoStorage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'public/uploads/landing'),
-  filename: (req, file, cb) => cb(null, 'gallery-video-' + Date.now() + path.extname(file.originalname))
-});
-const uploadVideo = multer({
-  storage: videoStorage,
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
-  fileFilter: (req, file, cb) => {
-    const ok = /mp4|webm|mov|avi/.test(path.extname(file.originalname).toLowerCase());
-    cb(ok ? null : new Error('Video files only'), ok);
-  }
-});
 
 router.get('/video', async (req, res) => {
   const gv = await GalleryVideo.findOne({});

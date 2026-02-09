@@ -2159,11 +2159,17 @@
   box-shadow: 0 24px 40px rgba(15, 23, 42, 0.15);
 }
 
-.specialists-image-card img {
+.specialists-image-card img,
+.specialists-image-card video.specialists-video {
   width: 100%;
   max-width: 460px;
   display: block;
   object-fit: cover;
+}
+
+.specialists-video {
+  height: auto;
+  min-height: 400px;
 }
 
 .specialists-image-overlay {

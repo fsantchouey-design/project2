@@ -664,7 +664,11 @@
 
     <div class="specialists-visual">
       <div class="specialists-image-card">
-        <img src="<%= specialistsConfig.imageUrl %>" alt="<%= specialistsConfig.imageAlt %>">
+        <% if (specialistsConfig.mediaType === 'video' && specialistsConfig.videoUrl) { %>
+          <video src="<%= specialistsConfig.videoUrl %>" autoplay muted loop playsinline class="specialists-video"></video>
+        <% } else { %>
+          <img src="<%= specialistsConfig.imageUrl %>" alt="<%= specialistsConfig.imageAlt %>">
+        <% } %>
         <div class="specialists-image-overlay">
           <span>Réseau d'experts vérifiés</span>
         </div>

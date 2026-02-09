@@ -10,6 +10,9 @@ const SpecialistsConfigSchema = new mongoose.Schema({
   imageUrl: { type: String, default: '' },
   imageAlt: { type: String, default: '' },
   imagePublicId: { type: String, default: '' },
+  videoUrl: { type: String, default: '' },
+  videoPublicId: { type: String, default: '' },
+  mediaType: { type: String, enum: ['image', 'video'], default: 'image' },
   categories: { type: [SpecialistsCategorySchema], default: [] },
   updatedAt: { type: Date, default: Date.now }
 });

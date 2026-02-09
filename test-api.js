@@ -5,7 +5,7 @@
 
 require('dotenv').config();
 
-const API_URL = process.env.HOMEDESIGNS_API_URL || 'https://api.homedesigns.ai';
+const API_URL = process.env.HOMEDESIGNS_API_URL || 'https://homedesigns.ai/api/v2';
 const API_TOKEN = process.env.HOMEDESIGNS_API_TOKEN;
 
 console.log('Testing HomeDesigns.AI API Integration\n');
@@ -15,24 +15,29 @@ console.log('Token (first 20 chars):', API_TOKEN ? API_TOKEN.substring(0, 20) + 
 console.log('=====================================\n');
 
 async function testCreditsCheck() {
-  console.log('1. Testing Credits Check...');
+  console.log('1. Testing User Info / Credits...');
   try {
-    const response = await fetch(`${API_URL}/v1/credits`, {
+    const response = await fetch(`${API_URL}/user_info`, {
       headers: {
-        'Authorization': `Bearer ${API_TOKEN}`
+        'x-api-key': API_TOKEN
       }
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.log('   ❌ Credits check failed:', response.status, errorText);
+      console.log('   ❌ User info check failed:', response.status);
+      console.log('   Error:', errorText.substring(0, 200));
       return false;
     }
 
     const data = await response.json();
-    console.log('   ✅ Credits check successful!');
-    console.log('   Credits remaining:', data.credits_remaining || data.credits || 'N/A');
-    console.log('   Plan:', data.plan || 'N/A');
+    console.log('   ✅ User info check successful!');
+    console.log('   Name:', data.Data?.[0]?.customer?.name || 'N/A');
+    console.log('   Email:', data.Data?.[0]?.customer?.Email || 'N/A');
+    console.log('   Plan:', data.Data?.[0]?.Subscription?.Plan_Name || 'N/A');
+    console.log('   Total Credits:', data.Data?.[0]?.Subscription?.Total_Credit || 'N/A');
+    console.log('   Used Credits:', data.Data?.[0]?.Subscription?.Used_Credit || 'N/A');
+    console.log('   Left Credits:', data.Data?.[0]?.Subscription?.Left_Credit || 'N/A');
     return true;
   } catch (error) {
     console.log('   ❌ Error:', error.message);
@@ -43,35 +48,43 @@ async function testCreditsCheck() {
 async function testDesignGeneration() {
   console.log('\n2. Testing Design Generation (using sample image)...');
   
+  const FormData = require('form-data');
+  const https = require('https');
+  
   // Using a publicly accessible sample room image
   const sampleImageUrl = 'https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=800';
   
   try {
-    console.log('   Sending request to API...');
-    console.log('   Image URL:', sampleImageUrl);
-    console.log('   Style: modern');
-    console.log('   Room Type: living-room');
+    console.log('   Downloading test image...');
+    const imageResponse = await fetch(sampleImageUrl);
+    const imageBuffer = Buffer.from(await imageResponse.arrayBuffer());
     
-    const response = await fetch(`${API_URL}/v1/generate`, {
+    console.log('   Creating form data...');
+    const formData = new FormData();
+    formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
+    formData.append('design_type', 'Interior');
+    formData.append('ai_intervention', 'Mid');
+    formData.append('no_design', '1');
+    formData.append('design_style', 'Modern');
+    formData.append('room_type', 'Living Room');
+    
+    console.log('   Sending POST request to', `${API_URL}/beautiful_redesign`);
+    console.log('   Parameters: Interior, Modern, Living Room, Mid intervention');
+    
+    const response = await fetch(`${API_URL}/beautiful_redesign`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${API_TOKEN}`,
-        'Content-Type': 'application/json'
+        'x-api-key': API_TOKEN,
+        ...formData.getHeaders()
       },
-      body: JSON.stringify({
-        image_url: sampleImageUrl,
-        room_type: 'living-room',
-        design_style: 'modern',
-        mode: 'interior',
-        output_quality: 'standard'
-      })
+      body: formData
     });
 
     const responseText = await response.text();
     console.log('\n   Response status:', response.status);
     
     if (!response.ok) {
-      console.log('   ❌ Generation failed:', responseText);
+      console.log('   ❌ Generation request failed:', responseText.substring(0, 500));
       return false;
     }
 
@@ -83,14 +96,40 @@ async function testDesignGeneration() {
       return false;
     }
 
-    console.log('   ✅ Generation request successful!');
-    console.log('   Response:', JSON.stringify(data, null, 2));
+    console.log('   ✅ Generation request queued!');
+    console.log('   Queue ID:', data.queue_id);
     
-    if (data.output_url) {
-      console.log('\n   🎨 Generated Image URL:', data.output_url);
+    if (data.queue_id) {
+      console.log('\n   Checking status (will poll for up to 60 seconds)...');
+      
+      // Poll status
+      for (let i = 0; i < 30; i++) {
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        const statusResponse = await fetch(`${API_URL}/beautiful_redesign/status_check/${data.queue_id}`, {
+          headers: { 'x-api-key': API_TOKEN }
+        });
+        
+        if (statusResponse.ok) {
+          const statusData = await statusResponse.json();
+          console.log(`   [${i+1}] Status:`, statusData.status);
+          
+          if (statusData.status === 'SUCCESS') {
+            console.log('\n   ✅ Generation complete!');
+            console.log('   🎨 Generated Image URL:', statusData.generated_images?.[0] || statusData.output_url);
+            return true;
+          } else if (statusData.status === 'FAILED' || statusData.status === 'ERROR') {
+            console.log('   ❌ Generation failed:', statusData.message);
+            return false;
+          }
+        }
+      }
+      
+      console.log('   ⚠️  Timeout waiting for generation');
+      return false;
     }
     
-    return true;
+    return false;
   } catch (error) {
     console.log('   ❌ Error:', error.message);
     return false;
@@ -120,16 +159,11 @@ async function runTests() {
 
   const creditsOk = await testCreditsCheck();
   
-  if (creditsOk) {
-    console.log('\n⚠️  Note: Design generation will use 1 credit from your account.');
-    console.log('   Comment out testDesignGeneration() if you want to save credits.\n');
-    
-    // Uncomment the line below to actually test generation (uses 1 credit)
-    // await testDesignGeneration();
-    
-    console.log('\n   (Generation test is commented out to save credits)');
-    console.log('   Edit test-api.js and uncomment testDesignGeneration() to test.');
-  }
+  // Try generation test even if credits check failed (might be different endpoint)
+  console.log('\n⚠️  Note: Design generation will use credits from your account.');
+  console.log('   Testing actual generation...\n');
+  
+  await testDesignGeneration();
   
   await listAvailableEndpoints();
   

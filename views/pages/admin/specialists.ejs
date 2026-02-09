@@ -1,65 +1,116 @@
 <div class="page-container admin-landing">
   <div class="page-header">
     <h1>Specialists Section</h1>
-    <p class="text-muted">Manage the specialists dropdown, options, and image on the landing page.</p>
-    <div style="margin-top: 12px; display: flex; gap: 8px;">
-      <a href="/admin/landing" class="btn btn-secondary btn-sm">Images</a>
+    <p class="text-muted">Manage the specialists dropdown, options, and media (image or video) on the landing page.</p>
+    <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+      <a href="/admin/landing" class="btn btn-secondary btn-sm">Landing Images</a>
+      <a href="/admin/gallery-images" class="btn btn-secondary btn-sm">Gallery Side Images</a>
       <a href="/admin/specialists" class="btn btn-primary btn-sm">Specialists</a>
-      <a href="/admin/video" class="btn btn-secondary btn-sm">Video</a>
-      <a href="/admin/pricing" class="btn btn-secondary btn-sm">Pricing</a>
+      <a href="/admin/video" class="btn btn-secondary btn-sm">Gallery Video</a>
       <a href="/admin/messages" class="btn btn-secondary btn-sm">Messages</a>
     </div>
   </div>
 
-  <div class="admin-asset-grid">
-    <div class="admin-asset-card">
-      <div class="admin-asset-preview">
-        <img src="<%= specialists.imageUrl %>" alt="<%= specialists.imageAlt %>">
+  <div class="admin-sections-list">
+    <!-- Media Section -->
+    <div class="admin-section-group">
+      <div class="admin-section-header">
+        <div class="admin-section-title">
+          <i data-lucide="image"></i>
+          <h2>Section Media</h2>
+          <span class="admin-section-count">Image or Video</span>
+        </div>
+        <p class="admin-section-desc">Upload an image or video to display beside the specialists options. Video creates more engagement!</p>
       </div>
-      <div class="admin-asset-body">
-        <h3>Section Image</h3>
-        <form action="/admin/specialists/image" method="POST" enctype="multipart/form-data" class="admin-asset-form">
-          <label class="form-label">Replace image</label>
-          <input type="file" name="image" class="form-input" accept="image/*">
 
-          <label class="form-label">Alt text</label>
-          <input type="text" name="alt" class="form-input" value="<%= specialists.imageAlt %>">
+      <div class="admin-asset-grid">
+        <div class="admin-asset-card">
+          <div class="admin-asset-preview">
+            <% if (specialists.mediaType === 'video' && specialists.videoUrl) { %>
+              <video src="<%= specialists.videoUrl %>" autoplay muted loop playsinline style="width:100%; height:100%; object-fit:cover;"></video>
+            <% } else { %>
+              <img src="<%= specialists.imageUrl %>" alt="<%= specialists.imageAlt %>">
+            <% } %>
+          </div>
+          <div class="admin-asset-body">
+            <div class="admin-asset-meta">
+              <h3>Current: <%= specialists.mediaType === 'video' ? 'Video' : 'Image' %></h3>
+            </div>
 
-          <button type="submit" class="btn btn-primary btn-sm">
-            <i data-lucide="save"></i>
-            Save Image
-          </button>
-        </form>
+            <!-- Image Upload Form -->
+            <form action="/admin/specialists/image" method="POST" enctype="multipart/form-data" class="admin-asset-form">
+              <label class="form-label">Upload Image</label>
+              <input type="file" name="image" class="form-input" accept="image/*">
+
+              <label class="form-label">Alt text (for images)</label>
+              <input type="text" name="alt" class="form-input" value="<%= specialists.imageAlt %>" placeholder="Description for accessibility">
+
+              <button type="submit" class="btn btn-primary btn-sm">
+                <i data-lucide="image"></i>
+                Save Image
+              </button>
+            </form>
+
+            <div style="margin: 16px 0; text-align: center; color: var(--text-muted); font-size: 13px;">— OR —</div>
+
+            <!-- Video Upload Form -->
+            <form action="/admin/specialists/video" method="POST" enctype="multipart/form-data" class="admin-asset-form">
+              <label class="form-label">Upload Video (MP4, WebM, MOV – max 50MB)</label>
+              <input type="file" name="video" class="form-input" accept="video/*">
+
+              <button type="submit" class="btn btn-primary btn-sm">
+                <i data-lucide="video"></i>
+                Save Video
+              </button>
+            </form>
+
+            <% if (specialists.videoUrl) { %>
+              <form action="/admin/specialists/video/delete" method="POST" style="margin-top: 12px;">
+                <button type="submit" class="btn btn-outline btn-sm" style="width: 100%;">
+                  <i data-lucide="trash-2"></i>
+                  Remove Video (revert to image)
+                </button>
+              </form>
+            <% } %>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="admin-asset-card">
-      <div class="admin-asset-body">
-        <h3>Categories & Options</h3>
-        <form action="/admin/specialists/options" method="POST" class="admin-asset-form">
-          <% specialists.categories.forEach(category => { %>
-            <div class="form-group">
-              <label class="form-label">Title</label>
-              <input type="text" name="categories[<%= category.key %>][label]" class="form-input" value="<%= category.label %>">
-              <input type="hidden" name="categories[<%= category.key %>][key]" value="<%= category.key %>">
-            </div>
+    <!-- Categories & Options Section -->
+    <div class="admin-section-group">
+      <div class="admin-section-header">
+        <div class="admin-section-title">
+          <i data-lucide="list"></i>
+          <h2>Categories & Options</h2>
+          <span class="admin-section-count"><%= specialists.categories.length %> categories</span>
+        </div>
+        <p class="admin-section-desc">Edit the dropdown categories and their options. Each category can have multiple services listed (one per line).</p>
+      </div>
 
-            <div class="form-group">
-              <label class="form-label">Options (one per line)</label>
-              <textarea name="categories[<%= category.key %>][options]" class="form-input form-textarea" rows="5"><%= category.options.join('\n') %></textarea>
-            </div>
+      <div class="admin-asset-grid">
+        <div class="admin-asset-card" style="grid-column: 1 / -1;">
+          <div class="admin-asset-body">
+            <form action="/admin/specialists/options" method="POST" class="admin-asset-form">
+              <% specialists.categories.forEach((category, index) => { %>
+                <div class="form-group" style="margin-bottom: 24px; padding: 16px; background: var(--bg-tertiary, #f8fafc); border-radius: 12px;">
+                  <label class="form-label" style="font-size: 15px; font-weight: 600;">Category <%= index + 1 %>: <%= category.key %></label>
+                  <input type="text" name="categories[<%= category.key %>][label]" class="form-input" value="<%= category.label %>" placeholder="Display name (e.g., Gros oeuvre)">
+                  <input type="hidden" name="categories[<%= category.key %>][key]" value="<%= category.key %>">
 
-            <hr style="border: none; border-top: 1px solid var(--border-color); margin: 12px 0;">
-          <% }) %>
+                  <label class="form-label" style="margin-top: 12px;">Options (one per line)</label>
+                  <textarea name="categories[<%= category.key %>][options]" class="form-input form-textarea" rows="6" style="font-family: inherit;" placeholder="Fondation&#10;Démolition&#10;Maçonnerie&#10;..."><%= category.options.join('\n') %></textarea>
+                </div>
+              <% }) %>
 
-          <button type="submit" class="btn btn-primary btn-sm">
-            <i data-lucide="save"></i>
-            Save Options
-          </button>
-        </form>
+              <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">
+                <i data-lucide="save"></i>
+                Save All Categories & Options
+              </button>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </div>
-
-
