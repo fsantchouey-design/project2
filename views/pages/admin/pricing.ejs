@@ -1,0 +1,243 @@
+<div class="page-container admin-landing">
+  <div class="page-header">
+    <h1>Pricing Configuration</h1>
+    <p class="text-muted">Manage pricing plans shown across the entire site — landing page, pricing page, and signed-in dashboard.</p>
+    <div style="margin-top: 12px; display: flex; gap: 8px;">
+      <a href="/admin/landing" class="btn btn-secondary btn-sm">Images</a>
+      <a href="/admin/specialists" class="btn btn-secondary btn-sm">Specialists</a>
+      <a href="/admin/video" class="btn btn-secondary btn-sm">Video</a>
+      <a href="/admin/pricing" class="btn btn-primary btn-sm">Pricing</a>
+      <a href="/admin/messages" class="btn btn-secondary btn-sm">Messages</a>
+    </div>
+  </div>
+
+  <!-- Plans Section -->
+  <% const planKeys = ['regular', 'advanced', 'premium']; %>
+  <% const planIcons = { regular: 'box', advanced: 'zap', premium: 'crown' }; %>
+  <% const planColors = { regular: '#6b7280', advanced: '#00ff88', premium: '#8b5cf6' }; %>
+
+  <form action="/admin/pricing/plans" method="POST" class="admin-pricing-form">
+    <div class="admin-sections-list">
+      <% planKeys.forEach(key => { %>
+        <% const plan = pricing[key]; %>
+        <div class="admin-section-group">
+          <div class="admin-section-header">
+            <div class="admin-section-title">
+              <i data-lucide="<%= planIcons[key] %>" style="color: <%= planColors[key] %>"></i>
+              <h2><%= plan.name %> Plan</h2>
+              <% if (plan.popular) { %>
+                <span class="admin-section-count" style="background: var(--accent-gradient); color: #000;">Populaire</span>
+              <% } %>
+            </div>
+          </div>
+
+          <div class="admin-pricing-plan-grid">
+            <!-- Basic Info -->
+            <div class="admin-asset-card">
+              <div class="admin-asset-body">
+                <h3>Basic Info</h3>
+                <div class="form-group">
+                  <label class="form-label">Plan Name</label>
+                  <input type="text" name="plans[<%= key %>][name]" class="form-input" value="<%= plan.name %>">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Subtitle</label>
+                  <input type="text" name="plans[<%= key %>][subtitle]" class="form-input" value="<%= plan.subtitle %>">
+                </div>
+                <div class="form-row-inline">
+                  <div class="form-group">
+                    <label class="form-label">Price ($)</label>
+                    <input type="number" step="0.01" name="plans[<%= key %>][price]" class="form-input" value="<%= plan.price %>">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Period</label>
+                    <input type="text" name="plans[<%= key %>][period]" class="form-input" value="<%= plan.period %>" placeholder="e.g. /mois, gratuit">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Generations</label>
+                    <input type="number" name="plans[<%= key %>][generations]" class="form-input" value="<%= plan.generations || 0 %>" placeholder="0 = unlimited">
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Description</label>
+                  <textarea name="plans[<%= key %>][description]" class="form-input form-textarea" rows="2"><%= plan.description %></textarea>
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Badge Text <span class="text-muted">(leave empty for none)</span></label>
+                  <input type="text" name="plans[<%= key %>][badge]" class="form-input" value="<%= plan.badge %>">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Bonus Text <span class="text-muted">(leave empty for none)</span></label>
+                  <input type="text" name="plans[<%= key %>][bonus]" class="form-input" value="<%= plan.bonus %>">
+                </div>
+              </div>
+            </div>
+
+            <!-- CTA & Features -->
+            <div class="admin-asset-card">
+              <div class="admin-asset-body">
+                <h3>Call to Action</h3>
+                <div class="form-group">
+                  <label class="form-label">Button Text</label>
+                  <input type="text" name="plans[<%= key %>][cta]" class="form-input" value="<%= plan.cta %>">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">Button Link</label>
+                  <input type="text" name="plans[<%= key %>][ctaLink]" class="form-input" value="<%= plan.ctaLink %>">
+                </div>
+                <div class="form-group">
+                  <label class="form-label">
+                    <input type="checkbox" name="plans[<%= key %>][popular]" value="true" <%= plan.popular ? 'checked' : '' %>>
+                    Mark as "Most Popular"
+                  </label>
+                </div>
+
+                <hr style="border: none; border-top: 1px solid var(--border-color); margin: 16px 0;">
+
+                <h3>Features <span class="text-muted">(one per line)</span></h3>
+                <p class="text-muted" style="font-size: 0.8rem; margin-bottom: 8px;">
+                  Prefix a line with <code>[addon]</code> to mark it as an add-on (shown in muted style).
+                </p>
+                <div class="form-group">
+                  <textarea name="plans[<%= key %>][features]" class="form-input form-textarea" rows="8"><%= plan.features.map(f => (f.addon ? '[addon] ' : '') + f.text).join('\n') %></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% }) %>
+
+      <!-- Comparison Table -->
+      <div class="admin-section-group">
+        <div class="admin-section-header">
+          <div class="admin-section-title">
+            <i data-lucide="table"></i>
+            <h2>Comparison Table</h2>
+          </div>
+          <p class="admin-section-desc">These rows appear in the comparison table on the pricing page. Each row shows values for Régulier, Avancé, and Premium columns.</p>
+        </div>
+
+        <div class="admin-asset-card">
+          <div class="admin-asset-body">
+            <div class="comparison-rows-editor">
+              <% pricing.comparison.forEach((row, idx) => { %>
+                <div class="comparison-row-group">
+                  <span class="comparison-row-num">#<%= idx + 1 %></span>
+                  <div class="comparison-row-fields">
+                    <input type="text" name="comparison[<%= idx %>][feature]" class="form-input" value="<%= row.feature %>" placeholder="Feature name">
+                    <input type="text" name="comparison[<%= idx %>][regular]" class="form-input" value="<%= row.regular %>" placeholder="Régulier value">
+                    <input type="text" name="comparison[<%= idx %>][advanced]" class="form-input" value="<%= row.advanced %>" placeholder="Avancé value">
+                    <input type="text" name="comparison[<%= idx %>][premium]" class="form-input" value="<%= row.premium %>" placeholder="Premium value">
+                  </div>
+                </div>
+              <% }) %>
+
+              <!-- Extra empty rows for adding new entries -->
+              <% for (let i = pricing.comparison.length; i < pricing.comparison.length + 2; i++) { %>
+                <div class="comparison-row-group comparison-row-extra">
+                  <span class="comparison-row-num text-muted">#<%= i + 1 %></span>
+                  <div class="comparison-row-fields">
+                    <input type="text" name="comparison[<%= i %>][feature]" class="form-input" placeholder="Feature name (leave empty to skip)">
+                    <input type="text" name="comparison[<%= i %>][regular]" class="form-input" placeholder="Régulier value">
+                    <input type="text" name="comparison[<%= i %>][advanced]" class="form-input" placeholder="Avancé value">
+                    <input type="text" name="comparison[<%= i %>][premium]" class="form-input" placeholder="Premium value">
+                  </div>
+                </div>
+              <% } %>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Save Button -->
+      <div style="text-align: right; padding: 16px 0;">
+        <button type="submit" class="btn btn-primary">
+          <i data-lucide="save"></i>
+          Save All Pricing
+        </button>
+      </div>
+    </div>
+  </form>
+</div>
+
+<style>
+  .admin-pricing-plan-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-lg);
+  }
+
+  .form-row-inline {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: var(--spacing-md);
+  }
+
+  .form-group {
+    margin-bottom: var(--spacing-md);
+  }
+
+  .form-textarea {
+    resize: vertical;
+    font-family: monospace;
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  .comparison-rows-editor {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+
+  .comparison-row-group {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+  }
+
+  .comparison-row-num {
+    font-weight: 700;
+    font-size: 0.85rem;
+    min-width: 30px;
+    padding-top: 10px;
+    color: var(--text-secondary);
+  }
+
+  .comparison-row-fields {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: var(--spacing-sm);
+  }
+
+  .comparison-row-extra {
+    opacity: 0.6;
+  }
+
+  .comparison-row-extra:focus-within {
+    opacity: 1;
+  }
+
+  code {
+    background: var(--bg-secondary);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+  }
+
+  @media (max-width: 768px) {
+    .admin-pricing-plan-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .form-row-inline {
+      grid-template-columns: 1fr;
+    }
+
+    .comparison-row-fields {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+

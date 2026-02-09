@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
   initRoomsCarousel();
   initSpecialistsSection();
   initVideoSoundToggle();
+  initGallerySlideColumns();
   
   // Fallback: ensure all content is visible after 2 seconds
   setTimeout(() => {
@@ -1030,4 +1031,107 @@ function initVideoSoundToggle() {
       });
     });
   }
+}
+
+/**
+ * Gallery side columns - interactive vertical slider
+ * Adds touch / mouse drag support & ensures smooth auto-scroll
+ */
+function initGallerySlideColumns() {
+  const cols = document.querySelectorAll('.gallery-slide-col');
+  if (!cols.length) return;
+
+  cols.forEach(col => {
+    const track = col.querySelector('.gallery-slide-track');
+    if (!track) return;
+
+    let isDown = false;
+    let startY = 0;
+    let scrollOffset = 0;
+    let currentOffset = 0;
+    let resumeTimer;
+
+    // Helper: pause CSS animation and switch to manual offset
+    const pauseAnimation = () => {
+      col.classList.add('is-dragging');
+      const computedTransform = getComputedStyle(track).transform;
+      if (computedTransform && computedTransform !== 'none') {
+        const matrix = new DOMMatrix(computedTransform);
+        currentOffset = matrix.m42; // translateY value
+      }
+      track.style.animation = 'none';
+      track.style.transform = `translateY(${currentOffset}px)`;
+    };
+
+    // Helper: resume CSS animation
+    const resumeAnimation = () => {
+      clearTimeout(resumeTimer);
+      resumeTimer = setTimeout(() => {
+        col.classList.remove('is-dragging');
+        track.style.animation = '';
+        track.style.transform = '';
+      }, 2000); // resume after 2s of inactivity
+    };
+
+    // Clamp offset so we don't scroll past content
+    const clampOffset = (offset) => {
+      const trackHeight = track.scrollHeight / 2; // half because of duplicates
+      // Wrap around
+      while (offset > 0) offset -= trackHeight;
+      while (offset < -trackHeight) offset += trackHeight;
+      return offset;
+    };
+
+    // --- Mouse drag ---
+    col.addEventListener('mousedown', (e) => {
+      isDown = true;
+      startY = e.clientY;
+      pauseAnimation();
+      scrollOffset = currentOffset;
+      e.preventDefault();
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isDown) return;
+      const delta = e.clientY - startY;
+      currentOffset = clampOffset(scrollOffset + delta);
+      track.style.transform = `translateY(${currentOffset}px)`;
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (!isDown) return;
+      isDown = false;
+      resumeAnimation();
+    });
+
+    // --- Touch drag ---
+    col.addEventListener('touchstart', (e) => {
+      isDown = true;
+      startY = e.touches[0].clientY;
+      pauseAnimation();
+      scrollOffset = currentOffset;
+    }, { passive: true });
+
+    col.addEventListener('touchmove', (e) => {
+      if (!isDown) return;
+      const delta = e.touches[0].clientY - startY;
+      currentOffset = clampOffset(scrollOffset + delta);
+      track.style.transform = `translateY(${currentOffset}px)`;
+    }, { passive: true });
+
+    col.addEventListener('touchend', () => {
+      if (!isDown) return;
+      isDown = false;
+      resumeAnimation();
+    });
+
+    // --- Mouse wheel scroll ---
+    col.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      pauseAnimation();
+      currentOffset = clampOffset(currentOffset - e.deltaY * 0.5);
+      track.style.transform = `translateY(${currentOffset}px)`;
+      resumeAnimation();
+    }, { passive: false });
+  });
 }

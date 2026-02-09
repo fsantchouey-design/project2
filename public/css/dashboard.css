@@ -1711,3 +1711,81 @@ body {
   background: rgba(99, 102, 241, 0.2);
   color: #c7d2fe;
 }
+
+/* ====================== */
+/* Admin Section Grouping */
+/* ====================== */
+
+.admin-sections-list {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+.admin-section-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-section-header {
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+}
+
+.admin-section-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-section-title i {
+  width: 22px;
+  height: 22px;
+  color: #6366f1;
+  flex-shrink: 0;
+}
+
+.admin-section-title h2 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.admin-section-count {
+  margin-left: 4px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: #6366f1;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.admin-section-desc {
+  margin: 8px 0 0 32px;
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+/* Dark theme overrides for section grouping */
+[data-theme="dark"] .admin-section-header {
+  background: linear-gradient(135deg, var(--bg-secondary) 0%, rgba(99,102,241,0.08) 100%);
+  border-color: var(--border-color);
+}
+
+[data-theme="dark"] .admin-section-title h2 {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .admin-section-title i {
+  color: #818cf8;
+}
+
+[data-theme="dark"] .admin-section-desc {
+  color: var(--text-secondary);
+}

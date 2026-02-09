@@ -150,65 +150,27 @@
         <thead>
           <tr>
             <th>Fonctionnalité</th>
-            <th>Régulier</th>
-            <th class="highlight">Avancé</th>
-            <th>Premium</th>
+            <th><%= plans.regular.name %></th>
+            <th class="highlight"><%= plans.advanced.name %></th>
+            <th><%= plans.premium.name %></th>
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>Générations IA</td>
-            <td>3 total</td>
-            <td class="highlight">50 / mois</td>
-            <td>Illimitées</td>
-          </tr>
-          <tr>
-            <td>Styles de design</td>
-            <td>2 styles</td>
-            <td class="highlight">Tous (80+)</td>
-            <td>Tous (80+)</td>
-          </tr>
-          <tr>
-            <td>Qualité des rendus</td>
-            <td>Ultra HD</td>
-            <td class="highlight">Ultra HD</td>
-            <td>Ultra HD</td>
-          </tr>
-          <tr>
-            <td>Nombre de projets</td>
-            <td>2 projets</td>
-            <td class="highlight">Illimité</td>
-            <td>Illimité</td>
-          </tr>
-          <tr>
-            <td>Connexion entrepreneur</td>
-            <td><i data-lucide="check"></i></td>
-            <td class="highlight"><i data-lucide="check"></i></td>
-            <td><i data-lucide="check"></i></td>
-          </tr>
-          <tr>
-            <td>Téléchargement PDF</td>
-            <td>1,99$ / PDF</td>
-            <td class="highlight"><i data-lucide="check"></i> Inclus</td>
-            <td><i data-lucide="check"></i> Inclus</td>
-          </tr>
-          <tr>
-            <td>Générations supplémentaires</td>
-            <td>3,99$ / gen</td>
-            <td class="highlight">3,99$ / 3 gen</td>
-            <td>N/A</td>
-          </tr>
-          <tr>
-            <td>Support</td>
-            <td>Email</td>
-            <td class="highlight">Prioritaire</td>
-            <td>Prioritaire</td>
-          </tr>
+          <% if (plans.comparison && plans.comparison.length > 0) { %>
+            <% plans.comparison.forEach(row => { %>
+              <tr>
+                <td><%= row.feature %></td>
+                <td><%- row.regular === '✓' ? '<i data-lucide="check"></i>' : row.regular %></td>
+                <td class="highlight"><%- row.advanced === '✓' ? '<i data-lucide="check"></i>' : row.advanced %></td>
+                <td><%- row.premium === '✓' ? '<i data-lucide="check"></i>' : row.premium %></td>
+              </tr>
+            <% }) %>
+          <% } %>
           <tr>
             <td><strong>Prix</strong></td>
-            <td><strong>Gratuit</strong></td>
-            <td class="highlight"><strong>29,99$ / mois</strong></td>
-            <td><strong>79,99$ / mois</strong></td>
+            <td><strong><%= plans.regular.price === 0 ? 'Gratuit' : plans.regular.price + '$ ' + plans.regular.period %></strong></td>
+            <td class="highlight"><strong><%= plans.advanced.price %>$ <%= plans.advanced.period %></strong></td>
+            <td><strong><%= plans.premium.price %>$ <%= plans.premium.period %></strong></td>
           </tr>
         </tbody>
       </table>

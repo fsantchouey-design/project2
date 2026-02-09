@@ -12,6 +12,8 @@ const {
   mergeLandingAssetsForAdmin
 } = require('../utils/landingAssets');
 const { mergeSpecialistsConfig, defaultSpecialistsConfig } = require('../utils/specialistsConfig');
+const PricingConfig = require('../models/PricingConfig');
+const { mergePricingConfig, defaultPricingConfig } = require('../utils/pricingConfig');
 
 router.get('/', (req, res) => {
   res.redirect('/admin/landing');
@@ -282,6 +284,100 @@ router.post('/messages/:id/delete', async (req, res) => {
   } catch (err) {
     console.error('Admin message delete error:', err);
     res.redirect('/admin/messages');
+  }
+});
+
+// ==========================================
+// Pricing Configuration
+// ==========================================
+
+router.get('/pricing', async (req, res) => {
+  try {
+    const storedConfig = await PricingConfig.findOne({});
+    const pricing = mergePricingConfig(storedConfig);
+
+    res.render('pages/admin/pricing', {
+      title: 'Pricing Configuration - Admin',
+      layout: 'layouts/minimal',
+      extraStyles: ['/css/dashboard.css'],
+      pricing
+    });
+  } catch (err) {
+    console.error('Admin pricing error:', err);
+    req.flash('error_msg', 'Unable to load pricing configuration.');
+    res.redirect('/admin');
+  }
+});
+
+router.post('/pricing/plans', async (req, res) => {
+  try {
+    const { plans, comparison } = req.body;
+    let config = await PricingConfig.findOne({});
+    if (!config) {
+      config = new PricingConfig();
+    }
+
+    // Process each plan
+    ['regular', 'advanced', 'premium'].forEach(key => {
+      if (!plans || !plans[key]) return;
+      const p = plans[key];
+
+      // Parse features from textarea
+      const featuresText = (p.features || '').toString();
+      const features = featuresText
+        .split('\n')
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+        .map(line => {
+          const isAddon = line.startsWith('[addon]');
+          const text = isAddon ? line.replace('[addon]', '').trim() : line;
+          return { text, included: true, addon: isAddon };
+        });
+
+      config[key] = {
+        name: (p.name || '').trim(),
+        subtitle: (p.subtitle || '').trim(),
+        price: parseFloat(p.price) || 0,
+        period: (p.period || '').trim(),
+        generations: parseInt(p.generations) || 0,
+        description: (p.description || '').trim(),
+        features: features.length > 0 ? features : defaultPricingConfig[key].features,
+        bonus: (p.bonus || '').trim(),
+        cta: (p.cta || '').trim(),
+        ctaLink: (p.ctaLink || '').trim(),
+        popular: p.popular === 'true',
+        badge: (p.badge || '').trim()
+      };
+    });
+
+    // Process comparison table
+    if (comparison) {
+      const comparisonRows = [];
+      const keys = Object.keys(comparison).sort((a, b) => parseInt(a) - parseInt(b));
+      keys.forEach(idx => {
+        const row = comparison[idx];
+        const feature = (row.feature || '').trim();
+        if (feature) {
+          comparisonRows.push({
+            feature,
+            regular: (row.regular || '').trim(),
+            advanced: (row.advanced || '').trim(),
+            premium: (row.premium || '').trim()
+          });
+        }
+      });
+      config.comparison = comparisonRows.length > 0 ? comparisonRows : defaultPricingConfig.comparison;
+    }
+
+    config.updatedAt = new Date();
+    await config.save();
+
+    req.flash('success_msg', 'Pricing configuration updated successfully.');
+    res.redirect('/admin/pricing');
+  } catch (err) {
+    console.error('Admin pricing save error:', err);
+    req.flash('error_msg', 'Unable to save pricing configuration.');
+    res.redirect('/admin/pricing');
   }
 });
 

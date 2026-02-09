@@ -751,51 +751,47 @@
     </div>
     
     <div class="pricing-grid">
-      <!-- Free Plan -->
+      <!-- Régulier Plan -->
       <div class="pricing-card">
         <div class="pricing-header">
-          <h3>Gratuit</h3>
+          <h3><%= plans.regular.name %></h3>
           <div class="price">
-            <span class="amount">€0</span>
-            <span class="period">pour toujours</span>
+            <span class="amount"><%= plans.regular.price %>$</span>
+            <span class="period"><%= plans.regular.period %></span>
           </div>
-          <p>Parfait pour découvrir</p>
+          <p><%= plans.regular.subtitle %></p>
         </div>
         <ul class="pricing-features">
-          <li><i data-lucide="check"></i> 3 générations IA par mois</li>
-          <li><i data-lucide="check"></i> Styles de design basiques</li>
-          <li><i data-lucide="check"></i> Qualité standard</li>
-          <li><i data-lucide="check"></i> Jusqu'à 2 projets</li>
-          <li><i data-lucide="check"></i> Support communautaire</li>
+          <% plans.regular.features.forEach(feature => { %>
+            <li><i data-lucide="check"></i> <%= feature.text %></li>
+          <% }) %>
         </ul>
-        <a href="/auth/register" class="btn btn-outline btn-block">Commencer gratuitement</a>
+        <a href="<%= plans.regular.ctaLink %>" class="btn btn-outline btn-block"><%= plans.regular.cta %></a>
       </div>
       
-      <!-- Pro Plan -->
+      <!-- Avancé Plan -->
       <div class="pricing-card pricing-featured">
+        <% if (plans.advanced.badge) { %>
         <div class="pricing-badge">
           <i data-lucide="crown"></i>
-          Le plus populaire
+            <%= plans.advanced.badge %>
         </div>
+        <% } %>
         <div class="pricing-header">
-          <h3>Pro</h3>
+          <h3><%= plans.advanced.name %></h3>
           <div class="price">
-            <span class="amount">€19</span>
-            <span class="period">/mois</span>
+            <span class="amount"><%= plans.advanced.price %>$</span>
+            <span class="period">CAD <%= plans.advanced.period %></span>
           </div>
-          <p>Pour les projets sérieux</p>
+          <p><%= plans.advanced.subtitle %></p>
         </div>
         <ul class="pricing-features">
-          <li><i data-lucide="check"></i> 50 générations IA par mois</li>
-          <li><i data-lucide="check"></i> Tous les styles de design</li>
-          <li><i data-lucide="check"></i> Qualité HD</li>
-          <li><i data-lucide="check"></i> Projets illimités</li>
-          <li><i data-lucide="check"></i> Liste de matériaux</li>
-          <li><i data-lucide="check"></i> Connexion entrepreneurs</li>
-          <li><i data-lucide="check"></i> Support prioritaire</li>
+          <% plans.advanced.features.forEach(feature => { %>
+            <li><i data-lucide="check"></i> <%= feature.text %></li>
+          <% }) %>
         </ul>
-        <a href="/auth/register" class="btn btn-primary btn-block btn-glow">
-          Essai gratuit 7 jours
+        <a href="<%= plans.advanced.ctaLink %>" class="btn btn-primary btn-block btn-glow">
+          <%= plans.advanced.cta %>
           <span class="btn-shine"></span>
         </a>
       </div>
@@ -803,24 +799,19 @@
       <!-- Premium Plan -->
       <div class="pricing-card">
         <div class="pricing-header">
-          <h3>Premium</h3>
+          <h3><%= plans.premium.name %></h3>
           <div class="price">
-            <span class="amount">€49</span>
-            <span class="period">/mois</span>
+            <span class="amount"><%= plans.premium.price %>$</span>
+            <span class="period">CAD <%= plans.premium.period %></span>
           </div>
-          <p>Pour les professionnels</p>
+          <p><%= plans.premium.subtitle %></p>
         </div>
         <ul class="pricing-features">
-          <li><i data-lucide="check"></i> Générations IA illimitées</li>
-          <li><i data-lucide="check"></i> Styles exclusifs</li>
-          <li><i data-lucide="check"></i> Qualité Ultra HD</li>
-          <li><i data-lucide="check"></i> Analyse avancée des matériaux</li>
-          <li><i data-lucide="check"></i> Priorité entrepreneurs</li>
-          <li><i data-lucide="check"></i> Outils d'estimation</li>
-          <li><i data-lucide="check"></i> Export PDF</li>
-          <li><i data-lucide="check"></i> Support dédié</li>
+          <% plans.premium.features.forEach(feature => { %>
+            <li><i data-lucide="check"></i> <%= feature.text %></li>
+          <% }) %>
         </ul>
-        <a href="/auth/register" class="btn btn-outline btn-block">Passer Premium</a>
+        <a href="<%= plans.premium.ctaLink %>" class="btn btn-outline btn-block"><%= plans.premium.cta %></a>
       </div>
     </div>
   </div>

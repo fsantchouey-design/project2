@@ -8,12 +8,15 @@ const { buildLandingImageMap } = require('../utils/landingAssets');
 const { mergeSpecialistsConfig } = require('../utils/specialistsConfig');
 const ContactMessage = require('../models/ContactMessage');
 const GalleryVideo = require('../models/GalleryVideo');
+const PricingConfig = require('../models/PricingConfig');
+const { mergePricingConfig } = require('../utils/pricingConfig');
 
 // Landing Page
 router.get('/', async (req, res) => {
   let landingImages = buildLandingImageMap();
   let specialistsConfig = mergeSpecialistsConfig(null);
   let galleryVideoUrl = '';
+  let pricingConfig = mergePricingConfig(null);
   try {
     const assets = await LandingAsset.find({});
     landingImages = buildLandingImageMap(assets);
@@ -21,6 +24,8 @@ router.get('/', async (req, res) => {
     specialistsConfig = mergeSpecialistsConfig(storedSpecialists);
     const gv = await GalleryVideo.findOne({});
     if (gv && gv.url) galleryVideoUrl = gv.url;
+    const storedPricing = await PricingConfig.findOne({});
+    pricingConfig = mergePricingConfig(storedPricing);
   } catch (err) {
     console.error('Landing assets load error:', err);
   }
@@ -35,7 +40,8 @@ router.get('/', async (req, res) => {
     roomTypes: getRoomTypes(),
     landingImages,
     specialistsConfig,
-    galleryVideoUrl
+    galleryVideoUrl,
+    plans: pricingConfig
   });
 });
 
@@ -58,84 +64,21 @@ router.get('/how-it-works', (req, res) => {
 });
 
 // Pricing Page
-router.get('/pricing', (req, res) => {
-  const plans = {
-    // Plan 1: Régulier (Gratuit)
-    regular: {
-      id: 'regular',
-      name: 'Régulier',
-      subtitle: 'Pour commencer',
-      price: 0,
-      period: 'gratuit',
-      description: 'Démarrez gratuitement avec 3 générations IA. Parfait pour tester la plateforme.',
-      features: [
-        { text: '3 générations IA', included: true },
-        { text: '2 styles de design', included: true },
-        { text: 'Qualité Ultra HD', included: true },
-        { text: 'Jusqu\'à 2 projets', included: true },
-        { text: 'Connexion entrepreneur', included: true },
-        { text: 'Génération supplémentaire: 3,99$', included: true, addon: true },
-        { text: 'Téléchargement PDF: 1,99$', included: true, addon: true }
-      ],
-      bonus: '🎁 Obtenez 30 générations gratuites + projets illimités en concluant un projet avec un entrepreneur!',
-      cta: 'Commencer gratuitement',
-      ctaLink: '/auth/register',
-      popular: false
-    },
-    // Plan 2: Avancé - 29,99$ CAD/mois
-    advanced: {
-      id: 'advanced',
-      name: 'Avancé',
-      subtitle: 'Le plus populaire',
-      price: 29.99,
-      period: '/mois',
-      generations: 50,
-      description: '50 générations IA par mois. Idéal pour les rénovations actives et les projets multiples.',
-      features: [
-        { text: '50 générations IA / mois', included: true },
-        { text: 'Tous les styles de design', included: true },
-        { text: 'Qualité Ultra HD', included: true },
-        { text: 'Projets illimités', included: true },
-        { text: 'Connexion entrepreneur', included: true },
-        { text: 'Téléchargement PDF inclus', included: true },
-        { text: '3 générations supplémentaires: 3,99$', included: true, addon: true }
-      ],
-      cta: 'Choisir Avancé',
-      ctaLink: '/auth/register?plan=advanced',
-      highlight: 'Plus populaire',
-      popular: true,
-      badge: '⭐ Recommandé'
-    },
-    // Plan 3: Premium - 79,99$ CAD/mois
-    premium: {
-      id: 'premium',
-      name: 'Premium',
-      subtitle: 'Sans limites',
-      price: 79.99,
-      period: '/mois',
-      description: 'Générations illimitées pour les professionnels et les grands projets.',
-      features: [
-        { text: 'Générations IA illimitées', included: true },
-        { text: 'Tous les styles de design', included: true },
-        { text: 'Qualité Ultra HD', included: true },
-        { text: 'Projets illimités', included: true },
-        { text: 'Connexion entrepreneur', included: true },
-        { text: 'Téléchargement PDF inclus', included: true },
-        { text: 'Support prioritaire', included: true }
-      ],
-      cta: 'Choisir Premium',
-      ctaLink: '/auth/register?plan=premium',
-      popular: false,
-      badge: '👑 Pro'
-    }
-  };
+router.get('/pricing', async (req, res) => {
+  let pricingConfig = mergePricingConfig(null);
+  try {
+    const storedPricing = await PricingConfig.findOne({});
+    pricingConfig = mergePricingConfig(storedPricing);
+  } catch (err) {
+    console.error('Pricing config load error:', err);
+  }
 
   res.render('pages/pricing', {
     title: 'Pricing - CraftyCrib | AI Interior Design Plans',
     metaDescription: 'Choose the perfect CraftyCrib plan. Free with contractor partners, or pay-as-you-go for DIY projects. Start with 3 free AI generations.',
     keywords: 'interior design pricing, AI design cost, renovation platform pricing, home design subscription',
     layout: 'layouts/landing',
-    plans
+    plans: pricingConfig
   });
 });
 

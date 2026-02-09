@@ -1,7 +1,7 @@
 <div class="page-container admin-landing">
   <div class="page-header">
     <h1>Landing Page Assets</h1>
-    <p class="text-muted">Replace images used across the landing page without changing the layout.</p>
+    <p class="text-muted">Replace images used across the landing page. Organised by section for easy management.</p>
     <div style="margin-top: 12px; display: flex; gap: 8px;">
       <a href="/admin/landing" class="btn btn-primary btn-sm">Images</a>
       <a href="/admin/specialists" class="btn btn-secondary btn-sm">Specialists</a>
@@ -10,33 +10,88 @@
     </div>
   </div>
 
-  <div class="admin-asset-grid">
-    <% assets.forEach(asset => { %>
-      <div class="admin-asset-card">
-        <div class="admin-asset-preview">
-          <img src="<%= asset.url %>" alt="<%= asset.alt %>">
-        </div>
-        <div class="admin-asset-body">
-          <div class="admin-asset-meta">
-            <span class="admin-asset-section"><%= asset.section %></span>
-            <h3><%= asset.label %></h3>
-            <p class="text-muted">Key: <code><%= asset.key %></code></p>
+  <%
+    // Group assets by section
+    const sections = {};
+    assets.forEach(asset => {
+      const sec = asset.section || 'Other';
+      if (!sections[sec]) sections[sec] = [];
+      sections[sec].push(asset);
+    });
+
+    // Ordered section list with icons & descriptions
+    const sectionMeta = {
+      'Hero': {
+        icon: 'image',
+        description: 'Before / After images shown in the hero comparison slider at the top of the page.'
+      },
+      'Styles Slider': {
+        icon: 'palette',
+        description: 'Style cards that scroll horizontally in the "Explore Our Design Styles" carousel.'
+      },
+      'Gallery': {
+        icon: 'layout-grid',
+        description: 'Images displayed in the left & right sliding columns beside the gallery video. Upload your best showcase photos here.'
+      },
+      'Features': {
+        icon: 'zap',
+        description: 'Before / After images shown in the main feature card.'
+      },
+      'Showcase': {
+        icon: 'sparkles',
+        description: 'Before / After comparison sliders in the "See the magic of AI in action" section.'
+      }
+    };
+
+    const sectionOrder = ['Hero', 'Gallery', 'Styles Slider', 'Features', 'Showcase'];
+    const orderedSections = sectionOrder.filter(s => sections[s]);
+    // Add any extra sections not in our order
+    Object.keys(sections).forEach(s => { if (!orderedSections.includes(s)) orderedSections.push(s); });
+  %>
+
+  <div class="admin-sections-list">
+    <% orderedSections.forEach(sectionName => { %>
+      <% const meta = sectionMeta[sectionName] || { icon: 'folder', description: '' }; %>
+      <div class="admin-section-group">
+        <div class="admin-section-header">
+          <div class="admin-section-title">
+            <i data-lucide="<%= meta.icon %>"></i>
+            <h2><%= sectionName %></h2>
+            <span class="admin-section-count"><%= sections[sectionName].length %> image<%= sections[sectionName].length > 1 ? 's' : '' %></span>
           </div>
-          <form action="/admin/landing/<%= asset.key %>" method="POST" enctype="multipart/form-data" class="admin-asset-form">
-            <label class="form-label">Replace image</label>
-            <input type="file" name="image" class="form-input" accept="image/*">
+          <% if (meta.description) { %>
+            <p class="admin-section-desc"><%= meta.description %></p>
+          <% } %>
+        </div>
 
-            <label class="form-label">Alt text</label>
-            <input type="text" name="alt" class="form-input" value="<%= asset.alt %>">
+        <div class="admin-asset-grid">
+          <% sections[sectionName].forEach(asset => { %>
+            <div class="admin-asset-card">
+              <div class="admin-asset-preview">
+                <img src="<%= asset.url %>" alt="<%= asset.alt %>">
+              </div>
+              <div class="admin-asset-body">
+                <div class="admin-asset-meta">
+                  <h3><%= asset.label %></h3>
+                  <p class="text-muted">Key: <code><%= asset.key %></code></p>
+                </div>
+                <form action="/admin/landing/<%= asset.key %>" method="POST" enctype="multipart/form-data" class="admin-asset-form">
+                  <label class="form-label">Replace image</label>
+                  <input type="file" name="image" class="form-input" accept="image/*">
 
-            <button type="submit" class="btn btn-primary btn-sm">
-              <i data-lucide="save"></i>
-              Save
-            </button>
-          </form>
+                  <label class="form-label">Alt text</label>
+                  <input type="text" name="alt" class="form-input" value="<%= asset.alt %>">
+
+                  <button type="submit" class="btn btn-primary btn-sm">
+                    <i data-lucide="save"></i>
+                    Save
+                  </button>
+                </form>
+              </div>
+            </div>
+          <% }) %>
         </div>
       </div>
     <% }) %>
   </div>
 </div>
-
