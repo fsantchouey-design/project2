@@ -5,3 +5,4 @@ $envContent | Set-Content .env -NoNewline
 Write-Host "Complete API token updated successfully!"
 Write-Host "Token: $($completeToken.Substring(0, 30))..."
 
+

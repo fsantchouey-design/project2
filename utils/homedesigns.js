@@ -6,9 +6,42 @@
 const API_URL = process.env.HOMEDESIGNS_API_URL || 'https://homedesigns.ai/api/v2';
 const API_TOKEN = process.env.HOMEDESIGNS_API_TOKEN;
 
+// Map our style IDs to the exact names the API expects
+const STYLE_MAP = {
+  'modern': 'Modern',
+  'contemporary': 'Contemporary',
+  'minimalist': 'Minimalist',
+  'industrial': 'Industrial',
+  'scandinavian': 'Scandinavian',
+  'traditional': 'Traditional',
+  'rustic': 'Rustic',
+  'bohemian': 'Bohemian',
+  'coastal': 'Coastal',
+  'mid-century': 'Midcentury Modern',
+  'farmhouse': 'Modern Farm House',
+  'art-deco': 'Art Deco',
+  'japanese': 'Japanese Design',
+  'mediterranean': 'Mediterranean'
+};
+
+// Map our room type IDs to the exact names the API expects
+const ROOM_TYPE_MAP = {
+  'living-room': 'Living Room',
+  'bedroom': 'Bedroom',
+  'kitchen': 'Kitchen',
+  'bathroom': 'Bathroom',
+  'dining-room': 'Dining Room',
+  'office': 'Home Office',
+  'outdoor': 'Rooftop Terrace',
+  'kids-room': 'Kids Room',
+  'basement': 'Basement Lounge',
+  'garage': 'Garage Gym',
+  'other': 'Living Room'
+};
+
 /**
  * Generate a design using HomeDesigns.AI API
- * API uses queue system: 1) POST to start, 2) Poll status endpoint, 3) Get result
+ * Posts image + parameters, returns generated design URL immediately
  */
 const generateDesign = async (options) => {
   const {
@@ -20,85 +53,68 @@ const generateDesign = async (options) => {
   } = options;
 
   try {
-    // Step 1: Download the image and convert to form data
+    // Step 1: Download the source image
     const imageResponse = await fetch(imageUrl);
     if (!imageResponse.ok) {
       throw new Error('Failed to fetch image');
     }
-    const imageBuffer = await imageResponse.arrayBuffer();
-    const imageBlob = new Blob([imageBuffer], { type: 'image/jpeg' });
+    const imageBlob = await imageResponse.blob();
 
-    // Step 2: Create form data
-    const FormData = require('form-data');
+    // Step 2: Create form data with built-in FormData
+    const apiRoomType = ROOM_TYPE_MAP[roomType] || roomType;
+    const apiStyle = STYLE_MAP[style] || style.charAt(0).toUpperCase() + style.slice(1);
     const formData = new FormData();
     formData.append('image', imageBlob, 'room.jpg');
     formData.append('design_type', mode);
     formData.append('ai_intervention', 'Mid');
     formData.append('no_design', '1');
-    formData.append('design_style', style);
+    formData.append('design_style', apiStyle);
     if (mode === 'Interior') {
-      formData.append('room_type', roomType);
+      formData.append('room_type', apiRoomType);
     }
 
     // Step 3: Submit generation request
     const response = await fetch(`${API_URL}/beautiful_redesign`, {
       method: 'POST',
       headers: {
-        'x-api-key': API_TOKEN,
-        ...formData.getHeaders()
+        'Authorization': `Bearer ${API_TOKEN}`
       },
       body: formData
     });
 
     if (!response.ok) {
       const errorText = await response.text();
+      // Parse validation errors for user-friendly messages
+      if (response.status === 422) {
+        try {
+          const errors = JSON.parse(errorText).error;
+          const messages = Object.values(errors).flat();
+          if (messages.some(m => m.includes('minimum dimentions'))) {
+            throw new Error('Image is too small. Please upload an image at least 512x512 pixels.');
+          }
+          throw new Error(messages[0]);
+        } catch (e) {
+          if (e.message.includes('Image is too small') || e.message.includes('should be in')) throw e;
+        }
+      }
       throw new Error(`API request failed: ${response.status} - ${errorText}`);
     }
 
     const data = await response.json();
-    const queueId = data.queue_id;
 
-    if (!queueId) {
-      throw new Error('No queue_id returned from API');
+    // API returns { success: { original_image: "...", generated_image: ["..."] } }
+    if (data.success && data.success.generated_image) {
+      const outputUrl = data.success.generated_image[0];
+      return {
+        success: true,
+        imageUrl: outputUrl,
+        thumbnailUrl: outputUrl,
+        originalImageUrl: data.success.original_image,
+        creditsUsed: 1
+      };
     }
 
-    // Step 4: Poll status endpoint
-    let attempts = 0;
-    const maxAttempts = 60; // 60 attempts * 2 seconds = 2 minutes max
-    
-    while (attempts < maxAttempts) {
-      await new Promise(resolve => setTimeout(resolve, 2000)); // Wait 2 seconds
-      
-      const statusResponse = await fetch(`${API_URL}/beautiful_redesign/status_check/${queueId}`, {
-        headers: {
-          'x-api-key': API_TOKEN
-        }
-      });
-
-      if (!statusResponse.ok) {
-        throw new Error('Status check failed');
-      }
-
-      const statusData = await statusResponse.json();
-      
-      if (statusData.status === 'SUCCESS') {
-        // Get the first generated image
-        const outputUrl = statusData.output_url || (statusData.generated_images && statusData.generated_images[0]);
-        return {
-          success: true,
-          imageUrl: outputUrl,
-          thumbnailUrl: outputUrl,
-          generationId: queueId,
-          creditsUsed: 1
-        };
-      } else if (statusData.status === 'FAILED' || statusData.status === 'ERROR') {
-        throw new Error(statusData.message || 'Generation failed');
-      }
-      
-      attempts++;
-    }
-
-    throw new Error('Generation timeout - exceeded 2 minutes');
+    throw new Error('Unexpected API response format');
   } catch (error) {
     console.error('HomeDesigns API Error:', error);
     return {
@@ -153,21 +169,21 @@ const getRoomTypes = () => {
  */
 const checkCredits = async () => {
   try {
-    const response = await fetch(`${API_URL}/v1/credits`, {
+    const response = await fetch(`${API_URL}/user_info`, {
       headers: {
         'Authorization': `Bearer ${API_TOKEN}`
       }
     });
 
     if (!response.ok) {
-      throw new Error('Failed to check credits');
+      return { success: false, error: 'Credits check not available' };
     }
 
     const data = await response.json();
     return {
       success: true,
-      credits: data.credits_remaining,
-      plan: data.plan
+      credits: data.Data?.[0]?.Subscription?.Left_Credit,
+      plan: data.Data?.[0]?.Subscription?.Plan_Name
     };
   } catch (error) {
     console.error('Credits check error:', error);
@@ -184,4 +200,3 @@ module.exports = {
   getRoomTypes,
   checkCredits
 };
-
