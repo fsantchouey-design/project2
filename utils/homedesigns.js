@@ -65,15 +65,35 @@ const downloadImage = (imageUrl) => {
 };
 
 /**
+ * Make an HTTP GET request to the API
+ */
+const apiGet = (endpoint) => {
+  return new Promise((resolve, reject) => {
+    const url = new URL(endpoint);
+    const client = url.protocol === 'https:' ? https : http;
+    client.get({
+      hostname: url.hostname,
+      port: url.port || undefined,
+      path: url.pathname + url.search,
+      headers: { 'Authorization': `Bearer ${API_TOKEN}` }
+    }, (res) => {
+      let body = '';
+      res.on('data', (chunk) => body += chunk);
+      res.on('end', () => resolve({ statusCode: res.statusCode, body }));
+      res.on('error', reject);
+    }).on('error', reject);
+  });
+};
+
+/**
  * Submit form data to the HomeDesigns API
  */
 const submitToApi = (endpoint, formData) => {
   return new Promise((resolve, reject) => {
     const url = new URL(endpoint);
     const options = {
-      protocol: url.protocol,
       hostname: url.hostname,
-      port: url.port,
+      port: url.port || undefined,
       path: url.pathname,
       method: 'POST',
       headers: {
@@ -96,8 +116,46 @@ const submitToApi = (endpoint, formData) => {
 };
 
 /**
+ * Poll the status endpoint until the design is ready (for async queue responses)
+ */
+const pollForResult = async (queueId, maxAttempts = 30) => {
+  for (let i = 0; i < maxAttempts; i++) {
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    try {
+      const statusResult = await apiGet(`${API_URL}/beautiful_redesign/status_check/${queueId}`);
+      if (statusResult.statusCode === 200) {
+        const statusData = JSON.parse(statusResult.body);
+        console.log(`[HomeDesigns] Poll [${i + 1}/${maxAttempts}] status:`, statusData.status || 'unknown');
+
+        if (statusData.status === 'SUCCESS' || statusData.generated_images || statusData.output_images) {
+          const outputUrl = statusData.generated_images?.[0] || statusData.output_images?.[0] || statusData.output_url;
+          if (outputUrl) {
+            console.log('[HomeDesigns] Design generated (async):', outputUrl.substring(0, 80));
+            return {
+              success: true,
+              imageUrl: outputUrl,
+              thumbnailUrl: outputUrl,
+              originalImageUrl: statusData.input_image,
+              creditsUsed: 1
+            };
+          }
+        }
+
+        if (statusData.status === 'FAILED' || statusData.status === 'ERROR') {
+          return { success: false, error: statusData.message || 'Generation failed on server' };
+        }
+      }
+    } catch (pollErr) {
+      console.error('[HomeDesigns] Poll error:', pollErr.message);
+    }
+  }
+  return null;
+};
+
+/**
  * Generate a design using HomeDesigns.AI API
- * Posts image + parameters, returns generated design URL immediately
+ * Posts image + parameters, returns generated design URL
  */
 const generateDesign = async (options) => {
   const {
@@ -159,9 +217,10 @@ const generateDesign = async (options) => {
 
     const data = JSON.parse(result.body);
 
+    // Handle synchronous response: { success: { generated_image: [...] } }
     if (data.success && data.success.generated_image) {
       const outputUrl = data.success.generated_image[0];
-      console.log('[HomeDesigns] Design generated successfully:', outputUrl.substring(0, 80));
+      console.log('[HomeDesigns] Design generated (sync):', outputUrl.substring(0, 80));
       return {
         success: true,
         imageUrl: outputUrl,
@@ -169,6 +228,27 @@ const generateDesign = async (options) => {
         originalImageUrl: data.success.original_image,
         creditsUsed: 1
       };
+    }
+
+    // Handle documented response: { output_images: [...] }
+    if (data.output_images && data.output_images.length > 0) {
+      const outputUrl = data.output_images[0];
+      console.log('[HomeDesigns] Design generated (direct):', outputUrl.substring(0, 80));
+      return {
+        success: true,
+        imageUrl: outputUrl,
+        thumbnailUrl: outputUrl,
+        originalImageUrl: data.input_image,
+        creditsUsed: 1
+      };
+    }
+
+    // Handle async queue response: { queue_id: "..." }
+    if (data.queue_id) {
+      console.log('[HomeDesigns] Got queue_id:', data.queue_id, '- polling for result...');
+      const pollResult = await pollForResult(data.queue_id);
+      if (pollResult) return pollResult;
+      throw new Error('Design generation timed out. Please try again.');
     }
 
     throw new Error('Unexpected API response format: ' + JSON.stringify(data).substring(0, 200));
@@ -226,23 +306,7 @@ const getRoomTypes = () => {
  */
 const checkCredits = async () => {
   try {
-    const url = new URL(`${API_URL}/user_info`);
-    const client = url.protocol === 'https:' ? https : http;
-
-    const result = await new Promise((resolve, reject) => {
-      const req = client.get({
-        hostname: url.hostname,
-        port: url.port,
-        path: url.pathname,
-        headers: { 'Authorization': `Bearer ${API_TOKEN}` }
-      }, (res) => {
-        let body = '';
-        res.on('data', (chunk) => body += chunk);
-        res.on('end', () => resolve({ statusCode: res.statusCode, body }));
-        res.on('error', reject);
-      });
-      req.on('error', reject);
-    });
+    const result = await apiGet(`${API_URL}/user_info`);
 
     if (result.statusCode !== 200) {
       return { success: false, error: 'Credits check not available' };
