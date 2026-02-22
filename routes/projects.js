@@ -320,26 +320,24 @@ router.post('/:id/generate', ensureAuthenticated, async (req, res) => {
     });
 
     if (!project) {
-      return res.status(404).json({ error: 'Project not found' });
+      return res.status(404).json({ success: false, error: 'Project not found' });
     }
 
     if (!project.originalImages || project.originalImages.length === 0) {
-      return res.status(400).json({ error: 'Please upload at least one image first' });
+      return res.status(400).json({ success: false, error: 'Please upload at least one image first' });
     }
 
-    // Update status to generating
     project.status = 'generating';
     await project.save();
 
-    // Get the first image URL
     let imageUrl = project.originalImages[0].url;
     
-    // If it's a local URL, construct full URL (for AI API to access)
     if (imageUrl.startsWith('/')) {
       imageUrl = `${process.env.APP_URL || 'http://localhost:3000'}${imageUrl}`;
     }
 
-    // Generate design using HomeDesigns.AI
+    console.log('[Generate] Starting for project:', project._id, 'Image URL:', imageUrl.substring(0, 80));
+
     const result = await generateDesign({
       imageUrl,
       roomType: project.roomType,
@@ -347,8 +345,9 @@ router.post('/:id/generate', ensureAuthenticated, async (req, res) => {
       quality: req.user.isPremium ? 'hd' : 'standard'
     });
 
+    console.log('[Generate] Result:', result.success ? 'SUCCESS' : 'FAILED', result.success ? '' : result.error);
+
     if (result.success) {
-      // Add to design variants
       project.designVariants.push({
         name: `${project.style || 'Modern'} Design`,
         style: project.style,
@@ -356,8 +355,7 @@ router.post('/:id/generate', ensureAuthenticated, async (req, res) => {
         thumbnailUrl: result.thumbnailUrl,
         aiParameters: {
           roomType: project.roomType,
-          style: project.style,
-          generationId: result.generationId
+          style: project.style
         }
       });
 
@@ -374,7 +372,7 @@ router.post('/:id/generate', ensureAuthenticated, async (req, res) => {
         design: project.designVariants[project.designVariants.length - 1]
       });
     } else {
-      project.status = 'pending';
+      project.status = 'draft';
       project.aiGenerationHistory.push({
         parameters: { roomType: project.roomType, style: project.style },
         success: false,
@@ -388,8 +386,8 @@ router.post('/:id/generate', ensureAuthenticated, async (req, res) => {
       });
     }
   } catch (err) {
-    console.error('Generate design error:', err);
-    res.status(500).json({ error: 'An error occurred' });
+    console.error('[Generate] Unexpected error:', err);
+    res.status(500).json({ success: false, error: 'An unexpected error occurred: ' + err.message });
   }
 });
 

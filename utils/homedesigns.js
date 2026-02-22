@@ -3,6 +3,10 @@
  * Documentation: https://api.homedesigns.ai/homedesignsai-api-documentation
  */
 
+const FormData = require('form-data');
+const https = require('https');
+const http = require('http');
+
 const API_URL = process.env.HOMEDESIGNS_API_URL || 'https://homedesigns.ai/api/v2';
 const API_TOKEN = process.env.HOMEDESIGNS_API_TOKEN;
 
@@ -40,6 +44,58 @@ const ROOM_TYPE_MAP = {
 };
 
 /**
+ * Download an image from a URL and return it as a Buffer
+ */
+const downloadImage = (imageUrl) => {
+  return new Promise((resolve, reject) => {
+    const client = imageUrl.startsWith('https') ? https : http;
+    client.get(imageUrl, (res) => {
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        return downloadImage(res.headers.location).then(resolve).catch(reject);
+      }
+      if (res.statusCode !== 200) {
+        return reject(new Error(`Failed to fetch image: HTTP ${res.statusCode}`));
+      }
+      const chunks = [];
+      res.on('data', (chunk) => chunks.push(chunk));
+      res.on('end', () => resolve(Buffer.concat(chunks)));
+      res.on('error', reject);
+    }).on('error', reject);
+  });
+};
+
+/**
+ * Submit form data to the HomeDesigns API
+ */
+const submitToApi = (endpoint, formData) => {
+  return new Promise((resolve, reject) => {
+    const url = new URL(endpoint);
+    const options = {
+      protocol: url.protocol,
+      hostname: url.hostname,
+      port: url.port,
+      path: url.pathname,
+      method: 'POST',
+      headers: {
+        ...formData.getHeaders(),
+        'Authorization': `Bearer ${API_TOKEN}`
+      }
+    };
+
+    const client = url.protocol === 'https:' ? https : http;
+    const req = client.request(options, (res) => {
+      let body = '';
+      res.on('data', (chunk) => body += chunk);
+      res.on('end', () => resolve({ statusCode: res.statusCode, body }));
+      res.on('error', reject);
+    });
+
+    req.on('error', reject);
+    formData.pipe(req);
+  });
+};
+
+/**
  * Generate a design using HomeDesigns.AI API
  * Posts image + parameters, returns generated design URL immediately
  */
@@ -48,23 +104,28 @@ const generateDesign = async (options) => {
     imageUrl,
     roomType,
     style,
-    mode = 'Interior', // Interior, Exterior, Garden
-    quality = 'standard' // standard, hd, ultra
+    mode = 'Interior',
+    quality = 'standard'
   } = options;
 
   try {
-    // Step 1: Download the source image
-    const imageResponse = await fetch(imageUrl);
-    if (!imageResponse.ok) {
-      throw new Error('Failed to fetch image');
+    if (!API_TOKEN) {
+      throw new Error('HomeDesigns API token is not configured. Set HOMEDESIGNS_API_TOKEN in .env');
     }
-    const imageBlob = await imageResponse.blob();
 
-    // Step 2: Create form data with built-in FormData
+    console.log('[HomeDesigns] Starting generation:', { imageUrl: imageUrl.substring(0, 80), roomType, style, mode });
+
+    const imageBuffer = await downloadImage(imageUrl);
+    console.log('[HomeDesigns] Image downloaded:', imageBuffer.length, 'bytes');
+
     const apiRoomType = ROOM_TYPE_MAP[roomType] || roomType;
     const apiStyle = STYLE_MAP[style] || style.charAt(0).toUpperCase() + style.slice(1);
+
     const formData = new FormData();
-    formData.append('image', imageBlob, 'room.jpg');
+    formData.append('image', imageBuffer, {
+      filename: 'room.jpg',
+      contentType: 'image/jpeg'
+    });
     formData.append('design_type', mode);
     formData.append('ai_intervention', 'Mid');
     formData.append('no_design', '1');
@@ -73,21 +134,17 @@ const generateDesign = async (options) => {
       formData.append('room_type', apiRoomType);
     }
 
-    // Step 3: Submit generation request
-    const response = await fetch(`${API_URL}/beautiful_redesign`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${API_TOKEN}`
-      },
-      body: formData
-    });
+    console.log('[HomeDesigns] Sending request to API...', { apiStyle, apiRoomType });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      // Parse validation errors for user-friendly messages
-      if (response.status === 422) {
+    const result = await submitToApi(`${API_URL}/beautiful_redesign`, formData);
+
+    console.log('[HomeDesigns] API response status:', result.statusCode);
+    console.log('[HomeDesigns] API response body:', result.body.substring(0, 300));
+
+    if (result.statusCode !== 200) {
+      if (result.statusCode === 422) {
         try {
-          const errors = JSON.parse(errorText).error;
+          const errors = JSON.parse(result.body).error;
           const messages = Object.values(errors).flat();
           if (messages.some(m => m.includes('minimum dimentions'))) {
             throw new Error('Image is too small. Please upload an image at least 512x512 pixels.');
@@ -97,14 +154,14 @@ const generateDesign = async (options) => {
           if (e.message.includes('Image is too small') || e.message.includes('should be in')) throw e;
         }
       }
-      throw new Error(`API request failed: ${response.status} - ${errorText}`);
+      throw new Error(`API request failed: ${result.statusCode} - ${result.body.substring(0, 200)}`);
     }
 
-    const data = await response.json();
+    const data = JSON.parse(result.body);
 
-    // API returns { success: { original_image: "...", generated_image: ["..."] } }
     if (data.success && data.success.generated_image) {
       const outputUrl = data.success.generated_image[0];
+      console.log('[HomeDesigns] Design generated successfully:', outputUrl.substring(0, 80));
       return {
         success: true,
         imageUrl: outputUrl,
@@ -114,9 +171,9 @@ const generateDesign = async (options) => {
       };
     }
 
-    throw new Error('Unexpected API response format');
+    throw new Error('Unexpected API response format: ' + JSON.stringify(data).substring(0, 200));
   } catch (error) {
-    console.error('HomeDesigns API Error:', error);
+    console.error('[HomeDesigns] API Error:', error.message);
     return {
       success: false,
       error: error.message
@@ -169,17 +226,29 @@ const getRoomTypes = () => {
  */
 const checkCredits = async () => {
   try {
-    const response = await fetch(`${API_URL}/user_info`, {
-      headers: {
-        'Authorization': `Bearer ${API_TOKEN}`
-      }
+    const url = new URL(`${API_URL}/user_info`);
+    const client = url.protocol === 'https:' ? https : http;
+
+    const result = await new Promise((resolve, reject) => {
+      const req = client.get({
+        hostname: url.hostname,
+        port: url.port,
+        path: url.pathname,
+        headers: { 'Authorization': `Bearer ${API_TOKEN}` }
+      }, (res) => {
+        let body = '';
+        res.on('data', (chunk) => body += chunk);
+        res.on('end', () => resolve({ statusCode: res.statusCode, body }));
+        res.on('error', reject);
+      });
+      req.on('error', reject);
     });
 
-    if (!response.ok) {
+    if (result.statusCode !== 200) {
       return { success: false, error: 'Credits check not available' };
     }
 
-    const data = await response.json();
+    const data = JSON.parse(result.body);
     return {
       success: true,
       credits: data.Data?.[0]?.Subscription?.Left_Credit,
