@@ -338,10 +338,29 @@ router.post('/:id/generate', ensureAuthenticated, async (req, res) => {
 
     console.log('[Generate] Starting for project:', project._id, 'Image URL:', imageUrl.substring(0, 80));
 
+    // Build a prompt from description and preferences
+    const promptParts = [];
+    if (project.description) promptParts.push(project.description);
+    if (project.preferences) {
+      if (project.preferences.colors && project.preferences.colors.length > 0) {
+        promptParts.push('Colors: ' + project.preferences.colors.join(', '));
+      }
+      if (project.preferences.materials && project.preferences.materials.length > 0) {
+        promptParts.push('Materials: ' + project.preferences.materials.join(', '));
+      }
+      if (project.preferences.mustHave && project.preferences.mustHave.length > 0) {
+        promptParts.push('Must include: ' + project.preferences.mustHave.join(', '));
+      }
+      if (project.preferences.mustAvoid && project.preferences.mustAvoid.length > 0) {
+        promptParts.push('Avoid: ' + project.preferences.mustAvoid.join(', '));
+      }
+    }
+
     const result = await generateDesign({
       imageUrl,
       roomType: project.roomType,
       style: project.style || 'modern',
+      prompt: promptParts.length > 0 ? promptParts.join('. ') : undefined,
       quality: req.user.isPremium ? 'hd' : 'standard'
     });
 

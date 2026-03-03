@@ -57,10 +57,29 @@ router.post('/generate', ensureAuthenticated, async (req, res) => {
       imageUrl = `${process.env.APP_URL || 'https://craftycrib.com'}${imageUrl}`;
     }
 
+    // Build a prompt from description and preferences
+    const promptParts = [];
+    if (project.description) promptParts.push(project.description);
+    if (project.preferences) {
+      if (project.preferences.colors && project.preferences.colors.length > 0) {
+        promptParts.push('Colors: ' + project.preferences.colors.join(', '));
+      }
+      if (project.preferences.materials && project.preferences.materials.length > 0) {
+        promptParts.push('Materials: ' + project.preferences.materials.join(', '));
+      }
+      if (project.preferences.mustHave && project.preferences.mustHave.length > 0) {
+        promptParts.push('Must include: ' + project.preferences.mustHave.join(', '));
+      }
+      if (project.preferences.mustAvoid && project.preferences.mustAvoid.length > 0) {
+        promptParts.push('Avoid: ' + project.preferences.mustAvoid.join(', '));
+      }
+    }
+
     const result = await generateDesign({
       imageUrl,
       roomType: project.roomType,
       style: style || project.style || 'modern',
+      prompt: promptParts.length > 0 ? promptParts.join('. ') : undefined,
       quality: req.user.isPremium ? 'hd' : 'standard'
     });
 

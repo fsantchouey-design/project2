@@ -162,6 +162,7 @@ const generateDesign = async (options) => {
     imageUrl,
     roomType,
     style,
+    prompt,
     mode = 'Interior',
     quality = 'standard'
   } = options;
@@ -191,8 +192,11 @@ const generateDesign = async (options) => {
     if (mode === 'Interior') {
       formData.append('room_type', apiRoomType);
     }
+    if (prompt) {
+      formData.append('prompt', prompt);
+    }
 
-    console.log('[HomeDesigns] Sending request to API...', { apiStyle, apiRoomType });
+    console.log('[HomeDesigns] Sending request to API...', { apiStyle, apiRoomType, prompt: prompt ? prompt.substring(0, 100) : 'none' });
 
     const result = await submitToApi(`${API_URL}/beautiful_redesign`, formData);
 
