@@ -1,0 +1,373 @@
+<div class="shared-container">
+  <div class="shared-header">
+    <h1><%= project.title %></h1>
+    <div class="shared-meta">
+      <span class="shared-author">
+        <i data-lucide="user"></i>
+        By <%= project.user.firstName %> <%= project.user.lastName %>
+      </span>
+      <span class="shared-date">
+        <i data-lucide="calendar"></i>
+        <%= new Date(project.createdAt).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) %>
+      </span>
+      <% if (project.roomType) { %>
+        <span class="shared-tag">
+          <i data-lucide="home"></i>
+          <%= project.roomType.replace('-', ' ') %>
+        </span>
+      <% } %>
+      <% if (project.style) { %>
+        <span class="shared-tag">
+          <i data-lucide="palette"></i>
+          <%= project.style.replace('-', ' ') %>
+        </span>
+      <% } %>
+    </div>
+  </div>
+
+  <% if (project.designVariants && project.designVariants.length > 0) { %>
+    <div class="shared-section">
+      <h2>AI Generated Designs</h2>
+      <div class="shared-gallery">
+        <% project.designVariants.forEach((variant, index) => { %>
+          <div class="shared-design" onclick="viewFullscreen('<%= variant.imageUrl %>')">
+            <img src="<%= variant.imageUrl %>" alt="<%= variant.name || 'Design ' + (index + 1) %>">
+            <div class="shared-design-overlay">
+              <i data-lucide="maximize-2"></i>
+            </div>
+            <div class="shared-design-info">
+              <span><%= variant.name || 'Design ' + (index + 1) %></span>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  <% } %>
+
+  <% if (project.originalImages && project.originalImages.length > 0) { %>
+    <div class="shared-section">
+      <h2>Original Photos</h2>
+      <div class="shared-originals">
+        <% project.originalImages.forEach((img, index) => { %>
+          <div class="shared-original" onclick="viewFullscreen('<%= img.url %>')">
+            <img src="<%= img.url %>" alt="Original photo <%= index + 1 %>">
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  <% } %>
+
+  <% if (project.description) { %>
+    <div class="shared-section">
+      <h2>About This Project</h2>
+      <p class="shared-description"><%= project.description %></p>
+    </div>
+  <% } %>
+
+  <div class="shared-section shared-details">
+    <% if (project.budget && (project.budget.min || project.budget.max)) { %>
+      <div class="shared-detail">
+        <i data-lucide="euro"></i>
+        <div>
+          <span class="detail-label">Budget</span>
+          <span class="detail-value">
+            <%= project.budget.min ? '€' + project.budget.min.toLocaleString() : '' %>
+            <%= project.budget.min && project.budget.max ? ' - ' : '' %>
+            <%= project.budget.max ? '€' + project.budget.max.toLocaleString() : '' %>
+          </span>
+        </div>
+      </div>
+    <% } %>
+    <% if (project.dimensions && (project.dimensions.length || project.dimensions.width)) { %>
+      <div class="shared-detail">
+        <i data-lucide="ruler"></i>
+        <div>
+          <span class="detail-label">Dimensions</span>
+          <span class="detail-value">
+            <%= project.dimensions.length || '?' %>m × <%= project.dimensions.width || '?' %>m
+            <% if (project.dimensions.height) { %> × <%= project.dimensions.height %>m<% } %>
+          </span>
+        </div>
+      </div>
+    <% } %>
+  </div>
+
+  <div class="shared-cta">
+    <p>Want to redesign your own space?</p>
+    <a href="/auth/register" class="btn btn-primary btn-lg">
+      <i data-lucide="sparkles"></i>
+      Get Started with CraftyCrib
+    </a>
+  </div>
+</div>
+
+<!-- Fullscreen Modal -->
+<div class="fullscreen-modal" id="fullscreen-modal" onclick="closeFullscreen()">
+  <img src="" alt="Design" id="fullscreen-image">
+  <button class="close-fullscreen"><i data-lucide="x"></i></button>
+</div>
+
+<style>
+  .shared-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: var(--spacing-xl);
+  }
+
+  .shared-header {
+    text-align: center;
+    margin-bottom: var(--spacing-3xl);
+  }
+
+  .shared-header h1 {
+    font-size: 2.5rem;
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .shared-meta {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: var(--spacing-lg);
+    color: var(--text-muted);
+    font-size: 0.9rem;
+  }
+
+  .shared-meta span {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+  }
+
+  .shared-meta i {
+    width: 16px;
+    height: 16px;
+  }
+
+  .shared-tag {
+    text-transform: capitalize;
+    background: var(--bg-secondary);
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius-full);
+  }
+
+  .shared-section {
+    margin-bottom: var(--spacing-3xl);
+  }
+
+  .shared-section h2 {
+    font-size: 1.5rem;
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .shared-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--spacing-lg);
+  }
+
+  .shared-design {
+    position: relative;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid var(--border-color);
+    transition: all var(--transition-base);
+  }
+
+  .shared-design:hover {
+    border-color: var(--accent-primary);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+  }
+
+  .shared-design img {
+    width: 100%;
+    height: 250px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .shared-design-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+  }
+
+  .shared-design:hover .shared-design-overlay {
+    opacity: 1;
+  }
+
+  .shared-design-overlay i {
+    width: 32px;
+    height: 32px;
+    color: white;
+  }
+
+  .shared-design-info {
+    padding: var(--spacing-md);
+    background: var(--bg-card);
+  }
+
+  .shared-design-info span {
+    font-weight: 500;
+    font-size: 0.95rem;
+  }
+
+  .shared-originals {
+    display: flex;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+  }
+
+  .shared-original {
+    width: 180px;
+    height: 180px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 2px solid var(--border-color);
+    cursor: pointer;
+    transition: all var(--transition-base);
+  }
+
+  .shared-original:hover {
+    border-color: var(--accent-primary);
+  }
+
+  .shared-original img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .shared-description {
+    color: var(--text-secondary);
+    line-height: 1.8;
+    font-size: 1.05rem;
+    white-space: pre-wrap;
+  }
+
+  .shared-details {
+    display: flex;
+    gap: var(--spacing-xl);
+    flex-wrap: wrap;
+  }
+
+  .shared-detail {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    flex: 1;
+    min-width: 200px;
+  }
+
+  .shared-detail i {
+    width: 24px;
+    height: 24px;
+    color: var(--accent-primary);
+  }
+
+  .shared-detail .detail-label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 2px;
+  }
+
+  .shared-detail .detail-value {
+    font-weight: 600;
+  }
+
+  .shared-cta {
+    text-align: center;
+    padding: var(--spacing-3xl);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+  }
+
+  .shared-cta p {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+    margin-bottom: var(--spacing-lg);
+  }
+
+  /* Fullscreen Modal */
+  .fullscreen-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.95);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    padding: var(--spacing-xl);
+  }
+
+  .fullscreen-modal.active {
+    display: flex;
+  }
+
+  .fullscreen-modal img {
+    max-width: 100%;
+    max-height: 100%;
+    border-radius: var(--radius-lg);
+  }
+
+  .close-fullscreen {
+    position: absolute;
+    top: var(--spacing-xl);
+    right: var(--spacing-xl);
+    background: var(--bg-card);
+    border: none;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  @media (max-width: 768px) {
+    .shared-header h1 {
+      font-size: 1.75rem;
+    }
+
+    .shared-gallery {
+      grid-template-columns: 1fr;
+    }
+
+    .shared-original {
+      width: 120px;
+      height: 120px;
+    }
+  }
+</style>
+
+<script>
+  function viewFullscreen(imageUrl) {
+    const modal = document.getElementById('fullscreen-modal');
+    const img = document.getElementById('fullscreen-image');
+    img.src = imageUrl;
+    modal.classList.add('active');
+  }
+
+  function closeFullscreen() {
+    document.getElementById('fullscreen-modal').classList.remove('active');
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') closeFullscreen();
+  });
+</script>

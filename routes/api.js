@@ -114,14 +114,17 @@ router.get('/projects/:id', ensureAuthenticated, async (req, res) => {
   }
 });
 
-// Update Project Status
+// Update Project Status/Visibility
 router.patch('/projects/:id/status', ensureAuthenticated, async (req, res) => {
   try {
-    const { status } = req.body;
-    
+    const { status, visibility } = req.body;
+    const update = {};
+    if (status) update.status = status;
+    if (visibility) update.visibility = visibility;
+
     const project = await Project.findOneAndUpdate(
       { _id: req.params.id, user: req.user.id },
-      { status },
+      update,
       { new: true }
     );
 
