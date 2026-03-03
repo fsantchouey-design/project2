@@ -77,7 +77,7 @@ router.post('/', ensureAuthenticated, upload.array('images', 5), async (req, res
       title,
       description,
       roomType,
-      style,
+      style: style || undefined,
       budget: {
         min: budgetMin ? parseFloat(budgetMin) : undefined,
         max: budgetMax ? parseFloat(budgetMax) : undefined
@@ -197,7 +197,7 @@ router.put('/:id', ensureAuthenticated, upload.array('images', 5), async (req, r
     project.title = title;
     project.description = description;
     project.roomType = roomType;
-    project.style = style;
+    project.style = style || undefined;
     project.budget.min = budgetMin ? parseFloat(budgetMin) : undefined;
     project.budget.max = budgetMax ? parseFloat(budgetMax) : undefined;
     project.visibility = visibility;

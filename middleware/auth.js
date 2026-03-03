@@ -5,6 +5,12 @@ const ensureAuthenticated = (req, res, next) => {
   if (req.isAuthenticated()) {
     return next();
   }
+
+  // For AJAX/fetch requests, return JSON instead of redirect
+  if (req.xhr || (req.headers.accept && req.headers.accept.includes('application/json')) || (req.headers['content-type'] && req.headers['content-type'].includes('application/json'))) {
+    return res.status(401).json({ success: false, error: 'Session expired. Please log in again.' });
+  }
+
   req.flash('error_msg', 'Please log in to access this page');
   res.redirect('/auth/login');
 };

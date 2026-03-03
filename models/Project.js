@@ -48,12 +48,12 @@ const projectSchema = new mongoose.Schema({
   },
   roomType: {
     type: String,
-    enum: ['living-room', 'bedroom', 'kitchen', 'bathroom', 'dining-room', 'office', 'outdoor', 'other'],
+    enum: ['living-room', 'bedroom', 'kitchen', 'bathroom', 'dining-room', 'office', 'outdoor', 'kids-room', 'basement', 'garage', 'other'],
     required: true
   },
   style: {
     type: String,
-    enum: ['modern', 'contemporary', 'minimalist', 'industrial', 'scandinavian', 'traditional', 'rustic', 'bohemian', 'coastal', 'mid-century', 'other']
+    enum: ['modern', 'contemporary', 'minimalist', 'industrial', 'scandinavian', 'traditional', 'rustic', 'bohemian', 'coastal', 'mid-century', 'farmhouse', 'art-deco', 'japanese', 'mediterranean', 'other']
   },
   budget: {
     min: Number,

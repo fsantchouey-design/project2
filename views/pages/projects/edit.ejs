@@ -1,0 +1,401 @@
+<div class="page-container">
+  <div class="page-header">
+    <a href="/projects/<%= project._id %>" class="back-link">
+      <i data-lucide="arrow-left"></i>
+      Back to Project
+    </a>
+    <h1>Edit Project</h1>
+    <p class="text-muted">Update your project details</p>
+  </div>
+
+  <form action="/projects/<%= project._id %>?_method=PUT" method="POST" enctype="multipart/form-data" class="project-form">
+    <!-- Step 1: Basic Info -->
+    <div class="form-section">
+      <h2><span class="step-num">1</span> Project Details</h2>
+
+      <div class="form-group">
+        <label class="form-label">Project Title *</label>
+        <input type="text" name="title" class="form-input" placeholder="e.g., Modern Kitchen Renovation" required value="<%= project.title %>">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Description *</label>
+        <textarea name="description" class="form-textarea" rows="4" placeholder="Describe your vision for this space..." required maxlength="1000"><%= project.description %></textarea>
+        <p class="form-hint">Be as detailed as possible - mention colors, styles, materials, and any specific requirements</p>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Room Type *</label>
+          <select name="roomType" class="form-select" required>
+            <option value="">Select room type</option>
+            <% if (typeof roomTypes !== 'undefined') { %>
+              <% roomTypes.forEach(room => { %>
+                <option value="<%= room.id %>" <%= project.roomType === room.id ? 'selected' : '' %>><%= room.name %></option>
+              <% }) %>
+            <% } %>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Design Style</label>
+          <select name="style" class="form-select">
+            <option value="">Let AI decide</option>
+            <% if (typeof styles !== 'undefined') { %>
+              <% styles.forEach(s => { %>
+                <option value="<%= s.id %>" <%= project.style === s.id ? 'selected' : '' %>><%= s.name %></option>
+              <% }) %>
+            <% } %>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 2: Photos -->
+    <div class="form-section">
+      <h2><span class="step-num">2</span> Photos</h2>
+      <p class="section-desc">Current photos and upload new ones</p>
+
+      <% if (project.originalImages && project.originalImages.length > 0) { %>
+        <div class="existing-images">
+          <label class="form-label">Current Images</label>
+          <div class="file-preview">
+            <% project.originalImages.forEach(img => { %>
+              <div class="preview-item existing">
+                <img src="<%= img.url %>" alt="Project image">
+              </div>
+            <% }) %>
+          </div>
+        </div>
+      <% } %>
+
+      <div class="upload-area" id="upload-area">
+        <input type="file" name="images" id="images" multiple accept="image/*" class="file-input">
+        <label for="images" class="upload-label">
+          <i data-lucide="upload-cloud"></i>
+          <span>Drop new images here or click to browse</span>
+          <span class="upload-hint">Max 5 images, 10MB each (JPG, PNG, WebP)</span>
+        </label>
+      </div>
+      <div id="images-preview" class="file-preview"></div>
+    </div>
+
+    <!-- Step 3: Budget -->
+    <div class="form-section">
+      <h2><span class="step-num">3</span> Budget (Optional)</h2>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Minimum Budget (&euro;)</label>
+          <input type="number" name="budgetMin" class="form-input" placeholder="5000" min="0" value="<%= project.budget && project.budget.min ? project.budget.min : '' %>">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Maximum Budget (&euro;)</label>
+          <input type="number" name="budgetMax" class="form-input" placeholder="15000" min="0" value="<%= project.budget && project.budget.max ? project.budget.max : '' %>">
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 4: Visibility -->
+    <div class="form-section">
+      <h2><span class="step-num">4</span> Visibility</h2>
+
+      <div class="form-group">
+        <label class="form-label">Who can see this project?</label>
+        <select name="visibility" class="form-select">
+          <option value="private" <%= project.visibility === 'private' ? 'selected' : '' %>>Private - Only me</option>
+          <option value="contractors" <%= project.visibility === 'contractors' ? 'selected' : '' %>>Contractors - Visible to contractors</option>
+          <option value="public" <%= project.visibility === 'public' ? 'selected' : '' %>>Public - Anyone can see</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <div class="form-actions">
+      <a href="/projects/<%= project._id %>" class="btn btn-ghost">Cancel</a>
+      <button type="submit" class="btn btn-primary btn-lg">
+        <i data-lucide="save"></i>
+        Save Changes
+      </button>
+    </div>
+  </form>
+</div>
+
+<style>
+  .page-container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: var(--spacing-xl);
+  }
+
+  .page-header {
+    margin-bottom: var(--spacing-2xl);
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: var(--spacing-md);
+    transition: color var(--transition-fast);
+  }
+
+  .back-link:hover {
+    color: var(--text-primary);
+  }
+
+  .back-link i {
+    width: 16px;
+    height: 16px;
+  }
+
+  .page-header h1 {
+    font-size: 2rem;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .text-muted {
+    color: var(--text-muted);
+  }
+
+  .project-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+  }
+
+  .form-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-xl);
+  }
+
+  .form-section h2 {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    font-size: 1.25rem;
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .step-num {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--accent-gradient);
+    border-radius: 50%;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #000;
+  }
+
+  .section-desc {
+    color: var(--text-muted);
+    margin-bottom: var(--spacing-lg);
+    margin-top: calc(-1 * var(--spacing-sm));
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-lg);
+  }
+
+  .existing-images {
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .existing-images .form-label {
+    margin-bottom: var(--spacing-sm);
+  }
+
+  /* Upload Area */
+  .upload-area {
+    position: relative;
+    border: 2px dashed var(--border-color);
+    border-radius: var(--radius-lg);
+    transition: all var(--transition-base);
+  }
+
+  .upload-area:hover,
+  .upload-area.dragover {
+    border-color: var(--accent-primary);
+    background: rgba(0, 255, 136, 0.05);
+  }
+
+  .file-input {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  .upload-label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-3xl);
+    text-align: center;
+    cursor: pointer;
+  }
+
+  .upload-label i {
+    width: 48px;
+    height: 48px;
+    color: var(--text-muted);
+  }
+
+  .upload-hint {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  .file-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-md);
+  }
+
+  .preview-item {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 2px solid var(--border-color);
+  }
+
+  .preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .preview-item .remove-btn {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 24px;
+    height: 24px;
+    background: rgba(255, 0, 0, 0.8);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+  }
+
+  .preview-item:hover .remove-btn {
+    opacity: 1;
+  }
+
+  .preview-item .remove-btn i {
+    width: 14px;
+    height: 14px;
+  }
+
+  /* Form Actions */
+  .form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: var(--spacing-md);
+    padding-top: var(--spacing-lg);
+  }
+
+  @media (max-width: 768px) {
+    .form-row {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>
+
+<script>
+  // Drag and drop upload
+  const uploadArea = document.getElementById('upload-area');
+  const fileInput = document.getElementById('images');
+  const previewContainer = document.getElementById('images-preview');
+
+  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    uploadArea.addEventListener(eventName, preventDefaults, false);
+  });
+
+  function preventDefaults(e) {
+    e.preventDefault();
+    e.stopPropagation();
+  }
+
+  ['dragenter', 'dragover'].forEach(eventName => {
+    uploadArea.addEventListener(eventName, () => uploadArea.classList.add('dragover'), false);
+  });
+
+  ['dragleave', 'drop'].forEach(eventName => {
+    uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('dragover'), false);
+  });
+
+  uploadArea.addEventListener('drop', (e) => {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    fileInput.files = files;
+    fileInput.dispatchEvent(new Event('change'));
+  });
+
+  // Image preview
+  fileInput.addEventListener('change', function() {
+    previewContainer.innerHTML = '';
+
+    if (this.files.length > 5) {
+      alert('Maximum 5 images allowed');
+      this.value = '';
+      return;
+    }
+
+    Array.from(this.files).forEach((file, index) => {
+      if (file.size > 10 * 1024 * 1024) {
+        alert(`File ${file.name} is too large (max 10MB)`);
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const previewItem = document.createElement('div');
+        previewItem.className = 'preview-item';
+        previewItem.innerHTML = `
+          <img src="${e.target.result}" alt="Preview ${index + 1}">
+          <button type="button" class="remove-btn" onclick="removeImage(${index})">
+            <i data-lucide="x"></i>
+          </button>
+        `;
+        previewContainer.appendChild(previewItem);
+        lucide.createIcons();
+      };
+      reader.readAsDataURL(file);
+    });
+  });
+
+  function removeImage(index) {
+    const dt = new DataTransfer();
+    const files = fileInput.files;
+
+    for (let i = 0; i < files.length; i++) {
+      if (i !== index) {
+        dt.items.add(files[i]);
+      }
+    }
+
+    fileInput.files = dt.files;
+    fileInput.dispatchEvent(new Event('change'));
+  }
+</script>
