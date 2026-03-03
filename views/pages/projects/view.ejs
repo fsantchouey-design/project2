@@ -170,7 +170,7 @@
       <div class="sidebar-card">
         <h3>Share Project</h3>
         <div class="share-link">
-          <input type="text" value="<%= process.env.APP_URL || 'http://localhost:3000' %>/projects/share/<%= project.shareToken %>" readonly class="form-input" id="share-url">
+          <input type="text" value="<%= process.env.APP_URL || 'https://craftycrib.com' %>/projects/share/<%= project.shareToken %>" readonly class="form-input" id="share-url">
           <button class="btn btn-secondary" onclick="copyShareLink()">
             <i data-lucide="copy"></i>
           </button>

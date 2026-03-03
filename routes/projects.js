@@ -333,7 +333,7 @@ router.post('/:id/generate', ensureAuthenticated, async (req, res) => {
     let imageUrl = project.originalImages[0].url;
     
     if (imageUrl.startsWith('/')) {
-      imageUrl = `${process.env.APP_URL || 'http://localhost:3000'}${imageUrl}`;
+      imageUrl = `${process.env.APP_URL || 'https://craftycrib.com'}${imageUrl}`;
     }
 
     console.log('[Generate] Starting for project:', project._id, 'Image URL:', imageUrl.substring(0, 80));

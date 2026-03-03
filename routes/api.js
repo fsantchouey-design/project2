@@ -54,7 +54,7 @@ router.post('/generate', ensureAuthenticated, async (req, res) => {
     let imageUrl = project.originalImages[0].url;
     // If it's a local URL, construct full URL (for AI API to access)
     if (imageUrl.startsWith('/')) {
-      imageUrl = `${process.env.APP_URL || 'http://localhost:3000'}${imageUrl}`;
+      imageUrl = `${process.env.APP_URL || 'https://craftycrib.com'}${imageUrl}`;
     }
 
     const result = await generateDesign({
