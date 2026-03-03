@@ -191,6 +191,17 @@ router.put('/:id', ensureAuthenticated, upload.array('images', 5), async (req, r
       style,
       budgetMin,
       budgetMax,
+      length,
+      width,
+      height,
+      colors,
+      materials,
+      mustHave,
+      mustAvoid,
+      priorityQuality,
+      priorityPrice,
+      prioritySpeed,
+      isDIY,
       visibility
     } = req.body;
 
@@ -200,6 +211,23 @@ router.put('/:id', ensureAuthenticated, upload.array('images', 5), async (req, r
     project.style = style || undefined;
     project.budget.min = budgetMin ? parseFloat(budgetMin) : undefined;
     project.budget.max = budgetMax ? parseFloat(budgetMax) : undefined;
+    project.dimensions = {
+      length: length ? parseFloat(length) : undefined,
+      width: width ? parseFloat(width) : undefined,
+      height: height ? parseFloat(height) : undefined
+    };
+    project.preferences = {
+      colors: colors ? colors.split(',').map(c => c.trim()).filter(Boolean) : [],
+      materials: materials ? materials.split(',').map(m => m.trim()).filter(Boolean) : [],
+      mustHave: mustHave ? mustHave.split(',').map(m => m.trim()).filter(Boolean) : [],
+      mustAvoid: mustAvoid ? mustAvoid.split(',').map(m => m.trim()).filter(Boolean) : []
+    };
+    project.priorities = {
+      quality: priorityQuality ? parseInt(priorityQuality) : 3,
+      price: priorityPrice ? parseInt(priorityPrice) : 3,
+      speed: prioritySpeed ? parseInt(prioritySpeed) : 3
+    };
+    project.isDIY = isDIY === 'on';
     project.visibility = visibility;
 
     // Add new images if uploaded (works with both Cloudinary and local storage)

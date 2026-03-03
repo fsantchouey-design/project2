@@ -8,7 +8,9 @@
     <p class="text-muted">Update your project details</p>
   </div>
 
-  <form action="/projects/<%= project._id %>?_method=PUT" method="POST" enctype="multipart/form-data" class="project-form">
+  <form action="/projects/<%= project._id %>" method="POST" enctype="multipart/form-data" class="project-form">
+    <input type="hidden" name="_method" value="PUT">
+
     <!-- Step 1: Basic Info -->
     <div class="form-section">
       <h2><span class="step-num">1</span> Project Details</h2>
@@ -97,17 +99,111 @@
       </div>
     </div>
 
-    <!-- Step 4: Visibility -->
+    <!-- Step 4: Dimensions -->
     <div class="form-section">
-      <h2><span class="step-num">4</span> Visibility</h2>
+      <h2><span class="step-num">4</span> Room Dimensions (Optional)</h2>
 
-      <div class="form-group">
-        <label class="form-label">Who can see this project?</label>
-        <select name="visibility" class="form-select">
-          <option value="private" <%= project.visibility === 'private' ? 'selected' : '' %>>Private - Only me</option>
-          <option value="contractors" <%= project.visibility === 'contractors' ? 'selected' : '' %>>Contractors - Visible to contractors</option>
-          <option value="public" <%= project.visibility === 'public' ? 'selected' : '' %>>Public - Anyone can see</option>
-        </select>
+      <div class="form-row-3">
+        <div class="form-group">
+          <label class="form-label">Length (m)</label>
+          <input type="number" name="length" class="form-input" placeholder="4.5" step="0.1" min="0" value="<%= project.dimensions && project.dimensions.length ? project.dimensions.length : '' %>">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Width (m)</label>
+          <input type="number" name="width" class="form-input" placeholder="3.5" step="0.1" min="0" value="<%= project.dimensions && project.dimensions.width ? project.dimensions.width : '' %>">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Height (m)</label>
+          <input type="number" name="height" class="form-input" placeholder="2.7" step="0.1" min="0" value="<%= project.dimensions && project.dimensions.height ? project.dimensions.height : '' %>">
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 5: Preferences -->
+    <div class="form-section">
+      <h2><span class="step-num">5</span> Preferences (Optional)</h2>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Preferred Colors</label>
+          <input type="text" name="colors" class="form-input" placeholder="White, Gray, Wood tones" value="<%= project.preferences && project.preferences.colors ? project.preferences.colors.join(', ') : '' %>">
+          <p class="form-hint">Separate with commas</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Preferred Materials</label>
+          <input type="text" name="materials" class="form-input" placeholder="Marble, Oak, Brass" value="<%= project.preferences && project.preferences.materials ? project.preferences.materials.join(', ') : '' %>">
+          <p class="form-hint">Separate with commas</p>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Must Have</label>
+          <input type="text" name="mustHave" class="form-input" placeholder="Island, Pendant lights" value="<%= project.preferences && project.preferences.mustHave ? project.preferences.mustHave.join(', ') : '' %>">
+          <p class="form-hint">Essential elements for your design</p>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Must Avoid</label>
+          <input type="text" name="mustAvoid" class="form-input" placeholder="Carpet, Dark colors" value="<%= project.preferences && project.preferences.mustAvoid ? project.preferences.mustAvoid.join(', ') : '' %>">
+          <p class="form-hint">Elements you don't want</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Step 6: Priorities -->
+    <div class="form-section">
+      <h2><span class="step-num">6</span> Priorities</h2>
+
+      <div class="priority-sliders">
+        <div class="priority-item">
+          <label>Quality</label>
+          <input type="range" name="priorityQuality" min="1" max="5" value="<%= project.priorities && project.priorities.quality ? project.priorities.quality : 3 %>" class="priority-slider">
+          <span class="priority-labels"><span>Budget</span><span>Premium</span></span>
+        </div>
+
+        <div class="priority-item">
+          <label>Price Focus</label>
+          <input type="range" name="priorityPrice" min="1" max="5" value="<%= project.priorities && project.priorities.price ? project.priorities.price : 3 %>" class="priority-slider">
+          <span class="priority-labels"><span>Flexible</span><span>Strict</span></span>
+        </div>
+
+        <div class="priority-item">
+          <label>Timeline</label>
+          <input type="range" name="prioritySpeed" min="1" max="5" value="<%= project.priorities && project.priorities.speed ? project.priorities.speed : 3 %>" class="priority-slider">
+          <span class="priority-labels"><span>Relaxed</span><span>Urgent</span></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DIY + Visibility -->
+    <div class="form-section">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Visibility</label>
+          <select name="visibility" class="form-select">
+            <option value="private" <%= project.visibility === 'private' ? 'selected' : '' %>>Private - Only me</option>
+            <option value="contractors" <%= project.visibility === 'contractors' ? 'selected' : '' %>>Contractors - Visible to contractors</option>
+            <option value="public" <%= project.visibility === 'public' ? 'selected' : '' %>>Public - Anyone can see</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">&nbsp;</label>
+          <div class="diy-option">
+            <input type="checkbox" name="isDIY" id="isDIY" <%= project.isDIY ? 'checked' : '' %>>
+            <label for="isDIY">
+              <div class="diy-icon"><i data-lucide="hammer"></i></div>
+              <div>
+                <strong>DIY Project</strong>
+                <p>I plan to do this myself</p>
+              </div>
+            </label>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -204,6 +300,12 @@
   .form-row {
     display: grid;
     grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-lg);
+  }
+
+  .form-row-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: var(--spacing-lg);
   }
 
@@ -307,6 +409,102 @@
     height: 14px;
   }
 
+  /* Priority Sliders */
+  .priority-sliders {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+  }
+
+  .priority-item label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .priority-slider {
+    width: 100%;
+    height: 8px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-full);
+    outline: none;
+    -webkit-appearance: none;
+  }
+
+  .priority-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: var(--accent-gradient);
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  .priority-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: var(--spacing-xs);
+  }
+
+  /* DIY Option */
+  .diy-option {
+    display: flex;
+    align-items: center;
+  }
+
+  .diy-option input[type="checkbox"] {
+    display: none;
+  }
+
+  .diy-option label {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    width: 100%;
+  }
+
+  .diy-option input:checked + label {
+    border-color: var(--accent-primary);
+    background: rgba(0, 255, 136, 0.05);
+  }
+
+  .diy-icon {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-tertiary);
+    border-radius: var(--radius-md);
+    color: var(--text-muted);
+    flex-shrink: 0;
+  }
+
+  .diy-option input:checked + label .diy-icon {
+    background: var(--accent-gradient);
+    color: #000;
+  }
+
+  .diy-option strong {
+    display: block;
+    font-size: 0.9rem;
+    margin-bottom: 2px;
+  }
+
+  .diy-option p {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin: 0;
+  }
+
   /* Form Actions */
   .form-actions {
     display: flex;
@@ -316,7 +514,8 @@
   }
 
   @media (max-width: 768px) {
-    .form-row {
+    .form-row,
+    .form-row-3 {
       grid-template-columns: 1fr;
     }
   }

@@ -186,7 +186,7 @@ const generateDesign = async (options) => {
       contentType: 'image/jpeg'
     });
     formData.append('design_type', mode);
-    formData.append('ai_intervention', 'Mid');
+    formData.append('ai_intervention', prompt ? 'High' : 'Mid');
     formData.append('no_design', '1');
     formData.append('design_style', apiStyle);
     if (mode === 'Interior') {
