@@ -185,18 +185,21 @@ const generateDesign = async (options) => {
       filename: 'room.jpg',
       contentType: 'image/jpeg'
     });
+    const hasPrompt = prompt && prompt.trim().length > 0;
+
     formData.append('design_type', mode);
-    formData.append('ai_intervention', prompt ? 'High' : 'Mid');
+    formData.append('ai_intervention', hasPrompt ? 'Extreme' : 'Mid');
+    formData.append('keep_structural_element', hasPrompt ? 'false' : 'true');
     formData.append('no_design', '1');
     formData.append('design_style', apiStyle);
     if (mode === 'Interior') {
       formData.append('room_type', apiRoomType);
     }
-    if (prompt) {
-      formData.append('prompt', prompt);
+    if (hasPrompt) {
+      formData.append('prompt', prompt.trim());
     }
 
-    console.log('[HomeDesigns] Sending request to API...', { apiStyle, apiRoomType, prompt: prompt ? prompt.substring(0, 100) : 'none' });
+    console.log('[HomeDesigns] Sending request to API...', { apiStyle, apiRoomType, hasPrompt, prompt: hasPrompt ? prompt.substring(0, 100) : 'none' });
 
     const result = await submitToApi(`${API_URL}/beautiful_redesign`, formData);
 
