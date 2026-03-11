@@ -3,7 +3,7 @@ const router = express.Router();
 const crypto = require('crypto');
 const { ensureAuthenticated, ensureProjectOwner } = require('../middleware/auth');
 const Project = require('../models/Project');
-const { generateDesign, getStyles, getRoomTypes } = require('../utils/homedesigns');
+const { generateDesign, changeColorTextures, getStyles, getRoomTypes } = require('../utils/homedesigns');
 const { uploadProjectImages, deleteImage, getImageUrl, isCloudinaryConfigured } = require('../config/cloudinary');
 
 // Use Cloudinary storage for uploads (or local fallback)
@@ -434,6 +434,82 @@ router.post('/:id/generate', ensureAuthenticated, async (req, res) => {
     }
   } catch (err) {
     console.error('[Generate] Unexpected error:', err);
+    res.status(500).json({ success: false, error: 'An unexpected error occurred: ' + err.message });
+  }
+});
+
+// Change Colors/Textures (requires mask from frontend)
+router.post('/:id/change-colors', ensureAuthenticated, async (req, res) => {
+  try {
+    const project = await Project.findOne({
+      _id: req.params.id,
+      user: req.user.id
+    });
+
+    if (!project) {
+      return res.status(404).json({ success: false, error: 'Project not found' });
+    }
+
+    if (!project.originalImages || project.originalImages.length === 0) {
+      return res.status(400).json({ success: false, error: 'Please upload at least one image first' });
+    }
+
+    const { maskBase64, prompt, color, materials, materialsType, object } = req.body;
+
+    if (!maskBase64) {
+      return res.status(400).json({ success: false, error: 'Please paint the areas you want to change' });
+    }
+
+    project.status = 'generating';
+    await project.save();
+
+    let imageUrl = project.originalImages[0].url;
+    if (imageUrl.startsWith('/')) {
+      imageUrl = `${process.env.APP_URL || 'https://craftycrib.com'}${imageUrl}`;
+    }
+
+    console.log('[ChangeColors] Starting for project:', project._id);
+
+    const result = await changeColorTextures({
+      imageUrl,
+      maskBase64,
+      prompt: prompt || undefined,
+      color: color || undefined,
+      materials: materials || undefined,
+      materialsType: materialsType || undefined,
+      object: object || undefined,
+      mode: 'Interior'
+    });
+
+    console.log('[ChangeColors] Result:', result.success ? 'SUCCESS' : 'FAILED', result.success ? '' : result.error);
+
+    if (result.success) {
+      project.designVariants.push({
+        name: `Color Change${color ? ' - ' + color : ''}`,
+        style: project.style,
+        imageUrl: result.imageUrl,
+        thumbnailUrl: result.thumbnailUrl,
+        aiParameters: { type: 'color-change', prompt, color, materials, object }
+      });
+
+      project.status = 'completed';
+      await project.save();
+
+      res.json({
+        success: true,
+        design: project.designVariants[project.designVariants.length - 1]
+      });
+    } else {
+      project.status = 'draft';
+      await project.save();
+
+      res.status(500).json({
+        success: false,
+        error: result.error || 'Failed to change colors'
+      });
+    }
+  } catch (err) {
+    console.error('[ChangeColors] Unexpected error:', err);
     res.status(500).json({ success: false, error: 'An unexpected error occurred: ' + err.message });
   }
 });

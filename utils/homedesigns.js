@@ -309,6 +309,106 @@ const getRoomTypes = () => {
 };
 
 /**
+ * Change colors/textures of specific areas using Colors & Textures API
+ * Requires a mask image (white = areas to change, black = keep)
+ */
+const changeColorTextures = async (options) => {
+  const {
+    imageUrl,
+    maskBase64,
+    prompt,
+    color,
+    materials,
+    materialsType,
+    object,
+    mode = 'Interior'
+  } = options;
+
+  try {
+    if (!API_TOKEN) {
+      throw new Error('HomeDesigns API token is not configured.');
+    }
+
+    console.log('[ColorTextures] Starting:', { prompt, color, materials, object, mode });
+
+    const imageBuffer = await downloadImage(imageUrl);
+    console.log('[ColorTextures] Image downloaded:', imageBuffer.length, 'bytes');
+
+    // Decode base64 mask to buffer
+    const maskBuffer = Buffer.from(maskBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+    console.log('[ColorTextures] Mask size:', maskBuffer.length, 'bytes');
+
+    const formData = new FormData();
+    formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
+    formData.append('masked_image', maskBuffer, { filename: 'mask.png', contentType: 'image/png' });
+    formData.append('design_type', mode);
+    formData.append('no_design', '1');
+
+    if (prompt && prompt.trim().length > 0) {
+      formData.append('prompt', prompt.trim());
+    }
+    if (color) {
+      formData.append('color', color);
+    }
+    if (materials) {
+      formData.append('materials', materials);
+    }
+    if (materialsType) {
+      formData.append('materials_type', materialsType);
+    }
+    if (object) {
+      formData.append('object', object);
+    }
+
+    console.log('[ColorTextures] Sending request to API...');
+
+    const result = await submitToApi(`${API_URL}/change_color_textures`, formData);
+
+    console.log('[ColorTextures] API response status:', result.statusCode);
+    console.log('[ColorTextures] API response body:', result.body.substring(0, 300));
+
+    if (result.statusCode !== 200) {
+      if (result.statusCode === 422) {
+        try {
+          const errors = JSON.parse(result.body).error;
+          const messages = Object.values(errors).flat();
+          throw new Error(messages[0]);
+        } catch (e) {
+          if (e.message) throw e;
+        }
+      }
+      throw new Error(`API request failed: ${result.statusCode} - ${result.body.substring(0, 200)}`);
+    }
+
+    const data = JSON.parse(result.body);
+
+    if (data.success && data.success.generated_image) {
+      const outputUrl = data.success.generated_image[0];
+      console.log('[ColorTextures] Generated (sync):', outputUrl.substring(0, 80));
+      return { success: true, imageUrl: outputUrl, thumbnailUrl: outputUrl };
+    }
+
+    if (data.output_images && data.output_images.length > 0) {
+      const outputUrl = data.output_images[0];
+      console.log('[ColorTextures] Generated (direct):', outputUrl.substring(0, 80));
+      return { success: true, imageUrl: outputUrl, thumbnailUrl: outputUrl };
+    }
+
+    if (data.queue_id) {
+      console.log('[ColorTextures] Got queue_id:', data.queue_id);
+      const pollResult = await pollForResult(data.queue_id);
+      if (pollResult) return pollResult;
+      throw new Error('Color change timed out. Please try again.');
+    }
+
+    throw new Error('Unexpected API response: ' + JSON.stringify(data).substring(0, 200));
+  } catch (error) {
+    console.error('[ColorTextures] Error:', error.message);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
  * Check API credits balance
  */
 const checkCredits = async () => {
@@ -336,6 +436,7 @@ const checkCredits = async () => {
 
 module.exports = {
   generateDesign,
+  changeColorTextures,
   getStyles,
   getRoomTypes,
   checkCredits

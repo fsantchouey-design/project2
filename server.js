@@ -27,8 +27,8 @@ app.set('views', path.join(__dirname, 'views'));
 app.set('layout', 'layouts/main');
 
 // Body Parser
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+app.use(express.urlencoded({ extended: true, limit: '20mb' }));
+app.use(express.json({ limit: '20mb' }));
 
 // Method Override for PUT/DELETE
 app.use(methodOverride('_method'));

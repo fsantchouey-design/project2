@@ -14,6 +14,12 @@
           <i data-lucide="edit"></i>
           Edit
         </a>
+        <% if (project.originalImages && project.originalImages.length > 0) { %>
+          <button class="btn btn-secondary" onclick="openColorChanger()" id="color-btn">
+            <i data-lucide="palette"></i>
+            Change Colors
+          </button>
+        <% } %>
         <button class="btn btn-primary" onclick="generateDesign()" id="generate-btn">
           <i data-lucide="sparkles"></i>
           Generate Design
@@ -213,6 +219,91 @@
     </div>
   </div>
 </div>
+
+<!-- Color Changer Modal -->
+<% if (project.originalImages && project.originalImages.length > 0) { %>
+<div class="color-modal" id="color-modal">
+  <div class="color-modal-content">
+    <div class="color-modal-header">
+      <h2>Change Colors & Textures</h2>
+      <button class="close-modal-btn" onclick="closeColorChanger()"><i data-lucide="x"></i></button>
+    </div>
+    <p class="color-modal-hint">Paint over the areas you want to change (walls, floor, etc.), then choose a color.</p>
+
+    <div class="color-modal-body">
+      <div class="canvas-container">
+        <canvas id="mask-canvas"></canvas>
+      </div>
+
+      <div class="color-controls">
+        <div class="control-group">
+          <label>Brush Size</label>
+          <input type="range" id="brush-size" min="5" max="80" value="30">
+        </div>
+
+        <div class="control-group">
+          <label>What to change</label>
+          <select id="cc-object" class="form-select">
+            <option value="wall">Wall</option>
+            <option value="floor">Floor</option>
+            <option value="ceiling">Ceiling</option>
+            <option value="furniture">Furniture</option>
+            <option value="door">Door</option>
+            <option value="window">Window</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label>Color</label>
+          <select id="cc-color" class="form-select">
+            <option value="">Custom (use prompt)</option>
+            <option value="White">White</option>
+            <option value="Off White">Off White</option>
+            <option value="Cream">Cream</option>
+            <option value="Beige">Beige</option>
+            <option value="Light Gray">Light Gray</option>
+            <option value="Medium Gray">Medium Gray</option>
+            <option value="Charcoal Black">Charcoal Black</option>
+            <option value="Taupe">Taupe</option>
+            <option value="Light Brown">Light Brown</option>
+            <option value="Navy Blue">Navy Blue</option>
+            <option value="Forest Green">Forest Green</option>
+            <option value="Burgundy">Burgundy</option>
+            <option value="Terracotta">Terracotta</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label>Material (optional)</label>
+          <select id="cc-materials" class="form-select">
+            <option value="">None</option>
+            <option value="Wood">Wood</option>
+            <option value="Stone">Stone</option>
+            <option value="Metal">Metal</option>
+            <option value="Glass">Glass</option>
+            <option value="Fabrics">Fabrics</option>
+            <option value="Ceramics and Porcelain">Ceramics</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label>Instructions (optional)</label>
+          <input type="text" id="cc-prompt" class="form-input" placeholder="e.g., Dark matte finish">
+        </div>
+
+        <div class="color-actions">
+          <button class="btn btn-ghost" onclick="clearMask()">
+            <i data-lucide="eraser"></i> Clear
+          </button>
+          <button class="btn btn-primary" onclick="submitColorChange()" id="cc-submit-btn">
+            <i data-lucide="palette"></i> Apply Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<% } %>
 
 <!-- Fullscreen Modal -->
 <div class="fullscreen-modal" id="fullscreen-modal" onclick="closeFullscreen()">
@@ -620,6 +711,118 @@
     text-transform: capitalize;
   }
   
+  /* Color Changer Modal */
+  .color-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.85);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9998;
+    padding: var(--spacing-lg);
+  }
+
+  .color-modal.active {
+    display: flex;
+  }
+
+  .color-modal-content {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    max-width: 1100px;
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    padding: var(--spacing-xl);
+  }
+
+  .color-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .color-modal-header h2 {
+    font-size: 1.4rem;
+    margin: 0;
+  }
+
+  .close-modal-btn {
+    background: var(--bg-secondary);
+    border: none;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    color: var(--text-primary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .color-modal-hint {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .color-modal-body {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    gap: var(--spacing-xl);
+  }
+
+  .canvas-container {
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    position: relative;
+    background: #000;
+  }
+
+  .canvas-container canvas {
+    width: 100%;
+    display: block;
+    cursor: crosshair;
+  }
+
+  .color-controls {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+  }
+
+  .control-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+  }
+
+  .control-group label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-muted);
+  }
+
+  .color-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-top: auto;
+    padding-top: var(--spacing-md);
+  }
+
+  .color-actions .btn {
+    flex: 1;
+  }
+
+  @media (max-width: 768px) {
+    .color-modal-body {
+      grid-template-columns: 1fr;
+    }
+  }
+
   /* Fullscreen Modal */
   .fullscreen-modal {
     position: fixed;
@@ -903,7 +1106,182 @@
   }
   
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') closeFullscreen();
+    if (e.key === 'Escape') {
+      closeFullscreen();
+      closeColorChanger();
+    }
   });
+
+  // === Color Changer / Mask Painter ===
+  <% if (project.originalImages && project.originalImages.length > 0) { %>
+  let maskCanvas, maskCtx, painting = false;
+  let bgImage = null;
+
+  function openColorChanger() {
+    const modal = document.getElementById('color-modal');
+    modal.classList.add('active');
+    lucide.createIcons();
+    initMaskCanvas();
+  }
+
+  function closeColorChanger() {
+    const modal = document.getElementById('color-modal');
+    if (modal) modal.classList.remove('active');
+  }
+
+  function initMaskCanvas() {
+    maskCanvas = document.getElementById('mask-canvas');
+    maskCtx = maskCanvas.getContext('2d');
+
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = function() {
+      // Scale canvas to fit container while keeping aspect ratio
+      const container = maskCanvas.parentElement;
+      const maxW = container.clientWidth;
+      const scale = Math.min(maxW / img.width, 600 / img.height);
+      maskCanvas.width = img.width * scale;
+      maskCanvas.height = img.height * scale;
+
+      bgImage = img;
+      drawBackground();
+    };
+    img.src = '<%= project.originalImages[0].url %>';
+
+    // Drawing events
+    maskCanvas.addEventListener('mousedown', startPaint);
+    maskCanvas.addEventListener('mousemove', paint);
+    maskCanvas.addEventListener('mouseup', stopPaint);
+    maskCanvas.addEventListener('mouseleave', stopPaint);
+
+    // Touch support
+    maskCanvas.addEventListener('touchstart', (e) => { e.preventDefault(); startPaint(getTouchPos(e)); });
+    maskCanvas.addEventListener('touchmove', (e) => { e.preventDefault(); paint(getTouchPos(e)); });
+    maskCanvas.addEventListener('touchend', stopPaint);
+  }
+
+  function getTouchPos(e) {
+    const rect = maskCanvas.getBoundingClientRect();
+    const touch = e.touches[0];
+    return { offsetX: touch.clientX - rect.left, offsetY: touch.clientY - rect.top };
+  }
+
+  function drawBackground() {
+    maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+    maskCtx.drawImage(bgImage, 0, 0, maskCanvas.width, maskCanvas.height);
+  }
+
+  // Store mask strokes separately
+  let maskStrokes = [];
+  let currentStroke = [];
+
+  function startPaint(e) {
+    painting = true;
+    currentStroke = [];
+    paint(e);
+  }
+
+  function paint(e) {
+    if (!painting) return;
+    const brushSize = parseInt(document.getElementById('brush-size').value);
+    const x = e.offsetX;
+    const y = e.offsetY;
+    currentStroke.push({ x, y, size: brushSize });
+
+    // Draw semi-transparent overlay on the visible canvas
+    maskCtx.globalAlpha = 0.4;
+    maskCtx.fillStyle = '#00ff88';
+    maskCtx.beginPath();
+    maskCtx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
+    maskCtx.fill();
+    maskCtx.globalAlpha = 1.0;
+  }
+
+  function stopPaint() {
+    if (painting && currentStroke.length > 0) {
+      maskStrokes.push([...currentStroke]);
+    }
+    painting = false;
+    currentStroke = [];
+  }
+
+  function clearMask() {
+    maskStrokes = [];
+    if (bgImage) drawBackground();
+  }
+
+  function generateMaskBase64() {
+    // Create a separate canvas for the mask (white on black)
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = maskCanvas.width;
+    tempCanvas.height = maskCanvas.height;
+    const ctx = tempCanvas.getContext('2d');
+
+    // Fill black (areas to keep)
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+
+    // Draw white circles where user painted (areas to change)
+    ctx.fillStyle = '#ffffff';
+    maskStrokes.forEach(stroke => {
+      stroke.forEach(point => {
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, point.size / 2, 0, Math.PI * 2);
+        ctx.fill();
+      });
+    });
+
+    return tempCanvas.toDataURL('image/png');
+  }
+
+  async function submitColorChange() {
+    if (maskStrokes.length === 0) {
+      showNotification('Please paint over the areas you want to change first', 'error');
+      return;
+    }
+
+    const btn = document.getElementById('cc-submit-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Processing...';
+
+    try {
+      const maskBase64 = generateMaskBase64();
+      const prompt = document.getElementById('cc-prompt').value;
+      const color = document.getElementById('cc-color').value;
+      const materials = document.getElementById('cc-materials').value;
+      const object = document.getElementById('cc-object').value;
+
+      const response = await fetch(`/projects/${projectId}/change-colors`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ maskBase64, prompt, color, materials, object })
+      });
+
+      const contentType = response.headers.get('content-type');
+      if (!contentType || !contentType.includes('application/json')) {
+        throw new Error('Server returned an unexpected response');
+      }
+
+      const data = await response.json();
+
+      if (data.success) {
+        showNotification('Colors changed successfully!');
+        closeColorChanger();
+        setTimeout(() => window.location.reload(), 1000);
+      } else {
+        showNotification(data.error || 'Failed to change colors', 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<i data-lucide="palette"></i> Apply Changes';
+        lucide.createIcons();
+      }
+    } catch (err) {
+      console.error('Color change error:', err);
+      showNotification(err.message || 'An error occurred', 'error');
+      btn.disabled = false;
+      btn.innerHTML = '<i data-lucide="palette"></i> Apply Changes';
+      lucide.createIcons();
+    }
+  }
+  <% } %>
 </script>
 
