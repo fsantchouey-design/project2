@@ -460,6 +460,16 @@ router.post('/:id/change-colors', ensureAuthenticated, async (req, res) => {
       return res.status(400).json({ success: false, error: 'Please paint the areas you want to change' });
     }
 
+    // Auto-derive materialsType from object if materials is set but materialsType isn't
+    const objectToMaterialType = {
+      wall: 'Wall Material', floor: 'Floor Material', ceiling: 'Ceiling Material',
+      furniture: 'Furniture Material', door: 'Door Material', window: 'Window Material'
+    };
+    let resolvedMaterialsType = materialsType;
+    if (materials && !materialsType && object) {
+      resolvedMaterialsType = objectToMaterialType[object] || 'Wall Material';
+    }
+
     project.status = 'generating';
     await project.save();
 
@@ -468,7 +478,7 @@ router.post('/:id/change-colors', ensureAuthenticated, async (req, res) => {
       imageUrl = `${process.env.APP_URL || 'https://craftycrib.com'}${imageUrl}`;
     }
 
-    console.log('[ChangeColors] Starting for project:', project._id);
+    console.log('[ChangeColors] Starting for project:', project._id, { color, materials, materialsType: resolvedMaterialsType, object });
 
     const result = await changeColorTextures({
       imageUrl,
@@ -476,7 +486,7 @@ router.post('/:id/change-colors', ensureAuthenticated, async (req, res) => {
       prompt: prompt || undefined,
       color: color || undefined,
       materials: materials || undefined,
-      materialsType: materialsType || undefined,
+      materialsType: resolvedMaterialsType || undefined,
       object: object || undefined,
       mode: 'Interior'
     });

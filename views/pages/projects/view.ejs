@@ -286,6 +286,18 @@
           </select>
         </div>
 
+        <div class="control-group" id="cc-materials-type-group" style="display:none;">
+          <label>Material Type</label>
+          <select id="cc-materials-type" class="form-select">
+            <option value="Wall Material">Wall Material</option>
+            <option value="Floor Material">Floor Material</option>
+            <option value="Ceiling Material">Ceiling Material</option>
+            <option value="Furniture Material">Furniture Material</option>
+            <option value="Door Material">Door Material</option>
+            <option value="Window Material">Window Material</option>
+          </select>
+        </div>
+
         <div class="control-group">
           <label>Instructions (optional)</label>
           <input type="text" id="cc-prompt" class="form-input" placeholder="e.g., Dark matte finish">
@@ -1117,11 +1129,38 @@
   let maskCanvas, maskCtx, painting = false;
   let bgImage = null;
 
+  const objectToMaterialType = {
+    wall: 'Wall Material',
+    floor: 'Floor Material',
+    ceiling: 'Ceiling Material',
+    furniture: 'Furniture Material',
+    door: 'Door Material',
+    window: 'Window Material'
+  };
+
   function openColorChanger() {
     const modal = document.getElementById('color-modal');
     modal.classList.add('active');
     lucide.createIcons();
     initMaskCanvas();
+
+    // Show/hide materials_type based on material selection
+    document.getElementById('cc-materials').addEventListener('change', function() {
+      document.getElementById('cc-materials-type-group').style.display = this.value ? 'block' : 'none';
+    });
+
+    // Sync materials_type with object selector
+    document.getElementById('cc-object').addEventListener('change', function() {
+      const mtSelect = document.getElementById('cc-materials-type');
+      const mapped = objectToMaterialType[this.value];
+      if (mapped) mtSelect.value = mapped;
+    });
+
+    // Set initial materials_type from current object
+    const initObj = document.getElementById('cc-object').value;
+    if (objectToMaterialType[initObj]) {
+      document.getElementById('cc-materials-type').value = objectToMaterialType[initObj];
+    }
   }
 
   function closeColorChanger() {
@@ -1249,12 +1288,13 @@
       const prompt = document.getElementById('cc-prompt').value;
       const color = document.getElementById('cc-color').value;
       const materials = document.getElementById('cc-materials').value;
+      const materialsType = document.getElementById('cc-materials-type').value;
       const object = document.getElementById('cc-object').value;
 
       const response = await fetch(`/projects/${projectId}/change-colors`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ maskBase64, prompt, color, materials, object })
+        body: JSON.stringify({ maskBase64, prompt, color, materials, materialsType: materials ? materialsType : undefined, object })
       });
 
       const contentType = response.headers.get('content-type');

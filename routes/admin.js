@@ -5,29 +5,19 @@ const SpecialistsConfig = require('../models/SpecialistsConfig');
 const {
   uploadLandingImages,
   getLandingImageUrl,
-  deleteImage
+  deleteImage,
+  uploadVideo,
+  deleteVideo,
+  getVideoUrl,
+  getVideoPublicId,
+  isCloudinaryConfigured
 } = require('../config/cloudinary');
 const {
   getLandingDefaultByKey,
   mergeLandingAssetsForAdmin
 } = require('../utils/landingAssets');
 const { mergeSpecialistsConfig, defaultSpecialistsConfig } = require('../utils/specialistsConfig');
-const multer = require('multer');
 const path = require('path');
-
-// Video upload configuration (used for gallery video AND specialists video)
-const videoStorage = multer.diskStorage({
-  destination: (req, file, cb) => cb(null, 'public/uploads/landing'),
-  filename: (req, file, cb) => cb(null, 'gallery-video-' + Date.now() + path.extname(file.originalname))
-});
-const uploadVideo = multer({
-  storage: videoStorage,
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
-  fileFilter: (req, file, cb) => {
-    const ok = /mp4|webm|mov|avi/.test(path.extname(file.originalname).toLowerCase());
-    cb(ok ? null : new Error('Video files only'), ok);
-  }
-});
 const PricingConfig = require('../models/PricingConfig');
 const { mergePricingConfig, defaultPricingConfig } = require('../utils/pricingConfig');
 
@@ -200,19 +190,11 @@ router.post('/specialists/video', uploadVideo.single('video'), async (req, res) 
     if (req.file) {
       // Delete old video if exists
       if (config.videoPublicId) {
-        try {
-          const fs = require('fs');
-          const oldPath = path.join(__dirname, '..', 'public', 'uploads', 'landing', config.videoPublicId);
-          if (fs.existsSync(oldPath)) {
-            fs.unlinkSync(oldPath);
-          }
-        } catch (deleteErr) {
-          console.error('Error deleting old video:', deleteErr);
-        }
+        await deleteVideo(config.videoPublicId);
       }
 
-      config.videoUrl = '/uploads/landing/' + req.file.filename;
-      config.videoPublicId = req.file.filename;
+      config.videoUrl = getVideoUrl(req.file);
+      config.videoPublicId = getVideoPublicId(req.file);
       config.mediaType = 'video';
     }
 
@@ -233,15 +215,7 @@ router.post('/specialists/video/delete', async (req, res) => {
   try {
     const config = await SpecialistsConfig.findOne({});
     if (config && config.videoPublicId) {
-      try {
-        const fs = require('fs');
-        const videoPath = path.join(__dirname, '..', 'public', 'uploads', 'landing', config.videoPublicId);
-        if (fs.existsSync(videoPath)) {
-          fs.unlinkSync(videoPath);
-        }
-      } catch (deleteErr) {
-        console.error('Error deleting video file:', deleteErr);
-      }
+      await deleteVideo(config.videoPublicId);
 
       config.videoUrl = '';
       config.videoPublicId = '';
@@ -318,8 +292,12 @@ router.post('/video', uploadVideo.single('video'), async (req, res) => {
     if (!gv) gv = new GalleryVideo();
 
     if (req.file) {
-      gv.url = '/uploads/landing/' + req.file.filename;
-      gv.publicId = req.file.filename;
+      // Delete old video from Cloudinary if exists
+      if (gv.publicId) {
+        await deleteVideo(gv.publicId);
+      }
+      gv.url = getVideoUrl(req.file);
+      gv.publicId = getVideoPublicId(req.file);
     }
     gv.updatedAt = new Date();
     await gv.save();
@@ -335,6 +313,10 @@ router.post('/video', uploadVideo.single('video'), async (req, res) => {
 
 router.post('/video/delete', async (req, res) => {
   try {
+    const gv = await GalleryVideo.findOne({});
+    if (gv && gv.publicId) {
+      await deleteVideo(gv.publicId);
+    }
     await GalleryVideo.deleteMany({});
     req.flash('success_msg', 'Gallery video removed. Image fallback will be used.');
     res.redirect('/admin/video');

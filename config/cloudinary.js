@@ -95,6 +95,68 @@ const cloudinaryAvatarStorage = isCloudinaryConfigured ? new CloudinaryStorage({
   }
 }) : null;
 
+// Cloudinary video storage
+const cloudinaryVideoStorage = isCloudinaryConfigured ? new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: 'craftycrib/videos',
+    resource_type: 'video',
+    allowed_formats: ['mp4', 'webm', 'mov', 'avi'],
+  }
+}) : null;
+
+// Local video storage fallback
+const localVideoStorage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    ensureDir('public/uploads/landing');
+    cb(null, 'public/uploads/landing');
+  },
+  filename: (req, file, cb) => {
+    cb(null, 'gallery-video-' + Date.now() + path.extname(file.originalname));
+  }
+});
+
+// Video file filter
+const videoFilter = (req, file, cb) => {
+  const ok = /mp4|webm|mov|avi/.test(path.extname(file.originalname).toLowerCase());
+  cb(ok ? null : new Error('Video files only (MP4, WebM, MOV, AVI)'), ok);
+};
+
+// Video upload instance
+const uploadVideo = multer({
+  storage: isCloudinaryConfigured ? cloudinaryVideoStorage : localVideoStorage,
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
+  fileFilter: videoFilter
+});
+
+// Helper to get video URL
+const getVideoUrl = (file) => {
+  if (isCloudinaryConfigured && file.path) {
+    return file.path;
+  }
+  return '/uploads/landing/' + file.filename;
+};
+
+// Helper to get video public ID from Cloudinary URL
+const getVideoPublicId = (file) => {
+  if (isCloudinaryConfigured && file.filename) {
+    return file.filename;
+  }
+  return file.filename;
+};
+
+// Helper to delete video from Cloudinary
+const deleteVideo = async (publicId) => {
+  if (!isCloudinaryConfigured || !publicId) return true;
+  try {
+    await cloudinary.uploader.destroy(publicId, { resource_type: 'video' });
+    return true;
+  } catch (error) {
+    console.error('Cloudinary video delete error:', error);
+    return false;
+  }
+};
+
 // File filter
 const imageFilter = (req, file, cb) => {
   const allowedTypes = /jpeg|jpg|png|webp/;
@@ -109,13 +171,13 @@ const imageFilter = (req, file, cb) => {
 // Multer upload instances - use Cloudinary if configured, otherwise local storage
 const uploadProjectImages = multer({ 
   storage: isCloudinaryConfigured ? cloudinaryProjectStorage : localProjectStorage,
-  limits: { fileSize: 10 * 1024 * 1024 }, // 10MB
+  limits: { fileSize: 25 * 1024 * 1024 }, // 25MB
   fileFilter: imageFilter
 });
 
-const uploadContractorImages = multer({ 
+const uploadContractorImages = multer({
   storage: isCloudinaryConfigured ? cloudinaryContractorStorage : localContractorStorage,
-  limits: { fileSize: 10 * 1024 * 1024 },
+  limits: { fileSize: 25 * 1024 * 1024 },
   fileFilter: imageFilter
 });
 
@@ -123,9 +185,9 @@ if (!isCloudinaryConfigured) {
   ensureDir('public/uploads/landing');
 }
 
-const uploadLandingImages = multer({ 
+const uploadLandingImages = multer({
   storage: isCloudinaryConfigured ? cloudinaryLandingStorage : localLandingStorage,
-  limits: { fileSize: 10 * 1024 * 1024 },
+  limits: { fileSize: 25 * 1024 * 1024 },
   fileFilter: imageFilter
 });
 
@@ -181,8 +243,12 @@ module.exports = {
   uploadContractorImages,
   uploadLandingImages,
   uploadAvatar,
+  uploadVideo,
   deleteImage,
+  deleteVideo,
   getImageUrl,
   getContractorImageUrl,
-  getLandingImageUrl
+  getLandingImageUrl,
+  getVideoUrl,
+  getVideoPublicId
 };
