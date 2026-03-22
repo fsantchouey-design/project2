@@ -11,6 +11,9 @@
       <i data-lucide="languages"></i>
       <span>Select Language</span>
     </div>
+    <div class="language-search">
+      <input type="text" id="lang-search" placeholder="Search languages..." class="lang-search-input" autocomplete="off">
+    </div>
     <div class="language-options">
       <button class="language-option" data-lang="en" data-label="EN">
         <span class="lang-flag">🇬🇧</span>
@@ -37,14 +40,14 @@
         <span class="lang-name">Italiano</span>
         <i data-lucide="check" class="lang-check"></i>
       </button>
-      <button class="language-option" data-lang="nl" data-label="NL">
-        <span class="lang-flag">🇳🇱</span>
-        <span class="lang-name">Nederlands</span>
-        <i data-lucide="check" class="lang-check"></i>
-      </button>
       <button class="language-option" data-lang="pt" data-label="PT">
         <span class="lang-flag">🇵🇹</span>
         <span class="lang-name">Português</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
+      <button class="language-option" data-lang="nl" data-label="NL">
+        <span class="lang-flag">🇳🇱</span>
+        <span class="lang-name">Nederlands</span>
         <i data-lucide="check" class="lang-check"></i>
       </button>
       <button class="language-option" data-lang="pl" data-label="PL">
@@ -57,9 +60,19 @@
         <span class="lang-name">Русский</span>
         <i data-lucide="check" class="lang-check"></i>
       </button>
+      <button class="language-option" data-lang="uk" data-label="UK">
+        <span class="lang-flag">🇺🇦</span>
+        <span class="lang-name">Українська</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
       <button class="language-option" data-lang="zh-CN" data-label="中文">
         <span class="lang-flag">🇨🇳</span>
-        <span class="lang-name">中文</span>
+        <span class="lang-name">中文 (简体)</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
+      <button class="language-option" data-lang="zh-TW" data-label="繁體">
+        <span class="lang-flag">🇹🇼</span>
+        <span class="lang-name">中文 (繁體)</span>
         <i data-lucide="check" class="lang-check"></i>
       </button>
       <button class="language-option" data-lang="ja" data-label="日本">
@@ -67,9 +80,159 @@
         <span class="lang-name">日本語</span>
         <i data-lucide="check" class="lang-check"></i>
       </button>
+      <button class="language-option" data-lang="ko" data-label="한국">
+        <span class="lang-flag">🇰🇷</span>
+        <span class="lang-name">한국어</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
       <button class="language-option" data-lang="ar" data-label="عربي">
         <span class="lang-flag">🇸🇦</span>
         <span class="lang-name">العربية</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
+      <button class="language-option" data-lang="he" data-label="HE">
+        <span class="lang-flag">🇮🇱</span>
+        <span class="lang-name">עברית</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
+      <button class="language-option" data-lang="hi" data-label="HI">
+        <span class="lang-flag">🇮🇳</span>
+        <span class="lang-name">हिन्दी</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
+      <button class="language-option" data-lang="bn" data-label="BN">
+        <span class="lang-flag">🇧🇩</span>
+        <span class="lang-name">বাংলা</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
+      <button class="language-option" data-lang="tr" data-label="TR">
+        <span class="lang-flag">🇹🇷</span>
+        <span class="lang-name">Türkçe</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
+      <button class="language-option" data-lang="vi" data-label="VI">
+        <span class="lang-flag">🇻🇳</span>
+        <span class="lang-name">Tiếng Việt</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
+      <button class="language-option" data-lang="th" data-label="TH">
+        <span class="lang-flag">🇹🇭</span>
+        <span class="lang-name">ไทย</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
+      <button class="language-option" data-lang="id" data-label="ID">
+        <span class="lang-flag">🇮🇩</span>
+        <span class="lang-name">Bahasa Indonesia</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
+      <button class="language-option" data-lang="ms" data-label="MS">
+        <span class="lang-flag">🇲🇾</span>
+        <span class="lang-name">Bahasa Melayu</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
+      <button class="language-option" data-lang="tl" data-label="TL">
+        <span class="lang-flag">🇵🇭</span>
+        <span class="lang-name">Filipino</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
+      <button class="language-option" data-lang="sv" data-label="SV">
+        <span class="lang-flag">🇸🇪</span>
+        <span class="lang-name">Svenska</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
+      <button class="language-option" data-lang="no" data-label="NO">
+        <span class="lang-flag">🇳🇴</span>
+        <span class="lang-name">Norsk</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
+      <button class="language-option" data-lang="da" data-label="DA">
+        <span class="lang-flag">🇩🇰</span>
+        <span class="lang-name">Dansk</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
+      <button class="language-option" data-lang="fi" data-label="FI">
+        <span class="lang-flag">🇫🇮</span>
+        <span class="lang-name">Suomi</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
+      <button class="language-option" data-lang="el" data-label="EL">
+        <span class="lang-flag">🇬🇷</span>
+        <span class="lang-name">Ελληνικά</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
+      <button class="language-option" data-lang="cs" data-label="CS">
+        <span class="lang-flag">🇨🇿</span>
+        <span class="lang-name">Čeština</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
+      <button class="language-option" data-lang="hu" data-label="HU">
+        <span class="lang-flag">🇭🇺</span>
+        <span class="lang-name">Magyar</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
+      <button class="language-option" data-lang="ro" data-label="RO">
+        <span class="lang-flag">🇷🇴</span>
+        <span class="lang-name">Română</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
+      <button class="language-option" data-lang="bg" data-label="BG">
+        <span class="lang-flag">🇧🇬</span>
+        <span class="lang-name">Български</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
+      <button class="language-option" data-lang="hr" data-label="HR">
+        <span class="lang-flag">🇭🇷</span>
+        <span class="lang-name">Hrvatski</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
+      <button class="language-option" data-lang="sk" data-label="SK">
+        <span class="lang-flag">🇸🇰</span>
+        <span class="lang-name">Slovenčina</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
+      <button class="language-option" data-lang="sl" data-label="SL">
+        <span class="lang-flag">🇸🇮</span>
+        <span class="lang-name">Slovenščina</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
+      <button class="language-option" data-lang="sr" data-label="SR">
+        <span class="lang-flag">🇷🇸</span>
+        <span class="lang-name">Српски</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
+      <button class="language-option" data-lang="lt" data-label="LT">
+        <span class="lang-flag">🇱🇹</span>
+        <span class="lang-name">Lietuvių</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
+      <button class="language-option" data-lang="lv" data-label="LV">
+        <span class="lang-flag">🇱🇻</span>
+        <span class="lang-name">Latviešu</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
+      <button class="language-option" data-lang="et" data-label="ET">
+        <span class="lang-flag">🇪🇪</span>
+        <span class="lang-name">Eesti</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
+      <button class="language-option" data-lang="sw" data-label="SW">
+        <span class="lang-flag">🇰🇪</span>
+        <span class="lang-name">Kiswahili</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
+      <button class="language-option" data-lang="af" data-label="AF">
+        <span class="lang-flag">🇿🇦</span>
+        <span class="lang-name">Afrikaans</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
+      <button class="language-option" data-lang="fa" data-label="FA">
+        <span class="lang-flag">🇮🇷</span>
+        <span class="lang-name">فارسی</span>
+        <i data-lucide="check" class="lang-check"></i>
+      </button>
+      <button class="language-option" data-lang="ur" data-label="UR">
+        <span class="lang-flag">🇵🇰</span>
+        <span class="lang-name">اردو</span>
         <i data-lucide="check" class="lang-check"></i>
       </button>
     </div>
@@ -130,6 +293,19 @@
     });
   });
   
+  // Language search filter
+  const langSearch = document.getElementById('lang-search');
+  if (langSearch) {
+    langSearch.addEventListener('input', function() {
+      const query = this.value.toLowerCase();
+      languageOptions.forEach(opt => {
+        const name = opt.querySelector('.lang-name').textContent.toLowerCase();
+        const label = (opt.dataset.label || '').toLowerCase();
+        opt.style.display = (name.includes(query) || label.includes(query)) ? '' : 'none';
+      });
+    });
+  }
+
   // Restore saved language
   const savedLang = localStorage.getItem('preferredLanguage');
   const savedLabel = localStorage.getItem('preferredLanguageLabel');
@@ -141,7 +317,6 @@
       }
     });
   } else {
-    // Default to English
     document.querySelector('[data-lang="en"]')?.classList.add('selected');
   }
 })();

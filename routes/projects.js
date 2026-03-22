@@ -460,14 +460,16 @@ router.post('/:id/change-colors', ensureAuthenticated, async (req, res) => {
       return res.status(400).json({ success: false, error: 'Please paint the areas you want to change' });
     }
 
-    // Auto-derive materialsType from object if materials is set but materialsType isn't
-    const objectToMaterialType = {
-      wall: 'Wall Material', floor: 'Floor Material', ceiling: 'Ceiling Material',
-      furniture: 'Furniture Material', door: 'Door Material', window: 'Window Material'
+    // materials_type must be a valid sub-type for the chosen material (e.g. "Oak" for Wood)
+    const MATERIAL_DEFAULTS = {
+      'Wood': 'Oak', 'Stone': 'Marble', 'Metal': 'Steel', 'Glass': 'Clear',
+      'Fabrics': 'Cotton', 'Ceramics and Porcelain': 'Glazed',
+      'Plastics and Polymers': 'Acrylic', 'Paper and Cardboard': 'Wallpaper',
+      'Natural Fibers': 'Jute', 'Composite Materials': 'Laminate'
     };
     let resolvedMaterialsType = materialsType;
-    if (materials && !materialsType && object) {
-      resolvedMaterialsType = objectToMaterialType[object] || 'Wall Material';
+    if (materials && !materialsType) {
+      resolvedMaterialsType = MATERIAL_DEFAULTS[materials] || undefined;
     }
 
     project.status = 'generating';

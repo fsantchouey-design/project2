@@ -220,29 +220,60 @@
   </div>
 </div>
 
-<!-- Color Changer Modal -->
+<!-- Color & Texture Editor (Full-Screen) -->
 <% if (project.originalImages && project.originalImages.length > 0) { %>
-<div class="color-modal" id="color-modal">
-  <div class="color-modal-content">
-    <div class="color-modal-header">
-      <h2>Change Colors & Textures</h2>
-      <button class="close-modal-btn" onclick="closeColorChanger()"><i data-lucide="x"></i></button>
+<div class="color-editor" id="color-modal">
+  <div class="color-editor-header">
+    <div class="editor-title">
+      <i data-lucide="palette"></i>
+      <span>Color & Texture Editor</span>
     </div>
-    <p class="color-modal-hint">Paint over the areas you want to change (walls, floor, etc.), then choose a color.</p>
-
-    <div class="color-modal-body">
-      <div class="canvas-container">
-        <canvas id="mask-canvas"></canvas>
+    <div class="editor-toolbar">
+      <div class="tool-group">
+        <button class="tool-btn active" id="tool-brush" onclick="setTool('brush')" title="Brush (B)">
+          <i data-lucide="paintbrush"></i>
+        </button>
+        <button class="tool-btn" id="tool-eraser" onclick="setTool('eraser')" title="Eraser (E)">
+          <i data-lucide="eraser"></i>
+        </button>
       </div>
+      <div class="tool-separator"></div>
+      <div class="tool-group brush-size-group">
+        <i data-lucide="circle" class="size-icon"></i>
+        <input type="range" id="brush-size" min="5" max="100" value="30" class="brush-slider">
+        <span class="brush-size-val" id="brush-size-display">30</span>
+      </div>
+      <div class="tool-separator"></div>
+      <div class="tool-group">
+        <button class="tool-btn" onclick="undoStroke()" title="Undo (Ctrl+Z)">
+          <i data-lucide="undo-2"></i>
+        </button>
+        <button class="tool-btn" onclick="clearMask()" title="Clear All">
+          <i data-lucide="trash-2"></i>
+        </button>
+      </div>
+    </div>
+    <button class="close-editor-btn" onclick="closeColorChanger()" title="Close (Esc)">
+      <i data-lucide="x"></i>
+    </button>
+  </div>
 
-      <div class="color-controls">
-        <div class="control-group">
-          <label>Brush Size</label>
-          <input type="range" id="brush-size" min="5" max="80" value="30">
-        </div>
+  <div class="color-editor-body">
+    <div class="canvas-area">
+      <div class="canvas-wrapper" id="canvas-wrapper">
+        <canvas id="mask-canvas"></canvas>
+        <div class="canvas-cursor" id="canvas-cursor"></div>
+      </div>
+      <div class="canvas-hint">
+        <i data-lucide="info"></i>
+        Paint over the areas you want to change, then configure options on the right
+      </div>
+    </div>
 
-        <div class="control-group">
-          <label>What to change</label>
+    <div class="editor-panel">
+      <div class="panel-scroll">
+        <div class="panel-section">
+          <label class="panel-label">Target Object</label>
           <select id="cc-object" class="form-select">
             <option value="wall">Wall</option>
             <option value="floor">Floor</option>
@@ -253,28 +284,39 @@
           </select>
         </div>
 
-        <div class="control-group">
-          <label>Color</label>
+        <div class="panel-section">
+          <label class="panel-label">Color</label>
           <select id="cc-color" class="form-select">
-            <option value="">Custom (use prompt)</option>
+            <option value="">None (use prompt or material only)</option>
             <option value="White">White</option>
             <option value="Off White">Off White</option>
             <option value="Cream">Cream</option>
+            <option value="Ivory">Ivory</option>
             <option value="Beige">Beige</option>
             <option value="Light Gray">Light Gray</option>
             <option value="Medium Gray">Medium Gray</option>
             <option value="Charcoal Black">Charcoal Black</option>
             <option value="Taupe">Taupe</option>
             <option value="Light Brown">Light Brown</option>
+            <option value="Dark Brown">Dark Brown</option>
             <option value="Navy Blue">Navy Blue</option>
+            <option value="Sky Blue">Sky Blue</option>
+            <option value="Teal">Teal</option>
             <option value="Forest Green">Forest Green</option>
+            <option value="Sage Green">Sage Green</option>
+            <option value="Olive Green">Olive Green</option>
             <option value="Burgundy">Burgundy</option>
             <option value="Terracotta">Terracotta</option>
+            <option value="Coral">Coral</option>
+            <option value="Blush Pink">Blush Pink</option>
+            <option value="Lavender">Lavender</option>
+            <option value="Mustard Yellow">Mustard Yellow</option>
+            <option value="Rust">Rust</option>
           </select>
         </div>
 
-        <div class="control-group">
-          <label>Material (optional)</label>
+        <div class="panel-section">
+          <label class="panel-label">Material <span class="optional-tag">optional</span></label>
           <select id="cc-materials" class="form-select">
             <option value="">None</option>
             <option value="Wood">Wood</option>
@@ -282,35 +324,31 @@
             <option value="Metal">Metal</option>
             <option value="Glass">Glass</option>
             <option value="Fabrics">Fabrics</option>
-            <option value="Ceramics and Porcelain">Ceramics</option>
+            <option value="Ceramics and Porcelain">Ceramics & Porcelain</option>
+            <option value="Plastics and Polymers">Plastics & Polymers</option>
+            <option value="Paper and Cardboard">Paper & Cardboard</option>
+            <option value="Natural Fibers">Natural Fibers</option>
+            <option value="Composite Materials">Composite Materials</option>
           </select>
         </div>
 
-        <div class="control-group" id="cc-materials-type-group" style="display:none;">
-          <label>Material Type</label>
-          <select id="cc-materials-type" class="form-select">
-            <option value="Wall Material">Wall Material</option>
-            <option value="Floor Material">Floor Material</option>
-            <option value="Ceiling Material">Ceiling Material</option>
-            <option value="Furniture Material">Furniture Material</option>
-            <option value="Door Material">Door Material</option>
-            <option value="Window Material">Window Material</option>
-          </select>
+        <div class="panel-section" id="cc-materials-type-group" style="display:none;">
+          <label class="panel-label">Material Type</label>
+          <select id="cc-materials-type" class="form-select"></select>
         </div>
 
-        <div class="control-group">
-          <label>Instructions (optional)</label>
-          <input type="text" id="cc-prompt" class="form-input" placeholder="e.g., Dark matte finish">
+        <div class="panel-section">
+          <label class="panel-label">Custom Instructions <span class="optional-tag">optional</span></label>
+          <input type="text" id="cc-prompt" class="form-input" placeholder="e.g., Dark matte finish, rustic look">
+          <span class="input-hint">Use when desired option isn't in the dropdowns</span>
         </div>
+      </div>
 
-        <div class="color-actions">
-          <button class="btn btn-ghost" onclick="clearMask()">
-            <i data-lucide="eraser"></i> Clear
-          </button>
-          <button class="btn btn-primary" onclick="submitColorChange()" id="cc-submit-btn">
-            <i data-lucide="palette"></i> Apply Changes
-          </button>
-        </div>
+      <div class="panel-actions">
+        <button class="btn btn-primary btn-full" onclick="submitColorChange()" id="cc-submit-btn">
+          <i data-lucide="sparkles"></i>
+          Apply Changes
+        </button>
       </div>
     </div>
   </div>
@@ -723,115 +761,314 @@
     text-transform: capitalize;
   }
   
-  /* Color Changer Modal */
-  .color-modal {
+  /* Color & Texture Editor (Full-Screen) */
+  .color-editor {
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.85);
+    background: var(--bg-primary);
     display: none;
+    flex-direction: column;
+    z-index: 9998;
+  }
+
+  .color-editor.active {
+    display: flex;
+  }
+
+  .color-editor-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-lg);
+    padding: 10px 16px;
+    background: var(--bg-card);
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0;
+    min-height: 52px;
+  }
+
+  .editor-title {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.95rem;
+    white-space: nowrap;
+  }
+
+  .editor-title i {
+    width: 18px;
+    height: 18px;
+    color: var(--accent-primary);
+  }
+
+  .editor-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    justify-content: center;
+  }
+
+  .tool-group {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .tool-separator {
+    width: 1px;
+    height: 24px;
+    background: var(--border-color);
+    margin: 0 4px;
+  }
+
+  .tool-btn {
+    display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 9998;
-    padding: var(--spacing-lg);
-  }
-
-  .color-modal.active {
-    display: flex;
-  }
-
-  .color-modal-content {
-    background: var(--bg-card);
-    border-radius: var(--radius-lg);
-    max-width: 1100px;
-    width: 100%;
-    max-height: 90vh;
-    overflow-y: auto;
-    padding: var(--spacing-xl);
-  }
-
-  .color-modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--spacing-sm);
-  }
-
-  .color-modal-header h2 {
-    font-size: 1.4rem;
-    margin: 0;
-  }
-
-  .close-modal-btn {
-    background: var(--bg-secondary);
-    border: none;
     width: 36px;
     height: 36px;
-    border-radius: 50%;
-    color: var(--text-primary);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    color: var(--text-muted);
     cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .tool-btn:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+  }
+
+  .tool-btn.active {
+    background: rgba(16, 185, 129, 0.12);
+    border-color: rgba(16, 185, 129, 0.3);
+    color: var(--accent-primary);
+  }
+
+  .tool-btn i {
+    width: 18px;
+    height: 18px;
+  }
+
+  .brush-size-group {
+    gap: 8px;
+  }
+
+  .brush-size-group .size-icon {
+    width: 14px;
+    height: 14px;
+    color: var(--text-muted);
+  }
+
+  .brush-slider {
+    width: 100px;
+    height: 4px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: var(--border-color);
+    border-radius: 2px;
+    outline: none;
+  }
+
+  .brush-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    background: var(--accent-primary);
+    border-radius: 50%;
+    cursor: pointer;
+  }
+
+  .brush-size-val {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    min-width: 24px;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .close-editor-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-  }
-
-  .color-modal-hint {
+    width: 36px;
+    height: 36px;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
     color: var(--text-muted);
-    font-size: 0.9rem;
-    margin-bottom: var(--spacing-lg);
+    cursor: pointer;
+    transition: all 0.15s;
+    flex-shrink: 0;
   }
 
-  .color-modal-body {
-    display: grid;
-    grid-template-columns: 1fr 280px;
-    gap: var(--spacing-xl);
+  .close-editor-btn:hover {
+    background: var(--error);
+    border-color: var(--error);
+    color: #fff;
   }
 
-  .canvas-container {
-    border: 2px solid var(--border-color);
+  .close-editor-btn i {
+    width: 18px;
+    height: 18px;
+  }
+
+  .color-editor-body {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+  }
+
+  .canvas-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    min-width: 0;
+    background: var(--bg-primary);
+  }
+
+  .canvas-wrapper {
+    position: relative;
+    display: inline-block;
     border-radius: var(--radius-md);
     overflow: hidden;
-    position: relative;
-    background: #000;
+    box-shadow: 0 0 0 1px var(--border-color), var(--shadow-xl);
   }
 
-  .canvas-container canvas {
-    width: 100%;
+  .canvas-wrapper canvas {
     display: block;
-    cursor: crosshair;
+    cursor: none;
   }
 
-  .color-controls {
+  .canvas-cursor {
+    position: absolute;
+    border: 2px solid rgba(16, 185, 129, 0.8);
+    border-radius: 50%;
+    pointer-events: none;
+    display: none;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.3);
+  }
+
+  .canvas-cursor.eraser-cursor {
+    border-color: rgba(239, 68, 68, 0.8);
+  }
+
+  .canvas-hint {
     display: flex;
-    flex-direction: column;
-    gap: var(--spacing-md);
-  }
-
-  .control-group {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xs);
-  }
-
-  .control-group label {
-    font-size: 0.85rem;
-    font-weight: 500;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-top: 12px;
+    font-size: 0.8rem;
     color: var(--text-muted);
   }
 
-  .color-actions {
-    display: flex;
-    gap: var(--spacing-sm);
-    margin-top: auto;
-    padding-top: var(--spacing-md);
+  .canvas-hint i {
+    width: 14px;
+    height: 14px;
   }
 
-  .color-actions .btn {
+  .editor-panel {
+    width: 300px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-card);
+    border-left: 1px solid var(--border-color);
+  }
+
+  .panel-scroll {
     flex: 1;
+    overflow-y: auto;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .panel-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .panel-label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .optional-tag {
+    font-size: 0.65rem;
+    font-weight: 400;
+    color: var(--text-muted);
+    text-transform: none;
+    letter-spacing: 0;
+    opacity: 0.7;
+  }
+
+  .input-hint {
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+    opacity: 0.7;
+  }
+
+  .editor-panel .form-select,
+  .editor-panel .form-input {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+  }
+
+  .editor-panel .form-select:focus,
+  .editor-panel .form-input:focus {
+    border-color: var(--accent-primary);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.15);
+  }
+
+  .panel-actions {
+    padding: 16px;
+    border-top: 1px solid var(--border-color);
+    flex-shrink: 0;
+  }
+
+  .btn-full {
+    width: 100%;
+    justify-content: center;
   }
 
   @media (max-width: 768px) {
-    .color-modal-body {
-      grid-template-columns: 1fr;
+    .color-editor-body {
+      flex-direction: column;
+    }
+    .editor-panel {
+      width: 100%;
+      max-height: 40vh;
+      border-left: none;
+      border-top: 1px solid var(--border-color);
+    }
+    .canvas-area {
+      min-height: 300px;
+    }
+    .editor-toolbar {
+      display: none;
     }
   }
 
@@ -1124,42 +1361,42 @@
     }
   });
 
-  // === Color Changer / Mask Painter ===
+  // === Color & Texture Editor ===
   <% if (project.originalImages && project.originalImages.length > 0) { %>
-  let maskCanvas, maskCtx, painting = false;
+  let maskCanvas, displayCtx;
+  let overlayCanvas, overlayCtx;
+  let painting = false;
   let bgImage = null;
+  let currentTool = 'brush';
+  let lastPoint = null;
+  let strokeHistory = [];
+  const MAX_UNDO = 25;
+  let editorInitialized = false;
 
-  const objectToMaterialType = {
-    wall: 'Wall Material',
-    floor: 'Floor Material',
-    ceiling: 'Ceiling Material',
-    furniture: 'Furniture Material',
-    door: 'Door Material',
-    window: 'Window Material'
+  const MATERIAL_SUBTYPES = {
+    'Wood': ['Oak', 'Maple', 'Cherry', 'Walnut', 'Pine', 'Teak', 'Mahogany', 'Bamboo', 'Birch', 'Rosewood', 'Ash', 'Cedar', 'Hickory', 'Alder', 'Ebony'],
+    'Stone': ['Marble', 'Granite', 'Limestone', 'Slate', 'Travertine', 'Sandstone', 'Quartzite', 'Onyx', 'Soapstone', 'Basalt', 'Flagstone', 'Bluestone', 'Fieldstone', 'Cobblestone', 'Terrazzo'],
+    'Metal': ['Gold', 'Silver', 'Bronze', 'Copper', 'Brass', 'Iron', 'Steel', 'Aluminum', 'Nickel', 'Titanium', 'Platinum', 'Chrome', 'Zinc', 'Pewter', 'Tin'],
+    'Glass': ['Clear', 'Frosted', 'Tinted', 'Stained', 'Tempered', 'Laminated', 'Mirrored', 'Etched', 'Colored', 'Opaque', 'Crackle', 'Murano', 'Sea', 'Blown', 'Fused'],
+    'Fabrics': ['Cotton', 'Linen', 'Silk', 'Velvet', 'Wool', 'Leather', 'Suede', 'Tweed', 'Chenille', 'Jacquard', 'Satin', 'Polyester', 'Nylon', 'Rayon', 'Cashmere'],
+    'Ceramics and Porcelain': ['Glazed', 'Matte', 'Porcelain', 'Terracotta', 'Mosaic', 'Subway', 'Hexagonal', 'Penny', 'Quarry', 'Encaustic', 'Majolica', 'Delft', 'Raku', 'Bisque', 'Celadon'],
+    'Plastics and Polymers': ['Acrylic', 'Polycarbonate', 'PVC', 'Polyethylene', 'Polypropylene', 'ABS', 'Nylon', 'Teflon', 'Silicone', 'Epoxy', 'Fiberglass', 'Melamine', 'Bakelite', 'Lucite', 'Resin'],
+    'Paper and Cardboard': ['Wallpaper', 'Cardboard', 'Kraft', 'Parchment', 'Foil embossed', 'Textured', 'Handmade paper', 'Recycled paper', 'Flocked paper', 'Metallic paper', 'Vellum', 'Linen paper', 'Watercolor paper', 'Matte', 'Glossy'],
+    'Natural Fibers': ['Jute', 'Sisal', 'Hemp', 'Bamboo', 'Rattan', 'Wicker', 'Seagrass', 'Coir', 'Cotton', 'Linen', 'Wool', 'Silk', 'Raffia', 'Palm', 'Cork'],
+    'Composite Materials': ['MDF', 'Plywood', 'Particleboard', 'Laminate', 'Fiberglass', 'Carbon Fiber', 'Kevlar', 'Corian', 'Quartz', 'Engineered Stone', 'WPC', 'Cement Board', 'Hardboard', 'OSB', 'LVL']
   };
 
   function openColorChanger() {
     const modal = document.getElementById('color-modal');
     modal.classList.add('active');
     lucide.createIcons();
-    initMaskCanvas();
 
-    // Show/hide materials_type based on material selection
-    document.getElementById('cc-materials').addEventListener('change', function() {
-      document.getElementById('cc-materials-type-group').style.display = this.value ? 'block' : 'none';
-    });
-
-    // Sync materials_type with object selector
-    document.getElementById('cc-object').addEventListener('change', function() {
-      const mtSelect = document.getElementById('cc-materials-type');
-      const mapped = objectToMaterialType[this.value];
-      if (mapped) mtSelect.value = mapped;
-    });
-
-    // Set initial materials_type from current object
-    const initObj = document.getElementById('cc-object').value;
-    if (objectToMaterialType[initObj]) {
-      document.getElementById('cc-materials-type').value = objectToMaterialType[initObj];
+    if (!editorInitialized) {
+      initMaskCanvas();
+      bindEditorEvents();
+      editorInitialized = true;
+    } else if (bgImage) {
+      resizeCanvas();
     }
   }
 
@@ -1168,35 +1405,92 @@
     if (modal) modal.classList.remove('active');
   }
 
+  function bindEditorEvents() {
+    document.getElementById('cc-materials').addEventListener('change', function() {
+      const typeGroup = document.getElementById('cc-materials-type-group');
+      const typeSelect = document.getElementById('cc-materials-type');
+      if (this.value && MATERIAL_SUBTYPES[this.value]) {
+        typeSelect.innerHTML = '';
+        MATERIAL_SUBTYPES[this.value].forEach(t => {
+          const opt = document.createElement('option');
+          opt.value = t;
+          opt.textContent = t;
+          typeSelect.appendChild(opt);
+        });
+        typeGroup.style.display = 'block';
+      } else {
+        typeGroup.style.display = 'none';
+      }
+    });
+
+    document.getElementById('brush-size').addEventListener('input', function() {
+      document.getElementById('brush-size-display').textContent = this.value;
+    });
+
+    document.addEventListener('keydown', function(e) {
+      const modal = document.getElementById('color-modal');
+      if (!modal || !modal.classList.contains('active')) return;
+      if (e.ctrlKey && e.key === 'z') { e.preventDefault(); undoStroke(); }
+      if (e.key === 'b' && !e.ctrlKey && document.activeElement.tagName !== 'INPUT') setTool('brush');
+      if (e.key === 'e' && !e.ctrlKey && document.activeElement.tagName !== 'INPUT') setTool('eraser');
+    });
+  }
+
+  function setTool(tool) {
+    currentTool = tool;
+    document.getElementById('tool-brush').classList.toggle('active', tool === 'brush');
+    document.getElementById('tool-eraser').classList.toggle('active', tool === 'eraser');
+    const cursor = document.getElementById('canvas-cursor');
+    cursor.classList.toggle('eraser-cursor', tool === 'eraser');
+  }
+
   function initMaskCanvas() {
     maskCanvas = document.getElementById('mask-canvas');
-    maskCtx = maskCanvas.getContext('2d');
+    displayCtx = maskCanvas.getContext('2d');
 
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = function() {
-      // Scale canvas to fit container while keeping aspect ratio
-      const container = maskCanvas.parentElement;
-      const maxW = container.clientWidth;
-      const scale = Math.min(maxW / img.width, 600 / img.height);
-      maskCanvas.width = img.width * scale;
-      maskCanvas.height = img.height * scale;
-
       bgImage = img;
-      drawBackground();
+      resizeCanvas();
     };
     img.src = '<%= project.originalImages[0].url %>';
 
-    // Drawing events
     maskCanvas.addEventListener('mousedown', startPaint);
-    maskCanvas.addEventListener('mousemove', paint);
+    maskCanvas.addEventListener('mousemove', onCanvasMouseMove);
     maskCanvas.addEventListener('mouseup', stopPaint);
-    maskCanvas.addEventListener('mouseleave', stopPaint);
+    maskCanvas.addEventListener('mouseleave', function() { stopPaint(); hideCursor(); });
+    maskCanvas.addEventListener('mouseenter', showCursor);
 
-    // Touch support
-    maskCanvas.addEventListener('touchstart', (e) => { e.preventDefault(); startPaint(getTouchPos(e)); });
-    maskCanvas.addEventListener('touchmove', (e) => { e.preventDefault(); paint(getTouchPos(e)); });
+    maskCanvas.addEventListener('touchstart', (e) => { e.preventDefault(); startPaint(getTouchPos(e)); }, { passive: false });
+    maskCanvas.addEventListener('touchmove', (e) => { e.preventDefault(); onCanvasMouseMove(getTouchPos(e)); }, { passive: false });
     maskCanvas.addEventListener('touchend', stopPaint);
+  }
+
+  function resizeCanvas() {
+    if (!bgImage) return;
+    const area = document.querySelector('.canvas-area');
+    const maxW = area.clientWidth - 32;
+    const maxH = area.clientHeight - 60;
+    const scale = Math.min(maxW / bgImage.width, maxH / bgImage.height, 1);
+    const w = Math.round(bgImage.width * scale);
+    const h = Math.round(bgImage.height * scale);
+
+    const prevOverlay = overlayCanvas;
+    maskCanvas.width = w;
+    maskCanvas.height = h;
+
+    overlayCanvas = document.createElement('canvas');
+    overlayCanvas.width = w;
+    overlayCanvas.height = h;
+    overlayCtx = overlayCanvas.getContext('2d');
+
+    if (prevOverlay) {
+      overlayCtx.drawImage(prevOverlay, 0, 0, prevOverlay.width, prevOverlay.height, 0, 0, w, h);
+    }
+
+    strokeHistory = [];
+    compositeDisplay();
   }
 
   function getTouchPos(e) {
@@ -1205,77 +1499,141 @@
     return { offsetX: touch.clientX - rect.left, offsetY: touch.clientY - rect.top };
   }
 
-  function drawBackground() {
-    maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
-    maskCtx.drawImage(bgImage, 0, 0, maskCanvas.width, maskCanvas.height);
+  function compositeDisplay() {
+    displayCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+    displayCtx.drawImage(bgImage, 0, 0, maskCanvas.width, maskCanvas.height);
+    displayCtx.globalAlpha = 0.4;
+    displayCtx.drawImage(overlayCanvas, 0, 0);
+    displayCtx.globalAlpha = 1.0;
   }
-
-  // Store mask strokes separately
-  let maskStrokes = [];
-  let currentStroke = [];
 
   function startPaint(e) {
     painting = true;
-    currentStroke = [];
-    paint(e);
+    strokeHistory.push(overlayCtx.getImageData(0, 0, overlayCanvas.width, overlayCanvas.height));
+    if (strokeHistory.length > MAX_UNDO) strokeHistory.shift();
+    lastPoint = { x: e.offsetX, y: e.offsetY };
+    paintAt(e.offsetX, e.offsetY);
   }
 
-  function paint(e) {
-    if (!painting) return;
-    const brushSize = parseInt(document.getElementById('brush-size').value);
-    const x = e.offsetX;
-    const y = e.offsetY;
-    currentStroke.push({ x, y, size: brushSize });
+  function onCanvasMouseMove(e) {
+    updateCursor(e);
+    if (painting) paintAt(e.offsetX, e.offsetY);
+  }
 
-    // Draw semi-transparent overlay on the visible canvas
-    maskCtx.globalAlpha = 0.4;
-    maskCtx.fillStyle = '#00ff88';
-    maskCtx.beginPath();
-    maskCtx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
-    maskCtx.fill();
-    maskCtx.globalAlpha = 1.0;
+  function paintAt(x, y) {
+    const brushSize = parseInt(document.getElementById('brush-size').value);
+
+    if (currentTool === 'brush') {
+      overlayCtx.globalCompositeOperation = 'source-over';
+      overlayCtx.strokeStyle = '#00ff88';
+      overlayCtx.fillStyle = '#00ff88';
+    } else {
+      overlayCtx.globalCompositeOperation = 'destination-out';
+      overlayCtx.strokeStyle = 'rgba(0,0,0,1)';
+      overlayCtx.fillStyle = 'rgba(0,0,0,1)';
+    }
+
+    if (lastPoint) {
+      overlayCtx.beginPath();
+      overlayCtx.lineWidth = brushSize;
+      overlayCtx.lineCap = 'round';
+      overlayCtx.lineJoin = 'round';
+      overlayCtx.moveTo(lastPoint.x, lastPoint.y);
+      overlayCtx.lineTo(x, y);
+      overlayCtx.stroke();
+    } else {
+      overlayCtx.beginPath();
+      overlayCtx.arc(x, y, brushSize / 2, 0, Math.PI * 2);
+      overlayCtx.fill();
+    }
+
+    overlayCtx.globalCompositeOperation = 'source-over';
+    lastPoint = { x, y };
+    compositeDisplay();
   }
 
   function stopPaint() {
-    if (painting && currentStroke.length > 0) {
-      maskStrokes.push([...currentStroke]);
-    }
     painting = false;
-    currentStroke = [];
+    lastPoint = null;
+  }
+
+  function undoStroke() {
+    if (strokeHistory.length > 0) {
+      overlayCtx.putImageData(strokeHistory.pop(), 0, 0);
+      compositeDisplay();
+    }
   }
 
   function clearMask() {
-    maskStrokes = [];
-    if (bgImage) drawBackground();
+    strokeHistory = [];
+    if (overlayCtx) overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
+    if (bgImage) compositeDisplay();
+  }
+
+  function updateCursor(e) {
+    const cursor = document.getElementById('canvas-cursor');
+    const brushSize = parseInt(document.getElementById('brush-size').value);
+    cursor.style.width = brushSize + 'px';
+    cursor.style.height = brushSize + 'px';
+    cursor.style.left = e.offsetX + 'px';
+    cursor.style.top = e.offsetY + 'px';
+    cursor.style.display = 'block';
+  }
+
+  function showCursor() {
+    document.getElementById('canvas-cursor').style.display = 'block';
+  }
+
+  function hideCursor() {
+    document.getElementById('canvas-cursor').style.display = 'none';
+  }
+
+  function hasMaskContent() {
+    if (!overlayCtx) return false;
+    const data = overlayCtx.getImageData(0, 0, overlayCanvas.width, overlayCanvas.height).data;
+    for (let i = 3; i < data.length; i += 4) {
+      if (data[i] > 0) return true;
+    }
+    return false;
   }
 
   function generateMaskBase64() {
-    // Create a separate canvas for the mask (white on black)
     const tempCanvas = document.createElement('canvas');
     tempCanvas.width = maskCanvas.width;
     tempCanvas.height = maskCanvas.height;
     const ctx = tempCanvas.getContext('2d');
 
-    // Fill black (areas to keep)
     ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
 
-    // Draw white circles where user painted (areas to change)
-    ctx.fillStyle = '#ffffff';
-    maskStrokes.forEach(stroke => {
-      stroke.forEach(point => {
-        ctx.beginPath();
-        ctx.arc(point.x, point.y, point.size / 2, 0, Math.PI * 2);
-        ctx.fill();
-      });
-    });
-
+    const overlayData = overlayCtx.getImageData(0, 0, overlayCanvas.width, overlayCanvas.height);
+    const maskData = ctx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+    for (let i = 0; i < overlayData.data.length; i += 4) {
+      if (overlayData.data[i + 3] > 0) {
+        maskData.data[i] = 255;
+        maskData.data[i + 1] = 255;
+        maskData.data[i + 2] = 255;
+        maskData.data[i + 3] = 255;
+      }
+    }
+    ctx.putImageData(maskData, 0, 0);
     return tempCanvas.toDataURL('image/png');
   }
 
   async function submitColorChange() {
-    if (maskStrokes.length === 0) {
+    if (!hasMaskContent()) {
       showNotification('Please paint over the areas you want to change first', 'error');
+      return;
+    }
+
+    const color = document.getElementById('cc-color').value;
+    const materials = document.getElementById('cc-materials').value;
+    const materialsType = document.getElementById('cc-materials-type').value;
+    const prompt = document.getElementById('cc-prompt').value;
+    const object = document.getElementById('cc-object').value;
+
+    if (!color && !materials && !prompt) {
+      showNotification('Please select a color, material, or provide custom instructions', 'error');
       return;
     }
 
@@ -1283,22 +1641,34 @@
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> Processing...';
 
+    function resetBtn() {
+      btn.disabled = false;
+      btn.innerHTML = '<i data-lucide="sparkles"></i> Apply Changes';
+      lucide.createIcons();
+    }
+
     try {
-      const maskBase64 = generateMaskBase64();
-      const prompt = document.getElementById('cc-prompt').value;
-      const color = document.getElementById('cc-color').value;
-      const materials = document.getElementById('cc-materials').value;
-      const materialsType = document.getElementById('cc-materials-type').value;
-      const object = document.getElementById('cc-object').value;
+      const body = { maskBase64: generateMaskBase64(), object };
+      if (prompt) body.prompt = prompt;
+      if (color) body.color = color;
+      if (materials) {
+        body.materials = materials;
+        if (materialsType) body.materialsType = materialsType;
+      }
 
       const response = await fetch(`/projects/${projectId}/change-colors`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ maskBase64, prompt, color, materials, materialsType: materials ? materialsType : undefined, object })
+        body: JSON.stringify(body)
       });
 
       const contentType = response.headers.get('content-type');
       if (!contentType || !contentType.includes('application/json')) {
+        if (response.status === 401) {
+          showNotification('Session expired. Please log in again.', 'error');
+          setTimeout(() => window.location.href = '/auth/login', 1500);
+          return;
+        }
         throw new Error('Server returned an unexpected response');
       }
 
@@ -1310,16 +1680,12 @@
         setTimeout(() => window.location.reload(), 1000);
       } else {
         showNotification(data.error || 'Failed to change colors', 'error');
-        btn.disabled = false;
-        btn.innerHTML = '<i data-lucide="palette"></i> Apply Changes';
-        lucide.createIcons();
+        resetBtn();
       }
     } catch (err) {
       console.error('Color change error:', err);
       showNotification(err.message || 'An error occurred', 'error');
-      btn.disabled = false;
-      btn.innerHTML = '<i data-lucide="palette"></i> Apply Changes';
-      lucide.createIcons();
+      resetBtn();
     }
   }
   <% } %>
