@@ -60,14 +60,14 @@ router.post('/register', ensureGuest, [
   const { firstName, lastName, email, password, role } = req.body;
 
   try {
-    // Check if user exists
+    // Check if email is already taken
     const existingUser = await User.findOne({ email: email.toLowerCase() });
-    
+
     if (existingUser) {
       return res.render('pages/auth/register', {
         title: 'Create Account - CraftyCrib',
         layout: 'layouts/auth',
-        errors: [{ msg: 'Email is already registered' }],
+        errors: [{ msg: 'Cette adresse e-mail est déjà associée à un compte. Veuillez vous connecter ou utiliser une autre adresse.', param: 'email' }],
         formData: req.body
       });
     }

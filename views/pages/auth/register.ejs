@@ -5,8 +5,12 @@
   </div>
   
   <% if (typeof errors !== 'undefined' && errors && errors.length > 0) { %>
-    <div class="error-list">
-      <ul>
+    <div class="alert alert-error" style="padding: 12px 16px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; border: 2px solid #ef4444; background: #fee2e2; color: #b91c1c;">
+      <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; font-weight: 600;">
+        <i data-lucide="alert-circle" style="width: 18px; height: 18px;"></i>
+        <span>Erreur</span>
+      </div>
+      <ul style="margin: 0; padding-left: 26px; list-style: disc;">
         <% errors.forEach(error => { %>
           <li><%= error.msg %></li>
         <% }) %>
@@ -70,10 +74,10 @@
       <label class="form-label">Adresse e-mail</label>
       <div class="input-icon-wrapper">
         <span class="input-icon"><i data-lucide="mail"></i></span>
-        <input 
-          type="email" 
-          name="email" 
-          class="form-input" 
+        <input
+          type="email"
+          name="email"
+          class="form-input<%= (typeof errors !== 'undefined' && errors && errors.some(e => e.param === 'email' || e.msg.toLowerCase().includes('email'))) ? ' input-error' : '' %>"
           placeholder="vous@exemple.com"
           value="<%= typeof formData !== 'undefined' && formData ? formData.email || '' : '' %>"
           required
