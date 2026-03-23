@@ -288,30 +288,72 @@
           <label class="panel-label">Color</label>
           <select id="cc-color" class="form-select">
             <option value="">None (use prompt or material only)</option>
-            <option value="White">White</option>
-            <option value="Off White">Off White</option>
-            <option value="Cream">Cream</option>
-            <option value="Ivory">Ivory</option>
-            <option value="Beige">Beige</option>
-            <option value="Light Gray">Light Gray</option>
-            <option value="Medium Gray">Medium Gray</option>
-            <option value="Charcoal Black">Charcoal Black</option>
-            <option value="Taupe">Taupe</option>
-            <option value="Light Brown">Light Brown</option>
-            <option value="Dark Brown">Dark Brown</option>
-            <option value="Navy Blue">Navy Blue</option>
-            <option value="Sky Blue">Sky Blue</option>
-            <option value="Teal">Teal</option>
-            <option value="Forest Green">Forest Green</option>
-            <option value="Sage Green">Sage Green</option>
-            <option value="Olive Green">Olive Green</option>
-            <option value="Burgundy">Burgundy</option>
-            <option value="Terracotta">Terracotta</option>
-            <option value="Coral">Coral</option>
-            <option value="Blush Pink">Blush Pink</option>
-            <option value="Lavender">Lavender</option>
-            <option value="Mustard Yellow">Mustard Yellow</option>
-            <option value="Rust">Rust</option>
+            <optgroup label="Neutrals">
+              <option value="White">White</option>
+              <option value="Off White">Off White</option>
+              <option value="Warm White">Warm White</option>
+              <option value="Cream">Cream</option>
+              <option value="Ivory">Ivory</option>
+              <option value="Beige">Beige</option>
+              <option value="Taupe">Taupe</option>
+              <option value="Light Gray">Light Gray</option>
+              <option value="Medium Gray">Medium Gray</option>
+              <option value="Charcoal">Charcoal</option>
+              <option value="Black">Black</option>
+              <option value="Charcoal Brown">Charcoal Brown</option>
+            </optgroup>
+            <optgroup label="Browns">
+              <option value="Light Brown">Light Brown</option>
+              <option value="Chocolate Brown">Chocolate Brown</option>
+              <option value="Espresso">Espresso</option>
+            </optgroup>
+            <optgroup label="Blues">
+              <option value="Navy Blue">Navy Blue</option>
+              <option value="Sky Blue">Sky Blue</option>
+              <option value="Pale Blue">Pale Blue</option>
+              <option value="Denim Blue">Denim Blue</option>
+              <option value="Slate Blue">Slate Blue</option>
+              <option value="Periwinkle">Periwinkle</option>
+              <option value="Teal">Teal</option>
+              <option value="Turquoise">Turquoise</option>
+            </optgroup>
+            <optgroup label="Greens">
+              <option value="Forest Green">Forest Green</option>
+              <option value="Sage Green">Sage Green</option>
+              <option value="Olive Green">Olive Green</option>
+              <option value="Mint Green">Mint Green</option>
+              <option value="Seafoam Green">Seafoam Green</option>
+              <option value="Chartreuse">Chartreuse</option>
+            </optgroup>
+            <optgroup label="Yellows & Oranges">
+              <option value="Pale Yellow">Pale Yellow</option>
+              <option value="Mustard Yellow">Mustard Yellow</option>
+              <option value="Canary Yellow">Canary Yellow</option>
+              <option value="Burnt Orange">Burnt Orange</option>
+              <option value="Terracotta">Terracotta</option>
+              <option value="Peach">Peach</option>
+            </optgroup>
+            <optgroup label="Pinks & Reds">
+              <option value="Soft Pink">Soft Pink</option>
+              <option value="Blush Pink">Blush Pink</option>
+              <option value="Dusty Rose">Dusty Rose</option>
+              <option value="Coral">Coral</option>
+              <option value="Burgundy">Burgundy</option>
+              <option value="Deep Red">Deep Red</option>
+            </optgroup>
+            <optgroup label="Purples">
+              <option value="Lavender">Lavender</option>
+              <option value="Lilac">Lilac</option>
+              <option value="Plum">Plum</option>
+              <option value="Mauve">Mauve</option>
+            </optgroup>
+            <optgroup label="Metallics">
+              <option value="Gold">Gold</option>
+              <option value="Silver">Silver</option>
+              <option value="Bronze">Bronze</option>
+              <option value="Copper">Copper</option>
+              <option value="Rust">Rust</option>
+            </optgroup>
           </select>
         </div>
 
@@ -1598,16 +1640,35 @@
   }
 
   function generateMaskBase64() {
+    // Output mask at original image dimensions (API requires >= 512x512)
+    const origW = bgImage.naturalWidth || bgImage.width;
+    const origH = bgImage.naturalHeight || bgImage.height;
+    const minDim = 512;
+    let outW = origW, outH = origH;
+    if (outW < minDim || outH < minDim) {
+      const upscale = Math.max(minDim / outW, minDim / outH);
+      outW = Math.round(outW * upscale);
+      outH = Math.round(outH * upscale);
+    }
+
+    // Scale the overlay painting up to output dimensions
+    const scaledOverlay = document.createElement('canvas');
+    scaledOverlay.width = outW;
+    scaledOverlay.height = outH;
+    const sCtx = scaledOverlay.getContext('2d');
+    sCtx.imageSmoothingEnabled = true;
+    sCtx.drawImage(overlayCanvas, 0, 0, overlayCanvas.width, overlayCanvas.height, 0, 0, outW, outH);
+
+    // Build the black/white mask from the scaled overlay alpha
     const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = maskCanvas.width;
-    tempCanvas.height = maskCanvas.height;
+    tempCanvas.width = outW;
+    tempCanvas.height = outH;
     const ctx = tempCanvas.getContext('2d');
-
     ctx.fillStyle = '#000000';
-    ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+    ctx.fillRect(0, 0, outW, outH);
 
-    const overlayData = overlayCtx.getImageData(0, 0, overlayCanvas.width, overlayCanvas.height);
-    const maskData = ctx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+    const overlayData = sCtx.getImageData(0, 0, outW, outH);
+    const maskData = ctx.getImageData(0, 0, outW, outH);
     for (let i = 0; i < overlayData.data.length; i += 4) {
       if (overlayData.data[i + 3] > 0) {
         maskData.data[i] = 255;

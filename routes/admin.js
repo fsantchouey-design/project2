@@ -464,5 +464,50 @@ router.post('/pricing/plans', async (req, res) => {
   }
 });
 
+// ==========================================
+// Site Settings (Social Links)
+// ==========================================
+const SiteSettings = require('../models/SiteSettings');
+
+router.get('/settings', async (req, res) => {
+  try {
+    const settings = await SiteSettings.findOne({});
+    res.render('pages/admin/settings', {
+      title: 'Site Settings - Admin',
+      layout: 'layouts/minimal',
+      extraStyles: ['/css/dashboard.css'],
+      socialLinks: settings ? settings.socialLinks : { facebook: '', instagram: '', tiktok: '' }
+    });
+  } catch (err) {
+    console.error('Admin settings error:', err);
+    req.flash('error_msg', 'Unable to load site settings.');
+    res.redirect('/admin');
+  }
+});
+
+router.post('/settings/social', async (req, res) => {
+  try {
+    const { facebook, instagram, tiktok } = req.body;
+    let settings = await SiteSettings.findOne({});
+    if (!settings) {
+      settings = new SiteSettings();
+    }
+    settings.socialLinks = {
+      facebook: (facebook || '').trim(),
+      instagram: (instagram || '').trim(),
+      tiktok: (tiktok || '').trim()
+    };
+    settings.updatedAt = new Date();
+    await settings.save();
+
+    req.flash('success_msg', 'Social media links updated successfully.');
+    res.redirect('/admin/settings');
+  } catch (err) {
+    console.error('Admin social links save error:', err);
+    req.flash('error_msg', 'Unable to save social media links.');
+    res.redirect('/admin/settings');
+  }
+});
+
 module.exports = router;
 

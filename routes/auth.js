@@ -34,17 +34,17 @@ router.get('/register', ensureGuest, (req, res) => {
 
 // Register Handler
 router.post('/register', ensureGuest, [
-  body('firstName').trim().notEmpty().withMessage('First name is required'),
-  body('lastName').trim().notEmpty().withMessage('Last name is required'),
-  body('email').isEmail().normalizeEmail().withMessage('Please enter a valid email'),
-  body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
+  body('firstName').trim().notEmpty().withMessage('Le prénom est requis.'),
+  body('lastName').trim().notEmpty().withMessage('Le nom est requis.'),
+  body('email').isEmail().normalizeEmail().withMessage('Veuillez entrer une adresse e-mail valide.'),
+  body('password').isLength({ min: 6 }).withMessage('Le mot de passe doit contenir au moins 6 caractères.'),
   body('confirmPassword').custom((value, { req }) => {
     if (value !== req.body.password) {
-      throw new Error('Passwords do not match');
+      throw new Error('Les mots de passe ne correspondent pas.');
     }
     return true;
   }),
-  body('role').isIn(['client', 'contractor']).withMessage('Please select a valid role')
+  body('role').isIn(['client', 'contractor']).withMessage('Veuillez sélectionner un rôle valide.')
 ], async (req, res) => {
   const errors = validationResult(req);
   

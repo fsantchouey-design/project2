@@ -113,9 +113,9 @@
         <img src="/assets/logoicon.png" alt="CraftyCrib" class="footer-logo">
         <p>Transform your living space with AI-powered interior design.</p>
         <div class="social-links">
-          <a href="#"><i data-lucide="twitter"></i></a>
-          <a href="#"><i data-lucide="instagram"></i></a>
-          <a href="#"><i data-lucide="linkedin"></i></a>
+          <a href="<%= typeof socialLinks !== 'undefined' && socialLinks.facebook ? socialLinks.facebook : '#' %>" target="_blank" rel="noopener noreferrer" aria-label="Facebook"><i data-lucide="facebook"></i></a>
+          <a href="<%= typeof socialLinks !== 'undefined' && socialLinks.instagram ? socialLinks.instagram : '#' %>" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i data-lucide="instagram"></i></a>
+          <a href="<%= typeof socialLinks !== 'undefined' && socialLinks.tiktok ? socialLinks.tiktok : '#' %>" target="_blank" rel="noopener noreferrer" aria-label="TikTok"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg></a>
         </div>
       </div>
       

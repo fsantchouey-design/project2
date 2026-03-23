@@ -2174,7 +2174,7 @@
 
 .specialists-image-overlay {
   position: absolute;
-  bottom: 16px;
+  top: 16px;
   left: 16px;
   padding: 10px 14px;
   background: rgba(15, 23, 42, 0.7);

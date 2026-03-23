@@ -59,12 +59,19 @@ app.use(passport.session());
 app.use(flash());
 
 // Global Variables
-app.use((req, res, next) => {
+const SiteSettings = require('./models/SiteSettings');
+app.use(async (req, res, next) => {
   res.locals.success_msg = req.flash('success_msg');
   res.locals.error_msg = req.flash('error_msg');
   res.locals.error = req.flash('error');
   res.locals.user = req.user || null;
   res.locals.currentYear = new Date().getFullYear();
+  try {
+    const settings = await SiteSettings.findOne({});
+    res.locals.socialLinks = settings ? settings.socialLinks : { facebook: '', instagram: '', tiktok: '' };
+  } catch (e) {
+    res.locals.socialLinks = { facebook: '', instagram: '', tiktok: '' };
+  }
   next();
 });
 
