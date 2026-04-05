@@ -3,7 +3,12 @@ const router = express.Router();
 const crypto = require('crypto');
 const { ensureAuthenticated, ensureProjectOwner } = require('../middleware/auth');
 const Project = require('../models/Project');
-const { generateDesign, changeColorTextures, getStyles, getRoomTypes } = require('../utils/homedesigns');
+const {
+  generateDesign, beautifulRedesign, perfectRedesign, creativeRedesign,
+  sketchToRender, precision, fillSpaces, decorStaging, furnitureRemoval,
+  changeColorTextures, furnitureFinder, fullHD, skyColors,
+  getStyles, getRoomTypes, getAiTools, WEATHER_OPTIONS
+} = require('../utils/homedesigns');
 const { uploadProjectImages, deleteImage, getImageUrl, isCloudinaryConfigured } = require('../config/cloudinary');
 
 // Use Cloudinary storage for uploads (or local fallback)
@@ -134,7 +139,9 @@ router.get('/:id', ensureAuthenticated, async (req, res) => {
       activePage: 'projects',
       project,
       styles: getStyles(),
-      roomTypes: getRoomTypes()
+      roomTypes: getRoomTypes(),
+      aiTools: getAiTools(),
+      weatherOptions: WEATHER_OPTIONS
     });
   } catch (err) {
     console.error('View project error:', err);
@@ -523,6 +530,175 @@ router.post('/:id/change-colors', ensureAuthenticated, async (req, res) => {
   } catch (err) {
     console.error('[ChangeColors] Unexpected error:', err);
     res.status(500).json({ success: false, error: 'An unexpected error occurred: ' + err.message });
+  }
+});
+
+// Unified AI Tool Handler
+router.post('/:id/ai/:tool', ensureAuthenticated, async (req, res) => {
+  try {
+    const project = await Project.findOne({ _id: req.params.id, user: req.user.id });
+    if (!project) return res.status(404).json({ success: false, error: 'Project not found' });
+    if (!project.originalImages || project.originalImages.length === 0) {
+      return res.status(400).json({ success: false, error: 'Please upload at least one image first' });
+    }
+
+    const tool = req.params.tool;
+    const {
+      maskBase64, prompt, designType, houseAngle, gardenType,
+      aiIntervention, noDesign, keepStructural, strength,
+      color, materials, materialsType, object,
+      weather, countryCode, imageIndex
+    } = req.body;
+
+    // Select image (default to first, or user-selected)
+    let imageUrl = project.originalImages[imageIndex || 0]?.url || project.originalImages[0].url;
+    if (imageUrl.startsWith('/')) {
+      imageUrl = `${process.env.APP_URL || 'https://craftycrib.com'}${imageUrl}`;
+    }
+
+    project.status = 'generating';
+    await project.save();
+
+    const baseOpts = {
+      imageUrl,
+      roomType: project.roomType,
+      style: project.style || 'modern',
+      prompt: prompt || undefined,
+      designType: designType || 'Interior',
+      houseAngle,
+      gardenType,
+      aiIntervention: aiIntervention || 'Mid',
+      noDesign: parseInt(noDesign) || 1,
+      keepStructural: keepStructural !== false
+    };
+
+    let result;
+    let toolName;
+
+    switch (tool) {
+      case 'beautiful-redesign':
+        toolName = 'Beautiful Redesign';
+        result = await beautifulRedesign(baseOpts);
+        break;
+      case 'perfect-redesign':
+        toolName = 'Perfect Redesign';
+        result = await perfectRedesign(baseOpts);
+        break;
+      case 'creative-redesign':
+        toolName = 'Creative Design';
+        result = await creativeRedesign(baseOpts);
+        break;
+      case 'sketch-to-render':
+        toolName = 'Sketch to Render';
+        result = await sketchToRender(baseOpts);
+        break;
+      case 'precision':
+        toolName = 'Precision';
+        if (!maskBase64) return res.status(400).json({ success: false, error: 'Please paint the areas you want to redesign' });
+        result = await precision({ ...baseOpts, maskBase64, strength: parseInt(strength) || 5 });
+        break;
+      case 'fill-spaces':
+        toolName = 'Fill Spaces';
+        if (!maskBase64) return res.status(400).json({ success: false, error: 'Please paint the areas you want to fill' });
+        result = await fillSpaces({ ...baseOpts, maskBase64, strength: parseInt(strength) || 5 });
+        break;
+      case 'decor-staging':
+        toolName = 'Decor Staging';
+        result = await decorStaging(baseOpts);
+        break;
+      case 'furniture-removal':
+        toolName = 'Furniture Removal';
+        if (!maskBase64) return res.status(400).json({ success: false, error: 'Please paint the furniture you want to remove' });
+        result = await furnitureRemoval({ imageUrl, maskBase64 });
+        break;
+      case 'color-textures':
+        toolName = 'Color & Textures';
+        if (!maskBase64) return res.status(400).json({ success: false, error: 'Please paint the areas you want to change' });
+        const MATERIAL_DEFAULTS = {
+          'Wood': 'Oak', 'Stone': 'Marble', 'Metal': 'Steel', 'Glass': 'Clear',
+          'Fabrics': 'Cotton', 'Ceramics and Porcelain': 'Glazed',
+          'Plastics and Polymers': 'Acrylic', 'Paper and Cardboard': 'Wallpaper',
+          'Natural Fibers': 'Jute', 'Composite Materials': 'Laminate'
+        };
+        result = await changeColorTextures({
+          imageUrl, maskBase64,
+          prompt: prompt || undefined,
+          color: color || undefined,
+          materials: materials || undefined,
+          materialsType: materialsType || (materials ? MATERIAL_DEFAULTS[materials] : undefined),
+          object: object || undefined,
+          mode: designType || 'Interior',
+          noDesign: parseInt(noDesign) || 1
+        });
+        break;
+      case 'furniture-finder':
+        toolName = 'Furniture Finder';
+        result = await furnitureFinder({ imageUrl, countryCode: countryCode || 'CA' });
+        break;
+      case 'full-hd':
+        toolName = 'Full HD';
+        result = await fullHD({ imageUrl });
+        break;
+      case 'sky-colors':
+        toolName = 'Sky Colors';
+        result = await skyColors({ imageUrl, weather: weather || 'Clear Sky', noDesign: parseInt(noDesign) || 1 });
+        break;
+      default:
+        project.status = 'draft';
+        await project.save();
+        return res.status(400).json({ success: false, error: 'Unknown AI tool: ' + tool });
+    }
+
+    console.log(`[AI:${tool}] Result:`, result.success ? 'SUCCESS' : 'FAILED');
+
+    if (result.success) {
+      // Furniture Finder returns product results, not images
+      if (tool === 'furniture-finder') {
+        project.status = 'completed';
+        await project.save();
+        return res.json({ success: true, resultArray: result.resultArray, tool: toolName });
+      }
+
+      // Save all generated images as variants
+      const images = result.allImages || [result.imageUrl];
+      images.forEach((imgUrl, i) => {
+        project.designVariants.push({
+          name: `${toolName}${images.length > 1 ? ' #' + (i + 1) : ''}`,
+          style: project.style,
+          imageUrl: imgUrl,
+          thumbnailUrl: imgUrl,
+          aiParameters: { type: tool, prompt, designType }
+        });
+      });
+
+      project.status = 'completed';
+      project.aiGenerationHistory.push({
+        parameters: { tool, roomType: project.roomType, style: project.style },
+        success: true
+      });
+      await project.save();
+
+      res.json({
+        success: true,
+        tool: toolName,
+        designs: images.map((imgUrl, i) => ({
+          name: `${toolName}${images.length > 1 ? ' #' + (i + 1) : ''}`,
+          imageUrl: imgUrl
+        }))
+      });
+    } else {
+      project.status = 'draft';
+      project.aiGenerationHistory.push({
+        parameters: { tool },
+        success: false,
+        errorMessage: result.error
+      });
+      await project.save();
+      res.status(500).json({ success: false, error: result.error || 'AI tool failed' });
+    }
+  } catch (err) {
+    console.error(`[AI:${req.params.tool}] Error:`, err);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 
