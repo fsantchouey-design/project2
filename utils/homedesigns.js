@@ -24,7 +24,8 @@ const http = require('http');
 const API_URL = process.env.HOMEDESIGNS_API_URL || 'https://homedesigns.ai/api/v2';
 const API_TOKEN = process.env.HOMEDESIGNS_API_TOKEN;
 
-// Map our style IDs to the exact names the API expects
+// Map our style IDs to the exact names the API expects per design type
+// Interior, Exterior, and Garden each have different valid style lists
 const STYLE_MAP = {
   'modern': 'Modern',
   'contemporary': 'Contemporary',
@@ -39,6 +40,42 @@ const STYLE_MAP = {
   'farmhouse': 'Modern Farm House',
   'art-deco': 'Art Deco',
   'japanese': 'Japanese Design',
+  'mediterranean': 'Mediterranean'
+};
+
+// Exterior-specific style mapping (fallback when interior style isn't valid for exterior)
+const EXTERIOR_STYLE_MAP = {
+  'modern': 'Modern',
+  'contemporary': 'Contemporary',
+  'minimalist': 'Modern',
+  'industrial': 'Urban Industrial',
+  'scandinavian': 'Modern Scandinavian',
+  'traditional': 'Traditional',
+  'rustic': 'Rustic Modern',
+  'bohemian': 'Bohemian',
+  'coastal': 'Beach House',
+  'mid-century': 'Modern',
+  'farmhouse': 'Modern Farm House',
+  'art-deco': 'Art Deco',
+  'japanese': 'Modern',
+  'mediterranean': 'Mediterranean'
+};
+
+// Garden-specific style mapping
+const GARDEN_STYLE_MAP = {
+  'modern': 'Modern',
+  'contemporary': 'Contemporary',
+  'minimalist': 'Minimalist',
+  'industrial': 'Industrial',
+  'scandinavian': 'Scandinavian',
+  'traditional': 'Traditional',
+  'rustic': 'Rustic',
+  'bohemian': 'Bohemian',
+  'coastal': 'Coastal',
+  'mid-century': 'Modern',
+  'farmhouse': 'Farmhouse',
+  'art-deco': 'Art Deco',
+  'japanese': 'Japanese',
   'mediterranean': 'Mediterranean'
 };
 
@@ -279,11 +316,20 @@ const resolveImageUrl = (imageUrl) => {
 
 /**
  * Get mapped style and room type for API
+ * @param {string} style - Our internal style id
+ * @param {string} roomType - Our internal room type id
+ * @param {string} designType - 'Interior', 'Exterior', or 'Garden'
  */
-const getApiParams = (style, roomType) => ({
-  apiStyle: STYLE_MAP[style] || (style ? style.charAt(0).toUpperCase() + style.slice(1) : 'Modern'),
-  apiRoomType: ROOM_TYPE_MAP[roomType] || roomType || 'Living Room'
-});
+const getApiParams = (style, roomType, designType = 'Interior') => {
+  let styleMap = STYLE_MAP;
+  if (designType === 'Exterior') styleMap = EXTERIOR_STYLE_MAP;
+  else if (designType === 'Garden') styleMap = GARDEN_STYLE_MAP;
+
+  return {
+    apiStyle: styleMap[style] || STYLE_MAP[style] || (style ? style.charAt(0).toUpperCase() + style.slice(1) : 'Modern'),
+    apiRoomType: ROOM_TYPE_MAP[roomType] || roomType || 'Living Room'
+  };
+};
 
 /**
  * Add design type fields to form data (room_type, house_angle, garden_type)
@@ -319,7 +365,7 @@ const beautifulRedesign = async (options) => {
     console.log('[BeautifulRedesign] Starting:', { imageUrl: imageUrl.substring(0, 80), roomType, style });
 
     const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
-    const { apiStyle, apiRoomType } = getApiParams(style, roomType);
+    const { apiStyle, apiRoomType } = getApiParams(style, roomType, designType);
 
     const formData = new FormData();
     formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
@@ -353,7 +399,7 @@ const perfectRedesign = async (options) => {
     console.log('[PerfectRedesign] Starting:', { roomType, style, designType });
 
     const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
-    const { apiStyle, apiRoomType } = getApiParams(style, roomType);
+    const { apiStyle, apiRoomType } = getApiParams(style, roomType, designType);
 
     const formData = new FormData();
     formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
@@ -387,7 +433,7 @@ const creativeRedesign = async (options) => {
     console.log('[CreativeRedesign] Starting:', { roomType, style, designType });
 
     const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
-    const { apiStyle, apiRoomType } = getApiParams(style, roomType);
+    const { apiStyle, apiRoomType } = getApiParams(style, roomType, designType);
 
     const formData = new FormData();
     formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
@@ -420,7 +466,7 @@ const sketchToRender = async (options) => {
     console.log('[SketchToRender] Starting:', { roomType, style, designType });
 
     const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
-    const { apiStyle, apiRoomType } = getApiParams(style, roomType);
+    const { apiStyle, apiRoomType } = getApiParams(style, roomType, designType);
 
     const formData = new FormData();
     formData.append('image', imageBuffer, { filename: 'sketch.jpg', contentType: 'image/jpeg' });
@@ -453,7 +499,7 @@ const precision = async (options) => {
 
     const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
     const maskBuffer = Buffer.from(maskBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64');
-    const { apiStyle, apiRoomType } = getApiParams(style, roomType);
+    const { apiStyle, apiRoomType } = getApiParams(style, roomType, designType);
 
     const formData = new FormData();
     formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
@@ -487,7 +533,7 @@ const fillSpaces = async (options) => {
 
     const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
     const maskBuffer = Buffer.from(maskBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64');
-    const { apiStyle, apiRoomType } = getApiParams(style, roomType);
+    const { apiStyle, apiRoomType } = getApiParams(style, roomType, designType);
 
     const formData = new FormData();
     formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
@@ -520,7 +566,7 @@ const decorStaging = async (options) => {
     console.log('[DecorStaging] Starting:', { roomType, style });
 
     const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
-    const { apiStyle, apiRoomType } = getApiParams(style, roomType);
+    const { apiStyle, apiRoomType } = getApiParams(style, roomType, designType);
 
     const formData = new FormData();
     // Decor Staging requires transparent PNG images
