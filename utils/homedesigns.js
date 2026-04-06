@@ -283,11 +283,16 @@ const parseApiResponse = async (result, apiEndpoint, logPrefix = '[HomeDesigns]'
     };
   }
 
-  // Handle furniture finder response: { resultArray: { ... } }
-  if (data.resultArray) {
+  // Handle { success: false, message: "..." } (e.g. furniture finder no results)
+  if (data.success === false && data.message) {
+    throw new Error(data.message);
+  }
+
+  // Handle furniture finder response: { success: true, result: { ... } } or { resultArray: { ... } }
+  if (data.resultArray || (data.success === true && data.result)) {
     return {
       success: true,
-      resultArray: data.resultArray,
+      resultArray: data.resultArray || data.result,
       creditsUsed: 1
     };
   }

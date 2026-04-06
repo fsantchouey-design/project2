@@ -633,7 +633,7 @@ router.post('/:id/ai/:tool', ensureAuthenticated, async (req, res) => {
         break;
       case 'furniture-finder':
         toolName = 'Furniture Finder';
-        result = await furnitureFinder({ imageUrl, countryCode: countryCode || 'CA' });
+        result = await furnitureFinder({ imageUrl, countryCode: countryCode || undefined });
         break;
       case 'full-hd':
         toolName = 'Full HD';
