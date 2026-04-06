@@ -6,7 +6,7 @@ const Project = require('../models/Project');
 const {
   generateDesign, beautifulRedesign, perfectRedesign, creativeRedesign,
   sketchToRender, precision, fillSpaces, decorStaging, furnitureRemoval,
-  changeColorTextures, furnitureFinder, fullHD, skyColors,
+  changeColorTextures, paintVisualizer, furnitureFinder, fullHD, skyColors,
   getStyles, getRoomTypes, getAiTools, WEATHER_OPTIONS
 } = require('../utils/homedesigns');
 const { uploadProjectImages, deleteImage, getImageUrl, isCloudinaryConfigured } = require('../config/cloudinary');
@@ -546,7 +546,7 @@ router.post('/:id/ai/:tool', ensureAuthenticated, async (req, res) => {
     const {
       maskBase64, prompt, style, designType, houseAngle, gardenType,
       aiIntervention, noDesign, keepStructural, strength,
-      color, materials, materialsType, object,
+      color, materials, materialsType, object, rgbColor,
       weather, countryCode, imageIndex
     } = req.body;
 
@@ -628,6 +628,16 @@ router.post('/:id/ai/:tool', ensureAuthenticated, async (req, res) => {
           materialsType: materialsType || (materials ? MATERIAL_DEFAULTS[materials] : undefined),
           object: object || undefined,
           mode: designType || 'Interior',
+          noDesign: parseInt(noDesign) || 1
+        });
+        break;
+      case 'paint-visualizer':
+        toolName = 'Paint Visualizer';
+        if (!maskBase64) return res.status(400).json({ success: false, error: 'Please paint the wall areas you want to repaint' });
+        if (!rgbColor && !color) return res.status(400).json({ success: false, error: 'Please select a paint color' });
+        result = await paintVisualizer({
+          imageUrl, maskBase64,
+          rgbColor: rgbColor || undefined,
           noDesign: parseInt(noDesign) || 1
         });
         break;

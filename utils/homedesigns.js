@@ -180,34 +180,60 @@ const submitToApi = (endpoint, formData) => {
  * @param {string} apiEndpoint - The API endpoint name (e.g. 'beautiful_redesign')
  * @param {string} queueId - The queue ID to poll
  */
-const pollForResult = async (apiEndpoint, queueId, maxAttempts = 30) => {
+const pollForResult = async (apiEndpoint, queueId, maxAttempts = 60) => {
   for (let i = 0; i < maxAttempts; i++) {
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    // Wait 3s between polls (total timeout: ~3 minutes)
+    await new Promise(resolve => setTimeout(resolve, 3000));
 
     try {
       const statusResult = await apiGet(`${API_URL}/${apiEndpoint}/status_check/${queueId}`);
       if (statusResult.statusCode === 200) {
         const statusData = JSON.parse(statusResult.body);
-        console.log(`[HomeDesigns] Poll [${i + 1}/${maxAttempts}] status:`, statusData.status || 'unknown');
+        const status = (statusData.status || '').toLowerCase();
+        console.log(`[HomeDesigns] Poll [${i + 1}/${maxAttempts}] status: ${status || 'unknown'}, keys: ${Object.keys(statusData).join(',')}`);
 
-        if (statusData.status === 'SUCCESS' || statusData.status === 'COMPLETED' || statusData.generated_images || statusData.output_images) {
-          const images = statusData.generated_images || statusData.output_images || [];
-          const outputUrl = images[0] || statusData.output_url || statusData.result;
-          if (outputUrl) {
-            console.log('[HomeDesigns] Design generated (async):', outputUrl.substring(0, 80));
-            return {
-              success: true,
-              imageUrl: outputUrl,
-              allImages: images,
-              thumbnailUrl: outputUrl,
-              originalImageUrl: statusData.input_image,
-              creditsUsed: 1
-            };
-          }
+        // Still processing — keep polling
+        if (status === 'in_queue' || status === 'starting' || status === 'processing') {
+          continue;
         }
 
-        if (statusData.status === 'FAILED' || statusData.status === 'ERROR') {
+        // Failed
+        if (status === 'failed' || status === 'error') {
           return { success: false, error: statusData.message || 'Generation failed on server' };
+        }
+
+        // Check for output images (final result may or may not have a status field)
+        const images = statusData.output_images || statusData.generated_images || [];
+        if (images.length > 0) {
+          console.log(`[HomeDesigns] Design generated (async): ${images.length} image(s)`);
+          return {
+            success: true,
+            imageUrl: images[0],
+            allImages: images,
+            thumbnailUrl: images[0],
+            originalImageUrl: statusData.input_image,
+            creditsUsed: 1
+          };
+        }
+
+        // Also check for any Google Storage URLs in case of unexpected format
+        const bodyStr = JSON.stringify(statusData);
+        const urlMatches = bodyStr.match(/https:\/\/storage\.googleapis\.com\/[^"]+/g);
+        if (urlMatches && urlMatches.length > 0) {
+          console.log(`[HomeDesigns] Found ${urlMatches.length} image URL(s) via fallback in poll`);
+          return {
+            success: true,
+            imageUrl: urlMatches[0],
+            allImages: urlMatches,
+            thumbnailUrl: urlMatches[0],
+            creditsUsed: 1
+          };
+        }
+
+        // If status is success/completed but no images found
+        if (status === 'success' || status === 'completed') {
+          console.log('[HomeDesigns] Status succeeded but no images found:', JSON.stringify(statusData).substring(0, 300));
+          return { success: false, error: 'Generation completed but no images returned' };
         }
       }
     } catch (pollErr) {
@@ -683,6 +709,42 @@ const changeColorTextures = async (options) => {
 };
 
 /**
+ * Paint Visualizer - Change wall paint color using mask + color
+ * Requires either rgb_color OR color_image
+ */
+const paintVisualizer = async (options) => {
+  const {
+    imageUrl, maskBase64, rgbColor, colorImageBase64, noDesign = 1
+  } = options;
+
+  try {
+    if (!API_TOKEN) throw new Error('HomeDesigns API token is not configured.');
+    console.log('[PaintVisualizer] Starting:', { rgbColor, hasColorImage: !!colorImageBase64 });
+
+    const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
+    const maskBuffer = Buffer.from(maskBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+
+    const formData = new FormData();
+    formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
+    formData.append('masked_image', maskBuffer, { filename: 'mask.png', contentType: 'image/png' });
+    formData.append('no_design', String(noDesign));
+
+    if (rgbColor) {
+      formData.append('rgb_color', rgbColor);
+    } else if (colorImageBase64) {
+      const colorBuffer = Buffer.from(colorImageBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+      formData.append('color_image', colorBuffer, { filename: 'color.png', contentType: 'image/png' });
+    }
+
+    const result = await submitToApi(`${API_URL}/paint_visualizer`, formData);
+    return await parseApiResponse(result, 'paint_visualizer', '[PaintVisualizer]');
+  } catch (error) {
+    console.error('[PaintVisualizer] Error:', error.message);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
  * Furniture Finder - Find purchasable furniture from an image
  */
 const furnitureFinder = async (options) => {
@@ -896,6 +958,16 @@ const getAiTools = () => {
       maxDesigns: 4
     },
     {
+      id: 'paint-visualizer',
+      name: 'Paint Visualizer',
+      description: 'Change wall paint color with precision',
+      icon: 'paintbrush',
+      category: 'mask',
+      requiresMask: true,
+      requiresStyle: false,
+      maxDesigns: 4
+    },
+    {
       id: 'furniture-finder',
       name: 'Furniture Finder',
       description: 'Find matching furniture to buy online',
@@ -962,6 +1034,7 @@ module.exports = {
   decorStaging,
   furnitureRemoval,
   changeColorTextures,
+  paintVisualizer,
   furnitureFinder,
   fullHD,
   skyColors,
