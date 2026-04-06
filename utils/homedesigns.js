@@ -253,57 +253,89 @@ const parseApiResponse = async (result, apiEndpoint, logPrefix = '[HomeDesigns]'
   }
 
   const data = JSON.parse(result.body);
+  const keys = Object.keys(data);
+  console.log(`${logPrefix} Response keys:`, keys.join(', '));
 
-  // Handle synchronous response: { success: { generated_image: [...] } }
-  if (data.success && data.success.generated_image) {
-    const images = data.success.generated_image;
-    const outputUrl = images[0];
-    console.log(`${logPrefix} Generated (sync):`, outputUrl.substring(0, 80));
-    return {
-      success: true,
-      imageUrl: outputUrl,
-      allImages: images,
-      thumbnailUrl: outputUrl,
-      originalImageUrl: data.success.original_image,
-      creditsUsed: 1
-    };
-  }
-
-  // Handle documented response: { output_images: [...] }
-  if (data.output_images && data.output_images.length > 0) {
-    const outputUrl = data.output_images[0];
-    console.log(`${logPrefix} Generated (direct):`, outputUrl.substring(0, 80));
-    return {
-      success: true,
-      imageUrl: outputUrl,
-      allImages: data.output_images,
-      thumbnailUrl: outputUrl,
-      originalImageUrl: data.input_image,
-      creditsUsed: 1
-    };
-  }
-
-  // Handle { success: false, message: "..." } (e.g. furniture finder no results)
+  // --- ERROR RESPONSES ---
+  // { success: false, message: "..." }
   if (data.success === false && data.message) {
     throw new Error(data.message);
   }
 
-  // Handle furniture finder response: { success: true, result: { ... } } or { resultArray: { ... } }
-  if (data.resultArray || (data.success === true && data.result)) {
+  // --- IMAGE GENERATION RESPONSES ---
+  // Find output images from ANY possible field name
+  let outputImages = null;
+  let inputImage = null;
+
+  // Format: { output_images: [...] }
+  if (Array.isArray(data.output_images) && data.output_images.length > 0) {
+    outputImages = data.output_images;
+    inputImage = data.input_image;
+  }
+  // Format: { success: { generated_image: [...] } }
+  if (!outputImages && data.success && typeof data.success === 'object' && data.success.generated_image) {
+    outputImages = data.success.generated_image;
+    inputImage = data.success.original_image;
+  }
+  // Format: { generated_images: [...] }
+  if (!outputImages && Array.isArray(data.generated_images) && data.generated_images.length > 0) {
+    outputImages = data.generated_images;
+    inputImage = data.input_image;
+  }
+
+  if (outputImages) {
+    console.log(`${logPrefix} Got ${outputImages.length} output image(s)`);
     return {
       success: true,
-      resultArray: data.resultArray || data.result,
+      imageUrl: outputImages[0],
+      allImages: outputImages,
+      thumbnailUrl: outputImages[0],
+      originalImageUrl: inputImage,
       creditsUsed: 1
     };
   }
 
-  // Handle async queue response: { queue_id: "..." } or { id: "...", status: "IN_QUEUE" }
-  const queueId = data.queue_id || (data.id && (data.status === 'IN_QUEUE' || data.status === 'PROCESSING') ? data.id : null);
+  // --- FURNITURE FINDER RESPONSES ---
+  // Format: { resultArray: { category: [...] } } (documented)
+  // Format: { success: true, result: { category: [...] } } (actual)
+  // Format: { result: { category: [...] } }
+  const furnitureData = data.resultArray || data.result;
+  if (furnitureData && typeof furnitureData === 'object' && !Array.isArray(furnitureData)) {
+    // Check if it looks like furniture data (object with arrays as values)
+    const values = Object.values(furnitureData);
+    if (values.length > 0 && Array.isArray(values[0])) {
+      console.log(`${logPrefix} Got furniture results: ${Object.keys(furnitureData).join(', ')}`);
+      return {
+        success: true,
+        resultArray: furnitureData,
+        creditsUsed: 1
+      };
+    }
+  }
+
+  // --- ASYNC QUEUE RESPONSES ---
+  // Format: { queue_id: "..." } or { id: "...", status: "IN_QUEUE" }
+  const queueId = data.queue_id || data.queueId ||
+    (data.id && typeof data.id === 'string' && (!data.status || data.status === 'IN_QUEUE' || data.status === 'PROCESSING' || data.status === 'PENDING') ? data.id : null);
   if (queueId) {
     console.log(`${logPrefix} Got queue_id:`, queueId, '- polling for result...');
     const pollResult = await pollForResult(apiEndpoint, queueId);
     if (pollResult) return pollResult;
     throw new Error('Design generation timed out. Please try again.');
+  }
+
+  // --- FALLBACK: try to find ANY URL that looks like an output ---
+  const bodyStr = JSON.stringify(data);
+  const urlMatches = bodyStr.match(/https:\/\/storage\.googleapis\.com\/[^"]+/g);
+  if (urlMatches && urlMatches.length > 0) {
+    console.log(`${logPrefix} Found ${urlMatches.length} image URL(s) via fallback`);
+    return {
+      success: true,
+      imageUrl: urlMatches[0],
+      allImages: urlMatches,
+      thumbnailUrl: urlMatches[0],
+      creditsUsed: 1
+    };
   }
 
   throw new Error('Unexpected API response format: ' + JSON.stringify(data).substring(0, 200));

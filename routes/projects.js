@@ -544,7 +544,7 @@ router.post('/:id/ai/:tool', ensureAuthenticated, async (req, res) => {
 
     const tool = req.params.tool;
     const {
-      maskBase64, prompt, designType, houseAngle, gardenType,
+      maskBase64, prompt, style, designType, houseAngle, gardenType,
       aiIntervention, noDesign, keepStructural, strength,
       color, materials, materialsType, object,
       weather, countryCode, imageIndex
@@ -562,7 +562,7 @@ router.post('/:id/ai/:tool', ensureAuthenticated, async (req, res) => {
     const baseOpts = {
       imageUrl,
       roomType: project.roomType,
-      style: project.style || 'modern',
+      style: style || project.style || 'modern',
       prompt: prompt || undefined,
       designType: designType || 'Interior',
       houseAngle,
