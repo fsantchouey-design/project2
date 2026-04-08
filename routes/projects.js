@@ -7,6 +7,9 @@ const {
   generateDesign, beautifulRedesign, perfectRedesign, creativeRedesign,
   sketchToRender, precision, fillSpaces, decorStaging, furnitureRemoval,
   changeColorTextures, paintVisualizer, furnitureFinder, fullHD, skyColors,
+  magicRedesign, videoGeneration, virtualStaging, textToDesign, furnitureCreator,
+  designAdvisor, designTransfer, floorEditor, materialSwap, roomComposer,
+  designCritique, createMaskImage, smartHome,
   getStyles, getRoomTypes, getAiTools, WEATHER_OPTIONS
 } = require('../utils/homedesigns');
 const { uploadProjectImages, deleteImage, getImageUrl, isCloudinaryConfigured } = require('../config/cloudinary');
@@ -653,6 +656,77 @@ router.post('/:id/ai/:tool', ensureAuthenticated, async (req, res) => {
         toolName = 'Sky Colors';
         result = await skyColors({ imageUrl, weather: weather || 'Clear Sky', noDesign: parseInt(noDesign) || 1 });
         break;
+      case 'magic-redesign':
+        toolName = 'Magic Redesign';
+        result = await magicRedesign(baseOpts);
+        break;
+      case 'video-generation':
+        toolName = 'Video Generation';
+        result = await videoGeneration(baseOpts);
+        break;
+      case 'virtual-staging':
+        toolName = 'Virtual Staging';
+        result = await virtualStaging(baseOpts);
+        break;
+      case 'text-to-design':
+        toolName = 'Text to Design';
+        result = await textToDesign(baseOpts);
+        break;
+      case 'furniture-creator':
+        toolName = 'Furniture Creator';
+        result = await furnitureCreator({ imageUrl, style: style || project.style, prompt: prompt || undefined, noDesign: parseInt(noDesign) || 1 });
+        break;
+      case 'design-advisor':
+        toolName = 'Design Advisor';
+        result = await designAdvisor({ imageUrl, prompt: prompt || undefined });
+        break;
+      case 'design-transfer':
+        toolName = 'Design Transfer';
+        result = await designTransfer(baseOpts);
+        break;
+      case 'floor-editor':
+        toolName = 'Floor Editor';
+        if (!maskBase64) return res.status(400).json({ success: false, error: 'Please paint the floor areas you want to edit' });
+        result = await floorEditor({
+          imageUrl, maskBase64,
+          prompt: prompt || undefined,
+          style: style || project.style,
+          materials: materials || undefined,
+          materialsType: materialsType || undefined,
+          color: color || undefined,
+          designType: designType || 'Interior',
+          noDesign: parseInt(noDesign) || 1
+        });
+        break;
+      case 'material-swap':
+        toolName = 'Material Swap';
+        if (!maskBase64) return res.status(400).json({ success: false, error: 'Please paint the areas where you want to swap materials' });
+        result = await materialSwap({
+          imageUrl, maskBase64,
+          prompt: prompt || undefined,
+          materials: materials || undefined,
+          materialsType: materialsType || undefined,
+          color: color || undefined,
+          designType: designType || 'Interior',
+          noDesign: parseInt(noDesign) || 1
+        });
+        break;
+      case 'room-composer':
+        toolName = 'Room Composer';
+        result = await roomComposer(baseOpts);
+        break;
+      case 'design-critique':
+        toolName = 'Design Critique';
+        result = await designCritique({ imageUrl, prompt: prompt || undefined });
+        break;
+      case 'create-mask-image':
+        toolName = 'Create Mask Image';
+        result = await createMaskImage({ imageUrl });
+        break;
+      case 'smart-home':
+        toolName = 'Smart Home';
+        result = await smartHome(baseOpts);
+        break;
       default:
         project.status = 'draft';
         await project.save();
@@ -667,6 +741,40 @@ router.post('/:id/ai/:tool', ensureAuthenticated, async (req, res) => {
         project.status = 'completed';
         await project.save();
         return res.json({ success: true, resultArray: result.resultArray, tool: toolName });
+      }
+
+      // Text-only tools (design-advisor, design-critique)
+      if (result.textResult) {
+        project.status = 'completed';
+        project.aiGenerationHistory.push({
+          parameters: { tool, roomType: project.roomType },
+          success: true
+        });
+        await project.save();
+        return res.json({ success: true, textResult: result.textResult, tool: toolName });
+      }
+
+      // Video generation
+      if (result.videoUrl) {
+        project.designVariants.push({
+          name: `${toolName}`,
+          style: project.style,
+          imageUrl: result.videoUrl,
+          thumbnailUrl: result.imageUrl || result.videoUrl,
+          aiParameters: { type: tool, prompt, designType, isVideo: true }
+        });
+        project.status = 'completed';
+        project.aiGenerationHistory.push({
+          parameters: { tool, roomType: project.roomType },
+          success: true
+        });
+        await project.save();
+        return res.json({
+          success: true,
+          tool: toolName,
+          videoUrl: result.videoUrl,
+          designs: [{ name: toolName, imageUrl: result.videoUrl, isVideo: true }]
+        });
       }
 
       // Save all generated images as variants
