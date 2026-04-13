@@ -629,8 +629,8 @@ const TOOL_META = {
   'paint-visualizer': { name: 'Paint Visualizer', icon: 'paintbrush' },
   'furniture-finder': { name: 'Furniture Finder', icon: 'shopping-bag' },
   'full-hd': { name: 'Full HD', icon: 'monitor' },
-  'sky-colors': { name: 'Sky Colors', icon: 'cloud-sun' }
-'magic-redesign': { name: 'Magic Redesign', icon: 'wand' },
+  'sky-colors': { name: 'Sky Colors', icon: 'cloud-sun' },
+  'magic-redesign': { name: 'Magic Redesign', icon: 'zap' },
   'video-generation': { name: 'Video Generation', icon: 'video' },
   'virtual-staging': { name: 'Virtual Staging', icon: 'sofa' },
   'text-to-design': { name: 'Text to Design', icon: 'type' },
@@ -641,7 +641,7 @@ const TOOL_META = {
   'material-swap': { name: 'Material Swap', icon: 'refresh-cw' },
   'room-composer': { name: 'Room Composer', icon: 'layout-dashboard' },
   'design-critique': { name: 'Design Critique', icon: 'message-square' },
-  'create-maskimage': { name: 'Create Mask Image', icon: 'scissors' },
+  'create-mask-image': { name: 'Create Mask Image', icon: 'scissors' },
   'smart-home': { name: 'Smart Home', icon: 'home' }
 };
 
@@ -785,7 +785,8 @@ function openToolEditor(toolId) {
   // Show/hide panel sections
   const show = (id, v) => { const el = document.getElementById(id); if (el) el.style.display = v ? '' : 'none'; };
   show('ep-source', projectImages.length > 1);
-  show('ep-design-type', requiresStyle || toolId === 'color-textures');
+  const isMaterial = toolId === 'color-textures' || toolId === 'floor-editor' || toolId === 'material-swap';
+  show('ep-design-type', requiresStyle || isMaterial);
   show('ep-style', requiresStyle);
   show('ep-room-type', requiresStyle && currentDesignType === 'Interior');
   show('ep-house-angle', requiresStyle && currentDesignType === 'Exterior');
@@ -794,12 +795,14 @@ function openToolEditor(toolId) {
   show('ep-no-design', maxDesigns > 1);
   show('ep-strength', toolId === 'precision' || toolId === 'fill-spaces');
   show('ep-weather', toolId === 'sky-colors');
-  show('ep-prompt', toolId !== 'furniture-finder' && toolId !== 'full-hd' && toolId !== 'furniture-removal' && toolId !== 'paint-visualizer');
+  show('ep-prompt', toolId !== 'furniture-finder' && toolId !== 'full-hd' && toolId !== 'furniture-removal' && toolId !== 'paint-visualizer' && toolId !== 'create-mask-image');
   show('ep-paint-color', toolId === 'paint-visualizer');
 
-  // Color & Texture specific
-  const isCT = toolId === 'color-textures';
-  show('ep-ct-object', isCT); show('ep-ct-color', isCT); show('ep-ct-material', isCT); show('ep-ct-material-type', false);
+  // Color & Texture / Floor Editor / Material Swap panels
+  show('ep-ct-object', toolId === 'color-textures');
+  show('ep-ct-color', isMaterial);
+  show('ep-ct-material', isMaterial);
+  show('ep-ct-material-type', false);
 
   // Max designs dropdown
   if (maxDesigns > 0) {
@@ -904,11 +907,11 @@ async function submitAiTool() {
 
     if (isMaskTool) body.maskBase64 = generateMaskBase64();
 
-    if (selectedTool === 'color-textures') {
+    if (selectedTool === 'color-textures' || selectedTool === 'floor-editor' || selectedTool === 'material-swap') {
       if (v('ai-ct-color')) body.color = v('ai-ct-color');
       if (v('ai-ct-material')) body.materials = v('ai-ct-material');
       if (v('ai-ct-material-type')) body.materialsType = v('ai-ct-material-type');
-      if (v('ai-ct-object')) body.object = v('ai-ct-object');
+      if (selectedTool === 'color-textures' && v('ai-ct-object')) body.object = v('ai-ct-object');
     }
 
     if (selectedTool === 'paint-visualizer') {
