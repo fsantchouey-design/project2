@@ -147,9 +147,15 @@ const apiGet = (endpoint) => {
 
 /**
  * Submit form data to the HomeDesigns API
+ * Automatically injects tool_name (required by the API) from the endpoint path
  */
 const submitToApi = (endpoint, formData) => {
   return new Promise((resolve, reject) => {
+    // The HomeDesigns API requires tool_name in every request
+    // Extract it from the last path segment of the endpoint URL
+    const toolName = endpoint.split('/').pop();
+    if (toolName) formData.append('tool_name', toolName);
+
     const url = new URL(endpoint);
     const options = {
       hostname: url.hostname,
