@@ -550,7 +550,7 @@ router.post('/:id/ai/:tool', ensureAuthenticated, async (req, res) => {
       maskBase64, prompt, style, designType, houseAngle, gardenType,
       aiIntervention, noDesign, keepStructural, strength,
       color, materials, materialsType, object, rgbColor,
-      weather, countryCode, imageIndex
+      weather, countryCode, imageIndex, roomType: bodyRoomType
     } = req.body;
 
     // Select image (default to first, or user-selected)
@@ -564,7 +564,7 @@ router.post('/:id/ai/:tool', ensureAuthenticated, async (req, res) => {
 
     const baseOpts = {
       imageUrl,
-      roomType: project.roomType,
+      roomType: bodyRoomType || project.roomType,
       style: style || project.style || 'modern',
       prompt: prompt || undefined,
       designType: designType || 'Interior',
