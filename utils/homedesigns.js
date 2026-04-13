@@ -996,6 +996,136 @@ const getAiTools = () => {
       requiresMask: false,
       requiresStyle: false,
       maxDesigns: 4
+    },
+  ,{
+      id: 'magic-redesign',
+      name: 'Magic Redesign',
+      description: 'Transform your room with magic AI redesign',
+      icon: 'wand',
+      category: 'redesign',
+      requiresMask: false,
+      requiresStyle: true,
+      maxDesigns: 4
+    },
+    {
+      id: 'video-generation',
+      name: 'Video Generation',
+      description: 'Generate a video walkthrough of your design',
+      icon: 'video',
+      category: 'redesign',
+      requiresMask: false,
+      requiresStyle: true,
+      maxDesigns: 1
+    },
+    {
+      id: 'virtual-staging',
+      name: 'Virtual Staging',
+      description: 'Stage empty rooms with furniture',
+      icon: 'sofa',
+      category: 'staging',
+      requiresMask: false,
+      requiresStyle: true,
+      maxDesigns: 4
+    },
+    {
+      id: 'text-to-design',
+      name: 'Text to Design',
+      description: 'Create a design from a text prompt',
+      icon: 'type',
+      category: 'redesign',
+      requiresMask: false,
+      requiresStyle: false,
+      maxDesigns: 4
+    },
+    {
+      id: 'furniture-creator',
+      name: 'Furniture Creator',
+      description: 'Create custom furniture pieces',
+      icon: 'armchair',
+      category: 'furniture',
+      requiresMask: false,
+      requiresStyle: false,
+      maxDesigns: 4
+    },
+    {
+      id: 'design-advisor',
+      name: 'Design Advisor',
+      description: 'Get AI design advice for your space',
+      icon: 'lightbulb',
+      category: 'utility',
+      requiresMask: false,
+      requiresStyle: false,
+      maxDesigns: 1
+    },
+    {
+      id: 'design-transfer',
+      name: 'Design Transfer',
+      description: 'Transfer style from one room to another',
+      icon: 'arrow-right-left',
+      category: 'redesign',
+      requiresMask: false,
+      requiresStyle: true,
+      maxDesigns: 4
+    },
+    {
+      id: 'floor-editor',
+      name: 'Floor Editor',
+      description: 'Edit and redesign your floor',
+      icon: 'grid-3x3',
+      category: 'editing',
+      requiresMask: true,
+      requiresStyle: false,
+      maxDesigns: 4
+    },
+    {
+      id: 'material-swap',
+      name: 'Material Swap',
+      description: 'Swap materials and textures in your room',
+      icon: 'refresh-cw',
+      category: 'editing',
+      requiresMask: true,
+      requiresStyle: false,
+      maxDesigns: 4
+    },
+    {
+      id: 'room-composer',
+      name: 'Room Composer',
+      description: 'Compose and arrange your room layout',
+      icon: 'layout-dashboard',
+      category: 'redesign',
+      requiresMask: false,
+      requiresStyle: true,
+      maxDesigns: 4
+    },
+    {
+      id: 'design-critique',
+      name: 'Design Critique',
+      description: 'Get a professional critique of your design',
+      icon: 'message-square',
+      category: 'utility',
+      requiresMask: false,
+      requiresStyle: false,
+      maxDesigns: 1
+    },
+    {
+      id: 'create-maskimage',
+      name: 'Create Mask Image',
+      description: 'Create a mask image for editing',
+      icon: 'scissors',
+      category: 'editing',
+      requiresMask: false,
+      requiresStyle: false,
+      maxDesigns: 1
+    },
+    {
+      id: 'smart-home',
+      name: 'Smart Home',
+      description: 'Visualize smart home features in your space',
+      icon: 'home',
+      category: 'utility',
+      requiresMask: false,
+      requiresStyle: false,
+      maxDesigns: 4
     }
   ];
 };
