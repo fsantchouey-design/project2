@@ -1,0 +1,160 @@
+<div class="page-container admin-landing">
+  <div class="page-header">
+    <h1>Inspirations (<%= images.length %>)</h1>
+    <p class="text-muted">Gérez les images d'inspiration affichées dans la section Idées / Inspiration.</p>
+    <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+      <a href="/admin/landing" class="btn btn-secondary btn-sm">Images</a>
+      <a href="/admin/specialists" class="btn btn-secondary btn-sm">Specialists</a>
+      <a href="/admin/video" class="btn btn-secondary btn-sm">Video</a>
+      <a href="/admin/pricing" class="btn btn-secondary btn-sm">Pricing</a>
+      <a href="/admin/messages" class="btn btn-secondary btn-sm">Messages</a>
+      <a href="/admin/inspirations" class="btn btn-primary btn-sm">Inspirations</a>
+      <a href="/admin/settings" class="btn btn-secondary btn-sm">Settings</a>
+    </div>
+  </div>
+
+  <div class="admin-sections-list">
+
+    <!-- Add form -->
+    <div class="admin-section-group">
+      <div class="admin-section-header">
+        <div class="admin-section-title">
+          <i data-lucide="image-plus"></i>
+          <h2>Ajouter une image</h2>
+        </div>
+        <p class="admin-section-desc">Collez l'URL d'une image (Cloudinary, Unsplash, etc.) et renseignez les informations.</p>
+      </div>
+
+      <form action="/admin/inspirations" method="POST" style="max-width: 640px;">
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label class="form-label">Titre *</label>
+          <input type="text" name="title" class="form-input" placeholder="ex : Cuisine moderne ouverte" required>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 1.25rem;">
+          <div class="form-group">
+            <label class="form-label">Catégorie *</label>
+            <select name="category" class="form-input" required>
+              <option value="">-- Choisir --</option>
+              <% categories.forEach(cat => { %>
+                <option value="<%= cat.value %>"><%= cat.label %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Style</label>
+            <input type="text" name="style" class="form-input" placeholder="ex : moderne, rustique, luxe">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 1.25rem;">
+          <label class="form-label">URL de l'image *</label>
+          <input type="url" name="imageUrl" class="form-input" placeholder="https://..." required
+            oninput="previewImg(this.value)">
+        </div>
+
+        <div id="img-preview" style="display:none; margin-bottom: 1.25rem;">
+          <img id="preview-el" src="" alt="preview"
+            style="max-height: 180px; border-radius: 8px; border: 1px solid var(--border-color); object-fit: cover;">
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-sm">
+          <i data-lucide="plus"></i>
+          Ajouter l'image
+        </button>
+      </form>
+    </div>
+
+    <!-- Image list -->
+    <div class="admin-section-group" style="margin-top: 32px;">
+      <div class="admin-section-header">
+        <div class="admin-section-title">
+          <i data-lucide="images"></i>
+          <h2>Images existantes</h2>
+        </div>
+      </div>
+
+      <% if (images.length === 0) { %>
+        <div class="admin-asset-card" style="text-align: center; padding: 48px;">
+          <i data-lucide="image-off" style="width: 48px; height: 48px; color: var(--text-muted); margin-bottom: 16px;"></i>
+          <h3 style="margin-bottom: 8px;">Aucune image pour l'instant</h3>
+          <p class="text-muted">Ajoutez des images via le formulaire ci-dessus.</p>
+        </div>
+      <% } else { %>
+
+        <!-- Filter tabs -->
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px;">
+          <button class="btn btn-secondary btn-sm filter-btn active" data-cat="all">Toutes (<%= images.length %>)</button>
+          <% categories.forEach(cat => { %>
+            <% const count = images.filter(i => i.category === cat.value).length; %>
+            <% if (count > 0) { %>
+              <button class="btn btn-secondary btn-sm filter-btn" data-cat="<%= cat.value %>">
+                <%= cat.label %> (<%= count %>)
+              </button>
+            <% } %>
+          <% }) %>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px;" id="img-grid">
+          <% images.forEach(img => { %>
+            <div class="admin-asset-card insp-card" data-cat="<%= img.category %>"
+              style="flex-direction: column; padding: 0; overflow: hidden; align-items: stretch;">
+              <div style="position: relative; height: 160px; background: #f1f5f9; overflow: hidden;">
+                <img src="<%= img.imageUrl %>" alt="<%= img.title %>"
+                  style="width: 100%; height: 100%; object-fit: cover;"
+                  onerror="this.style.display='none'">
+              </div>
+              <div style="padding: 12px;">
+                <p style="font-weight: 600; font-size: 14px; margin: 0 0 4px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="<%= img.title %>"><%= img.title %></p>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px;">
+                  <span style="font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #dbeafe; color: #1d4ed8; font-weight: 500;">
+                    <%= categories.find(c => c.value === img.category)?.label || img.category %>
+                  </span>
+                  <% if (img.style) { %>
+                    <span style="font-size: 11px; padding: 2px 8px; border-radius: 999px; background: #f3f4f6; color: #374151; font-weight: 500;">
+                      <%= img.style %>
+                    </span>
+                  <% } %>
+                </div>
+                <form action="/admin/inspirations/<%= img._id %>/delete" method="POST"
+                  onsubmit="return confirm('Supprimer cette image ?')">
+                  <button type="submit" class="btn btn-secondary btn-sm" style="width: 100%; color: #ef4444;">
+                    <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                    Supprimer
+                  </button>
+                </form>
+              </div>
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<script>
+function previewImg(url) {
+  const wrap = document.getElementById('img-preview');
+  const el = document.getElementById('preview-el');
+  if (url) {
+    el.src = url;
+    wrap.style.display = 'block';
+  } else {
+    wrap.style.display = 'none';
+  }
+}
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active', 'btn-primary'));
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.add('btn-secondary'));
+    btn.classList.add('active', 'btn-primary');
+    btn.classList.remove('btn-secondary');
+
+    const cat = btn.dataset.cat;
+    document.querySelectorAll('.insp-card').forEach(card => {
+      card.style.display = (cat === 'all' || card.dataset.cat === cat) ? '' : 'none';
+    });
+  });
+});
+</script>

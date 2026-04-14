@@ -7,6 +7,7 @@ const SpecialistsConfig = require('../models/SpecialistsConfig');
 const { buildLandingImageMap } = require('../utils/landingAssets');
 const { mergeSpecialistsConfig } = require('../utils/specialistsConfig');
 const ContactMessage = require('../models/ContactMessage');
+const InspirationImage = require('../models/InspirationImage');
 const GalleryVideo = require('../models/GalleryVideo');
 const PricingConfig = require('../models/PricingConfig');
 const { mergePricingConfig } = require('../utils/pricingConfig');
@@ -125,31 +126,45 @@ router.get('/terms', (req, res) => {
   });
 });
 
-// Inspiration redirects (legacy/dashboard links)
-router.get('/inspiration/:room', (req, res) => {
-  const roomMap = {
-    cuisine: 'kitchen',
-    salon: 'living-room',
-    chambre: 'bedroom',
-    'salle-de-bain': 'bathroom',
-    exterieur: 'outdoor'
-  };
+// Inspiration pages — show InspirationImage records for each category
+const INSPIRATION_CATEGORY_LABELS = {
+  cuisine: 'Cuisine',
+  salon: 'Salon',
+  chambre: 'Chambre',
+  'salle-de-bain': 'Salle de bain',
+  exterieur: 'Extérieur'
+};
 
-  const styleMap = {
-    moderne: 'modern',
-    rustique: 'rustic',
-    industriel: 'industrial',
-    luxe: 'luxury'
-  };
+const INSPIRATION_CATEGORIES_NAV = [
+  { slug: 'cuisine', label: 'Cuisine' },
+  { slug: 'salon', label: 'Salon' },
+  { slug: 'chambre', label: 'Chambre' },
+  { slug: 'salle-de-bain', label: 'Salle de bain' },
+  { slug: 'exterieur', label: 'Extérieur' }
+];
 
-  const room = roomMap[req.params.room] || req.params.room;
-  const style = req.query.style ? (styleMap[req.query.style] || req.query.style) : '';
-  const query = new URLSearchParams();
+router.get('/inspiration/:room', async (req, res) => {
+  const category = req.params.room;
+  const label = INSPIRATION_CATEGORY_LABELS[category];
 
-  if (room) query.set('room', room);
-  if (style) query.set('style', style);
+  if (!label) {
+    return res.redirect('/');
+  }
 
-  res.redirect(`/gallery?${query.toString()}`);
+  try {
+    const images = await InspirationImage.find({ category }).sort({ createdAt: -1 });
+    res.render('pages/inspiration', {
+      title: `Inspiration ${label} - CraftyCrib`,
+      layout: 'layouts/dashboard',
+      category,
+      label,
+      images,
+      categories: INSPIRATION_CATEGORIES_NAV
+    });
+  } catch (err) {
+    console.error('Inspiration page error:', err);
+    res.redirect('/dashboard');
+  }
 });
 
 // ========================================

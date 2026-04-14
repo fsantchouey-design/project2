@@ -509,5 +509,65 @@ router.post('/settings/social', async (req, res) => {
   }
 });
 
+// ==========================================
+// Inspiration Images
+// ==========================================
+const InspirationImage = require('../models/InspirationImage');
+
+const INSPIRATION_CATEGORIES = [
+  { value: 'cuisine', label: 'Cuisine' },
+  { value: 'salon', label: 'Salon' },
+  { value: 'chambre', label: 'Chambre' },
+  { value: 'salle-de-bain', label: 'Salle de bain' },
+  { value: 'exterieur', label: 'Extérieur' }
+];
+
+router.get('/inspirations', async (req, res) => {
+  try {
+    const images = await InspirationImage.find({}).sort({ createdAt: -1 });
+    res.render('pages/admin/inspirations', {
+      title: 'Inspirations - Admin',
+      layout: 'layouts/minimal',
+      extraStyles: ['/css/dashboard.css'],
+      activePage: 'admin-inspirations',
+      images,
+      categories: INSPIRATION_CATEGORIES
+    });
+  } catch (err) {
+    console.error('Admin inspirations error:', err);
+    req.flash('error_msg', 'Unable to load inspirations.');
+    res.redirect('/admin');
+  }
+});
+
+router.post('/inspirations', async (req, res) => {
+  try {
+    const { title, category, style, imageUrl } = req.body;
+    if (!title || !category || !imageUrl) {
+      req.flash('error_msg', 'Titre, catégorie et URL sont requis.');
+      return res.redirect('/admin/inspirations');
+    }
+    await InspirationImage.create({ title: title.trim(), category, style: (style || '').trim(), imageUrl: imageUrl.trim() });
+    req.flash('success_msg', 'Image d\'inspiration ajoutée.');
+    res.redirect('/admin/inspirations');
+  } catch (err) {
+    console.error('Admin inspirations create error:', err);
+    req.flash('error_msg', 'Impossible d\'ajouter l\'image.');
+    res.redirect('/admin/inspirations');
+  }
+});
+
+router.post('/inspirations/:id/delete', async (req, res) => {
+  try {
+    await InspirationImage.findByIdAndDelete(req.params.id);
+    req.flash('success_msg', 'Image supprimée.');
+    res.redirect('/admin/inspirations');
+  } catch (err) {
+    console.error('Admin inspirations delete error:', err);
+    req.flash('error_msg', 'Impossible de supprimer l\'image.');
+    res.redirect('/admin/inspirations');
+  }
+});
+
 module.exports = router;
 
