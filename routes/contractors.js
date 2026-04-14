@@ -31,56 +31,117 @@ const upload = multer({
   }
 });
 
+// Service categories for the Home-Depot-style UI
+const SERVICE_CATEGORIES = [
+  {
+    id: 'painting',
+    specialty: 'painting',
+    label: 'Peinture et décoration',
+    icon: 'paintbrush',
+    subcategories: ['Peinture intérieure', 'Peinture extérieure', 'Papier peint', 'Enduit décoratif', 'Ravalement de façade']
+  },
+  {
+    id: 'kitchen',
+    specialty: 'kitchen',
+    label: 'Rénovation cuisine',
+    icon: 'utensils',
+    subcategories: ['Armoires', 'Comptoirs', 'Îlot de cuisine', 'Électroménager encastré', 'Carrelage cuisine']
+  },
+  {
+    id: 'bathroom',
+    specialty: 'bathroom',
+    label: 'Rénovation salle de bain',
+    icon: 'bath',
+    subcategories: ['Douche italienne', 'Baignoire', 'Vanité', 'Carrelage salle de bain', 'Robinetterie']
+  },
+  {
+    id: 'flooring',
+    specialty: 'flooring',
+    label: 'Planchers et revêtements',
+    icon: 'layers',
+    subcategories: ['Bois franc', 'Céramique', 'Vinyle', 'Moquette', 'Parquet flottant']
+  },
+  {
+    id: 'lighting',
+    specialty: 'electrical',
+    label: 'Éclairage',
+    icon: 'lightbulb',
+    subcategories: ['Plafonniers', 'Spots encastrés', 'Éclairage extérieur', 'Appliques murales', 'Lustres et suspensions']
+  },
+  {
+    id: 'furniture',
+    specialty: 'general',
+    label: 'Mobilier et aménagement',
+    icon: 'sofa',
+    subcategories: ['Aménagement salon', 'Aménagement chambre', 'Bureau à domicile', 'Dressing sur mesure', 'Rangement']
+  },
+  {
+    id: 'outdoor',
+    specialty: 'outdoor',
+    label: 'Jardinage et extérieur',
+    icon: 'trees',
+    subcategories: ['Terrasse et patio', 'Clôture et portail', 'Gazon et paysagement', 'Piscine et spa', 'Pergola et abri']
+  },
+  {
+    id: 'plumbing',
+    specialty: 'plumbing',
+    label: 'Plomberie',
+    icon: 'wrench',
+    subcategories: ['Robinetterie', 'Tuyaux et raccords', 'Chauffe-eau', 'WC et sanitaires', 'Évacuations']
+  },
+  {
+    id: 'electrical',
+    specialty: 'electrical',
+    label: 'Électricité',
+    icon: 'zap',
+    subcategories: ['Prises et interrupteurs', 'Tableau électrique', 'Domotique', 'Câblage', 'Mise aux normes']
+  },
+  {
+    id: 'cleaning',
+    specialty: 'general',
+    label: 'Nettoyage',
+    icon: 'sparkles',
+    subcategories: ['Ménage régulier', 'Nettoyage de vitres', 'Nettoyage de tapis', 'Après travaux', 'Nettoyage extérieur']
+  }
+];
+
 // Browse Contractors (Public)
 router.get('/', async (req, res) => {
   try {
-    const { specialty, city, minRating, q } = req.query;
-    
-    // For new sites, show all contractors or mock data
-    let query = {};
-    
+    const { specialty, city, q, service } = req.query;
+
+    let dbQuery = {};
+
     if (specialty) {
-      query.specialties = specialty;
+      dbQuery.specialties = specialty;
     }
     if (city) {
-      query['serviceArea.cities'] = { $regex: city, $options: 'i' };
-    }
-    if (minRating) {
-      query['rating.average'] = { $gte: parseFloat(minRating) };
+      dbQuery['serviceArea.cities'] = { $regex: city, $options: 'i' };
     }
     if (q) {
-      query.$or = [
+      dbQuery.$or = [
         { companyName: { $regex: q, $options: 'i' } },
         { specialties: { $regex: q, $options: 'i' } },
-        { 'location.city': { $regex: q, $options: 'i' } }
+        { 'address.city': { $regex: q, $options: 'i' } }
       ];
     }
 
-    const contractors = await Contractor.find(query)
+    const contractors = await Contractor.find(dbQuery)
       .populate('user', 'firstName lastName avatar')
       .sort({ isPremium: -1, 'rating.average': -1 })
-      .limit(20);
+      .limit(24);
 
-    // Available specialties for filter
-    const specialties = [
-      'Interior Design',
-      'General Contractor',
-      'Kitchen & Bath',
-      'Electrical',
-      'Plumbing',
-      'Flooring',
-      'Painting',
-      'Carpentry'
-    ];
+    // Find the active category label for breadcrumb display
+    const activeCategory = SERVICE_CATEGORIES.find(c => c.specialty === specialty && (!service || c.subcategories.includes(service)));
 
     res.render('pages/contractors/index', {
-      title: 'Find Professional Contractors - CraftyCrib',
-      metaDescription: 'Browse and connect with verified interior designers and contractors. Get quotes for your AI-generated renovation designs.',
+      title: 'Trouver un entrepreneur - CraftyCrib',
+      metaDescription: 'Trouvez des entrepreneurs et designers d\'intérieur vérifiés pour concrétiser votre projet de rénovation.',
       layout: 'layouts/landing',
       contractors,
-      specialties,
-      filters: { specialty, city, minRating },
-      query: q || ''
+      categories: SERVICE_CATEGORIES,
+      filters: { specialty: specialty || '', city: city || '', service: service || '', q: q || '' },
+      activeCategory: activeCategory || null
     });
   } catch (err) {
     console.error('Browse contractors error:', err);

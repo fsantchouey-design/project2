@@ -1,515 +1,726 @@
-<!-- Hero Section -->
-<section class="contractors-hero">
-  <div class="container">
-    <div class="hero-content">
-      <span class="hero-badge">
-        <i data-lucide="hard-hat"></i>
-        Verified Professionals
-      </span>
-      <h1>Find Trusted Contractors<br>For Your <span class="gradient-text">Renovation Project</span></h1>
-      <p class="hero-subtitle">Connect with vetted interior designers, contractors, and craftsmen who can bring your AI-generated designs to life.</p>
-      
-      <!-- Search Box -->
-      <div class="contractor-search">
-        <form action="/contractors" method="GET" class="search-form">
-          <div class="search-input-wrapper">
-            <i data-lucide="search"></i>
-            <input type="text" name="q" placeholder="Search by specialty or location..." value="<%= typeof query !== 'undefined' ? query : '' %>" class="search-input">
-          </div>
-          <select name="specialty" class="search-select">
-            <option value="">All Specialties</option>
-            <% if (typeof specialties !== 'undefined') { %>
-              <% specialties.forEach(spec => { %>
-                <option value="<%= spec %>" <%= typeof filters !== 'undefined' && filters.specialty === spec ? 'selected' : '' %>><%= spec %></option>
-              <% }) %>
-            <% } %>
-          </select>
-          <button type="submit" class="btn btn-primary">
-            <i data-lucide="search"></i>
-            Search
-          </button>
-        </form>
+<!-- ===== HERO BANNER ===== -->
+<section class="ep-hero">
+  <div class="ep-hero-inner">
+    <p class="ep-hero-eyebrow">
+      <i data-lucide="hard-hat" style="width:16px;height:16px;vertical-align:-3px;margin-right:6px;"></i>
+      Entrepreneurs vérifiés · CraftyCrib
+    </p>
+    <h1 class="ep-hero-title">Trouvez l'entrepreneur<br>idéal pour votre projet</h1>
+    <p class="ep-hero-sub">Connectez-vous avec des professionnels qualifiés qui donneront vie à vos designs IA.</p>
+
+    <form class="ep-search-form" action="/contractors" method="GET" id="searchForm">
+      <div class="ep-search-box">
+        <i data-lucide="search" class="ep-search-icon"></i>
+        <input
+          type="text"
+          name="q"
+          class="ep-search-input"
+          placeholder="Rechercher un service ou une ville…"
+          value="<%= filters.q %>"
+          autocomplete="off"
+        >
+        <% if (filters.specialty) { %>
+          <input type="hidden" name="specialty" value="<%= filters.specialty %>">
+        <% } %>
+        <button type="submit" class="ep-search-btn">
+          <i data-lucide="search" style="width:18px;height:18px;"></i>
+          Rechercher
+        </button>
       </div>
+    </form>
+
+    <div class="ep-hero-stats">
+      <span><i data-lucide="shield-check" style="width:15px;height:15px;color:var(--accent-primary);vertical-align:-3px;margin-right:4px;"></i>Professionnels vérifiés</span>
+      <span><i data-lucide="star" style="width:15px;height:15px;color:#f59e0b;vertical-align:-3px;margin-right:4px;"></i>Avis clients authentiques</span>
+      <span><i data-lucide="message-circle" style="width:15px;height:15px;color:var(--accent-primary);vertical-align:-3px;margin-right:4px;"></i>Contact direct</span>
     </div>
   </div>
-  
-  <div class="hero-bg">
-    <div class="gradient-orb hero-orb-1"></div>
-    <div class="gradient-orb hero-orb-2"></div>
+  <div class="ep-hero-bg">
+    <div class="ep-orb ep-orb-1"></div>
+    <div class="ep-orb ep-orb-2"></div>
   </div>
 </section>
 
-<!-- Filters & Results -->
-<section class="contractors-section">
-  <div class="container">
-    <!-- Filter Tags -->
-    <div class="filter-bar">
-      <div class="filter-tags">
-        <button class="filter-tag active" data-filter="all">All</button>
-        <button class="filter-tag" data-filter="interior-design">Interior Design</button>
-        <button class="filter-tag" data-filter="general-contractor">General Contractor</button>
-        <button class="filter-tag" data-filter="kitchen-bath">Kitchen & Bath</button>
-        <button class="filter-tag" data-filter="electrical">Electrical</button>
-        <button class="filter-tag" data-filter="plumbing">Plumbing</button>
-      </div>
-      
-      <div class="sort-dropdown">
-        <select name="sort" id="sortSelect">
-          <option value="rating">Highest Rated</option>
-          <option value="reviews">Most Reviews</option>
-          <option value="newest">Newest</option>
-        </select>
-      </div>
+<!-- ===== CATEGORIES GRID ===== -->
+<section class="ep-section ep-categories-section">
+  <div class="ep-container">
+    <div class="ep-section-header">
+      <h2 class="ep-section-title">Parcourir par catégorie</h2>
+      <p class="ep-section-sub">Cliquez sur une catégorie pour voir les sous-services disponibles</p>
     </div>
-    
-    <!-- Results Count -->
-    <div class="results-info">
-      <p>Showing <strong><%= typeof contractors !== 'undefined' ? contractors.length : 0 %></strong> contractors</p>
+
+    <div class="ep-cat-grid">
+      <% categories.forEach((cat, idx) => { %>
+        <% const isActive = filters.specialty === cat.specialty && (!filters.service || cat.subcategories.includes(filters.service)); %>
+        <div class="ep-cat-card <%= isActive ? 'ep-cat-active' : '' %>" data-idx="<%= idx %>">
+          <button class="ep-cat-toggle" type="button" onclick="toggleCat(<%= idx %>)">
+            <span class="ep-cat-icon-wrap">
+              <i data-lucide="<%= cat.icon %>"></i>
+            </span>
+            <span class="ep-cat-label"><%= cat.label %></span>
+            <span class="ep-cat-plus" id="plus-<%= idx %>"><%= isActive ? '−' : '+' %></span>
+          </button>
+          <div class="ep-subcat-panel" id="panel-<%= idx %>" style="<%= isActive ? '' : 'display:none' %>">
+            <div class="ep-subcat-list">
+              <% cat.subcategories.forEach(sub => { %>
+                <% const subActive = filters.service === sub && filters.specialty === cat.specialty; %>
+                <a
+                  href="/contractors?specialty=<%= cat.specialty %>&service=<%= encodeURIComponent(sub) %>"
+                  class="ep-subcat-chip <%= subActive ? 'ep-subcat-chip-active' : '' %>"
+                >
+                  <%= sub %>
+                  <i data-lucide="arrow-right" style="width:12px;height:12px;margin-left:4px;opacity:0.6;"></i>
+                </a>
+              <% }) %>
+            </div>
+          </div>
+        </div>
+      <% }) %>
     </div>
-    
-    <!-- Contractors Grid -->
-    <div class="contractors-grid">
-      <% if (typeof contractors !== 'undefined' && contractors.length > 0) { %>
-        <% contractors.forEach(contractor => { %>
-          <article class="contractor-card">
-            <div class="contractor-header">
-              <div class="contractor-avatar">
-                <% if (contractor.logo) { %>
-                  <img src="<%= contractor.logo %>" alt="<%= contractor.companyName %>">
+  </div>
+</section>
+
+<!-- ===== RESULTS SECTION ===== -->
+<section class="ep-section ep-results-section" id="results">
+  <div class="ep-container">
+
+    <!-- Active filter breadcrumb -->
+    <% if (filters.specialty || filters.q) { %>
+      <div class="ep-breadcrumb">
+        <a href="/contractors" class="ep-breadcrumb-home">
+          <i data-lucide="layout-grid" style="width:14px;height:14px;"></i>
+          Toutes les catégories
+        </a>
+        <% if (filters.specialty) { %>
+          <i data-lucide="chevron-right" style="width:14px;height:14px;color:var(--text-muted);"></i>
+          <span class="ep-breadcrumb-cat">
+            <% const bc = categories.find(c => c.specialty === filters.specialty); %>
+            <%= bc ? bc.label : filters.specialty %>
+          </span>
+        <% } %>
+        <% if (filters.service) { %>
+          <i data-lucide="chevron-right" style="width:14px;height:14px;color:var(--text-muted);"></i>
+          <span class="ep-breadcrumb-service"><%= filters.service %></span>
+        <% } %>
+        <% if (filters.q) { %>
+          <i data-lucide="chevron-right" style="width:14px;height:14px;color:var(--text-muted);"></i>
+          <span class="ep-breadcrumb-service">«&nbsp;<%= filters.q %>&nbsp;»</span>
+        <% } %>
+        <a href="/contractors" class="ep-clear-btn">
+          <i data-lucide="x" style="width:13px;height:13px;"></i> Effacer
+        </a>
+      </div>
+    <% } %>
+
+    <!-- Count + sort -->
+    <div class="ep-results-bar">
+      <p class="ep-results-count">
+        <strong><%= contractors.length %></strong>
+        entrepreneur<%= contractors.length !== 1 ? 's' : '' %>
+        <%= filters.service ? `pour « ${filters.service} »` : (filters.specialty ? 'dans cette catégorie' : 'disponibles') %>
+      </p>
+    </div>
+
+    <!-- Contractors grid -->
+    <% if (contractors.length > 0) { %>
+      <div class="ep-contractors-grid">
+        <% contractors.forEach(c => { %>
+          <article class="ep-card">
+            <div class="ep-card-top">
+              <div class="ep-avatar">
+                <% if (c.logo) { %>
+                  <img src="<%= c.logo %>" alt="<%= c.companyName %>">
                 <% } else { %>
-                  <span><%= contractor.companyName.charAt(0) %></span>
+                  <span><%= c.companyName.charAt(0).toUpperCase() %></span>
                 <% } %>
-                <% if (contractor.isVerified) { %>
-                  <span class="verified-badge" title="Verified Contractor">
-                    <i data-lucide="badge-check"></i>
+                <% if (c.isVerified) { %>
+                  <span class="ep-verified" title="Vérifié">
+                    <i data-lucide="badge-check" style="width:12px;height:12px;"></i>
                   </span>
                 <% } %>
               </div>
-              <div class="contractor-info">
-                <h3><%= contractor.companyName %></h3>
-                <p class="contractor-tagline"><%= contractor.tagline || 'Professional Contractor' %></p>
+              <div class="ep-card-info">
+                <h3 class="ep-card-name"><%= c.companyName %></h3>
+                <p class="ep-card-tagline"><%= c.tagline || 'Entrepreneur professionnel' %></p>
+                <div class="ep-card-meta">
+                  <span class="ep-meta-item">
+                    <i data-lucide="star" style="width:13px;height:13px;color:#f59e0b;"></i>
+                    <%= c.rating?.average ? c.rating.average.toFixed(1) : '—' %>
+                    <span class="ep-meta-muted">(<%= c.rating?.count || 0 %>)</span>
+                  </span>
+                  <span class="ep-meta-item">
+                    <i data-lucide="map-pin" style="width:13px;height:13px;"></i>
+                    <%= c.address?.city || 'France' %>
+                  </span>
+                  <% if (c.availability?.status === 'available') { %>
+                    <span class="ep-badge-avail">Disponible</span>
+                  <% } %>
+                </div>
               </div>
+              <% if (c.isPremium) { %>
+                <span class="ep-badge-premium">Pro</span>
+              <% } %>
             </div>
-            
-            <div class="contractor-body">
-              <div class="contractor-stats">
-                <div class="stat">
-                  <i data-lucide="star"></i>
-                  <span><%= contractor.rating?.average?.toFixed(1) || 'N/A' %></span>
-                  <span class="stat-label">(<%= contractor.rating?.count || 0 %> reviews)</span>
-                </div>
-                <div class="stat">
-                  <i data-lucide="map-pin"></i>
-                  <span><%= contractor.location?.city || 'France' %></span>
-                </div>
-              </div>
-              
-              <div class="contractor-specialties">
-                <% (contractor.specialties || []).slice(0, 3).forEach(spec => { %>
-                  <span class="specialty-tag"><%= spec %></span>
+
+            <div class="ep-card-body">
+              <p class="ep-card-desc"><%= c.description ? c.description.substring(0, 110) + (c.description.length > 110 ? '…' : '') : 'Aucune description.' %></p>
+              <div class="ep-tags">
+                <% (c.specialties || []).slice(0, 4).forEach(spec => { %>
+                  <span class="ep-tag"><%= spec %></span>
                 <% }) %>
-                <% if (contractor.specialties && contractor.specialties.length > 3) { %>
-                  <span class="specialty-tag more">+<%= contractor.specialties.length - 3 %></span>
+                <% if ((c.specialties || []).length > 4) { %>
+                  <span class="ep-tag ep-tag-more">+<%= c.specialties.length - 4 %></span>
                 <% } %>
               </div>
-              
-              <p class="contractor-bio"><%= contractor.bio ? contractor.bio.substring(0, 120) + '...' : 'No bio available' %></p>
             </div>
-            
-            <div class="contractor-footer">
-              <a href="/contractors/<%= contractor.slug %>" class="btn btn-secondary">
-                View Profile
+
+            <div class="ep-card-footer">
+              <a href="/contractors/<%= c.slug %>" class="btn btn-secondary ep-btn-profile">
+                <i data-lucide="user" style="width:15px;height:15px;"></i>
+                Voir le profil
               </a>
-              <button class="btn btn-primary" onclick="contactContractor('<%= contractor._id %>')">
-                <i data-lucide="message-square"></i>
-                Contact
+              <button class="btn btn-primary ep-btn-contact" onclick="contactContractor('<%= c._id %>')">
+                <i data-lucide="message-circle" style="width:15px;height:15px;"></i>
+                Contacter
               </button>
             </div>
           </article>
         <% }) %>
-      <% } else { %>
-        <!-- Empty State -->
-        <div class="empty-state">
-          <div class="empty-state-icon">
-            <i data-lucide="hard-hat"></i>
-          </div>
-          <h3>No contractors found</h3>
-          <p>We couldn't find any contractors matching your criteria. Try adjusting your filters or check back later.</p>
-          <a href="/contractors" class="btn btn-secondary">Clear Filters</a>
+      </div>
+
+    <% } else { %>
+      <div class="ep-empty">
+        <div class="ep-empty-icon">
+          <i data-lucide="hard-hat"></i>
         </div>
-      <% } %>
-    </div>
-    
-    <!-- Pagination -->
-    <% if (typeof pagination !== 'undefined' && pagination.pages > 1) { %>
-      <div class="pagination">
-        <% if (pagination.page > 1) { %>
-          <a href="/contractors?page=<%= pagination.page - 1 %>" class="pagination-btn">
-            <i data-lucide="chevron-left"></i>
-          </a>
-        <% } %>
-        
-        <% for (let i = 1; i <= pagination.pages; i++) { %>
-          <a href="/contractors?page=<%= i %>" class="pagination-btn <%= pagination.page === i ? 'active' : '' %>">
-            <%= i %>
-          </a>
-        <% } %>
-        
-        <% if (pagination.page < pagination.pages) { %>
-          <a href="/contractors?page=<%= pagination.page + 1 %>" class="pagination-btn">
-            <i data-lucide="chevron-right"></i>
-          </a>
-        <% } %>
+        <h3>Aucun entrepreneur trouvé</h3>
+        <p>Aucun professionnel ne correspond à ce critère pour l'instant. Essayez une autre catégorie ou revenez bientôt.</p>
+        <a href="/contractors" class="btn btn-secondary" style="margin-top: 16px;">Voir tous les entrepreneurs</a>
       </div>
     <% } %>
   </div>
 </section>
 
-<!-- CTA Section -->
-<section class="cta-section">
-  <div class="cta-bg">
-    <div class="gradient-orb cta-orb-1"></div>
-    <div class="gradient-orb cta-orb-2"></div>
+<!-- ===== JOIN CTA ===== -->
+<section class="ep-join-section">
+  <div class="ep-join-bg">
+    <div class="ep-orb ep-orb-1"></div>
+    <div class="ep-orb ep-orb-2"></div>
   </div>
-  <div class="cta-content">
-    <h2>Are You a Contractor?</h2>
-    <p>Join CraftyCrib and connect with homeowners who have ready-to-build AI designs.</p>
-    <a href="/auth/register?role=contractor" class="btn btn-primary btn-lg">
-      <i data-lucide="building-2"></i>
-      Join as Contractor
-    </a>
-    <p class="cta-note">Free to join • Get qualified leads • Build your portfolio</p>
+  <div class="ep-join-content">
+    <span class="ep-join-badge">
+      <i data-lucide="briefcase" style="width:14px;height:14px;margin-right:6px;vertical-align:-2px;"></i>
+      Vous êtes entrepreneur ?
+    </span>
+    <h2>Rejoignez CraftyCrib Pro</h2>
+    <p>Connectez-vous avec des propriétaires ayant des designs IA prêts à construire. Développez votre clientèle.</p>
+    <div class="ep-join-actions">
+      <a href="/auth/register?role=contractor" class="btn btn-primary btn-lg">
+        <i data-lucide="building-2"></i>
+        Créer mon profil entrepreneur
+      </a>
+    </div>
+    <p class="ep-join-note">Gratuit · Prospects qualifiés · Gérez votre portfolio</p>
   </div>
 </section>
 
+
+<!-- ===== STYLES ===== -->
 <style>
-  /* Contractors Page Styles */
-  .contractors-hero {
-    position: relative;
-    padding: 140px 2rem 80px;
-    text-align: center;
-  }
-  
-  .contractors-hero .hero-content {
-    max-width: 800px;
-    margin: 0 auto;
-    position: relative;
-    z-index: 1;
-  }
-  
-  .contractors-hero h1 {
-    font-size: clamp(2rem, 5vw, 3.5rem);
-    font-weight: 800;
-    margin-bottom: var(--spacing-lg);
-  }
-  
-  .contractors-hero .hero-subtitle {
-    font-size: 1.1rem;
-    color: var(--text-secondary);
-    margin-bottom: var(--spacing-2xl);
-  }
-  
-  .contractor-search {
-    max-width: 700px;
-    margin: 0 auto;
-  }
-  
-  .search-form {
-    display: flex;
-    gap: var(--spacing-sm);
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-full);
-    padding: 0.5rem;
-  }
-  
-  .search-input-wrapper {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-    padding-left: var(--spacing-md);
-  }
-  
-  .search-input-wrapper i {
-    color: var(--text-muted);
-    width: 18px;
-    height: 18px;
-  }
-  
-  .search-input {
-    flex: 1;
-    background: transparent;
-    border: none;
-    color: var(--text-primary);
-    font-size: 0.95rem;
-  }
-  
-  .search-input:focus { outline: none; }
-  
-  .search-select {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    padding: 0.75rem 1rem;
-    color: var(--text-primary);
-    font-size: 0.9rem;
-  }
-  
-  .contractors-section {
-    padding: var(--spacing-3xl) 2rem;
-  }
-  
-  .filter-bar {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--spacing-xl);
-    flex-wrap: wrap;
-    gap: var(--spacing-lg);
-  }
-  
-  .filter-tags {
-    display: flex;
-    gap: var(--spacing-sm);
-    flex-wrap: wrap;
-  }
-  
-  .filter-tag {
-    padding: 0.5rem 1rem;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-full);
-    color: var(--text-secondary);
-    font-size: 0.85rem;
-    cursor: pointer;
-    transition: all var(--transition-fast);
-  }
-  
-  .filter-tag:hover,
-  .filter-tag.active {
-    background: rgba(0, 255, 136, 0.1);
-    border-color: var(--accent-primary);
-    color: var(--accent-primary);
-  }
-  
-  .sort-dropdown select {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    padding: 0.5rem 1rem;
-    color: var(--text-primary);
-  }
-  
-  .results-info {
-    margin-bottom: var(--spacing-xl);
-    color: var(--text-muted);
-  }
-  
-  .contractors-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-    gap: var(--spacing-xl);
-  }
-  
-  .contractor-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    transition: all var(--transition-base);
-  }
-  
-  .contractor-card:hover {
-    border-color: var(--accent-primary);
-    transform: translateY(-4px);
-  }
-  
-  .contractor-header {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-md);
-    padding: var(--spacing-lg);
-    border-bottom: 1px solid var(--border-color);
-    background: var(--bg-secondary);
-  }
-  
-  .contractor-avatar {
-    position: relative;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    overflow: hidden;
-    background: var(--accent-gradient);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 1.5rem;
-    font-weight: 700;
-    color: #000;
-    flex-shrink: 0;
-  }
-  
-  .contractor-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  
-  .verified-badge {
-    position: absolute;
-    bottom: -2px;
-    right: -2px;
-    width: 22px;
-    height: 22px;
-    background: var(--accent-primary);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #000;
-  }
-  
-  .verified-badge i {
-    width: 14px;
-    height: 14px;
-  }
-  
-  .contractor-info h3 {
-    font-size: 1.1rem;
-    font-weight: 600;
-    margin-bottom: var(--spacing-xs);
-  }
-  
-  .contractor-tagline {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-  }
-  
-  .contractor-body {
-    padding: var(--spacing-lg);
-  }
-  
-  .contractor-stats {
-    display: flex;
-    gap: var(--spacing-xl);
-    margin-bottom: var(--spacing-md);
-  }
-  
-  .contractor-stats .stat {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-    font-size: 0.9rem;
-  }
-  
-  .contractor-stats .stat i {
-    width: 16px;
-    height: 16px;
-    color: var(--accent-primary);
-  }
-  
-  .contractor-stats .stat-label {
-    color: var(--text-muted);
-    font-size: 0.8rem;
-  }
-  
-  .contractor-specialties {
-    display: flex;
-    gap: var(--spacing-xs);
-    flex-wrap: wrap;
-    margin-bottom: var(--spacing-md);
-  }
-  
-  .specialty-tag {
-    padding: 0.25rem 0.6rem;
-    background: var(--bg-secondary);
-    border-radius: var(--radius-sm);
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-  }
-  
-  .specialty-tag.more {
-    background: var(--bg-card-hover);
-  }
-  
-  .contractor-bio {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    line-height: 1.6;
-  }
-  
-  .contractor-footer {
-    display: flex;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-lg);
-    border-top: 1px solid var(--border-color);
-  }
-  
-  .contractor-footer .btn {
-    flex: 1;
-  }
-  
-  .empty-state {
-    grid-column: 1 / -1;
-    text-align: center;
-    padding: var(--spacing-3xl);
-  }
-  
-  .pagination {
-    display: flex;
-    justify-content: center;
-    gap: var(--spacing-sm);
-    margin-top: var(--spacing-3xl);
-  }
-  
-  .pagination-btn {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    transition: all var(--transition-fast);
-  }
-  
-  .pagination-btn:hover,
-  .pagination-btn.active {
-    background: var(--accent-primary);
-    color: #000;
-    border-color: var(--accent-primary);
-  }
-  
-  @media (max-width: 768px) {
-    .search-form {
-      flex-direction: column;
-      border-radius: var(--radius-lg);
-    }
-    
-    .search-input-wrapper {
-      padding: var(--spacing-md);
-    }
-    
-    .search-select {
-      margin: 0 var(--spacing-sm);
-    }
-    
-    .contractors-grid {
-      grid-template-columns: 1fr;
-    }
-  }
+/* ---- Global ---- */
+.ep-container { max-width: 1160px; margin: 0 auto; padding: 0 1.5rem; }
+.ep-section { padding: 64px 0; }
+
+/* ---- Hero ---- */
+.ep-hero {
+  position: relative;
+  padding: 140px 1.5rem 90px;
+  text-align: center;
+  overflow: hidden;
+}
+.ep-hero-bg { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+.ep-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.25;
+}
+.ep-orb-1 { width: 500px; height: 500px; top: -160px; left: -100px; background: var(--accent-primary, #00ff88); }
+.ep-orb-2 { width: 400px; height: 400px; bottom: -100px; right: -80px; background: #6366f1; }
+
+.ep-hero-inner { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; }
+.ep-hero-eyebrow {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent-primary, #00ff88);
+  border: 1px solid rgba(0,255,136,0.3);
+  border-radius: 999px;
+  padding: 6px 16px;
+  margin-bottom: 24px;
+}
+.ep-hero-title {
+  font-size: clamp(2rem, 5vw, 3.6rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin-bottom: 18px;
+  color: var(--text-primary);
+}
+.ep-hero-sub {
+  font-size: 1.05rem;
+  color: var(--text-secondary);
+  margin-bottom: 40px;
+}
+
+/* Search */
+.ep-search-form { max-width: 680px; margin: 0 auto 28px; }
+.ep-search-box {
+  display: flex;
+  align-items: center;
+  background: var(--bg-card, #1a1a1a);
+  border: 1.5px solid var(--border-color, #333);
+  border-radius: 999px;
+  padding: 6px 6px 6px 20px;
+  gap: 10px;
+  transition: border-color 0.2s;
+}
+.ep-search-box:focus-within { border-color: var(--accent-primary, #00ff88); }
+.ep-search-icon { width: 18px; height: 18px; color: var(--text-muted); flex-shrink: 0; }
+.ep-search-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  min-width: 0;
+}
+.ep-search-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--accent-primary, #00ff88);
+  color: #000;
+  border: none;
+  border-radius: 999px;
+  padding: 10px 22px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.2s;
+  flex-shrink: 0;
+}
+.ep-search-btn:hover { opacity: 0.85; }
+
+/* Stats row */
+.ep-hero-stats {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+/* ---- Categories ---- */
+.ep-categories-section { background: var(--bg-secondary, #111); }
+.ep-section-header { text-align: center; margin-bottom: 40px; }
+.ep-section-title { font-size: 1.8rem; font-weight: 700; margin-bottom: 8px; color: var(--text-primary); }
+.ep-section-sub { font-size: 0.95rem; color: var(--text-muted); }
+
+.ep-cat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 14px;
+}
+
+.ep-cat-card {
+  background: var(--bg-card, #1a1a1a);
+  border: 1.5px solid var(--border-color, #2a2a2a);
+  border-radius: 14px;
+  overflow: hidden;
+  transition: border-color 0.2s;
+}
+.ep-cat-card:hover,
+.ep-cat-card.ep-cat-active {
+  border-color: var(--accent-primary, #00ff88);
+}
+
+.ep-cat-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 18px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+.ep-cat-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: rgba(0,255,136,0.08);
+  border: 1px solid rgba(0,255,136,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--accent-primary, #00ff88);
+}
+.ep-cat-icon-wrap i { width: 20px; height: 20px; }
+.ep-cat-label {
+  flex: 1;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+.ep-cat-plus {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--bg-secondary, #111);
+  border: 1px solid var(--border-color, #2a2a2a);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  transition: background 0.2s, color 0.2s;
+  line-height: 1;
+}
+.ep-cat-card.ep-cat-active .ep-cat-plus {
+  background: var(--accent-primary, #00ff88);
+  color: #000;
+  border-color: var(--accent-primary, #00ff88);
+}
+
+.ep-subcat-panel {
+  border-top: 1px solid var(--border-color, #2a2a2a);
+  padding: 12px 16px 16px;
+  background: var(--bg-secondary, #111);
+}
+.ep-subcat-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.ep-subcat-chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 12px;
+  background: var(--bg-card, #1a1a1a);
+  border: 1px solid var(--border-color, #2a2a2a);
+  border-radius: 999px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: all 0.15s;
+}
+.ep-subcat-chip:hover {
+  border-color: var(--accent-primary, #00ff88);
+  color: var(--accent-primary, #00ff88);
+  background: rgba(0,255,136,0.06);
+}
+.ep-subcat-chip-active {
+  background: rgba(0,255,136,0.12);
+  border-color: var(--accent-primary, #00ff88);
+  color: var(--accent-primary, #00ff88);
+  font-weight: 600;
+}
+
+/* ---- Results section ---- */
+.ep-results-section { background: var(--bg-primary, #0a0a0a); }
+
+/* Breadcrumb */
+.ep-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+  font-size: 0.875rem;
+}
+.ep-breadcrumb-home {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--accent-primary, #00ff88);
+  text-decoration: none;
+  font-weight: 500;
+}
+.ep-breadcrumb-cat { color: var(--text-secondary); }
+.ep-breadcrumb-service { color: var(--text-primary); font-weight: 600; }
+.ep-clear-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 4px 10px;
+  border: 1px solid var(--border-color);
+  border-radius: 999px;
+  transition: all 0.15s;
+}
+.ep-clear-btn:hover { color: #ef4444; border-color: #ef4444; }
+
+.ep-results-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 28px;
+}
+.ep-results-count { font-size: 0.95rem; color: var(--text-secondary); }
+.ep-results-count strong { color: var(--text-primary); font-size: 1.1rem; }
+
+/* Contractor cards */
+.ep-contractors-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+}
+.ep-card {
+  background: var(--bg-card, #1a1a1a);
+  border: 1.5px solid var(--border-color, #2a2a2a);
+  border-radius: 16px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: border-color 0.2s, transform 0.2s;
+}
+.ep-card:hover {
+  border-color: var(--accent-primary, #00ff88);
+  transform: translateY(-3px);
+}
+.ep-card-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 20px 20px 16px;
+  position: relative;
+}
+.ep-avatar {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--accent-gradient, linear-gradient(135deg, #00ff88, #00ccff));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #000;
+  flex-shrink: 0;
+}
+.ep-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.ep-verified {
+  position: absolute;
+  bottom: -3px;
+  right: -3px;
+  width: 20px;
+  height: 20px;
+  background: var(--accent-primary, #00ff88);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+}
+.ep-card-info { flex: 1; min-width: 0; }
+.ep-card-name {
+  font-size: 1rem;
+  font-weight: 700;
+  margin: 0 0 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  color: var(--text-primary);
+}
+.ep-card-tagline {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin: 0 0 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ep-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.ep-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+.ep-meta-item i { flex-shrink: 0; }
+.ep-meta-muted { color: var(--text-muted); }
+.ep-badge-avail {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  background: rgba(0,255,136,0.1);
+  color: var(--accent-primary, #00ff88);
+  border: 1px solid rgba(0,255,136,0.3);
+  border-radius: 999px;
+}
+.ep-badge-premium {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 3px 9px;
+  background: linear-gradient(135deg, #f59e0b, #ef4444);
+  color: #fff;
+  border-radius: 999px;
+  letter-spacing: 0.04em;
+}
+
+.ep-card-body { padding: 0 20px 16px; flex: 1; }
+.ep-card-desc {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+.ep-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+.ep-tag {
+  font-size: 0.72rem;
+  padding: 3px 9px;
+  background: var(--bg-secondary, #111);
+  border: 1px solid var(--border-color, #2a2a2a);
+  border-radius: 999px;
+  color: var(--text-secondary);
+}
+.ep-tag-more { color: var(--text-muted); }
+
+.ep-card-footer {
+  display: flex;
+  gap: 8px;
+  padding: 14px 20px 18px;
+  border-top: 1px solid var(--border-color, #2a2a2a);
+}
+.ep-btn-profile { flex: 1; justify-content: center; }
+.ep-btn-contact { flex: 1; justify-content: center; }
+
+/* Empty state */
+.ep-empty {
+  text-align: center;
+  padding: 80px 24px;
+  background: var(--bg-card, #1a1a1a);
+  border: 1px solid var(--border-color, #2a2a2a);
+  border-radius: 16px;
+}
+.ep-empty-icon {
+  width: 72px;
+  height: 72px;
+  background: var(--bg-secondary, #111);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  color: var(--text-muted);
+}
+.ep-empty-icon i { width: 32px; height: 32px; }
+.ep-empty h3 { font-size: 1.3rem; font-weight: 600; margin-bottom: 8px; color: var(--text-primary); }
+.ep-empty p { color: var(--text-secondary); max-width: 420px; margin: 0 auto; }
+
+/* ---- Join CTA ---- */
+.ep-join-section {
+  position: relative;
+  padding: 100px 1.5rem;
+  text-align: center;
+  overflow: hidden;
+  background: var(--bg-secondary, #111);
+}
+.ep-join-bg { position: absolute; inset: 0; pointer-events: none; }
+.ep-join-content { position: relative; z-index: 1; max-width: 600px; margin: 0 auto; }
+.ep-join-badge {
+  display: inline-block;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-primary, #00ff88);
+  border: 1px solid rgba(0,255,136,0.3);
+  border-radius: 999px;
+  padding: 5px 16px;
+  margin-bottom: 20px;
+}
+.ep-join-content h2 {
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  font-weight: 800;
+  margin-bottom: 14px;
+  color: var(--text-primary);
+}
+.ep-join-content p {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  margin-bottom: 32px;
+  line-height: 1.7;
+}
+.ep-join-actions { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
+.ep-join-note { margin-top: 16px; font-size: 0.82rem; color: var(--text-muted); }
+
+/* ---- Responsive ---- */
+@media (max-width: 640px) {
+  .ep-hero { padding: 110px 1rem 70px; }
+  .ep-search-box { flex-direction: column; align-items: stretch; border-radius: 14px; padding: 12px; gap: 8px; }
+  .ep-search-btn { border-radius: 8px; justify-content: center; }
+  .ep-hero-stats { flex-direction: column; gap: 8px; }
+  .ep-cat-grid { grid-template-columns: 1fr; }
+  .ep-contractors-grid { grid-template-columns: 1fr; }
+}
 </style>
 
-<script>
-  function contactContractor(contractorId) {
-    <% if (typeof user !== 'undefined' && user) { %>
-      window.location.href = `/dashboard/messages?contractor=${contractorId}`;
-    <% } else { %>
-      window.location.href = `/auth/login?redirect=/contractors&message=Please login to contact contractors`;
-    <% } %>
-  }
-</script>
 
+<script>
+// Toggle category expand/collapse
+function toggleCat(idx) {
+  const panel = document.getElementById('panel-' + idx);
+  const plus  = document.getElementById('plus-' + idx);
+  const card  = panel.closest('.ep-cat-card');
+  const open  = panel.style.display !== 'none';
+
+  if (open) {
+    panel.style.display = 'none';
+    plus.textContent = '+';
+    card.classList.remove('ep-cat-active');
+  } else {
+    panel.style.display = '';
+    plus.textContent = '−';
+    card.classList.add('ep-cat-active');
+  }
+}
+
+// On load: scroll to results if a filter is active
+(function() {
+  const hasFilter = '<%= filters.specialty || filters.q %>' !== '';
+  if (hasFilter) {
+    const el = document.getElementById('results');
+    if (el) setTimeout(() => el.scrollIntoView({ behavior: 'smooth', block: 'start' }), 300);
+  }
+})();
+
+function contactContractor(contractorId) {
+  <% if (typeof user !== 'undefined' && user) { %>
+    window.location.href = `/dashboard/messages?contractor=${contractorId}`;
+  <% } else { %>
+    window.location.href = `/auth/login?redirect=/contractors`;
+  <% } %>
+}
+</script>
