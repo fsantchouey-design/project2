@@ -150,6 +150,80 @@ router.get('/', async (req, res) => {
   }
 });
 
+// ==========================================
+// Quote Request (4-step wizard form)
+// ==========================================
+const QuoteRequest = require('../models/QuoteRequest');
+const quoteUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => cb(null, 'public/uploads/quotes'),
+    filename: (req, file, cb) => {
+      cb(null, Date.now() + '-' + Math.round(Math.random() * 1e9) + path.extname(file.originalname));
+    }
+  }),
+  limits: { fileSize: 5 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const ok = /jpeg|jpg|png|webp/.test(path.extname(file.originalname).toLowerCase());
+    cb(null, ok);
+  }
+});
+
+router.post('/quote', quoteUpload.array('photos', 5), async (req, res) => {
+  try {
+    const {
+      service, specialty, postalCode, timing, description,
+      firstName, lastName, address, apartment, city, province,
+      contactPostalCode, phone, altPhone, email
+    } = req.body;
+
+    const photos = (req.files || []).map(f => '/uploads/quotes/' + f.filename);
+
+    const quote = await QuoteRequest.create({
+      service, specialty, postalCode, timing,
+      description: description || '',
+      photos,
+      firstName, lastName,
+      address: address || '',
+      apartment: apartment || '',
+      city: city || '',
+      province: province || '',
+      contactPostalCode: contactPostalCode || '',
+      phone,
+      altPhone: altPhone || '',
+      email
+    });
+
+    // Return matching contractors
+    const contractors = await Contractor.find({ specialties: specialty })
+      .populate('user', 'firstName lastName')
+      .sort({ isPremium: -1, 'rating.average': -1 })
+      .limit(6);
+
+    res.json({
+      success: true,
+      quoteId: quote._id,
+      contractors: contractors.map(c => ({
+        _id: c._id,
+        slug: c.slug,
+        companyName: c.companyName,
+        tagline: c.tagline || '',
+        description: c.description ? c.description.substring(0, 110) + (c.description.length > 110 ? '…' : '') : '',
+        logo: c.logo || '',
+        initials: c.companyName.charAt(0).toUpperCase(),
+        rating: c.rating || { average: 0, count: 0 },
+        city: c.address?.city || 'France',
+        specialties: c.specialties || [],
+        isVerified: c.isVerified,
+        isPremium: c.isPremium,
+        availability: c.availability?.status || 'unknown'
+      }))
+    });
+  } catch (err) {
+    console.error('Quote request error:', err);
+    res.status(500).json({ success: false, error: 'Une erreur est survenue.' });
+  }
+});
+
 // Contractor Profile Setup (for new contractors)
 router.get('/setup', ensureAuthenticated, ensureContractor, async (req, res) => {
   const existingProfile = await Contractor.findOne({ user: req.user.id });

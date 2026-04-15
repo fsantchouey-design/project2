@@ -64,13 +64,14 @@
             <div class="ep-subcat-list">
               <% cat.subcategories.forEach(sub => { %>
                 <% const subActive = filters.service === sub && filters.specialty === cat.specialty; %>
-                <a
-                  href="/contractors?specialty=<%= cat.specialty %>&service=<%= encodeURIComponent(sub) %>"
+                <button
+                  type="button"
                   class="ep-subcat-chip <%= subActive ? 'ep-subcat-chip-active' : '' %>"
+                  onclick="openQuoteModal('<%= cat.specialty %>', '<%= sub.replace(/'/g, "\\'") %>', '<%= cat.label.replace(/'/g, "\\'") %>')"
                 >
                   <%= sub %>
                   <i data-lucide="arrow-right" style="width:12px;height:12px;margin-left:4px;opacity:0.6;"></i>
-                </a>
+                </button>
               <% }) %>
             </div>
           </div>
@@ -685,7 +686,575 @@
   .ep-cat-grid { grid-template-columns: 1fr; }
   .ep-contractors-grid { grid-template-columns: 1fr; }
 }
+
+/* ============================================================
+   QUOTE MODAL — 4-step wizard
+   ============================================================ */
+.qm-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 9000;
+  background: rgba(0,0,0,0.72);
+  backdrop-filter: blur(4px);
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.qm-overlay.qm-open { display: flex; }
+
+.qm-dialog {
+  background: var(--bg-card, #1a1a1a);
+  border: 1.5px solid var(--border-color, #2a2a2a);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 660px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+  animation: qm-in 0.22s ease;
+}
+@keyframes qm-in {
+  from { opacity: 0; transform: translateY(20px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Header */
+.qm-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 24px 28px 0;
+  gap: 12px;
+}
+.qm-service-info { flex: 1; }
+.qm-service-cat {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--accent-primary, #00ff88);
+  margin-bottom: 4px;
+}
+.qm-service-name {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.qm-close {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--bg-secondary, #111);
+  border: 1px solid var(--border-color, #2a2a2a);
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: all 0.15s;
+  line-height: 1;
+}
+.qm-close:hover { background: #ef4444; color: #fff; border-color: #ef4444; }
+
+/* Progress bar */
+.qm-progress {
+  display: flex;
+  align-items: center;
+  padding: 24px 28px 0;
+  gap: 0;
+}
+.qm-step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+  gap: 6px;
+}
+.qm-step-item:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background: var(--border-color, #2a2a2a);
+  z-index: 0;
+  transition: background 0.3s;
+}
+.qm-step-item.qm-step-done:not(:last-child)::after { background: var(--accent-primary, #00ff88); }
+
+.qm-step-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--border-color, #2a2a2a);
+  background: var(--bg-secondary, #111);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  position: relative;
+  z-index: 1;
+  transition: all 0.25s;
+}
+.qm-step-item.qm-step-active .qm-step-circle {
+  border-color: var(--accent-primary, #00ff88);
+  background: rgba(0,255,136,0.12);
+  color: var(--accent-primary, #00ff88);
+}
+.qm-step-item.qm-step-done .qm-step-circle {
+  border-color: var(--accent-primary, #00ff88);
+  background: var(--accent-primary, #00ff88);
+  color: #000;
+}
+.qm-step-label {
+  font-size: 0.68rem;
+  color: var(--text-muted);
+  font-weight: 500;
+  text-align: center;
+  white-space: nowrap;
+}
+.qm-step-item.qm-step-active .qm-step-label,
+.qm-step-item.qm-step-done .qm-step-label { color: var(--text-primary); }
+
+/* Panes */
+.qm-pane { padding: 28px 28px 32px; }
+.qm-pane-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+.qm-pane-sub {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 28px;
+}
+
+/* Form elements */
+.qm-field { margin-bottom: 18px; }
+.qm-label {
+  display: block;
+  font-size: 0.83rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 7px;
+}
+.qm-input, .qm-textarea, .qm-select {
+  width: 100%;
+  background: var(--bg-secondary, #111);
+  border: 1.5px solid var(--border-color, #2a2a2a);
+  border-radius: 10px;
+  padding: 11px 14px;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 0.15s;
+  font-family: inherit;
+  box-sizing: border-box;
+}
+.qm-input:focus, .qm-textarea:focus, .qm-select:focus { border-color: var(--accent-primary, #00ff88); }
+.qm-textarea { resize: vertical; min-height: 90px; }
+
+.qm-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+@media (max-width: 480px) { .qm-row { grid-template-columns: 1fr; } }
+
+/* Timing options */
+.qm-timing-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+.qm-timing-opt {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 12px;
+  background: var(--bg-secondary, #111);
+  border: 1.5px solid var(--border-color, #2a2a2a);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+  color: var(--text-secondary);
+}
+.qm-timing-opt:hover { border-color: rgba(0,255,136,0.4); color: var(--text-primary); }
+.qm-timing-opt.qm-timing-selected {
+  border-color: var(--accent-primary, #00ff88);
+  background: rgba(0,255,136,0.07);
+  color: var(--accent-primary, #00ff88);
+}
+.qm-timing-opt svg, .qm-timing-opt i { width: 22px; height: 22px; }
+.qm-timing-opt span { font-size: 0.82rem; font-weight: 600; line-height: 1.3; }
+
+/* Photo upload */
+.qm-photo-zone {
+  border: 2px dashed var(--border-color, #2a2a2a);
+  border-radius: 12px;
+  padding: 24px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+.qm-photo-zone:hover { border-color: var(--accent-primary, #00ff88); color: var(--accent-primary, #00ff88); }
+.qm-photo-zone i { width: 28px; height: 28px; margin-bottom: 8px; display: block; margin: 0 auto 8px; }
+.qm-photo-zone input { display: none; }
+.qm-photo-previews {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.qm-photo-thumb {
+  width: 72px;
+  height: 72px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1.5px solid var(--border-color, #2a2a2a);
+  position: relative;
+}
+
+/* Footer nav */
+.qm-footer {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 28px;
+}
+.qm-btn-prev {
+  background: var(--bg-secondary, #111);
+  border: 1.5px solid var(--border-color, #2a2a2a);
+  border-radius: 10px;
+  padding: 11px 24px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.qm-btn-prev:hover { border-color: var(--accent-primary, #00ff88); color: var(--text-primary); }
+.qm-btn-next {
+  flex: 1;
+  background: var(--accent-primary, #00ff88);
+  border: none;
+  border-radius: 10px;
+  padding: 11px 24px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #000;
+  cursor: pointer;
+  transition: opacity 0.15s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+.qm-btn-next:hover { opacity: 0.85; }
+.qm-btn-next:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Step 4 — results */
+.qm-result-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+}
+.qm-result-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: var(--bg-secondary, #111);
+  border: 1.5px solid var(--border-color, #2a2a2a);
+  border-radius: 14px;
+  padding: 14px 16px;
+  text-decoration: none;
+  transition: border-color 0.15s;
+}
+.qm-result-card:hover { border-color: var(--accent-primary, #00ff88); }
+.qm-result-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+  background: var(--accent-gradient, linear-gradient(135deg,#00ff88,#00ccff));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #000;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.qm-result-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.qm-result-info { flex: 1; min-width: 0; }
+.qm-result-name { font-size: 0.95rem; font-weight: 700; color: var(--text-primary); margin-bottom: 3px; }
+.qm-result-desc { font-size: 0.78rem; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.qm-result-rating { font-size: 0.78rem; color: var(--text-muted); margin-top: 3px; }
+.qm-result-cta {
+  background: var(--accent-primary, #00ff88);
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  text-decoration: none;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.qm-no-results {
+  text-align: center;
+  padding: 40px 24px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+.qm-success-banner {
+  background: rgba(0,255,136,0.08);
+  border: 1px solid rgba(0,255,136,0.25);
+  border-radius: 10px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+}
+.qm-success-banner i { color: var(--accent-primary, #00ff88); flex-shrink: 0; }
+.qm-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 48px 0;
+}
+.qm-spinner-ring {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border-color, #2a2a2a);
+  border-top-color: var(--accent-primary, #00ff88);
+  border-radius: 50%;
+  animation: qm-spin 0.8s linear infinite;
+}
+@keyframes qm-spin { to { transform: rotate(360deg); } }
 </style>
+
+<!-- ===== QUOTE MODAL ===== -->
+<div id="quoteModal" class="qm-overlay" onclick="handleOverlayClick(event)">
+  <div class="qm-dialog">
+
+    <!-- Header -->
+    <div class="qm-header">
+      <div class="qm-service-info">
+        <p class="qm-service-cat" id="qm-cat-label"></p>
+        <p class="qm-service-name" id="qm-service-label"></p>
+      </div>
+      <button class="qm-close" onclick="closeQuoteModal()" type="button">✕</button>
+    </div>
+
+    <!-- Progress bar -->
+    <div class="qm-progress">
+      <div class="qm-step-item qm-step-active" id="qm-prog-1">
+        <div class="qm-step-circle">1</div>
+        <span class="qm-step-label">Emplacement</span>
+      </div>
+      <div class="qm-step-item" id="qm-prog-2">
+        <div class="qm-step-circle">2</div>
+        <span class="qm-step-label">Projet</span>
+      </div>
+      <div class="qm-step-item" id="qm-prog-3">
+        <div class="qm-step-circle">3</div>
+        <span class="qm-step-label">Coordonnées</span>
+      </div>
+      <div class="qm-step-item" id="qm-prog-4">
+        <div class="qm-step-circle">4</div>
+        <span class="qm-step-label">Entrepreneurs</span>
+      </div>
+    </div>
+
+    <!-- STEP 1 — Emplacement -->
+    <div class="qm-pane" id="qm-pane-1">
+      <h2 class="qm-pane-title">Emplacement du projet</h2>
+      <p class="qm-pane-sub">Entrez le code postal où les travaux auront lieu pour trouver des entrepreneurs près de chez vous.</p>
+      <div class="qm-field">
+        <label class="qm-label" for="qm-postal">Code postal du projet *</label>
+        <input type="text" id="qm-postal" class="qm-input" placeholder="ex : H2X 1Y6" maxlength="10" autocomplete="postal-code">
+      </div>
+      <div class="qm-footer">
+        <div></div>
+        <button class="qm-btn-next" type="button" onclick="qmNext(1)">
+          Suivant <i data-lucide="arrow-right" style="width:16px;height:16px;"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 2 — Détails projet -->
+    <div class="qm-pane" id="qm-pane-2" style="display:none">
+      <h2 class="qm-pane-title">Détails sur le projet</h2>
+      <p class="qm-pane-sub">Aidez les entrepreneurs à comprendre votre projet.</p>
+
+      <label class="qm-label">Quand souhaitez-vous que les travaux commencent ? *</label>
+      <div class="qm-timing-grid">
+        <button type="button" class="qm-timing-opt" data-val="asap" onclick="selectTiming(this)">
+          <i data-lucide="zap"></i>
+          <span>Dès que possible</span>
+        </button>
+        <button type="button" class="qm-timing-opt" data-val="week" onclick="selectTiming(this)">
+          <i data-lucide="calendar"></i>
+          <span>D'ici une semaine</span>
+        </button>
+        <button type="button" class="qm-timing-opt" data-val="later" onclick="selectTiming(this)">
+          <i data-lucide="clock"></i>
+          <span>Dans plus d'une semaine</span>
+        </button>
+        <button type="button" class="qm-timing-opt" data-val="flexible" onclick="selectTiming(this)">
+          <i data-lucide="sliders-horizontal"></i>
+          <span>Flexible</span>
+        </button>
+      </div>
+
+      <div class="qm-field">
+        <label class="qm-label" for="qm-desc">Parlez-nous de votre projet <span style="font-weight:400;color:var(--text-muted)">(facultatif)</span></label>
+        <textarea id="qm-desc" class="qm-textarea" placeholder="Décrivez votre projet, vos préférences de style, votre budget approximatif…"></textarea>
+      </div>
+
+      <div class="qm-field">
+        <label class="qm-label">Photos du projet <span style="font-weight:400;color:var(--text-muted)">(max 5, facultatif)</span></label>
+        <div class="qm-photo-zone" onclick="document.getElementById('qm-photos').click()">
+          <i data-lucide="image-plus"></i>
+          <p style="margin:0;">Cliquez pour ajouter des photos<br><span style="font-size:0.78rem;opacity:0.7;">JPG, PNG, WEBP · max 5 Mo chacune</span></p>
+          <input type="file" id="qm-photos" accept="image/*" multiple onchange="previewPhotos(this)">
+        </div>
+        <div class="qm-photo-previews" id="qm-photo-previews"></div>
+      </div>
+
+      <div class="qm-footer">
+        <button class="qm-btn-prev" type="button" onclick="qmPrev(2)">Précédent</button>
+        <button class="qm-btn-next" type="button" onclick="qmNext(2)">
+          Suivant <i data-lucide="arrow-right" style="width:16px;height:16px;"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 3 — Coordonnées -->
+    <div class="qm-pane" id="qm-pane-3" style="display:none">
+      <h2 class="qm-pane-title">Vos coordonnées</h2>
+      <p class="qm-pane-sub">Les entrepreneurs pourront vous contacter avec leur meilleure offre.</p>
+
+      <div class="qm-row">
+        <div class="qm-field">
+          <label class="qm-label" for="qm-fn">Prénom *</label>
+          <input type="text" id="qm-fn" class="qm-input" placeholder="Marie" autocomplete="given-name">
+        </div>
+        <div class="qm-field">
+          <label class="qm-label" for="qm-ln">Nom de famille *</label>
+          <input type="text" id="qm-ln" class="qm-input" placeholder="Tremblay" autocomplete="family-name">
+        </div>
+      </div>
+
+      <div class="qm-field">
+        <label class="qm-label" for="qm-addr">Adresse *</label>
+        <input type="text" id="qm-addr" class="qm-input" placeholder="123, rue des Érables" autocomplete="street-address">
+      </div>
+      <div class="qm-field">
+        <label class="qm-label" for="qm-apt">Appartement <span style="font-weight:400;color:var(--text-muted)">(facultatif)</span></label>
+        <input type="text" id="qm-apt" class="qm-input" placeholder="Apt 4B">
+      </div>
+
+      <div class="qm-row">
+        <div class="qm-field">
+          <label class="qm-label" for="qm-city">Ville *</label>
+          <input type="text" id="qm-city" class="qm-input" placeholder="Montréal" autocomplete="address-level2">
+        </div>
+        <div class="qm-field">
+          <label class="qm-label" for="qm-prov">Province *</label>
+          <select id="qm-prov" class="qm-select" autocomplete="address-level1">
+            <option value="">— Sélectionner —</option>
+            <option>Alberta</option>
+            <option>Colombie-Britannique</option>
+            <option>Île-du-Prince-Édouard</option>
+            <option>Manitoba</option>
+            <option>Nouveau-Brunswick</option>
+            <option>Nouvelle-Écosse</option>
+            <option>Nunavut</option>
+            <option>Ontario</option>
+            <option selected>Québec</option>
+            <option>Saskatchewan</option>
+            <option>Terre-Neuve-et-Labrador</option>
+            <option>Territoires du Nord-Ouest</option>
+            <option>Yukon</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="qm-row">
+        <div class="qm-field">
+          <label class="qm-label" for="qm-cpostale">Code postal *</label>
+          <input type="text" id="qm-cpostale" class="qm-input" placeholder="H2X 1Y6" autocomplete="postal-code" maxlength="10">
+        </div>
+        <div class="qm-field">
+          <label class="qm-label" for="qm-phone">Téléphone *</label>
+          <input type="tel" id="qm-phone" class="qm-input" placeholder="514 555-0100" autocomplete="tel">
+        </div>
+      </div>
+
+      <div class="qm-field">
+        <label class="qm-label" for="qm-altphone">Autre téléphone <span style="font-weight:400;color:var(--text-muted)">(facultatif)</span></label>
+        <input type="tel" id="qm-altphone" class="qm-input" placeholder="418 555-0200" autocomplete="tel">
+      </div>
+
+      <div class="qm-field">
+        <label class="qm-label" for="qm-email">Adresse courriel *</label>
+        <input type="email" id="qm-email" class="qm-input" placeholder="marie@exemple.ca" autocomplete="email">
+      </div>
+
+      <p style="font-size:0.75rem;color:var(--text-muted);margin-top:4px;">En soumettant ce formulaire, vous acceptez d'être contacté par des entrepreneurs CraftyCrib.</p>
+
+      <div class="qm-footer">
+        <button class="qm-btn-prev" type="button" onclick="qmPrev(3)">Précédent</button>
+        <button class="qm-btn-next" type="button" id="qm-submit-btn" onclick="submitQuote()">
+          <i data-lucide="send" style="width:16px;height:16px;"></i>
+          Voir les entrepreneurs
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 4 — Results -->
+    <div class="qm-pane" id="qm-pane-4" style="display:none">
+      <div id="qm-step4-loading" class="qm-spinner" style="display:none">
+        <div class="qm-spinner-ring"></div>
+      </div>
+      <div id="qm-step4-content" style="display:none">
+        <h2 class="qm-pane-title">Entrepreneurs disponibles</h2>
+        <div class="qm-success-banner">
+          <i data-lucide="check-circle" style="width:20px;height:20px;"></i>
+          <span>Votre demande a été envoyée ! Les entrepreneurs peuvent maintenant vous contacter.</span>
+        </div>
+        <div class="qm-result-grid" id="qm-results-list"></div>
+        <p id="qm-no-results" class="qm-no-results" style="display:none">
+          Aucun entrepreneur disponible pour ce service dans votre région pour le moment.<br>Votre demande est enregistrée — nous vous contacterons dès qu'un professionnel sera disponible.
+        </p>
+        <div style="text-align:center;margin-top:24px;">
+          <a href="/contractors" class="qm-btn-next" style="display:inline-flex;text-decoration:none;">
+            Voir tous les entrepreneurs
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /.qm-dialog -->
+</div><!-- /.qm-overlay -->
 
 
 <script>
@@ -722,5 +1291,223 @@ function contactContractor(contractorId) {
   <% } else { %>
     window.location.href = `/auth/login?redirect=/contractors`;
   <% } %>
+}
+
+// =============================================
+// QUOTE MODAL
+// =============================================
+let qmState = { specialty: '', service: '', catLabel: '', timing: '', currentStep: 1 };
+
+function openQuoteModal(specialty, service, catLabel) {
+  qmState = { specialty, service, catLabel, timing: '', currentStep: 1 };
+
+  document.getElementById('qm-cat-label').textContent = catLabel;
+  document.getElementById('qm-service-label').textContent = service;
+
+  // Reset form fields
+  ['qm-postal','qm-desc','qm-fn','qm-ln','qm-addr','qm-apt','qm-city','qm-cpostale','qm-phone','qm-altphone','qm-email'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  const prov = document.getElementById('qm-prov');
+  if (prov) prov.value = 'Québec';
+
+  document.querySelectorAll('.qm-timing-opt').forEach(b => b.classList.remove('qm-timing-selected'));
+  document.getElementById('qm-photo-previews').innerHTML = '';
+  const fi = document.getElementById('qm-photos');
+  if (fi) fi.value = '';
+
+  // Pre-fill with user data if logged in
+  <% if (typeof user !== 'undefined' && user) { %>
+    const fn = document.getElementById('qm-fn');
+    const em = document.getElementById('qm-email');
+    if (fn) fn.value = '<%= user.firstName || "" %>';
+    const ln = document.getElementById('qm-ln');
+    if (ln) ln.value = '<%= user.lastName || "" %>';
+    if (em) em.value = '<%= user.email || "" %>';
+  <% } %>
+
+  goToStep(1);
+  document.getElementById('quoteModal').classList.add('qm-open');
+  document.body.style.overflow = 'hidden';
+
+  // Re-init lucide icons in modal
+  if (window.lucide) lucide.createIcons();
+}
+
+function closeQuoteModal() {
+  document.getElementById('quoteModal').classList.remove('qm-open');
+  document.body.style.overflow = '';
+}
+
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('quoteModal')) closeQuoteModal();
+}
+
+function goToStep(n) {
+  for (let i = 1; i <= 4; i++) {
+    document.getElementById('qm-pane-' + i).style.display = (i === n) ? '' : 'none';
+    const prog = document.getElementById('qm-prog-' + i);
+    prog.classList.remove('qm-step-active', 'qm-step-done');
+    if (i < n)  prog.classList.add('qm-step-done');
+    if (i === n) prog.classList.add('qm-step-active');
+
+    // Update circle content
+    const circle = prog.querySelector('.qm-step-circle');
+    if (i < n) circle.innerHTML = '✓';
+    else circle.textContent = i;
+  }
+  qmState.currentStep = n;
+  if (window.lucide) lucide.createIcons();
+}
+
+function qmNext(fromStep) {
+  if (fromStep === 1) {
+    const postal = document.getElementById('qm-postal').value.trim();
+    if (!postal) { shakeField('qm-postal'); return; }
+    goToStep(2);
+  } else if (fromStep === 2) {
+    if (!qmState.timing) {
+      alert('Veuillez sélectionner quand vous souhaitez que les travaux commencent.');
+      return;
+    }
+    goToStep(3);
+  }
+}
+
+function qmPrev(fromStep) {
+  goToStep(fromStep - 1);
+}
+
+function selectTiming(btn) {
+  document.querySelectorAll('.qm-timing-opt').forEach(b => b.classList.remove('qm-timing-selected'));
+  btn.classList.add('qm-timing-selected');
+  qmState.timing = btn.dataset.val;
+}
+
+function shakeField(id) {
+  const el = document.getElementById(id);
+  el.style.borderColor = '#ef4444';
+  el.focus();
+  setTimeout(() => { el.style.borderColor = ''; }, 2000);
+}
+
+function previewPhotos(input) {
+  const container = document.getElementById('qm-photo-previews');
+  container.innerHTML = '';
+  const files = Array.from(input.files).slice(0, 5);
+  files.forEach(file => {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      img.className = 'qm-photo-thumb';
+      container.appendChild(img);
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+async function submitQuote() {
+  // Validate step 3
+  const required = [
+    { id: 'qm-fn', label: 'Prénom' },
+    { id: 'qm-ln', label: 'Nom' },
+    { id: 'qm-addr', label: 'Adresse' },
+    { id: 'qm-city', label: 'Ville' },
+    { id: 'qm-prov', label: 'Province' },
+    { id: 'qm-cpostale', label: 'Code postal' },
+    { id: 'qm-phone', label: 'Téléphone' },
+    { id: 'qm-email', label: 'Courriel' }
+  ];
+  for (const f of required) {
+    if (!document.getElementById(f.id).value.trim()) {
+      shakeField(f.id);
+      return;
+    }
+  }
+
+  const submitBtn = document.getElementById('qm-submit-btn');
+  submitBtn.disabled = true;
+  submitBtn.textContent = 'Envoi en cours…';
+
+  goToStep(4);
+  document.getElementById('qm-step4-loading').style.display = 'flex';
+  document.getElementById('qm-step4-content').style.display = 'none';
+
+  try {
+    const fd = new FormData();
+    fd.append('service',    qmState.service);
+    fd.append('specialty',  qmState.specialty);
+    fd.append('postalCode', document.getElementById('qm-postal').value.trim());
+    fd.append('timing',     qmState.timing);
+    fd.append('description',document.getElementById('qm-desc').value.trim());
+    fd.append('firstName',  document.getElementById('qm-fn').value.trim());
+    fd.append('lastName',   document.getElementById('qm-ln').value.trim());
+    fd.append('address',    document.getElementById('qm-addr').value.trim());
+    fd.append('apartment',  document.getElementById('qm-apt').value.trim());
+    fd.append('city',       document.getElementById('qm-city').value.trim());
+    fd.append('province',   document.getElementById('qm-prov').value.trim());
+    fd.append('contactPostalCode', document.getElementById('qm-cpostale').value.trim());
+    fd.append('phone',      document.getElementById('qm-phone').value.trim());
+    fd.append('altPhone',   document.getElementById('qm-altphone').value.trim());
+    fd.append('email',      document.getElementById('qm-email').value.trim());
+
+    // Attach photos if any
+    const photoInput = document.getElementById('qm-photos');
+    if (photoInput && photoInput.files.length > 0) {
+      Array.from(photoInput.files).slice(0, 5).forEach(f => fd.append('photos', f));
+    }
+
+    const resp = await fetch('/contractors/quote', { method: 'POST', body: fd });
+    const data = await resp.json();
+
+    document.getElementById('qm-step4-loading').style.display = 'none';
+    document.getElementById('qm-step4-content').style.display = '';
+
+    if (data.success) {
+      renderResults(data.contractors);
+    } else {
+      document.getElementById('qm-no-results').style.display = '';
+    }
+  } catch (err) {
+    document.getElementById('qm-step4-loading').style.display = 'none';
+    document.getElementById('qm-step4-content').style.display = '';
+    document.getElementById('qm-no-results').style.display = '';
+  }
+
+  if (window.lucide) lucide.createIcons();
+}
+
+function renderResults(contractors) {
+  const list = document.getElementById('qm-results-list');
+  const noRes = document.getElementById('qm-no-results');
+  list.innerHTML = '';
+
+  if (!contractors || contractors.length === 0) {
+    noRes.style.display = '';
+    return;
+  }
+  noRes.style.display = 'none';
+
+  contractors.forEach(c => {
+    const stars = c.rating && c.rating.average ? '★ ' + c.rating.average.toFixed(1) + ' (' + c.rating.count + ' avis)' : 'Nouveau';
+    const avatarHtml = c.logo
+      ? `<img src="${c.logo}" alt="${c.companyName}">`
+      : c.initials;
+
+    list.innerHTML += `
+      <a href="/contractors/${c.slug}" class="qm-result-card" target="_blank">
+        <div class="qm-result-avatar">${avatarHtml}</div>
+        <div class="qm-result-info">
+          <div class="qm-result-name">${c.companyName}${c.isPremium ? ' <span style="font-size:0.65rem;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;padding:1px 6px;border-radius:999px;vertical-align:middle;">Pro</span>' : ''}</div>
+          <div class="qm-result-desc">${c.tagline || c.city}</div>
+          <div class="qm-result-rating">${stars}</div>
+        </div>
+        <span class="qm-result-cta">Voir profil</span>
+      </a>`;
+  });
+
+  if (window.lucide) lucide.createIcons();
 }
 </script>
