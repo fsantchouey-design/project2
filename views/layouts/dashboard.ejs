@@ -104,7 +104,7 @@
           <span>Tableau de bord</span>
         </a>
         
-        <% if (user.role === 'client' || user.role === 'homeowner') { %>
+        <% if (user.role !== 'contractor') { %>
           <a href="/projects" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'projects' ? 'active' : '' %>">
             <i data-lucide="folder"></i>
             <span>Mes projets</span>
@@ -142,7 +142,7 @@
           <i data-lucide="bell"></i>
           <span>Notifications</span>
         </a>
-        <% if (user.role === 'client' || user.role === 'homeowner') { %>
+        <% if (user.role !== 'contractor') { %>
           <a href="/contractors" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'contractors' ? 'active' : '' %>">
             <i data-lucide="hard-hat"></i>
             <span>Entrepreneurs</span>
