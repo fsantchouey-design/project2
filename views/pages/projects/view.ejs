@@ -46,34 +46,127 @@
       </div>
       <% } %>
 
-      <!-- Design Gallery -->
+      <!-- Design Gallery + Historique (onglets) -->
       <div class="section-card">
-        <h2>Variantes de design</h2>
-        <% if (project.designVariants && project.designVariants.length > 0) { %>
-          <div class="design-gallery">
-            <% project.designVariants.forEach((variant, index) => { %>
-              <div class="design-variant">
-                <div class="variant-image">
-                  <img src="<%= variant.imageUrl || '/images/placeholder.png' %>" alt="<%= variant.name %>" loading="lazy">
-                  <div class="variant-overlay">
-                    <button class="btn btn-sm btn-primary" onclick="viewFullscreen('<%= variant.imageUrl %>')"><i data-lucide="maximize-2"></i></button>
-                    <a href="<%= variant.imageUrl %>" download class="btn btn-sm btn-secondary" target="_blank"><i data-lucide="download"></i></a>
+        <div class="design-tab-nav">
+          <button class="design-tab-btn active" id="tab-btn-designs" onclick="switchDesignTab('designs')">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            Designs <span class="tab-count" id="tab-designs-count"><%= project.designVariants ? project.designVariants.length : 0 %></span>
+          </button>
+          <button class="design-tab-btn" id="tab-btn-history" onclick="switchDesignTab('history')">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Historique
+          </button>
+        </div>
+
+        <!-- Onglet Designs -->
+        <div id="tab-panel-designs">
+          <% if (project.designVariants && project.designVariants.length > 0) { %>
+            <div class="design-gallery">
+              <% project.designVariants.forEach((variant, index) => { %>
+                <div class="design-variant">
+                  <div class="variant-image">
+                    <img src="<%= variant.imageUrl || '/images/placeholder.png' %>" alt="<%= variant.name %>" loading="lazy">
+                    <div class="variant-overlay">
+                      <button class="btn btn-sm btn-primary" onclick="viewFullscreen('<%= variant.imageUrl %>')"><i data-lucide="maximize-2"></i></button>
+                      <a href="<%= variant.imageUrl %>" download class="btn btn-sm btn-secondary" target="_blank"><i data-lucide="download"></i></a>
+                    </div>
+                  </div>
+                  <div class="variant-info">
+                    <h4><%= variant.name || 'Design ' + (index + 1) %></h4>
+                    <% if (variant.style) { %><span class="tag"><%= variant.style %></span><% } %>
                   </div>
                 </div>
-                <div class="variant-info">
-                  <h4><%= variant.name || 'Design ' + (index + 1) %></h4>
-                  <% if (variant.style) { %><span class="tag"><%= variant.style %></span><% } %>
+              <% }) %>
+            </div>
+          <% } else { %>
+            <div class="empty-designs">
+              <i data-lucide="image"></i>
+              <p>Aucun design genere</p>
+              <span>Utilisez les outils IA ci-dessus pour generer des designs</span>
+            </div>
+          <% } %>
+        </div>
+
+        <!-- Onglet Historique -->
+        <div id="tab-panel-history" style="display:none;">
+          <%
+            const TOOL_NAMES_MAP = {
+              'beautiful-redesign':'Beautiful Redesign','perfect-redesign':'Perfect Redesign',
+              'creative-redesign':'Creative Design','sketch-to-render':'Sketch to Render',
+              'precision':'Precision','fill-spaces':'Fill Spaces','decor-staging':'Decor Staging',
+              'furniture-removal':'Furniture Removal','color-textures':'Couleurs & Textures',
+              'paint-visualizer':'Peinture','furniture-finder':'Recherche Meubles','full-hd':'Full HD',
+              'sky-colors':'Ciel','magic-redesign':'Magic Redesign','video-generation':'Vidéo',
+              'virtual-staging':'Staging Virtuel','text-to-design':'Texte vers Design',
+              'furniture-creator':'Créateur Meubles','design-advisor':'Conseiller Design',
+              'design-transfer':'Transfert Design','floor-editor':'Éditeur Sol',
+              'material-swap':'Échange Matériaux','room-composer':'Compositeur Pièce',
+              'design-critique':'Critique Design','create-mask-image':'Masque Image',
+              'smart-home':'Smart Home','change-colors':'Changement Couleurs'
+            };
+            const sortedVars = project.designVariants
+              ? [...project.designVariants].sort((a,b) => new Date(b.generatedAt||0) - new Date(a.generatedAt||0))
+              : [];
+          %>
+          <% if (sortedVars.length > 0) { %>
+            <div class="history-list">
+              <% sortedVars.forEach(function(variant) { %>
+                <%
+                  const p = variant.aiParameters || {};
+                  const toolKey = p.type || '';
+                  const toolNameDisplay = p.toolName || TOOL_NAMES_MAP[toolKey] || variant.name || 'Design IA';
+                  const gDate = variant.generatedAt ? new Date(variant.generatedAt) : null;
+                  const varDate = gDate
+                    ? gDate.toLocaleDateString('fr-CA') + ' ' + gDate.toLocaleTimeString('fr-CA', {hour:'2-digit',minute:'2-digit'})
+                    : '—';
+                  const varId = variant._id ? variant._id.toString() : '';
+                  const imgUrl = variant.thumbnailUrl || variant.imageUrl || '';
+                %>
+                <div class="history-entry" id="history-entry-<%= varId %>">
+                  <div class="history-thumb" onclick="viewFullscreen('<%= imgUrl %>')">
+                    <img src="<%= imgUrl || '/images/placeholder.png' %>" alt="<%= toolNameDisplay %>" loading="lazy">
+                  </div>
+                  <div class="history-body">
+                    <div class="history-header">
+                      <span class="history-tool"><%= toolNameDisplay %></span>
+                      <span class="history-date"><%= varDate %></span>
+                    </div>
+                    <div class="history-params">
+                      <% if (p.style || variant.style) { %><span class="history-param"><%= p.style || variant.style %></span><% } %>
+                      <% if (p.roomType) { %><span class="history-param"><%= p.roomType %></span><% } %>
+                      <% if (p.designType && p.designType !== 'Interior') { %><span class="history-param"><%= p.designType %></span><% } %>
+                      <% if (p.color) { %><span class="history-param"><%= p.color %></span><% } %>
+                      <% if (p.materials) { %><span class="history-param"><%= p.materials %></span><% } %>
+                      <% if (p.weather) { %><span class="history-param"><%= p.weather %></span><% } %>
+                      <% if (p.aiIntervention && p.aiIntervention !== 'Mid') { %><span class="history-param"><%= p.aiIntervention %></span><% } %>
+                    </div>
+                    <% if (p.prompt) { %>
+                      <div class="history-prompt">"<%= p.prompt.length > 80 ? p.prompt.substring(0, 80) + '...' : p.prompt %>"</div>
+                    <% } %>
+                  </div>
+                  <div class="history-actions">
+                    <button class="history-action-btn" onclick="viewFullscreen('<%= imgUrl %>')" title="Plein écran">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
+                    </button>
+                    <a href="<%= imgUrl %>" download class="history-action-btn" target="_blank" title="Télécharger">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                    </a>
+                    <button class="history-action-btn delete-btn" onclick="deleteVariant('<%= varId %>')" title="Supprimer">
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+                    </button>
+                  </div>
                 </div>
-              </div>
-            <% }) %>
-          </div>
-        <% } else { %>
-          <div class="empty-designs">
-            <i data-lucide="image"></i>
-            <p>Aucun design genere</p>
-            <span>Utilisez les outils IA ci-dessus pour generer des designs</span>
-          </div>
-        <% } %>
+              <% }) %>
+            </div>
+          <% } else { %>
+            <div class="empty-history">
+              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:10px;opacity:0.35"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <p>Aucun design dans l'historique</p>
+              <span>Générez des designs avec les outils IA</span>
+            </div>
+          <% } %>
+        </div>
       </div>
 
       <!-- Original Images / Upload -->
@@ -462,6 +555,38 @@
   .tool-info { min-width: 0; }
   .tool-name { display: block; font-size: 0.85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .tool-desc { display: block; font-size: 0.7rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* Design Tab Navigation */
+  .design-tab-nav { display: flex; gap: 2px; border-bottom: 1px solid var(--border-color); margin-bottom: var(--spacing-lg); }
+  .design-tab-btn { display: flex; align-items: center; gap: 7px; padding: 8px 18px; background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -1px; cursor: pointer; color: var(--text-muted); font-size: 0.88rem; font-weight: 500; transition: all 0.15s; }
+  .design-tab-btn:hover { color: var(--text-primary); }
+  .design-tab-btn.active { color: var(--accent-primary); border-bottom-color: var(--accent-primary); }
+  .design-tab-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
+  .tab-count { display: inline-flex; align-items: center; justify-content: center; background: var(--bg-secondary); border-radius: 999px; font-size: 0.72rem; min-width: 20px; height: 18px; padding: 0 5px; font-weight: 600; }
+  .design-tab-btn.active .tab-count { background: rgba(16,185,129,0.15); color: var(--accent-primary); }
+
+  /* History List */
+  .history-list { display: flex; flex-direction: column; gap: 8px; }
+  .history-entry { display: flex; gap: 12px; align-items: flex-start; padding: 12px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); transition: border-color 0.15s; }
+  .history-entry:hover { border-color: rgba(16,185,129,0.4); }
+  .history-thumb { flex-shrink: 0; width: 76px; height: 57px; border-radius: var(--radius-sm); overflow: hidden; cursor: pointer; border: 1px solid var(--border-color); }
+  .history-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s; }
+  .history-thumb:hover img { transform: scale(1.06); }
+  .history-body { flex: 1; min-width: 0; }
+  .history-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
+  .history-tool { font-size: 0.88rem; font-weight: 600; color: var(--text-primary); }
+  .history-date { font-size: 0.73rem; color: var(--text-muted); white-space: nowrap; }
+  .history-params { display: flex; flex-wrap: wrap; gap: 4px; }
+  .history-param { display: inline-block; padding: 2px 7px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-full); font-size: 0.7rem; color: var(--text-secondary); text-transform: capitalize; }
+  .history-prompt { font-size: 0.75rem; color: var(--text-muted); margin-top: 5px; font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .history-actions { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
+  .history-action-btn { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: none; border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: var(--text-muted); cursor: pointer; transition: all 0.15s; text-decoration: none; }
+  .history-action-btn:hover { background: var(--bg-card); color: var(--text-primary); border-color: var(--accent-primary); }
+  .history-action-btn.delete-btn:hover { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.5); color: #ef4444; }
+  .history-action-btn svg { width: 13px; height: 13px; }
+  .empty-history { text-align: center; padding: var(--spacing-3xl); color: var(--text-muted); }
+  .empty-history p { font-size: 0.95rem; margin-bottom: 4px; }
+  .empty-history span { font-size: 0.82rem; opacity: 0.7; }
 
   /* Design Gallery */
   .design-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: var(--spacing-lg); }
@@ -1039,6 +1164,46 @@ function copyShareLink() { document.getElementById('share-url').select(); docume
 async function updateVisibility(v) { try { await fetch(`/api/projects/${projectId}/status`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({visibility:v}) }); showNotification('Visibilite mise a jour'); } catch { showNotification('Echec','error'); } }
 function viewFullscreen(url) { document.getElementById('fullscreen-image').src = url; document.getElementById('fullscreen-modal').classList.add('active'); }
 function closeFullscreen() { document.getElementById('fullscreen-modal').classList.remove('active'); }
+
+// ============================================================
+// DESIGN TABS
+// ============================================================
+function switchDesignTab(tab) {
+  document.getElementById('tab-panel-designs').style.display = tab === 'designs' ? '' : 'none';
+  document.getElementById('tab-panel-history').style.display = tab === 'history' ? '' : 'none';
+  document.getElementById('tab-btn-designs').classList.toggle('active', tab === 'designs');
+  document.getElementById('tab-btn-history').classList.toggle('active', tab === 'history');
+}
+
+// ============================================================
+// DELETE VARIANT
+// ============================================================
+async function deleteVariant(variantId) {
+  if (!confirm('Supprimer ce design de l\'historique ?')) return;
+  try {
+    const r = await fetch(`/projects/${projectId}/variants/${variantId}`, { method: 'DELETE' });
+    const d = await r.json();
+    if (d.success) {
+      const el = document.getElementById('history-entry-' + variantId);
+      if (el) {
+        el.style.transition = 'opacity 0.25s, transform 0.25s';
+        el.style.opacity = '0';
+        el.style.transform = 'translateX(16px)';
+        setTimeout(() => {
+          el.remove();
+          const remaining = document.querySelectorAll('.history-entry').length;
+          const counter = document.getElementById('tab-designs-count');
+          if (counter) counter.textContent = remaining;
+        }, 260);
+      }
+      showNotification('Design supprimé');
+    } else {
+      showNotification(d.error || 'Erreur', 'error');
+    }
+  } catch (err) {
+    showNotification('Erreur réseau', 'error');
+  }
+}
 
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') { closeFullscreen(); closeToolEditor(); closeFurnitureModal(); }

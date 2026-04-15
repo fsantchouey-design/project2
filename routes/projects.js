@@ -761,7 +761,15 @@ router.post('/:id/ai/:tool', ensureAuthenticated, async (req, res) => {
           style: project.style,
           imageUrl: result.videoUrl,
           thumbnailUrl: result.imageUrl || result.videoUrl,
-          aiParameters: { type: tool, prompt, designType, isVideo: true }
+          aiParameters: {
+            type: tool,
+            toolName,
+            prompt: prompt || undefined,
+            designType: designType || 'Interior',
+            style: style || project.style || undefined,
+            roomType: bodyRoomType || project.roomType || undefined,
+            isVideo: true
+          }
         });
         project.status = 'completed';
         project.aiGenerationHistory.push({
@@ -785,7 +793,19 @@ router.post('/:id/ai/:tool', ensureAuthenticated, async (req, res) => {
           style: project.style,
           imageUrl: imgUrl,
           thumbnailUrl: imgUrl,
-          aiParameters: { type: tool, prompt, designType }
+          aiParameters: {
+            type: tool,
+            toolName,
+            prompt: prompt || undefined,
+            designType: designType || 'Interior',
+            style: style || project.style || undefined,
+            roomType: bodyRoomType || project.roomType || undefined,
+            color: color || undefined,
+            materials: materials || undefined,
+            weather: weather || undefined,
+            strength: strength ? parseInt(strength) : undefined,
+            aiIntervention: aiIntervention || undefined
+          }
         });
       });
 
@@ -816,6 +836,27 @@ router.post('/:id/ai/:tool', ensureAuthenticated, async (req, res) => {
     }
   } catch (err) {
     console.error(`[AI:${req.params.tool}] Error:`, err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+// Delete a design variant (history entry)
+router.delete('/:id/variants/:variantId', ensureAuthenticated, async (req, res) => {
+  try {
+    const project = await Project.findOne({ _id: req.params.id, user: req.user.id });
+    if (!project) return res.status(404).json({ success: false, error: 'Projet introuvable' });
+
+    const before = project.designVariants.length;
+    project.designVariants = project.designVariants.filter(
+      v => v._id.toString() !== req.params.variantId
+    );
+    if (project.designVariants.length === before) {
+      return res.status(404).json({ success: false, error: 'Variante introuvable' });
+    }
+    await project.save();
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Delete variant error:', err);
     res.status(500).json({ success: false, error: err.message });
   }
 });
