@@ -569,5 +569,134 @@ router.post('/inspirations/:id/delete', async (req, res) => {
   }
 });
 
+// ==========================================
+// Service Categories (Entrepreneurs page)
+// ==========================================
+const ServiceCategory = require('../models/ServiceCategory');
+
+const SPECIALTY_OPTIONS = [
+  { value: 'painting',    label: 'Peinture' },
+  { value: 'kitchen',     label: 'Cuisine' },
+  { value: 'bathroom',    label: 'Salle de bain' },
+  { value: 'flooring',    label: 'Planchers' },
+  { value: 'electrical',  label: 'Électricité' },
+  { value: 'plumbing',    label: 'Plomberie' },
+  { value: 'outdoor',     label: 'Extérieur' },
+  { value: 'living-room', label: 'Salon' },
+  { value: 'bedroom',     label: 'Chambre' },
+  { value: 'general',     label: 'Général' }
+];
+
+router.get('/services', async (req, res) => {
+  try {
+    const categories = await ServiceCategory.find({}).sort({ order: 1 });
+    res.render('pages/admin/services', {
+      title: 'Services Entrepreneurs - Admin',
+      layout: 'layouts/minimal',
+      extraStyles: ['/css/dashboard.css'],
+      activePage: 'admin-services',
+      categories,
+      specialtyOptions: SPECIALTY_OPTIONS
+    });
+  } catch (err) {
+    console.error('Admin services error:', err);
+    req.flash('error_msg', 'Impossible de charger les services.');
+    res.redirect('/admin');
+  }
+});
+
+// Create category
+router.post('/services', async (req, res) => {
+  try {
+    const { label, icon, specialty, order } = req.body;
+    if (!label || !specialty) {
+      req.flash('error_msg', 'Nom et spécialité sont requis.');
+      return res.redirect('/admin/services');
+    }
+    const maxOrder = await ServiceCategory.findOne().sort({ order: -1 });
+    await ServiceCategory.create({
+      label: label.trim(),
+      icon: (icon || 'wrench').trim(),
+      specialty: specialty.trim(),
+      order: order ? parseInt(order) : (maxOrder ? maxOrder.order + 1 : 1)
+    });
+    req.flash('success_msg', 'Catégorie ajoutée.');
+    res.redirect('/admin/services');
+  } catch (err) {
+    console.error('Admin services create error:', err);
+    req.flash('error_msg', 'Impossible d\'ajouter la catégorie.');
+    res.redirect('/admin/services');
+  }
+});
+
+// Update category (label, icon, specialty, order, isActive)
+router.post('/services/:id/update', async (req, res) => {
+  try {
+    const { label, icon, specialty, order, isActive } = req.body;
+    await ServiceCategory.findByIdAndUpdate(req.params.id, {
+      label: (label || '').trim(),
+      icon: (icon || 'wrench').trim(),
+      specialty: (specialty || 'general').trim(),
+      order: order ? parseInt(order) : 0,
+      isActive: isActive === 'true' || isActive === '1' || isActive === 'on'
+    });
+    req.flash('success_msg', 'Catégorie mise à jour.');
+    res.redirect('/admin/services');
+  } catch (err) {
+    console.error('Admin services update error:', err);
+    req.flash('error_msg', 'Impossible de mettre à jour.');
+    res.redirect('/admin/services');
+  }
+});
+
+// Delete category
+router.post('/services/:id/delete', async (req, res) => {
+  try {
+    await ServiceCategory.findByIdAndDelete(req.params.id);
+    req.flash('success_msg', 'Catégorie supprimée.');
+    res.redirect('/admin/services');
+  } catch (err) {
+    console.error('Admin services delete error:', err);
+    req.flash('error_msg', 'Impossible de supprimer.');
+    res.redirect('/admin/services');
+  }
+});
+
+// Add subcategory
+router.post('/services/:id/subcategory/add', async (req, res) => {
+  try {
+    const { name } = req.body;
+    if (!name || !name.trim()) {
+      req.flash('error_msg', 'Nom de sous-catégorie requis.');
+      return res.redirect('/admin/services');
+    }
+    await ServiceCategory.findByIdAndUpdate(req.params.id, {
+      $push: { subcategories: name.trim() }
+    });
+    req.flash('success_msg', 'Sous-catégorie ajoutée.');
+    res.redirect('/admin/services');
+  } catch (err) {
+    console.error('Admin subcategory add error:', err);
+    req.flash('error_msg', 'Impossible d\'ajouter.');
+    res.redirect('/admin/services');
+  }
+});
+
+// Remove subcategory
+router.post('/services/:id/subcategory/remove', async (req, res) => {
+  try {
+    const { name } = req.body;
+    await ServiceCategory.findByIdAndUpdate(req.params.id, {
+      $pull: { subcategories: name }
+    });
+    req.flash('success_msg', 'Sous-catégorie supprimée.');
+    res.redirect('/admin/services');
+  } catch (err) {
+    console.error('Admin subcategory remove error:', err);
+    req.flash('error_msg', 'Impossible de supprimer.');
+    res.redirect('/admin/services');
+  }
+});
+
 module.exports = router;
 

@@ -31,115 +31,68 @@ const upload = multer({
   }
 });
 
-// Service categories for the Home-Depot-style UI
-const SERVICE_CATEGORIES = [
-  {
-    id: 'painting',
-    specialty: 'painting',
-    label: 'Peinture et décoration',
-    icon: 'paintbrush',
-    subcategories: ['Peinture intérieure', 'Peinture extérieure', 'Papier peint', 'Enduit décoratif', 'Ravalement de façade']
-  },
-  {
-    id: 'kitchen',
-    specialty: 'kitchen',
-    label: 'Rénovation cuisine',
-    icon: 'utensils',
-    subcategories: ['Armoires', 'Comptoirs', 'Îlot de cuisine', 'Électroménager encastré', 'Carrelage cuisine']
-  },
-  {
-    id: 'bathroom',
-    specialty: 'bathroom',
-    label: 'Rénovation salle de bain',
-    icon: 'bath',
-    subcategories: ['Douche italienne', 'Baignoire', 'Vanité', 'Carrelage salle de bain', 'Robinetterie']
-  },
-  {
-    id: 'flooring',
-    specialty: 'flooring',
-    label: 'Planchers et revêtements',
-    icon: 'layers',
-    subcategories: ['Bois franc', 'Céramique', 'Vinyle', 'Moquette', 'Parquet flottant']
-  },
-  {
-    id: 'lighting',
-    specialty: 'electrical',
-    label: 'Éclairage',
-    icon: 'lightbulb',
-    subcategories: ['Plafonniers', 'Spots encastrés', 'Éclairage extérieur', 'Appliques murales', 'Lustres et suspensions']
-  },
-  {
-    id: 'furniture',
-    specialty: 'general',
-    label: 'Mobilier et aménagement',
-    icon: 'sofa',
-    subcategories: ['Aménagement salon', 'Aménagement chambre', 'Bureau à domicile', 'Dressing sur mesure', 'Rangement']
-  },
-  {
-    id: 'outdoor',
-    specialty: 'outdoor',
-    label: 'Jardinage et extérieur',
-    icon: 'trees',
-    subcategories: ['Terrasse et patio', 'Clôture et portail', 'Gazon et paysagement', 'Piscine et spa', 'Pergola et abri']
-  },
-  {
-    id: 'plumbing',
-    specialty: 'plumbing',
-    label: 'Plomberie',
-    icon: 'wrench',
-    subcategories: ['Robinetterie', 'Tuyaux et raccords', 'Chauffe-eau', 'WC et sanitaires', 'Évacuations']
-  },
-  {
-    id: 'electrical',
-    specialty: 'electrical',
-    label: 'Électricité',
-    icon: 'zap',
-    subcategories: ['Prises et interrupteurs', 'Tableau électrique', 'Domotique', 'Câblage', 'Mise aux normes']
-  },
-  {
-    id: 'cleaning',
-    specialty: 'general',
-    label: 'Nettoyage',
-    icon: 'sparkles',
-    subcategories: ['Ménage régulier', 'Nettoyage de vitres', 'Nettoyage de tapis', 'Après travaux', 'Nettoyage extérieur']
-  }
+const ServiceCategory = require('../models/ServiceCategory');
+
+// Default seed data — written to DB on first run
+const DEFAULT_SERVICE_CATEGORIES = [
+  { order: 1,  specialty: 'painting',   label: 'Peinture et décoration',     icon: 'paintbrush',   subcategories: ['Peinture intérieure', 'Peinture extérieure', 'Papier peint', 'Enduit décoratif', 'Ravalement de façade'] },
+  { order: 2,  specialty: 'kitchen',    label: 'Rénovation cuisine',          icon: 'utensils',     subcategories: ['Armoires', 'Comptoirs', 'Îlot de cuisine', 'Électroménager encastré', 'Carrelage cuisine'] },
+  { order: 3,  specialty: 'bathroom',   label: 'Rénovation salle de bain',    icon: 'bath',         subcategories: ['Douche italienne', 'Baignoire', 'Vanité', 'Carrelage salle de bain', 'Robinetterie'] },
+  { order: 4,  specialty: 'flooring',   label: 'Planchers et revêtements',    icon: 'layers',       subcategories: ['Bois franc', 'Céramique', 'Vinyle', 'Moquette', 'Parquet flottant'] },
+  { order: 5,  specialty: 'electrical', label: 'Éclairage',                   icon: 'lightbulb',    subcategories: ['Plafonniers', 'Spots encastrés', 'Éclairage extérieur', 'Appliques murales', 'Lustres et suspensions'] },
+  { order: 6,  specialty: 'general',    label: 'Mobilier et aménagement',     icon: 'sofa',         subcategories: ['Aménagement salon', 'Aménagement chambre', 'Bureau à domicile', 'Dressing sur mesure', 'Rangement'] },
+  { order: 7,  specialty: 'outdoor',    label: 'Jardinage et extérieur',      icon: 'trees',        subcategories: ['Terrasse et patio', 'Clôture et portail', 'Gazon et paysagement', 'Piscine et spa', 'Pergola et abri'] },
+  { order: 8,  specialty: 'plumbing',   label: 'Plomberie',                   icon: 'wrench',       subcategories: ['Robinetterie', 'Tuyaux et raccords', 'Chauffe-eau', 'WC et sanitaires', 'Évacuations'] },
+  { order: 9,  specialty: 'electrical', label: 'Électricité',                 icon: 'zap',          subcategories: ['Prises et interrupteurs', 'Tableau électrique', 'Domotique', 'Câblage', 'Mise aux normes'] },
+  { order: 10, specialty: 'general',    label: 'Nettoyage',                   icon: 'sparkles',     subcategories: ['Ménage régulier', 'Nettoyage de vitres', 'Nettoyage de tapis', 'Après travaux', 'Nettoyage extérieur'] },
+  { order: 11, specialty: 'general',    label: 'Chauffage et climatisation',  icon: 'thermometer',  subcategories: ['Installation climatiseur', 'Installation fournaise', 'Entretien système HVAC', 'Thermostats intelligents', 'Ventilation'] },
+  { order: 12, specialty: 'general',    label: 'Portes et fenêtres',          icon: 'door-open',    subcategories: ['Installation portes intérieures', 'Installation portes extérieures', 'Installation fenêtres', 'Remplacement vitres', 'Calfeutrage'] }
 ];
+
+async function seedCategories() {
+  const count = await ServiceCategory.countDocuments();
+  if (count === 0) {
+    await ServiceCategory.insertMany(DEFAULT_SERVICE_CATEGORIES);
+    console.log('✅ ServiceCategory: seeded 12 default categories');
+  }
+}
 
 // Browse Contractors (Public)
 router.get('/', async (req, res) => {
   try {
+    await seedCategories();
+
     const { specialty, city, q, service } = req.query;
 
     let dbQuery = {};
-
-    if (specialty) {
-      dbQuery.specialties = specialty;
-    }
-    if (city) {
-      dbQuery['serviceArea.cities'] = { $regex: city, $options: 'i' };
-    }
+    if (specialty) dbQuery.specialties = specialty;
+    if (city)      dbQuery['serviceArea.cities'] = { $regex: city, $options: 'i' };
     if (q) {
       dbQuery.$or = [
-        { companyName: { $regex: q, $options: 'i' } },
-        { specialties: { $regex: q, $options: 'i' } },
+        { companyName:    { $regex: q, $options: 'i' } },
+        { specialties:    { $regex: q, $options: 'i' } },
         { 'address.city': { $regex: q, $options: 'i' } }
       ];
     }
 
-    const contractors = await Contractor.find(dbQuery)
-      .populate('user', 'firstName lastName avatar')
-      .sort({ isPremium: -1, 'rating.average': -1 })
-      .limit(24);
+    const [contractors, categories] = await Promise.all([
+      Contractor.find(dbQuery)
+        .populate('user', 'firstName lastName avatar')
+        .sort({ isPremium: -1, 'rating.average': -1 })
+        .limit(24),
+      ServiceCategory.find({ isActive: true }).sort({ order: 1 })
+    ]);
 
-    // Find the active category label for breadcrumb display
-    const activeCategory = SERVICE_CATEGORIES.find(c => c.specialty === specialty && (!service || c.subcategories.includes(service)));
+    const activeCategory = categories.find(c =>
+      c.specialty === specialty && (!service || c.subcategories.includes(service))
+    );
 
     res.render('pages/contractors/index', {
       title: 'Trouver un entrepreneur - CraftyCrib',
       metaDescription: 'Trouvez des entrepreneurs et designers d\'intérieur vérifiés pour concrétiser votre projet de rénovation.',
       layout: 'layouts/landing',
       contractors,
-      categories: SERVICE_CATEGORIES,
+      categories,
       filters: { specialty: specialty || '', city: city || '', service: service || '', q: q || '' },
       activeCategory: activeCategory || null
     });

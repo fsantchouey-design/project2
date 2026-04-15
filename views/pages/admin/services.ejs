@@ -1,0 +1,208 @@
+<div class="page-container admin-landing">
+  <div class="page-header">
+    <h1>Services Entrepreneurs (<%= categories.length %>)</h1>
+    <p class="text-muted">Gérez les catégories et sous-catégories affichées dans la page Entrepreneurs.</p>
+    <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
+      <a href="/admin/landing" class="btn btn-secondary btn-sm">Images</a>
+      <a href="/admin/specialists" class="btn btn-secondary btn-sm">Specialists</a>
+      <a href="/admin/video" class="btn btn-secondary btn-sm">Video</a>
+      <a href="/admin/pricing" class="btn btn-secondary btn-sm">Pricing</a>
+      <a href="/admin/messages" class="btn btn-secondary btn-sm">Messages</a>
+      <a href="/admin/inspirations" class="btn btn-secondary btn-sm">Inspirations</a>
+      <a href="/admin/services" class="btn btn-primary btn-sm">Services</a>
+      <a href="/admin/settings" class="btn btn-secondary btn-sm">Settings</a>
+    </div>
+  </div>
+
+  <div class="admin-sections-list">
+
+    <!-- ── ADD CATEGORY FORM ── -->
+    <div class="admin-section-group">
+      <div class="admin-section-header">
+        <div class="admin-section-title">
+          <i data-lucide="folder-plus"></i>
+          <h2>Ajouter une catégorie</h2>
+        </div>
+        <p class="admin-section-desc">Les catégories apparaissent dans la grille de la page /contractors.</p>
+      </div>
+
+      <form action="/admin/services" method="POST" style="max-width: 680px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px;">
+          <div class="form-group">
+            <label class="form-label">Nom de la catégorie *</label>
+            <input type="text" name="label" class="form-input" placeholder="ex : Chauffage et climatisation" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Icône Lucide *</label>
+            <input type="text" name="icon" class="form-input" placeholder="ex : thermometer" list="icon-suggestions" required>
+            <datalist id="icon-suggestions">
+              <option value="paintbrush"><option value="utensils"><option value="bath"><option value="layers">
+              <option value="lightbulb"><option value="sofa"><option value="trees"><option value="wrench">
+              <option value="zap"><option value="sparkles"><option value="thermometer"><option value="door-open">
+              <option value="hammer"><option value="home"><option value="tool"><option value="wind">
+              <option value="shield"><option value="camera"><option value="star"><option value="settings">
+            </datalist>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Spécialité (filtre entrepreneurs) *</label>
+            <select name="specialty" class="form-input" required>
+              <% specialtyOptions.forEach(s => { %>
+                <option value="<%= s.value %>"><%= s.label %></option>
+              <% }) %>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Ordre d'affichage</label>
+            <input type="number" name="order" class="form-input" placeholder="<%= categories.length + 1 %>" min="1">
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary btn-sm">
+          <i data-lucide="plus"></i>
+          Ajouter la catégorie
+        </button>
+      </form>
+    </div>
+
+    <!-- ── CATEGORIES LIST ── -->
+    <div class="admin-section-group" style="margin-top: 32px;">
+      <div class="admin-section-header">
+        <div class="admin-section-title">
+          <i data-lucide="list"></i>
+          <h2>Catégories existantes</h2>
+        </div>
+        <p class="admin-section-desc">Modifiez, réordonnez ou supprimez les catégories. Gérez leurs sous-catégories.</p>
+      </div>
+
+      <% if (categories.length === 0) { %>
+        <div class="admin-asset-card" style="text-align: center; padding: 48px;">
+          <p class="text-muted">Aucune catégorie. Ajoutez-en une via le formulaire ci-dessus.</p>
+        </div>
+      <% } else { %>
+        <div style="display: flex; flex-direction: column; gap: 16px;">
+          <% categories.forEach((cat, idx) => { %>
+            <div class="admin-asset-card" style="flex-direction: column; padding: 0; overflow: hidden;">
+
+              <!-- Category header -->
+              <div style="display: flex; align-items: center; gap: 14px; padding: 16px 20px; background: var(--bg-card);">
+                <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(0,255,136,0.08); border: 1px solid rgba(0,255,136,0.15); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--accent-primary);">
+                  <i data-lucide="<%= cat.icon %>" style="width: 18px; height: 18px;"></i>
+                </div>
+                <div style="flex: 1; min-width: 0;">
+                  <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                    <span style="font-weight: 700; font-size: 15px; color: var(--text-primary);"><%= cat.label %></span>
+                    <% if (!cat.isActive) { %>
+                      <span style="font-size: 11px; padding: 2px 8px; background: #fef3c7; color: #d97706; border-radius: 999px; font-weight: 600;">Masquée</span>
+                    <% } %>
+                  </div>
+                  <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">
+                    Spécialité : <strong style="color: var(--text-secondary);"><%= cat.specialty %></strong> ·
+                    Icône : <code style="font-size: 11px;"><%= cat.icon %></code> ·
+                    Ordre : <strong style="color: var(--text-secondary);"><%= cat.order %></strong>
+                  </div>
+                </div>
+                <div style="display: flex; gap: 6px; flex-shrink: 0;">
+                  <button class="btn btn-secondary btn-sm" onclick="toggleEdit('<%= cat._id %>')" type="button">
+                    <i data-lucide="pencil" style="width: 14px; height: 14px;"></i>
+                  </button>
+                  <form action="/admin/services/<%= cat._id %>/delete" method="POST" style="display:inline;"
+                    onsubmit="return confirm('Supprimer « <%= cat.label %> » et toutes ses sous-catégories ?')">
+                    <button type="submit" class="btn btn-secondary btn-sm" style="color: #ef4444;">
+                      <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                    </button>
+                  </form>
+                </div>
+              </div>
+
+              <!-- Edit form (hidden by default) -->
+              <div id="edit-<%= cat._id %>" style="display: none; padding: 16px 20px; border-top: 1px solid var(--border-color); background: var(--bg-secondary);">
+                <form action="/admin/services/<%= cat._id %>/update" method="POST">
+                  <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;">
+                    <div class="form-group">
+                      <label class="form-label">Nom</label>
+                      <input type="text" name="label" class="form-input" value="<%= cat.label %>" required>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Icône</label>
+                      <input type="text" name="icon" class="form-input" value="<%= cat.icon %>" list="icon-suggestions">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Spécialité</label>
+                      <select name="specialty" class="form-input">
+                        <% specialtyOptions.forEach(s => { %>
+                          <option value="<%= s.value %>" <%= cat.specialty === s.value ? 'selected' : '' %>><%= s.label %></option>
+                        <% }) %>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Ordre</label>
+                      <input type="number" name="order" class="form-input" value="<%= cat.order %>">
+                    </div>
+                  </div>
+                  <div class="form-group" style="margin-bottom: 12px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; color: var(--text-secondary);">
+                      <input type="checkbox" name="isActive" value="on" <%= cat.isActive ? 'checked' : '' %> style="width: 16px; height: 16px;">
+                      Catégorie active (visible sur la page Entrepreneurs)
+                    </label>
+                  </div>
+                  <div style="display: flex; gap: 8px;">
+                    <button type="submit" class="btn btn-primary btn-sm">
+                      <i data-lucide="save" style="width: 14px; height: 14px;"></i> Enregistrer
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="toggleEdit('<%= cat._id %>')">Annuler</button>
+                  </div>
+                </form>
+              </div>
+
+              <!-- Subcategories -->
+              <div style="padding: 14px 20px; border-top: 1px solid var(--border-color);">
+                <p style="font-size: 12px; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 10px;">
+                  Sous-catégories (<%= cat.subcategories.length %>)
+                </p>
+                <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px;">
+                  <% if (cat.subcategories.length === 0) { %>
+                    <span style="font-size: 13px; color: var(--text-muted); font-style: italic;">Aucune sous-catégorie</span>
+                  <% } %>
+                  <% cat.subcategories.forEach(sub => { %>
+                    <span style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px 5px 12px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 999px; font-size: 13px; color: var(--text-secondary);">
+                      <%= sub %>
+                      <form action="/admin/services/<%= cat._id %>/subcategory/remove" method="POST" style="display:inline;" onsubmit="return confirm('Supprimer « <%= sub %> » ?')">
+                        <input type="hidden" name="name" value="<%= sub %>">
+                        <button type="submit" style="background: none; border: none; cursor: pointer; color: var(--text-muted); padding: 0; line-height: 1; display: flex; align-items: center;" title="Supprimer">
+                          <i data-lucide="x" style="width: 13px; height: 13px;"></i>
+                        </button>
+                      </form>
+                    </span>
+                  <% }) %>
+                </div>
+
+                <!-- Add subcategory -->
+                <form action="/admin/services/<%= cat._id %>/subcategory/add" method="POST" style="display: flex; gap: 8px; max-width: 420px;">
+                  <input type="text" name="name" class="form-input" placeholder="Nouvelle sous-catégorie…" required style="font-size: 13px; padding: 7px 12px;">
+                  <button type="submit" class="btn btn-secondary btn-sm" style="white-space: nowrap; flex-shrink: 0;">
+                    <i data-lucide="plus" style="width: 14px; height: 14px;"></i>
+                    Ajouter
+                  </button>
+                </form>
+              </div>
+
+            </div>
+          <% }) %>
+        </div>
+      <% } %>
+    </div>
+
+    <!-- Tip -->
+    <div style="margin-top: 24px; padding: 14px 18px; background: rgba(0,255,136,0.05); border: 1px solid rgba(0,255,136,0.15); border-radius: 10px; font-size: 13px; color: var(--text-secondary);">
+      <strong style="color: var(--text-primary);">Astuce :</strong>
+      Les modifications sont immédiatement visibles sur <a href="/contractors" target="_blank" style="color: var(--accent-primary);">/contractors</a>.
+      Masquer une catégorie (décocher "active") la cache aux visiteurs sans la supprimer.
+    </div>
+  </div>
+</div>
+
+<script>
+function toggleEdit(id) {
+  const el = document.getElementById('edit-' + id);
+  el.style.display = el.style.display === 'none' ? '' : 'none';
+}
+</script>
