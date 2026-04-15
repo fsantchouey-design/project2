@@ -150,10 +150,10 @@
       </div>
     </div>
     
-    <!-- Inspiration Cuisine -->
+    <!-- Inspiration Carousel -->
     <div class="content-card" style="margin-bottom: 16px;">
       <div class="card-header">
-        <h2>🍳 Inspiration Cuisine</h2>
+        <h2>🍳 Idées / Inspiration</h2>
         <div class="inspiration-dropdown">
           <select id="inspiration-select" class="inspiration-select" onchange="changeInspiration(this.value)">
             <option value="cuisine" selected>Cuisine</option>
@@ -165,34 +165,86 @@
         </div>
       </div>
       <div class="card-body" style="padding: 12px;">
-        <div class="inspiration-grid">
-          <a href="/inspiration/cuisine?style=moderne" class="inspiration-item">
-            <img src="/assets/11houses/Modern Arabic.jpeg" alt="Cuisine Moderne">
-            <span class="inspiration-label">Moderne</span>
-          </a>
-          <a href="/inspiration/cuisine?style=rustique" class="inspiration-item">
-            <img src="/assets/11houses/Rustic.jpeg" alt="Cuisine Rustique">
-            <span class="inspiration-label">Rustique</span>
-          </a>
-          <a href="/inspiration/cuisine?style=industriel" class="inspiration-item">
-            <img src="/assets/11houses/Industrial.jpeg" alt="Cuisine Industrielle">
-            <span class="inspiration-label">Industriel</span>
-          </a>
-          <a href="/inspiration/cuisine?style=luxe" class="inspiration-item">
-            <img src="/assets/11houses/Luxury.jpeg" alt="Cuisine Luxe">
-            <span class="inspiration-label">Luxe</span>
-          </a>
+        <div class="insp-carousel" id="insp-carousel">
+          <div class="insp-track" id="insp-track">
+            <div class="insp-slide">
+              <a href="/inspiration/cuisine?style=moderne" class="insp-slide-inner">
+                <img src="/assets/11houses/Modern Arabic.jpeg" alt="Cuisine Moderne">
+                <span class="insp-label">Moderne</span>
+              </a>
+            </div>
+            <div class="insp-slide">
+              <a href="/inspiration/cuisine?style=rustique" class="insp-slide-inner">
+                <img src="/assets/11houses/Rustic.jpeg" alt="Cuisine Rustique">
+                <span class="insp-label">Rustique</span>
+              </a>
+            </div>
+            <div class="insp-slide">
+              <a href="/inspiration/cuisine?style=industriel" class="insp-slide-inner">
+                <img src="/assets/11houses/Industrial.jpeg" alt="Cuisine Industrielle">
+                <span class="insp-label">Industriel</span>
+              </a>
+            </div>
+            <div class="insp-slide">
+              <a href="/inspiration/cuisine?style=luxe" class="insp-slide-inner">
+                <img src="/assets/11houses/Luxury.jpeg" alt="Cuisine Luxe">
+                <span class="insp-label">Luxe</span>
+              </a>
+            </div>
+          </div>
+
+          <button class="insp-btn insp-btn-prev" id="insp-prev" aria-label="Précédent">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+          </button>
+          <button class="insp-btn insp-btn-next" id="insp-next" aria-label="Suivant">
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+          </button>
+
+          <div class="insp-dots" id="insp-dots">
+            <button class="insp-dot active" aria-label="Slide 1"></button>
+            <button class="insp-dot" aria-label="Slide 2"></button>
+            <button class="insp-dot" aria-label="Slide 3"></button>
+            <button class="insp-dot" aria-label="Slide 4"></button>
+          </div>
         </div>
+
         <a href="/inspiration/cuisine" class="btn btn-outline btn-block" style="margin-top: 12px;">
           Voir toutes les inspirations
         </a>
       </div>
     </div>
-    
+
     <script>
       function changeInspiration(type) {
         window.location.href = '/inspiration/' + type;
       }
+
+      (function() {
+        const track   = document.getElementById('insp-track');
+        const carousel = document.getElementById('insp-carousel');
+        const dots    = Array.from(document.querySelectorAll('#insp-dots .insp-dot'));
+        const slides  = Array.from(track.querySelectorAll('.insp-slide'));
+        let current = 0;
+        let timer;
+
+        function goTo(index) {
+          current = (index + slides.length) % slides.length;
+          track.style.transform = 'translateX(-' + (current * 100) + '%)';
+          dots.forEach(function(d, i) { d.classList.toggle('active', i === current); });
+        }
+
+        function startAuto() { timer = setInterval(function() { goTo(current + 1); }, 3000); }
+        function resetAuto()  { clearInterval(timer); startAuto(); }
+
+        document.getElementById('insp-prev').addEventListener('click', function() { goTo(current - 1); resetAuto(); });
+        document.getElementById('insp-next').addEventListener('click', function() { goTo(current + 1); resetAuto(); });
+        dots.forEach(function(dot, i) { dot.addEventListener('click', function() { goTo(i); resetAuto(); }); });
+
+        carousel.addEventListener('mouseenter', function() { clearInterval(timer); });
+        carousel.addEventListener('mouseleave', startAuto);
+
+        startAuto();
+      })();
     </script>
     
     <!-- Upgrade CTA -->
