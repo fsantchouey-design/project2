@@ -75,13 +75,26 @@ app.use(async (req, res, next) => {
   next();
 });
 
+// Admin access guard — must be authenticated AND have role 'admin'
+const adminGuard = (req, res, next) => {
+  if (!req.isAuthenticated()) {
+    req.flash('error_msg', 'Veuillez vous connecter pour accéder à cette page.');
+    return res.redirect('/auth/login');
+  }
+  if (req.user.role !== 'admin') {
+    req.flash('error_msg', 'Accès refusé. Privilèges administrateur requis.');
+    return res.redirect('/auth/login');
+  }
+  next();
+};
+
 // Routes
 app.use('/', require('./routes/index'));
 app.use('/auth', require('./routes/auth'));
 app.use('/dashboard', require('./routes/dashboard'));
 app.use('/projects', require('./routes/projects'));
 app.use('/contractors', require('./routes/contractors'));
-app.use('/admin', require('./routes/admin'));
+app.use('/admin', adminGuard, require('./routes/admin'));
 app.use('/api', require('./routes/api'));
 
 // 404 Handler
