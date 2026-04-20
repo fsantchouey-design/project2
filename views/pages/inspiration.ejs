@@ -39,32 +39,101 @@
   </div>
 
   <% if (images.length === 0) { %>
-    <div style="text-align: center; padding: 64px 24px; background: var(--bg-secondary); border-radius: 12px;">
-      <i data-lucide="image-off" style="width: 48px; height: 48px; color: var(--text-muted); margin-bottom: 16px;"></i>
-      <h3 style="margin-bottom: 8px; color: var(--text-primary);">Aucune image pour le moment</h3>
+    <div class="insp-empty">
+      <i data-lucide="image-off" style="width:48px;height:48px;color:var(--text-muted);margin-bottom:16px;"></i>
+      <h3>Aucune image pour le moment</h3>
       <p class="text-muted">Des inspirations <%= label.toLowerCase() %> seront bientôt disponibles.</p>
     </div>
   <% } else { %>
-    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 20px;">
-      <% images.forEach(img => { %>
-        <div style="border-radius: 12px; overflow: hidden; background: var(--bg-secondary); box-shadow: 0 1px 4px rgba(0,0,0,0.07);">
-          <div style="height: 200px; overflow: hidden; background: #f1f5f9;">
-            <img src="<%= img.imageUrl %>" alt="<%= img.title %>"
-              style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;"
-              onmouseover="this.style.transform='scale(1.04)'"
-              onmouseout="this.style.transform='scale(1)'"
-              onerror="this.parentElement.style.background='#e2e8f0'">
+    <div class="insp-grid">
+      <% images.forEach((img, idx) => { %>
+        <div class="insp-card" onclick="openInspLightbox(<%= idx %>)">
+          <div class="insp-card-img">
+            <img src="<%= img.imageUrl %>" alt="<%= img.title %>" loading="lazy"
+              onerror="this.parentElement.style.background='var(--bg-tertiary)'">
           </div>
-          <div style="padding: 14px 16px;">
-            <p style="font-weight: 600; font-size: 15px; margin: 0 0 6px 0; color: var(--text-primary);"><%= img.title %></p>
+          <div class="insp-card-body">
+            <p class="insp-card-title"><%= img.title %></p>
             <% if (img.style) { %>
-              <span style="font-size: 12px; padding: 2px 10px; border-radius: 999px; background: var(--bg-tertiary, #f1f5f9); color: var(--text-secondary); font-weight: 500;">
-                <%= img.style %>
-              </span>
+              <span class="insp-card-tag"><%= img.style %></span>
             <% } %>
           </div>
         </div>
       <% }) %>
     </div>
   <% } %>
+</div>
+
+<!-- Inspiration Lightbox -->
+<div id="insp-lightbox" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.96);flex-direction:column;" onclick="closeInspLightbox()">
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;position:relative;padding:12px 60px;min-height:0;" onclick="event.stopPropagation()">
+    <img id="insp-lb-img" src="" alt="" style="max-width:100%;max-height:calc(100vh - 72px);object-fit:contain;border-radius:10px;user-select:none;">
+    <button id="insp-lb-prev" onclick="inspLbNav(-1)" style="position:absolute;left:12px;width:44px;height:44px;background:rgba(255,255,255,0.13);border:1px solid rgba(255,255,255,0.2);border-radius:50%;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.4rem;">&#8249;</button>
+    <button id="insp-lb-next" onclick="inspLbNav(1)"  style="position:absolute;right:12px;width:44px;height:44px;background:rgba(255,255,255,0.13);border:1px solid rgba(255,255,255,0.2);border-radius:50%;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.4rem;">&#8250;</button>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;padding:10px 16px;background:rgba(0,0,0,0.5);border-top:1px solid rgba(255,255,255,0.08);flex-shrink:0;" onclick="event.stopPropagation()">
+    <span id="insp-lb-counter" style="color:rgba(255,255,255,0.6);font-size:0.82rem;flex:1;text-align:center;"></span>
+    <a id="insp-lb-dl" href="#" download target="_blank" style="display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,0.85);background:rgba(255,255,255,0.1);border:none;border-radius:6px;padding:6px 14px;text-decoration:none;font-size:0.8rem;">⬇ Télécharger</a>
+    <button onclick="closeInspLightbox()" style="display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,0.85);background:rgba(255,255,255,0.1);border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:0.8rem;">✕ Fermer</button>
+  </div>
+</div>
+
+<style>
+  .insp-empty { text-align:center; padding:64px 24px; background:var(--bg-secondary); border-radius:12px; }
+  .insp-empty h3 { margin-bottom:8px; color:var(--text-primary); }
+  .insp-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr)); gap:20px; }
+  .insp-card { border-radius:12px; overflow:hidden; background:var(--bg-secondary); box-shadow:0 1px 4px rgba(0,0,0,0.07); cursor:pointer; transition:transform 0.2s, box-shadow 0.2s; }
+  .insp-card:hover { transform:translateY(-3px); box-shadow:0 6px 20px rgba(0,0,0,0.13); }
+  .insp-card-img { aspect-ratio:4/3; overflow:hidden; background:#f1f5f9; }
+  .insp-card-img img { width:100%; height:100%; object-fit:cover; transition:transform 0.35s; }
+  .insp-card:hover .insp-card-img img { transform:scale(1.05); }
+  .insp-card-body { padding:14px 16px; }
+  .insp-card-title { font-weight:600; font-size:15px; margin:0 0 6px; color:var(--text-primary); }
+  .insp-card-tag { font-size:12px; padding:2px 10px; border-radius:999px; background:var(--bg-tertiary,#f1f5f9); color:var(--text-secondary); font-weight:500; }
+  @media (max-width: 600px) { .insp-grid { grid-template-columns:repeat(auto-fill, minmax(160px,1fr)); gap:12px; } }
+</style>
+
+<script>
+  const inspImages = <%- JSON.stringify(images.map(img => img.imageUrl || '')) %>;
+  let inspLbIdx = 0, inspTouchX = 0;
+
+  function openInspLightbox(idx) {
+    inspLbIdx = idx;
+    renderInspLb();
+    const lb = document.getElementById('insp-lightbox');
+    lb.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+  function renderInspLb() {
+    document.getElementById('insp-lb-img').src = inspImages[inspLbIdx] || '';
+    document.getElementById('insp-lb-dl').href  = inspImages[inspLbIdx] || '';
+    document.getElementById('insp-lb-counter').textContent = inspImages.length > 1 ? (inspLbIdx + 1) + ' / ' + inspImages.length : '';
+    document.getElementById('insp-lb-prev').style.visibility = inspImages.length > 1 ? 'visible' : 'hidden';
+    document.getElementById('insp-lb-next').style.visibility = inspImages.length > 1 ? 'visible' : 'hidden';
+  }
+  function inspLbNav(dir) {
+    inspLbIdx = (inspLbIdx + dir + inspImages.length) % inspImages.length;
+    renderInspLb();
+  }
+  function closeInspLightbox() {
+    document.getElementById('insp-lightbox').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+  const inspLb = document.getElementById('insp-lightbox');
+  if (inspLb) {
+    inspLb.addEventListener('touchstart', e => { inspTouchX = e.touches[0].clientX; }, { passive: true });
+    inspLb.addEventListener('touchend', e => {
+      const dx = e.changedTouches[0].clientX - inspTouchX;
+      if (Math.abs(dx) > 50) inspLbNav(dx < 0 ? 1 : -1);
+    }, { passive: true });
+  }
+  document.addEventListener('keydown', function(e) {
+    const lb = document.getElementById('insp-lightbox');
+    if (!lb || lb.style.display === 'none') return;
+    if (e.key === 'Escape')    closeInspLightbox();
+    if (e.key === 'ArrowLeft')  inspLbNav(-1);
+    if (e.key === 'ArrowRight') inspLbNav(1);
+  });
+</script>
+
 </div>

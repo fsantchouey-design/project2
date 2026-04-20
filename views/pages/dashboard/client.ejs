@@ -168,28 +168,28 @@
         <div class="insp-carousel" id="insp-carousel">
           <div class="insp-track" id="insp-track">
             <div class="insp-slide">
-              <a href="/inspiration/cuisine?style=moderne" class="insp-slide-inner">
+              <div class="insp-slide-inner" onclick="openCarouselLightbox(0)" style="cursor:pointer;">
                 <img src="/assets/11houses/Modern Arabic.jpeg" alt="Cuisine Moderne">
                 <span class="insp-label">Moderne</span>
-              </a>
+              </div>
             </div>
             <div class="insp-slide">
-              <a href="/inspiration/cuisine?style=rustique" class="insp-slide-inner">
+              <div class="insp-slide-inner" onclick="openCarouselLightbox(1)" style="cursor:pointer;">
                 <img src="/assets/11houses/Rustic.jpeg" alt="Cuisine Rustique">
                 <span class="insp-label">Rustique</span>
-              </a>
+              </div>
             </div>
             <div class="insp-slide">
-              <a href="/inspiration/cuisine?style=industriel" class="insp-slide-inner">
+              <div class="insp-slide-inner" onclick="openCarouselLightbox(2)" style="cursor:pointer;">
                 <img src="/assets/11houses/Industrial.jpeg" alt="Cuisine Industrielle">
                 <span class="insp-label">Industriel</span>
-              </a>
+              </div>
             </div>
             <div class="insp-slide">
-              <a href="/inspiration/cuisine?style=luxe" class="insp-slide-inner">
+              <div class="insp-slide-inner" onclick="openCarouselLightbox(3)" style="cursor:pointer;">
                 <img src="/assets/11houses/Luxury.jpeg" alt="Cuisine Luxe">
                 <span class="insp-label">Luxe</span>
-              </a>
+              </div>
             </div>
           </div>
 
@@ -219,6 +219,43 @@
         window.location.href = '/inspiration/' + type;
       }
 
+      // Carousel lightbox
+      const carouselLbImages = [
+        '/assets/11houses/Modern Arabic.jpeg',
+        '/assets/11houses/Rustic.jpeg',
+        '/assets/11houses/Industrial.jpeg',
+        '/assets/11houses/Luxury.jpeg'
+      ];
+      let carouselLbIdx = 0;
+
+      function openCarouselLightbox(idx) {
+        carouselLbIdx = idx;
+        renderCarouselLb();
+        const lb = document.getElementById('carousel-lightbox');
+        lb.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+      }
+      function renderCarouselLb() {
+        document.getElementById('carousel-lb-img').src = carouselLbImages[carouselLbIdx];
+        document.getElementById('carousel-lb-dl').href = carouselLbImages[carouselLbIdx];
+        document.getElementById('carousel-lb-counter').textContent = (carouselLbIdx + 1) + ' / ' + carouselLbImages.length;
+      }
+      function carouselLbNav(dir) {
+        carouselLbIdx = (carouselLbIdx + dir + carouselLbImages.length) % carouselLbImages.length;
+        renderCarouselLb();
+      }
+      function closeCarouselLightbox() {
+        document.getElementById('carousel-lightbox').style.display = 'none';
+        document.body.style.overflow = '';
+      }
+      document.addEventListener('keydown', function(e) {
+        const lb = document.getElementById('carousel-lightbox');
+        if (!lb || lb.style.display === 'none') return;
+        if (e.key === 'Escape') closeCarouselLightbox();
+        if (e.key === 'ArrowLeft')  carouselLbNav(-1);
+        if (e.key === 'ArrowRight') carouselLbNav(1);
+      });
+
       (function() {
         const track   = document.getElementById('insp-track');
         const carousel = document.getElementById('insp-carousel');
@@ -247,6 +284,20 @@
       })();
     </script>
     
+    <!-- Carousel Lightbox -->
+    <div id="carousel-lightbox" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.96);flex-direction:column;align-items:center;justify-content:center;" onclick="closeCarouselLightbox()">
+      <div style="position:relative;flex:1;display:flex;align-items:center;justify-content:center;width:100%;padding:12px 60px;min-height:0;" onclick="event.stopPropagation()">
+        <img id="carousel-lb-img" src="" alt="" style="max-width:100%;max-height:calc(100vh - 72px);object-fit:contain;border-radius:10px;user-select:none;">
+        <button onclick="carouselLbNav(-1)" style="position:absolute;left:12px;width:44px;height:44px;background:rgba(255,255,255,0.13);border:1px solid rgba(255,255,255,0.2);border-radius:50%;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.3rem;">&#8249;</button>
+        <button onclick="carouselLbNav(1)"  style="position:absolute;right:12px;width:44px;height:44px;background:rgba(255,255,255,0.13);border:1px solid rgba(255,255,255,0.2);border-radius:50%;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1.3rem;">&#8250;</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:10px 16px;background:rgba(0,0,0,0.5);border-top:1px solid rgba(255,255,255,0.08);width:100%;flex-shrink:0;" onclick="event.stopPropagation()">
+        <span id="carousel-lb-counter" style="color:rgba(255,255,255,0.6);font-size:0.82rem;flex:1;text-align:center;"></span>
+        <a id="carousel-lb-dl" href="#" download target="_blank" style="display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,0.85);background:rgba(255,255,255,0.1);border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:0.8rem;text-decoration:none;">⬇ Télécharger</a>
+        <button onclick="closeCarouselLightbox()" style="display:inline-flex;align-items:center;gap:6px;color:rgba(255,255,255,0.85);background:rgba(255,255,255,0.1);border:none;border-radius:6px;padding:6px 14px;cursor:pointer;font-size:0.8rem;">✕ Fermer</button>
+      </div>
+    </div>
+
     <!-- Upgrade CTA -->
     <% if (!user.isPremium) { %>
       <div class="content-card upgrade-card">

@@ -65,11 +65,11 @@
             <div class="design-gallery">
               <% project.designVariants.forEach((variant, index) => { %>
                 <div class="design-variant">
-                  <div class="variant-image">
-                    <img src="<%= variant.imageUrl || '/images/placeholder.png' %>" alt="<%= variant.name %>" loading="lazy">
+                  <div class="variant-image" onclick="openDesignLightbox(<%= index %>)">
+                    <img src="<%= variant.imageUrl || '/images/placeholder.png' %>" alt="<%= variant.name || 'Design ' + (index+1) %>" loading="lazy">
                     <div class="variant-overlay">
-                      <button class="btn btn-sm btn-primary" onclick="viewFullscreen('<%= variant.imageUrl %>')"><i data-lucide="maximize-2"></i></button>
-                      <a href="<%= variant.imageUrl %>" download class="btn btn-sm btn-secondary" target="_blank"><i data-lucide="download"></i></a>
+                      <button class="btn btn-sm btn-primary" onclick="event.stopPropagation();openDesignLightbox(<%= index %>)"><i data-lucide="maximize-2"></i></button>
+                      <a href="<%= variant.imageUrl %>" download class="btn btn-sm btn-secondary" target="_blank" onclick="event.stopPropagation()"><i data-lucide="download"></i></a>
                     </div>
                   </div>
                   <div class="variant-info">
@@ -111,7 +111,7 @@
           %>
           <% if (sortedVars.length > 0) { %>
             <div class="history-list">
-              <% sortedVars.forEach(function(variant) { %>
+              <% sortedVars.forEach(function(variant, histIdx) { %>
                 <%
                   const p = variant.aiParameters || {};
                   const toolKey = p.type || '';
@@ -124,7 +124,7 @@
                   const imgUrl = variant.thumbnailUrl || variant.imageUrl || '';
                 %>
                 <div class="history-entry" id="history-entry-<%= varId %>">
-                  <div class="history-thumb" onclick="viewFullscreen('<%= imgUrl %>')">
+                  <div class="history-thumb" onclick="openHistoryLightbox(<%= histIdx %>)">
                     <img src="<%= imgUrl || '/images/placeholder.png' %>" alt="<%= toolNameDisplay %>" loading="lazy">
                   </div>
                   <div class="history-body">
@@ -146,7 +146,7 @@
                     <% } %>
                   </div>
                   <div class="history-actions">
-                    <button class="history-action-btn" onclick="viewFullscreen('<%= imgUrl %>')" title="Plein écran">
+                    <button class="history-action-btn" onclick="openHistoryLightbox(<%= histIdx %>)" title="Plein écran">
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
                     </button>
                     <a href="<%= imgUrl %>" download class="history-action-btn" target="_blank" title="Télécharger">
@@ -194,10 +194,10 @@
         </div>
         <% if (project.originalImages && project.originalImages.length > 0) { %>
           <div class="original-gallery">
-            <% project.originalImages.forEach(img => { %>
-              <div class="original-image">
-                <img src="<%= img.url %>" alt="Original">
-                <button class="delete-img-btn" onclick="deleteImage('<%= img._id %>')"><i data-lucide="trash-2"></i></button>
+            <% project.originalImages.forEach((img, idx) => { %>
+              <div class="original-image" onclick="openOriginalLightbox(<%= idx %>)">
+                <img src="<%= img.url %>" alt="Photo originale <%= idx + 1 %>" loading="lazy">
+                <button class="delete-img-btn" onclick="event.stopPropagation();deleteImage('<%= img._id %>')"><i data-lucide="trash-2"></i></button>
               </div>
             <% }) %>
           </div>
@@ -520,10 +520,30 @@
   </div>
 </div>
 
-<!-- Fullscreen Image Modal -->
-<div class="fullscreen-modal" id="fullscreen-modal" onclick="closeFullscreen()">
-  <img src="" alt="Design" id="fullscreen-image">
-  <button class="close-fullscreen"><i data-lucide="x"></i></button>
+<!-- Lightbox Modal -->
+<div class="lightbox-overlay" id="lightbox-overlay" onclick="closeLightbox()">
+  <div class="lightbox-inner" onclick="event.stopPropagation()">
+    <img src="" alt="" id="lightbox-img" class="lightbox-img">
+    <div class="lightbox-controls">
+      <button class="lightbox-btn lightbox-prev" id="lightbox-prev" onclick="lightboxNav(-1)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+      </button>
+      <button class="lightbox-btn lightbox-next" id="lightbox-next" onclick="lightboxNav(1)">
+        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+      </button>
+    </div>
+  </div>
+  <div class="lightbox-bar">
+    <span class="lightbox-counter" id="lightbox-counter"></span>
+    <a href="#" download id="lightbox-download" class="lightbox-bar-btn" target="_blank" onclick="event.stopPropagation()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Télécharger
+    </a>
+    <button class="lightbox-bar-btn" onclick="closeLightbox()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      Fermer
+    </button>
+  </div>
 </div>
 
 <style>
@@ -592,22 +612,27 @@
   .design-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: var(--spacing-lg); }
   .design-variant { background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: var(--radius-lg); overflow: hidden; transition: all 0.2s; }
   .design-variant:hover { border-color: var(--accent-primary); }
-  .variant-image { position: relative; height: 200px; }
-  .variant-image img { width: 100%; height: 100%; object-fit: cover; }
+  .variant-image { position: relative; aspect-ratio: 4/3; overflow: hidden; cursor: pointer; }
+  .variant-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+  .variant-image:hover img { transform: scale(1.03); }
   .variant-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; gap: 8px; opacity: 0; transition: opacity 0.2s; }
   .variant-image:hover .variant-overlay { opacity: 1; }
+  @media (hover: none) { .variant-overlay { opacity: 1; background: rgba(0,0,0,0.3); } }
   .variant-info { padding: var(--spacing-md); }
   .variant-info h4 { font-size: 0.95rem; margin-bottom: var(--spacing-sm); }
   .empty-designs { text-align: center; padding: var(--spacing-3xl); color: var(--text-muted); }
   .empty-designs i { width: 48px; height: 48px; margin-bottom: var(--spacing-md); }
 
   /* Original Images */
-  .original-gallery { display: flex; gap: var(--spacing-md); flex-wrap: wrap; }
-  .original-image { position: relative; width: 150px; height: 150px; border-radius: var(--radius-md); overflow: hidden; border: 2px solid var(--border-color); }
-  .original-image img { width: 100%; height: 100%; object-fit: cover; }
+  .original-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--spacing-md); }
+  .original-image { position: relative; aspect-ratio: 4/3; border-radius: var(--radius-md); overflow: hidden; border: 2px solid var(--border-color); cursor: pointer; transition: border-color 0.2s; }
+  .original-image:hover { border-color: var(--accent-primary); }
+  .original-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
+  .original-image:hover img { transform: scale(1.04); }
   .delete-img-btn { position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; background: rgba(255,50,50,0.9); border: none; border-radius: 50%; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; }
   .original-image:hover .delete-img-btn { opacity: 1; }
   .delete-img-btn i { width: 16px; height: 16px; }
+  @media (hover: none) { .delete-img-btn { opacity: 1; } }
   .empty-images { text-align: center; padding: var(--spacing-3xl); background: var(--bg-secondary); border: 2px dashed var(--border-color); border-radius: var(--radius-lg); cursor: pointer; }
   .empty-images:hover { border-color: var(--accent-primary); }
   .empty-images i { width: 48px; height: 48px; color: var(--text-muted); margin-bottom: var(--spacing-md); }
@@ -716,11 +741,18 @@
   .furniture-item-info .fi-price { font-weight: 700; color: var(--accent-primary); }
   .furniture-item-info a { color: var(--accent-primary); text-decoration: none; font-size: 0.75rem; }
 
-  /* Fullscreen Modal */
-  .fullscreen-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.95); display: none; align-items: center; justify-content: center; z-index: 9999; padding: var(--spacing-xl); }
-  .fullscreen-modal.active { display: flex; }
-  .fullscreen-modal img { max-width: 100%; max-height: 100%; border-radius: var(--radius-lg); }
-  .close-fullscreen { position: absolute; top: var(--spacing-xl); right: var(--spacing-xl); background: var(--bg-card); border: none; width: 48px; height: 48px; border-radius: 50%; color: var(--text-primary); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  /* Lightbox */
+  .lightbox-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.96); display: none; flex-direction: column; z-index: 9999; }
+  .lightbox-overlay.active { display: flex; }
+  .lightbox-inner { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; padding: 16px 60px; min-height: 0; overflow: hidden; }
+  .lightbox-img { max-width: 100%; max-height: calc(100vh - 80px); object-fit: contain; border-radius: var(--radius-md); user-select: none; }
+  .lightbox-controls { position: absolute; inset: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; pointer-events: none; }
+  .lightbox-btn { width: 44px; height: 44px; background: rgba(255,255,255,0.12); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.2); border-radius: 50%; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; pointer-events: all; transition: background 0.2s; flex-shrink: 0; }
+  .lightbox-btn:hover { background: rgba(255,255,255,0.25); }
+  .lightbox-bar { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: rgba(0,0,0,0.5); border-top: 1px solid rgba(255,255,255,0.08); flex-shrink: 0; }
+  .lightbox-counter { color: rgba(255,255,255,0.6); font-size: 0.82rem; flex: 1; text-align: center; }
+  .lightbox-bar-btn { display: inline-flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.1); border: none; border-radius: 6px; padding: 6px 14px; cursor: pointer; font-size: 0.8rem; text-decoration: none; transition: background 0.15s; white-space: nowrap; }
+  .lightbox-bar-btn:hover { background: rgba(255,255,255,0.22); color: #fff; }
 
   @media (max-width: 1024px) { .project-layout { grid-template-columns: 1fr; } }
   @media (max-width: 768px) {
@@ -735,6 +767,9 @@
 <script>
 const projectId = '<%= project._id %>';
 const projectImages = [<% project.originalImages.forEach((img, i) => { %>'<%= img.url %>',<% }) %>];
+const designVariantsUrls = <%- JSON.stringify((project.designVariants||[]).map(v=>v.imageUrl||'')) %>;
+const originalImagesUrls = <%- JSON.stringify((project.originalImages||[]).map(img=>img.url||'')) %>;
+const historyUrls = <%- JSON.stringify([...(project.designVariants||[])].sort((a,b)=>new Date(b.generatedAt||0)-new Date(a.generatedAt||0)).map(v=>v.imageUrl||v.thumbnailUrl||'')) %>;
 let selectedTool = null;
 let selectedImageIndex = 0;
 let currentDesignType = 'Interior';
@@ -1162,8 +1197,58 @@ function showNotification(msg, type = 'success') {
 
 function copyShareLink() { document.getElementById('share-url').select(); document.execCommand('copy'); showNotification('Lien copie!'); }
 async function updateVisibility(v) { try { await fetch(`/api/projects/${projectId}/status`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({visibility:v}) }); showNotification('Visibilite mise a jour'); } catch { showNotification('Echec','error'); } }
-function viewFullscreen(url) { document.getElementById('fullscreen-image').src = url; document.getElementById('fullscreen-modal').classList.add('active'); }
-function closeFullscreen() { document.getElementById('fullscreen-modal').classList.remove('active'); }
+
+// ============================================================
+// LIGHTBOX
+// ============================================================
+let lbImages = [], lbIndex = 0, lbTouchStartX = 0;
+
+function openDesignLightbox(idx)   { openLightbox(designVariantsUrls, idx); }
+function openOriginalLightbox(idx) { openLightbox(originalImagesUrls, idx); }
+function openHistoryLightbox(idx)  { openLightbox(historyUrls, idx); }
+
+function openLightbox(images, idx) {
+  lbImages = images.filter(Boolean);
+  lbIndex  = Math.max(0, Math.min(idx, lbImages.length - 1));
+  renderLightbox();
+  document.getElementById('lightbox-overlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+
+function renderLightbox() {
+  const img  = document.getElementById('lightbox-img');
+  const dl   = document.getElementById('lightbox-download');
+  const ctr  = document.getElementById('lightbox-counter');
+  const prev = document.getElementById('lightbox-prev');
+  const next = document.getElementById('lightbox-next');
+  const url  = lbImages[lbIndex] || '';
+  img.src  = url;
+  dl.href  = url;
+  ctr.textContent = lbImages.length > 1 ? (lbIndex + 1) + ' / ' + lbImages.length : '';
+  const showNav = lbImages.length > 1;
+  if (prev) prev.style.visibility = showNav ? 'visible' : 'hidden';
+  if (next) next.style.visibility = showNav ? 'visible' : 'hidden';
+}
+
+function lightboxNav(dir) {
+  lbIndex = (lbIndex + dir + lbImages.length) % lbImages.length;
+  renderLightbox();
+}
+
+function closeLightbox() {
+  document.getElementById('lightbox-overlay').classList.remove('active');
+  document.body.style.overflow = '';
+}
+
+// Touch swipe support
+const lbOverlay = document.getElementById('lightbox-overlay');
+if (lbOverlay) {
+  lbOverlay.addEventListener('touchstart', (e) => { lbTouchStartX = e.touches[0].clientX; }, { passive: true });
+  lbOverlay.addEventListener('touchend', (e) => {
+    const dx = e.changedTouches[0].clientX - lbTouchStartX;
+    if (Math.abs(dx) > 50) lightboxNav(dx < 0 ? 1 : -1);
+  }, { passive: true });
+}
 
 // ============================================================
 // DESIGN TABS
@@ -1206,7 +1291,9 @@ async function deleteVariant(variantId) {
 }
 
 document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') { closeFullscreen(); closeToolEditor(); closeFurnitureModal(); }
+  if (e.key === 'Escape') { closeLightbox(); closeToolEditor(); closeFurnitureModal(); }
+  if (e.key === 'ArrowLeft'  && document.getElementById('lightbox-overlay').classList.contains('active')) lightboxNav(-1);
+  if (e.key === 'ArrowRight' && document.getElementById('lightbox-overlay').classList.contains('active')) lightboxNav(1);
   const editor = document.getElementById('tool-editor');
   if (editor && editor.classList.contains('active') && isMaskTool) {
     if (e.ctrlKey && e.key === 'z') { e.preventDefault(); undoMaskStroke(); }
