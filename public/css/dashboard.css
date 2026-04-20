@@ -462,10 +462,14 @@ body {
   height: 100vh;
   background: #ffffff;
   border-right: 1px solid #e2e8f0;
-  display: flex;
+  display: flex !important;
   flex-direction: column;
   z-index: 200;
   transition: transform 0.3s ease;
+  /* Explicitly visible on desktop — never hidden unless media query overrides */
+  transform: translateX(0) !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .sidebar-header {
@@ -1306,55 +1310,66 @@ body {
 /* ==================== */
 /* RESPONSIVE - TABLET & MOBILE */
 /* ==================== */
-@media (max-width: 1024px) {
-  /* Hide sidebar on tablet/mobile */
+
+/* Sidebar always visible on desktop (>768px) */
+@media (min-width: 769px) {
   .sidebar {
-    transform: translateX(-100%);
+    transform: translateX(0) !important;
+    display: flex !important;
+    visibility: visible !important;
   }
-  
+  .main-content {
+    margin-left: var(--sidebar-width);
+  }
+}
+
+/* Hide sidebar on mobile only (≤768px) */
+@media (max-width: 768px) {
+  .sidebar {
+    transform: translateX(-100%) !important;
+  }
+
   .sidebar.open {
-    transform: translateX(0);
+    transform: translateX(0) !important;
   }
-  
+
   .sidebar-close {
     display: flex;
   }
-  
-  /* Overlay is already positioned, just needs to be visible when active */
-  
+
   /* Show mobile header */
   .mobile-header {
     display: flex;
   }
-  
+
   /* Adjust main content */
   .main-content {
     margin-left: 0;
     padding-top: var(--mobile-header-height);
     padding-bottom: calc(var(--mobile-nav-height) + 24px);
   }
-  
+
   /* Show mobile nav */
   .mobile-nav {
     display: flex;
   }
-  
+
   /* Adjust page wrapper */
   .page-wrapper {
     padding: 16px;
   }
-  
+
   /* Stats grid */
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
     gap: 12px;
   }
-  
+
   /* Content grid */
   .content-grid {
     grid-template-columns: 1fr;
   }
-  
+
   /* Toast */
   .toast {
     margin: 12px 16px 0;
