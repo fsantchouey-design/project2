@@ -154,8 +154,12 @@ router.get('/inspiration/:room', async (req, res) => {
   try {
     const images = await InspirationImage.find({ category }).sort({ createdAt: -1 });
     res.render('pages/inspiration', {
-      title: `Inspiration ${label} - CraftyCrib`,
-      layout: 'layouts/dashboard',
+      title: `Inspiration ${label} — Design & Décoration | CraftyCrib`,
+      metaDescription: `Découvrez des inspirations de design pour votre ${label.toLowerCase()}. Styles, tendances et idées de décoration intérieure pour transformer votre espace avec CraftyCrib.`,
+      keywords: `inspiration ${label.toLowerCase()}, décoration ${label.toLowerCase()}, design intérieur ${label.toLowerCase()}, idées rénovation, aménagement ${label.toLowerCase()}`,
+      canonicalUrl: `https://craftycrib.com/inspiration/${category}`,
+      layout: 'layouts/landing',
+      activePage: 'inspiration',
       category,
       label,
       images,
@@ -305,6 +309,7 @@ router.get('/sitemap.xml', async (req, res) => {
     <loc>${baseUrl}/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
   </url>
   <url>
     <loc>${baseUrl}/pricing</loc>
@@ -331,20 +336,47 @@ router.get('/sitemap.xml', async (req, res) => {
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
-  
-  <!-- Gallery Categories -->
+
+  <!-- Pages Inspiration -->
+  <url>
+    <loc>${baseUrl}/inspiration/cuisine</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/inspiration/salon</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/inspiration/chambre</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/inspiration/salle-de-bain</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>${baseUrl}/inspiration/exterieur</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Gallery Categories (canonical URLs with filters) -->
   ${getStyles().map(style => `
   <url>
-    <loc>${baseUrl}/gallery?style=${style.id}</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
+    <loc>${baseUrl}/gallery?style=${encodeURIComponent(style.id)}</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
   </url>`).join('')}
-  
+
   ${getRoomTypes().map(room => `
   <url>
-    <loc>${baseUrl}/gallery?room=${room.id}</loc>
-    <changefreq>daily</changefreq>
-    <priority>0.7</priority>
+    <loc>${baseUrl}/gallery?room=${encodeURIComponent(room.id)}</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
   </url>`).join('')}
   
   <!-- Public Projects -->
@@ -378,12 +410,14 @@ Allow: /pricing
 Allow: /contractors
 Allow: /about
 Allow: /contact
+Allow: /inspiration
 
 # Disallow private/authenticated areas
 Disallow: /dashboard
 Disallow: /projects
 Disallow: /auth
 Disallow: /api
+Disallow: /admin
 
 # Sitemap
 Sitemap: ${baseUrl}/sitemap.xml

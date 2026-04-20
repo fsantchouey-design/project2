@@ -1,12 +1,26 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+
+  <!-- Primary SEO Meta Tags -->
   <title><%= typeof title !== 'undefined' ? title : 'CraftyCrib' %></title>
-  
+  <meta name="description" content="<%= typeof metaDescription !== 'undefined' ? metaDescription : 'CraftyCrib — Design intérieur propulsé par l\'IA.' %>">
+  <meta name="robots" content="noindex, follow">
+  <link rel="canonical" href="<%= typeof canonicalUrl !== 'undefined' ? canonicalUrl : 'https://craftycrib.com' %>">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="<%= typeof title !== 'undefined' ? title : 'CraftyCrib' %>">
+  <meta property="og:description" content="<%= typeof metaDescription !== 'undefined' ? metaDescription : 'CraftyCrib — Design intérieur propulsé par l\'IA.' %>">
+  <meta property="og:image" content="<%= (typeof ogImage !== 'undefined' && ogImage) ? ogImage : 'https://craftycrib.com/images/og-image.png' %>">
+  <meta property="og:site_name" content="CraftyCrib">
+
   <!-- Favicon -->
-  <link rel="icon" type="image/png" href="/assets/logoicon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/logoicon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/logoicon.png">
+  <meta name="theme-color" content="#10b981">
   
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">

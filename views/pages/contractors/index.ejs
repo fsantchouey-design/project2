@@ -1511,3 +1511,48 @@ function renderResults(contractors) {
   if (window.lucide) lucide.createIcons();
 }
 </script>
+
+<!-- JSON-LD : Service + Organization -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "Service",
+      "name": "Marketplace d'entrepreneurs — CraftyCrib",
+      "description": "Trouvez des entrepreneurs et professionnels qualifiés pour vos projets de rénovation, design intérieur, cuisine, salle de bain et plus encore.",
+      "url": "https://craftycrib.com/contractors",
+      "provider": {
+        "@type": "Organization",
+        "name": "CraftyCrib",
+        "url": "https://craftycrib.com",
+        "logo": "https://craftycrib.com/assets/fullogo.png"
+      },
+      "serviceType": "Marketplace de rénovation et design intérieur",
+      "areaServed": {
+        "@type": "Country",
+        "name": "France"
+      },
+      "hasOfferCatalog": {
+        "@type": "OfferCatalog",
+        "name": "Services de rénovation",
+        "itemListElement": [
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Peinture et revêtements" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Cuisine et salle de bain" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Plancher et revêtements de sol" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Électricité et plomberie" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Menuiserie et charpente" } },
+          { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Architecture d'intérieur" } }
+        ]
+      }
+    },
+    {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Accueil", "item": "https://craftycrib.com" },
+        { "@type": "ListItem", "position": 2, "name": "Entrepreneurs", "item": "https://craftycrib.com/contractors" }
+      ]
+    }
+  ]
+}
+</script>
