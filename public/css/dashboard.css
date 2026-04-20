@@ -578,6 +578,14 @@ body {
   background: linear-gradient(135deg, #f59e0b, #ef4444);
 }
 
+.nav-link .badge.ai {
+  background: linear-gradient(135deg, #10b981, #059669);
+  font-size: 0.62rem;
+  padding: 1px 6px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+}
+
 /* Nav Dropdown */
 .nav-dropdown {
   margin-bottom: 2px;
