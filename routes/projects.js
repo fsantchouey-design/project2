@@ -199,6 +199,7 @@ router.put('/:id', ensureAuthenticated, upload.array('images', 5), async (req, r
       description,
       roomType,
       style,
+      status,
       budgetMin,
       budgetMax,
       length,
@@ -219,6 +220,7 @@ router.put('/:id', ensureAuthenticated, upload.array('images', 5), async (req, r
     project.description = description;
     project.roomType = roomType;
     project.style = style || undefined;
+    if (status) project.status = status;
     project.budget.min = budgetMin ? parseFloat(budgetMin) : undefined;
     project.budget.max = budgetMax ? parseFloat(budgetMax) : undefined;
     project.dimensions = {
@@ -253,7 +255,7 @@ router.put('/:id', ensureAuthenticated, upload.array('images', 5), async (req, r
 
     await project.save();
 
-    req.flash('success_msg', 'Project updated successfully');
+    req.flash('success_msg', 'Projet mis à jour avec succès');
     res.redirect(`/projects/${project._id}`);
   } catch (err) {
     console.error('Update project error:', err);

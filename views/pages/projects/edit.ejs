@@ -2,35 +2,34 @@
   <div class="page-header">
     <a href="/projects/<%= project._id %>" class="back-link">
       <i data-lucide="arrow-left"></i>
-      Back to Project
+      Retour au projet
     </a>
-    <h1>Edit Project</h1>
-    <p class="text-muted">Update your project details</p>
+    <h1>Modifier le projet</h1>
+    <p class="text-muted">Mettez à jour les informations de votre projet</p>
   </div>
 
-  <form action="/projects/<%= project._id %>" method="POST" enctype="multipart/form-data" class="project-form">
-    <input type="hidden" name="_method" value="PUT">
+  <form action="/projects/<%= project._id %>?_method=PUT" method="POST" enctype="multipart/form-data" class="project-form">
 
     <!-- Step 1: Basic Info -->
     <div class="form-section">
-      <h2><span class="step-num">1</span> Project Details</h2>
+      <h2><span class="step-num">1</span> Informations du projet</h2>
 
       <div class="form-group">
-        <label class="form-label">Project Title *</label>
-        <input type="text" name="title" class="form-input" placeholder="e.g., Modern Kitchen Renovation" required value="<%= project.title %>">
+        <label class="form-label">Titre du projet *</label>
+        <input type="text" name="title" class="form-input" placeholder="ex : Rénovation cuisine moderne" required value="<%= project.title %>">
       </div>
 
       <div class="form-group">
         <label class="form-label">Description *</label>
-        <textarea name="description" class="form-textarea" rows="4" placeholder="Describe your vision for this space..." required maxlength="1000"><%= project.description %></textarea>
-        <p class="form-hint">Be as detailed as possible - mention colors, styles, materials, and any specific requirements</p>
+        <textarea name="description" class="form-textarea" rows="4" placeholder="Décrivez votre vision pour cet espace..." required maxlength="1000"><%= project.description %></textarea>
+        <p class="form-hint">Soyez aussi précis que possible — couleurs, styles, matériaux et besoins spécifiques</p>
       </div>
 
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Room Type *</label>
+          <label class="form-label">Type de pièce *</label>
           <select name="roomType" class="form-select" required>
-            <option value="">Select room type</option>
+            <option value="">Sélectionner une pièce</option>
             <% if (typeof roomTypes !== 'undefined') { %>
               <% roomTypes.forEach(room => { %>
                 <option value="<%= room.id %>" <%= project.roomType === room.id ? 'selected' : '' %>><%= room.name %></option>
@@ -40,9 +39,9 @@
         </div>
 
         <div class="form-group">
-          <label class="form-label">Design Style</label>
+          <label class="form-label">Style de design</label>
           <select name="style" class="form-select">
-            <option value="">Let AI decide</option>
+            <option value="">Laisser l'IA décider</option>
             <% if (typeof styles !== 'undefined') { %>
               <% styles.forEach(s => { %>
                 <option value="<%= s.id %>" <%= project.style === s.id ? 'selected' : '' %>><%= s.name %></option>
@@ -51,16 +50,37 @@
           </select>
         </div>
       </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Statut</label>
+          <select name="status" class="form-select">
+            <option value="draft"       <%= project.status === 'draft'       ? 'selected' : '' %>>Brouillon</option>
+            <option value="in-progress" <%= project.status === 'in-progress' ? 'selected' : '' %>>En cours</option>
+            <option value="completed"   <%= project.status === 'completed'   ? 'selected' : '' %>>Terminé</option>
+            <option value="archived"    <%= project.status === 'archived'    ? 'selected' : '' %>>Archivé</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Visibilité</label>
+          <select name="visibility" class="form-select">
+            <option value="private"     <%= project.visibility === 'private'     ? 'selected' : '' %>>Privé — Moi uniquement</option>
+            <option value="contractors" <%= project.visibility === 'contractors' ? 'selected' : '' %>>Entrepreneurs — Visible aux pros</option>
+            <option value="public"      <%= project.visibility === 'public'      ? 'selected' : '' %>>Public — Tout le monde</option>
+          </select>
+        </div>
+      </div>
     </div>
 
     <!-- Step 2: Photos -->
     <div class="form-section">
       <h2><span class="step-num">2</span> Photos</h2>
-      <p class="section-desc">Current photos and upload new ones</p>
+      <p class="section-desc">Photos actuelles et téléversement de nouvelles images</p>
 
       <% if (project.originalImages && project.originalImages.length > 0) { %>
         <div class="existing-images">
-          <label class="form-label">Current Images</label>
+          <label class="form-label">Images actuelles</label>
           <div class="file-preview">
             <% project.originalImages.forEach(img => { %>
               <div class="preview-item existing">
@@ -75,8 +95,8 @@
         <input type="file" name="images" id="images" multiple accept="image/*" class="file-input">
         <label for="images" class="upload-label">
           <i data-lucide="upload-cloud"></i>
-          <span>Drop new images here or click to browse</span>
-          <span class="upload-hint">Max 5 images, 10MB each (JPG, PNG, WebP)</span>
+          <span>Glissez de nouvelles images ici ou cliquez pour parcourir</span>
+          <span class="upload-hint">Max 5 images, 10 Mo chacune (JPG, PNG, WebP)</span>
         </label>
       </div>
       <div id="images-preview" class="file-preview"></div>
@@ -84,16 +104,16 @@
 
     <!-- Step 3: Budget -->
     <div class="form-section">
-      <h2><span class="step-num">3</span> Budget (Optional)</h2>
+      <h2><span class="step-num">3</span> Budget <span style="font-weight:400;font-size:0.85rem;opacity:0.6;">(optionnel)</span></h2>
 
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Minimum Budget (&euro;)</label>
+          <label class="form-label">Budget minimum (&euro;)</label>
           <input type="number" name="budgetMin" class="form-input" placeholder="5000" min="0" value="<%= project.budget && project.budget.min ? project.budget.min : '' %>">
         </div>
 
         <div class="form-group">
-          <label class="form-label">Maximum Budget (&euro;)</label>
+          <label class="form-label">Budget maximum (&euro;)</label>
           <input type="number" name="budgetMax" class="form-input" placeholder="15000" min="0" value="<%= project.budget && project.budget.max ? project.budget.max : '' %>">
         </div>
       </div>
@@ -101,21 +121,21 @@
 
     <!-- Step 4: Dimensions -->
     <div class="form-section">
-      <h2><span class="step-num">4</span> Room Dimensions (Optional)</h2>
+      <h2><span class="step-num">4</span> Dimensions <span style="font-weight:400;font-size:0.85rem;opacity:0.6;">(optionnel)</span></h2>
 
       <div class="form-row-3">
         <div class="form-group">
-          <label class="form-label">Length (m)</label>
+          <label class="form-label">Longueur (m)</label>
           <input type="number" name="length" class="form-input" placeholder="4.5" step="0.1" min="0" value="<%= project.dimensions && project.dimensions.length ? project.dimensions.length : '' %>">
         </div>
 
         <div class="form-group">
-          <label class="form-label">Width (m)</label>
+          <label class="form-label">Largeur (m)</label>
           <input type="number" name="width" class="form-input" placeholder="3.5" step="0.1" min="0" value="<%= project.dimensions && project.dimensions.width ? project.dimensions.width : '' %>">
         </div>
 
         <div class="form-group">
-          <label class="form-label">Height (m)</label>
+          <label class="form-label">Hauteur (m)</label>
           <input type="number" name="height" class="form-input" placeholder="2.7" step="0.1" min="0" value="<%= project.dimensions && project.dimensions.height ? project.dimensions.height : '' %>">
         </div>
       </div>
@@ -123,96 +143,84 @@
 
     <!-- Step 5: Preferences -->
     <div class="form-section">
-      <h2><span class="step-num">5</span> Preferences (Optional)</h2>
+      <h2><span class="step-num">5</span> Préférences <span style="font-weight:400;font-size:0.85rem;opacity:0.6;">(optionnel)</span></h2>
 
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Preferred Colors</label>
-          <input type="text" name="colors" class="form-input" placeholder="White, Gray, Wood tones" value="<%= project.preferences && project.preferences.colors ? project.preferences.colors.join(', ') : '' %>">
-          <p class="form-hint">Separate with commas</p>
+          <label class="form-label">Couleurs préférées</label>
+          <input type="text" name="colors" class="form-input" placeholder="Blanc, Gris, Bois naturel" value="<%= project.preferences && project.preferences.colors ? project.preferences.colors.join(', ') : '' %>">
+          <p class="form-hint">Séparez par des virgules</p>
         </div>
 
         <div class="form-group">
-          <label class="form-label">Preferred Materials</label>
-          <input type="text" name="materials" class="form-input" placeholder="Marble, Oak, Brass" value="<%= project.preferences && project.preferences.materials ? project.preferences.materials.join(', ') : '' %>">
-          <p class="form-hint">Separate with commas</p>
+          <label class="form-label">Matériaux préférés</label>
+          <input type="text" name="materials" class="form-input" placeholder="Marbre, Chêne, Laiton" value="<%= project.preferences && project.preferences.materials ? project.preferences.materials.join(', ') : '' %>">
+          <p class="form-hint">Séparez par des virgules</p>
         </div>
       </div>
 
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Must Have</label>
-          <input type="text" name="mustHave" class="form-input" placeholder="Island, Pendant lights" value="<%= project.preferences && project.preferences.mustHave ? project.preferences.mustHave.join(', ') : '' %>">
-          <p class="form-hint">Essential elements for your design</p>
+          <label class="form-label">À inclure absolument</label>
+          <input type="text" name="mustHave" class="form-input" placeholder="Îlot central, Suspensions" value="<%= project.preferences && project.preferences.mustHave ? project.preferences.mustHave.join(', ') : '' %>">
+          <p class="form-hint">Éléments indispensables dans votre design</p>
         </div>
 
         <div class="form-group">
-          <label class="form-label">Must Avoid</label>
-          <input type="text" name="mustAvoid" class="form-input" placeholder="Carpet, Dark colors" value="<%= project.preferences && project.preferences.mustAvoid ? project.preferences.mustAvoid.join(', ') : '' %>">
-          <p class="form-hint">Elements you don't want</p>
+          <label class="form-label">À éviter</label>
+          <input type="text" name="mustAvoid" class="form-input" placeholder="Moquette, Couleurs sombres" value="<%= project.preferences && project.preferences.mustAvoid ? project.preferences.mustAvoid.join(', ') : '' %>">
+          <p class="form-hint">Éléments que vous ne souhaitez pas</p>
         </div>
       </div>
     </div>
 
     <!-- Step 6: Priorities -->
     <div class="form-section">
-      <h2><span class="step-num">6</span> Priorities</h2>
+      <h2><span class="step-num">6</span> Priorités</h2>
 
       <div class="priority-sliders">
         <div class="priority-item">
-          <label>Quality</label>
+          <label>Qualité</label>
           <input type="range" name="priorityQuality" min="1" max="5" value="<%= project.priorities && project.priorities.quality ? project.priorities.quality : 3 %>" class="priority-slider">
-          <span class="priority-labels"><span>Budget</span><span>Premium</span></span>
+          <span class="priority-labels"><span>Économique</span><span>Premium</span></span>
         </div>
 
         <div class="priority-item">
-          <label>Price Focus</label>
+          <label>Budget</label>
           <input type="range" name="priorityPrice" min="1" max="5" value="<%= project.priorities && project.priorities.price ? project.priorities.price : 3 %>" class="priority-slider">
           <span class="priority-labels"><span>Flexible</span><span>Strict</span></span>
         </div>
 
         <div class="priority-item">
-          <label>Timeline</label>
+          <label>Délai</label>
           <input type="range" name="prioritySpeed" min="1" max="5" value="<%= project.priorities && project.priorities.speed ? project.priorities.speed : 3 %>" class="priority-slider">
-          <span class="priority-labels"><span>Relaxed</span><span>Urgent</span></span>
+          <span class="priority-labels"><span>Détendu</span><span>Urgent</span></span>
         </div>
       </div>
     </div>
 
-    <!-- DIY + Visibility -->
+    <!-- DIY -->
     <div class="form-section">
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Visibility</label>
-          <select name="visibility" class="form-select">
-            <option value="private" <%= project.visibility === 'private' ? 'selected' : '' %>>Private - Only me</option>
-            <option value="contractors" <%= project.visibility === 'contractors' ? 'selected' : '' %>>Contractors - Visible to contractors</option>
-            <option value="public" <%= project.visibility === 'public' ? 'selected' : '' %>>Public - Anyone can see</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">&nbsp;</label>
-          <div class="diy-option">
-            <input type="checkbox" name="isDIY" id="isDIY" <%= project.isDIY ? 'checked' : '' %>>
-            <label for="isDIY">
-              <div class="diy-icon"><i data-lucide="hammer"></i></div>
-              <div>
-                <strong>DIY Project</strong>
-                <p>I plan to do this myself</p>
-              </div>
-            </label>
-          </div>
+      <div class="form-group">
+        <div class="diy-option">
+          <input type="checkbox" name="isDIY" id="isDIY" <%= project.isDIY ? 'checked' : '' %>>
+          <label for="isDIY">
+            <div class="diy-icon"><i data-lucide="hammer"></i></div>
+            <div>
+              <strong>Projet DIY</strong>
+              <p>Je prévois de réaliser ce projet moi-même</p>
+            </div>
+          </label>
         </div>
       </div>
     </div>
 
     <!-- Submit -->
     <div class="form-actions">
-      <a href="/projects/<%= project._id %>" class="btn btn-ghost">Cancel</a>
+      <a href="/projects/<%= project._id %>" class="btn btn-ghost">Annuler</a>
       <button type="submit" class="btn btn-primary btn-lg">
         <i data-lucide="save"></i>
-        Save Changes
+        Enregistrer les modifications
       </button>
     </div>
   </form>
@@ -556,14 +564,14 @@
     previewContainer.innerHTML = '';
 
     if (this.files.length > 5) {
-      alert('Maximum 5 images allowed');
+      alert('Maximum 5 images autorisées');
       this.value = '';
       return;
     }
 
     Array.from(this.files).forEach((file, index) => {
       if (file.size > 10 * 1024 * 1024) {
-        alert(`File ${file.name} is too large (max 10MB)`);
+        alert(`Le fichier ${file.name} est trop volumineux (max 10 Mo)`);
         return;
       }
 
