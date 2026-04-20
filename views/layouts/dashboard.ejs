@@ -97,64 +97,68 @@
     </div>
     
     <nav class="sidebar-nav">
+
+      <!-- ========== GROUPE MENU ========== -->
       <div class="nav-group">
         <span class="nav-label">Menu</span>
-        <a href="/dashboard" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'dashboard' ? 'active' : '' %>">
+
+        <a href="/dashboard" class="nav-link <%= activePage === 'dashboard' ? 'active' : '' %>">
           <i data-lucide="layout-dashboard"></i>
           <span>Tableau de bord</span>
         </a>
-        
+
         <% if (user.role !== 'contractor') { %>
-          <a href="/projects" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'projects' ? 'active' : '' %>">
+          <a href="/projects" class="nav-link <%= activePage === 'projects' ? 'active' : '' %>">
             <i data-lucide="folder"></i>
             <span>Mes projets</span>
           </a>
-          <a href="/projects/new" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'new-project' ? 'active' : '' %>">
+          <a href="/projects/new" class="nav-link <%= activePage === 'new-project' ? 'active' : '' %>">
             <i data-lucide="plus-circle"></i>
             <span>Nouveau projet</span>
           </a>
-          <a href="/dashboard/ai-tools" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'ai-tools' ? 'active' : '' %>">
+          <a href="/dashboard/ai-tools" class="nav-link <%= activePage === 'ai-tools' ? 'active' : '' %>">
             <i data-lucide="cpu"></i>
             <span>Outils IA</span>
             <span class="badge ai">26</span>
           </a>
-        <% } else if (user.role === 'contractor') { %>
-          <a href="/contractors/projects/available" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'available-projects' ? 'active' : '' %>">
+        <% } else { %>
+          <a href="/contractors/projects/available" class="nav-link <%= activePage === 'available-projects' ? 'active' : '' %>">
             <i data-lucide="briefcase"></i>
             <span>Projets disponibles</span>
           </a>
-          <a href="/contractors/my-projects" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'my-projects' ? 'active' : '' %>">
+          <a href="/contractors/my-projects" class="nav-link <%= activePage === 'my-projects' ? 'active' : '' %>">
             <i data-lucide="folder-check"></i>
             <span>Mes projets</span>
           </a>
-          <a href="/contractors/profile" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'profile' ? 'active' : '' %>">
+          <a href="/contractors/profile" class="nav-link <%= activePage === 'profile' ? 'active' : '' %>">
             <i data-lucide="building-2"></i>
             <span>Profil entreprise</span>
           </a>
         <% } %>
       </div>
-      
+
+      <!-- ========== GROUPE COMMUNICATION ========== -->
       <div class="nav-group">
         <span class="nav-label">Communication</span>
-        <a href="/dashboard/messages" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'messages' ? 'active' : '' %>">
+
+        <a href="/dashboard/messages" class="nav-link <%= activePage === 'messages' ? 'active' : '' %>">
           <i data-lucide="message-square"></i>
           <span>Messages</span>
           <% if (typeof unreadMessages !== 'undefined' && unreadMessages > 0) { %>
             <span class="badge"><%= unreadMessages %></span>
           <% } %>
         </a>
-        <a href="/dashboard/notifications" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'notifications' ? 'active' : '' %>">
+        <a href="/dashboard/notifications" class="nav-link <%= activePage === 'notifications' ? 'active' : '' %>">
           <i data-lucide="bell"></i>
           <span>Notifications</span>
         </a>
+
         <% if (user.role !== 'contractor') { %>
-          <a href="/contractors" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'contractors' ? 'active' : '' %>">
+          <a href="/contractors" class="nav-link <%= activePage === 'contractors' ? 'active' : '' %>">
             <i data-lucide="hard-hat"></i>
             <span>Entrepreneurs</span>
           </a>
-
-          <!-- Idées/Inspiration Dropdown -->
-          <div class="nav-dropdown <%= typeof activePage !== 'undefined' && activePage === 'inspiration' ? 'active' : '' %>">
+          <div class="nav-dropdown <%= activePage === 'inspiration' ? 'open' : '' %>">
             <button class="nav-link nav-dropdown-toggle">
               <i data-lucide="lightbulb"></i>
               <span>Idées / Inspiration</span>
@@ -162,7 +166,7 @@
             </button>
             <div class="nav-dropdown-menu">
               <a href="/inspiration/cuisine" class="nav-dropdown-item <%= typeof inspirationType !== 'undefined' && inspirationType === 'cuisine' ? 'active' : '' %>">
-                <i data-lucide="cooking-pot"></i>
+                <i data-lucide="utensils"></i>
                 <span>Cuisine</span>
               </a>
               <a href="/inspiration/salon" class="nav-dropdown-item <%= typeof inspirationType !== 'undefined' && inspirationType === 'salon' ? 'active' : '' %>">
@@ -178,17 +182,19 @@
                 <span>Salle de bain</span>
               </a>
               <a href="/inspiration/exterieur" class="nav-dropdown-item <%= typeof inspirationType !== 'undefined' && inspirationType === 'exterieur' ? 'active' : '' %>">
-                <i data-lucide="trees"></i>
+                <i data-lucide="tree-pine"></i>
                 <span>Extérieur</span>
               </a>
             </div>
           </div>
         <% } %>
       </div>
-      
+
+      <!-- ========== GROUPE COMPTE ========== -->
       <div class="nav-group">
         <span class="nav-label">Compte</span>
-        <a href="/dashboard/settings" class="nav-link <%= typeof activePage !== 'undefined' && activePage === 'settings' ? 'active' : '' %>">
+
+        <a href="/dashboard/settings" class="nav-link <%= activePage === 'settings' ? 'active' : '' %>">
           <i data-lucide="settings"></i>
           <span>Paramètres</span>
         </a>
@@ -198,6 +204,7 @@
           <span class="badge pro">PRO</span>
         </a>
       </div>
+
     </nav>
     
     <div class="sidebar-footer">
