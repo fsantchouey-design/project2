@@ -17,6 +17,12 @@ const { uploadProjectImages, deleteImage, getImageUrl, isCloudinaryConfigured } 
 // Use Cloudinary storage for uploads (or local fallback)
 const upload = uploadProjectImages;
 
+// Force dashboard layout for ALL routes in this router
+router.use((req, res, next) => {
+  res.locals.layout = 'layouts/dashboard';
+  next();
+});
+
 // List all projects
 router.get('/', ensureAuthenticated, async (req, res) => {
   try {

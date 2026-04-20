@@ -6,6 +6,12 @@ const Contractor = require('../models/Contractor');
 const { Message, Conversation } = require('../models/Message');
 const { getAiTools } = require('../utils/homedesigns');
 
+// Force dashboard layout for ALL routes in this router
+router.use((req, res, next) => {
+  res.locals.layout = 'layouts/dashboard';
+  next();
+});
+
 // Dashboard Home - Route based on role
 router.get('/', ensureAuthenticated, async (req, res) => {
   try {
