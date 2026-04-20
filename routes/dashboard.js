@@ -4,6 +4,7 @@ const { ensureAuthenticated } = require('../middleware/auth');
 const Project = require('../models/Project');
 const Contractor = require('../models/Contractor');
 const { Message, Conversation } = require('../models/Message');
+const { getAiTools } = require('../utils/homedesigns');
 
 // Dashboard Home - Route based on role
 router.get('/', ensureAuthenticated, async (req, res) => {
@@ -204,6 +205,28 @@ router.get('/notifications', ensureAuthenticated, (req, res) => {
     activePage: 'notifications',
     pageTitle: 'Notifications'
   });
+});
+
+// AI Tools page
+router.get('/ai-tools', ensureAuthenticated, async (req, res) => {
+  try {
+    const projects = await Project.find({ user: req.user.id })
+      .select('_id title roomType status')
+      .sort({ updatedAt: -1 });
+
+    res.render('pages/ai-tools', {
+      title: 'Outils IA — CraftyCrib',
+      metaDescription: 'Découvrez les 26 outils IA de CraftyCrib pour transformer vos espaces.',
+      layout: 'layouts/dashboard',
+      activePage: 'ai-tools',
+      aiTools: getAiTools(),
+      projects
+    });
+  } catch (err) {
+    console.error('AI tools page error:', err);
+    req.flash('error_msg', 'Une erreur est survenue');
+    res.redirect('/dashboard');
+  }
 });
 
 module.exports = router;

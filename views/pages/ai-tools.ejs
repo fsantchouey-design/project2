@@ -1,0 +1,285 @@
+<%
+/* ── Curated Unsplash image + description for each tool ─────────────── */
+const TOOL_DETAILS = {
+  'perfect-redesign':   { img: 'photo-1586023492125-27b2c045efd7', desc: 'Redesign haute précision avec rendus photoréalistes de qualité professionnelle.' },
+  'beautiful-redesign': { img: 'photo-1616486338812-3dadae4b4ace', desc: 'Transformez votre pièce avec un nouveau style IA en quelques secondes.' },
+  'magic-redesign':     { img: 'photo-1618221195710-dd6b41faaea6', desc: 'Transformation instantanée de votre espace grâce à la magie de l\'IA.' },
+  'creative-redesign':  { img: 'photo-1600607687939-ce8a6c25118c', desc: 'Designs audacieux et artistiques qui repoussent les limites de la créativité.' },
+  'sketch-to-render':   { img: 'photo-1503387762-592deb58ef4e', desc: 'Convertissez vos croquis en rendus 3D photoréalistes en un instant.' },
+  'virtual-staging':    { img: 'photo-1555041469-a586c61ea9bc', desc: 'Meublez virtuellement des pièces vides pour les projections et la vente.' },
+  'precision':          { img: 'photo-1600566752355-35792bedcfea', desc: 'Retouchez des zones précises de votre pièce avec un masque personnalisé.' },
+  'fill-spaces':        { img: 'photo-1631679706909-1844bbd07221', desc: 'Remplissez automatiquement les espaces vides avec mobilier et décoration.' },
+  'decor-staging':      { img: 'photo-1600585154340-be6161a56a0c', desc: 'Mettez en scène une pièce entière avec des accessoires et du décor IA.' },
+  'furniture-removal':  { img: 'photo-1600210492486-724fe5c67fb0', desc: 'Supprimez les meubles indésirables pour un rendu épuré et minimaliste.' },
+  'color-textures':     { img: 'photo-1562184552-997c461abbe6', desc: 'Changez les couleurs et les matériaux des surfaces de votre espace.' },
+  'paint-visualizer':   { img: 'photo-1589939705384-5185137a7f0f', desc: 'Visualisez en temps réel l\'effet d\'une nouvelle couleur de peinture.' },
+  'furniture-finder':   { img: 'photo-1555041469-a586c61ea9bc', desc: 'Trouvez les meubles réels qui correspondent à votre design IA.' },
+  'full-hd':            { img: 'photo-1600047509807-ba8f99d2cdde', desc: 'Rehaussez vos images en qualité Ultra HD pour un rendu professionnel.' },
+  'text-to-design':     { img: 'photo-1524758631624-e2822e304c36', desc: 'Décrivez votre vision en texte et l\'IA crée le design pour vous.' },
+  'furniture-creator':  { img: 'photo-1555041469-a586c61ea9bc', desc: 'Créez des meubles sur mesure à partir d\'une simple description.' },
+  'design-advisor':     { img: 'photo-1600585154526-990dced4db0d', desc: 'Obtenez des conseils de design IA personnalisés pour votre espace.' },
+  'sky-colors':         { img: 'photo-1506905925346-21bda4d32df4', desc: 'Remplacez ou améliorez le ciel de vos photos extérieures.' },
+  'design-transfer':    { img: 'photo-1600121848594-d8644e57abab', desc: 'Transférez le style d\'une image de référence vers votre espace.' },
+  'floor-editor':       { img: 'photo-1558618666-fcd25c85cd64', desc: 'Changez le revêtement de sol : parquet, carrelage, béton et plus encore.' },
+  'material-swap':      { img: 'photo-1600607688969-a5bfcd646154', desc: 'Échangez les matériaux de n\'importe quelle zone sélectionnée.' },
+  'room-composer':      { img: 'photo-1600607687644-c7171b42498b', desc: 'Composez et agencez les éléments de votre pièce librement.' },
+  'design-critique':    { img: 'photo-1497366216548-37526070297c', desc: 'Recevez une analyse détaillée et des recommandations sur votre design.' },
+  'create-mask-image':  { img: 'photo-1617103996702-96ff29b1c467', desc: 'Générez automatiquement un masque de segmentation pour votre image.' },
+  'smart-home':         { img: 'photo-1558002038-1ad5c2a7ba70', desc: 'Visualisez les équipements domotiques intégrés dans votre espace.' },
+  'video-generation':   { img: 'photo-1574717024653-61fd2cf4d44d', desc: 'Générez une vidéo animée immersive à partir de votre design.' }
+};
+
+const CATEGORY_LABELS = {
+  redesign: 'Redesign',
+  mask:     'Masque',
+  utility:  'Utilitaire'
+};
+
+const CATEGORY_COLORS = {
+  redesign: '#10b981',
+  mask:     '#8b5cf6',
+  utility:  '#f59e0b'
+};
+%>
+
+<!-- Project Picker Modal -->
+<div id="tool-modal" class="ait-modal-overlay" style="display:none;" onclick="closeToolModal()">
+  <div class="ait-modal" onclick="event.stopPropagation()">
+    <div class="ait-modal-header">
+      <div class="ait-modal-icon" id="modal-tool-icon"></div>
+      <div>
+        <h3 id="modal-tool-name"></h3>
+        <p id="modal-tool-desc"></p>
+      </div>
+      <button class="ait-modal-close" onclick="closeToolModal()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="ait-modal-body">
+      <% if (projects && projects.length > 0) { %>
+        <p class="ait-modal-label">Choisissez un projet :</p>
+        <div class="ait-project-list">
+          <% projects.forEach(p => { %>
+            <a href="/projects/<%= p._id %>?tool=TOOL_ID" class="ait-project-item project-link" data-id="<%= p._id %>">
+              <div class="ait-project-info">
+                <span class="ait-project-title"><%= p.title %></span>
+                <span class="ait-project-meta"><%= p.roomType %> • <span class="status-<%= p.status %>"><%= p.status %></span></span>
+              </div>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+            </a>
+          <% }) %>
+        </div>
+      <% } else { %>
+        <div class="ait-no-projects">
+          <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--text-muted);margin-bottom:12px;"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          <p>Aucun projet disponible</p>
+          <span>Créez d'abord un projet pour utiliser cet outil</span>
+          <a href="/projects/new" class="btn btn-primary" style="margin-top:16px;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Créer un projet
+          </a>
+        </div>
+      <% } %>
+    </div>
+  </div>
+</div>
+
+<!-- Page -->
+<div class="ait-page">
+  <div class="ait-header">
+    <div class="ait-header-text">
+      <h1>
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent-primary);flex-shrink:0"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-4h14v4"/><path d="M12 12V8"/></svg>
+        Outils IA
+      </h1>
+      <p>26 outils propulsés par l'IA pour transformer vos espaces en designs professionnels</p>
+    </div>
+    <div class="ait-filters" id="ait-filters">
+      <button class="ait-filter active" data-cat="all">Tous <span>26</span></button>
+      <button class="ait-filter" data-cat="redesign">Redesign</button>
+      <button class="ait-filter" data-cat="mask">Masque</button>
+      <button class="ait-filter" data-cat="utility">Utilitaire</button>
+    </div>
+  </div>
+
+  <div class="ait-grid" id="ait-grid">
+    <% aiTools.forEach(tool => {
+      const detail = TOOL_DETAILS[tool.id] || { img: 'photo-1616486338812-3dadae4b4ace', desc: tool.description };
+      const imgUrl = 'https://images.unsplash.com/' + detail.img + '?auto=format&fit=crop&w=600&h=380&q=80';
+    %>
+      <div class="ait-card" data-cat="<%= tool.category %>">
+        <div class="ait-card-img">
+          <img src="<%= imgUrl %>" alt="<%= tool.name %>" loading="lazy"
+            onerror="this.parentElement.style.background='linear-gradient(135deg,#1a1a2e,#16213e)'">
+          <span class="ait-category-badge" style="background:<%= CATEGORY_COLORS[tool.category] || '#10b981' %>20;color:<%= CATEGORY_COLORS[tool.category] || '#10b981' %>;border:1px solid <%= CATEGORY_COLORS[tool.category] || '#10b981' %>40;">
+            <%= CATEGORY_LABELS[tool.category] || tool.category %>
+          </span>
+        </div>
+        <div class="ait-card-body">
+          <div class="ait-card-icon">
+            <i data-lucide="<%= tool.icon %>"></i>
+          </div>
+          <h3 class="ait-card-name"><%= tool.name %></h3>
+          <p class="ait-card-desc"><%= detail.desc %></p>
+          <div class="ait-card-meta">
+            <% if (tool.requiresMask) { %>
+              <span class="ait-tag mask-tag">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22C6.5 22 2 17.5 2 12S6.5 2 12 2s10 4.5 10 10-4.5 10-10 10zm0-18v8l4 2"/></svg>
+                Masque requis
+              </span>
+            <% } %>
+            <% if (tool.maxDesigns > 0) { %>
+              <span class="ait-tag">
+                <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                <%= tool.maxDesigns %> variation<%= tool.maxDesigns > 1 ? 's' : '' %>
+              </span>
+            <% } %>
+          </div>
+          <button class="ait-try-btn"
+            onclick="openToolModal('<%= tool.id %>','<%= tool.name %>','<%= detail.desc.replace(/'/g, "\\'") %>','<%= tool.icon %>')">
+            Essayer <%= tool.name %>
+          </button>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+</div>
+
+<style>
+  /* ── Page layout ─────────────────────────────────────────── */
+  .ait-page { padding: var(--spacing-xl); max-width: 1400px; margin: 0 auto; }
+
+  .ait-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap; margin-bottom: 32px; }
+  .ait-header-text h1 { display: flex; align-items: center; gap: 12px; font-size: 1.8rem; font-weight: 700; margin-bottom: 6px; color: var(--text-primary); }
+  .ait-header-text p { color: var(--text-muted); font-size: 0.95rem; }
+
+  /* ── Filters ─────────────────────────────────────────────── */
+  .ait-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+  .ait-filter { display: flex; align-items: center; gap: 6px; padding: 7px 16px; border: 1px solid var(--border-color); border-radius: var(--radius-full); background: var(--bg-card); color: var(--text-secondary); cursor: pointer; font-size: 0.83rem; font-weight: 500; transition: all 0.15s; }
+  .ait-filter span { background: var(--bg-secondary); border-radius: 999px; padding: 0 6px; font-size: 0.72rem; font-weight: 700; }
+  .ait-filter:hover { border-color: var(--accent-primary); color: var(--text-primary); }
+  .ait-filter.active { background: var(--accent-primary); border-color: var(--accent-primary); color: #000; font-weight: 600; }
+  .ait-filter.active span { background: rgba(0,0,0,0.15); color: #000; }
+
+  /* ── Grid ────────────────────────────────────────────────── */
+  .ait-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+
+  /* ── Card ────────────────────────────────────────────────── */
+  .ait-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s; }
+  .ait-card:hover { transform: translateY(-4px); box-shadow: 0 12px 40px rgba(0,0,0,0.18); border-color: rgba(16,185,129,0.35); }
+  .ait-card.hidden { display: none; }
+
+  .ait-card-img { position: relative; aspect-ratio: 16/10; overflow: hidden; background: var(--bg-secondary); }
+  .ait-card-img img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
+  .ait-card:hover .ait-card-img img { transform: scale(1.05); }
+
+  .ait-category-badge { position: absolute; top: 10px; left: 10px; font-size: 0.68rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 3px 9px; border-radius: 999px; backdrop-filter: blur(4px); }
+
+  .ait-card-body { padding: 18px; display: flex; flex-direction: column; flex: 1; }
+  .ait-card-icon { width: 36px; height: 36px; border-radius: 10px; background: rgba(16,185,129,0.12); display: flex; align-items: center; justify-content: center; margin-bottom: 12px; }
+  .ait-card-icon i { width: 18px; height: 18px; color: var(--accent-primary); }
+
+  .ait-card-name { font-size: 1rem; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+  .ait-card-desc { font-size: 0.82rem; color: var(--text-muted); line-height: 1.55; flex: 1; margin-bottom: 14px; }
+
+  .ait-card-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; min-height: 22px; }
+  .ait-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 0.7rem; color: var(--text-muted); background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 999px; padding: 2px 8px; }
+  .ait-tag.mask-tag { color: #8b5cf6; background: rgba(139,92,246,0.08); border-color: rgba(139,92,246,0.25); }
+
+  .ait-try-btn { width: 100%; padding: 10px; background: var(--accent-primary); border: none; border-radius: 10px; color: #000; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.15s; text-align: center; }
+  .ait-try-btn:hover { background: var(--accent-hover, #059669); transform: none; box-shadow: 0 4px 16px rgba(16,185,129,0.4); }
+
+  /* ── Status colours ──────────────────────────────────────── */
+  .status-completed   { color: #10b981; }
+  .status-in-progress { color: #f59e0b; }
+  .status-draft       { color: var(--text-muted); }
+  .status-generating  { color: #3b82f6; }
+  .status-archived    { color: var(--text-muted); opacity: 0.6; }
+
+  /* ── Modal ───────────────────────────────────────────────── */
+  .ait-modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 16px; backdrop-filter: blur(4px); }
+  .ait-modal { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; width: 100%; max-width: 480px; overflow: hidden; box-shadow: 0 24px 60px rgba(0,0,0,0.4); }
+
+  .ait-modal-header { display: flex; align-items: flex-start; gap: 14px; padding: 22px 22px 16px; border-bottom: 1px solid var(--border-color); }
+  .ait-modal-icon { width: 44px; height: 44px; border-radius: 12px; background: rgba(16,185,129,0.12); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .ait-modal-icon i { width: 22px; height: 22px; color: var(--accent-primary); }
+  .ait-modal-header h3 { font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin: 0 0 4px; }
+  .ait-modal-header p { font-size: 0.8rem; color: var(--text-muted); margin: 0; line-height: 1.4; }
+  .ait-modal-close { margin-left: auto; background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 4px; border-radius: 6px; flex-shrink: 0; display: flex; }
+  .ait-modal-close:hover { color: var(--text-primary); background: var(--bg-secondary); }
+
+  .ait-modal-body { padding: 18px 22px 22px; }
+  .ait-modal-label { font-size: 0.78rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px; }
+
+  .ait-project-list { display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; }
+  .ait-project-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 10px; text-decoration: none; color: var(--text-primary); transition: all 0.15s; }
+  .ait-project-item:hover { border-color: var(--accent-primary); background: rgba(16,185,129,0.06); }
+  .ait-project-info { flex: 1; min-width: 0; }
+  .ait-project-title { display: block; font-size: 0.9rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ait-project-meta { display: block; font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; text-transform: capitalize; }
+
+  .ait-no-projects { text-align: center; padding: 20px; color: var(--text-muted); }
+  .ait-no-projects p { font-size: 0.95rem; font-weight: 600; margin-bottom: 4px; color: var(--text-primary); }
+  .ait-no-projects span { font-size: 0.82rem; }
+
+  /* ── Responsive ──────────────────────────────────────────── */
+  @media (max-width: 768px) {
+    .ait-page { padding: 16px; }
+    .ait-header { flex-direction: column; gap: 16px; }
+    .ait-header-text h1 { font-size: 1.4rem; }
+    .ait-grid { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+  }
+  @media (max-width: 480px) {
+    .ait-grid { grid-template-columns: 1fr; }
+  }
+</style>
+
+<script>
+  let currentToolId = '';
+
+  function openToolModal(toolId, toolName, toolDesc, toolIcon) {
+    currentToolId = toolId;
+    document.getElementById('modal-tool-name').textContent = toolName;
+    document.getElementById('modal-tool-desc').textContent = toolDesc;
+
+    // Set icon
+    const iconEl = document.getElementById('modal-tool-icon');
+    iconEl.innerHTML = `<i data-lucide="${toolIcon}" style="width:22px;height:22px;color:var(--accent-primary)"></i>`;
+    lucide.createIcons({ nodes: [iconEl] });
+
+    // Update project links
+    document.querySelectorAll('#tool-modal .project-link').forEach(link => {
+      const pid = link.dataset.id;
+      link.href = `/projects/${pid}?tool=${toolId}`;
+    });
+
+    const modal = document.getElementById('tool-modal');
+    modal.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function closeToolModal() {
+    document.getElementById('tool-modal').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeToolModal();
+  });
+
+  // Category filter
+  document.querySelectorAll('.ait-filter').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.ait-filter').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const cat = btn.dataset.cat;
+      document.querySelectorAll('.ait-card').forEach(card => {
+        if (cat === 'all' || card.dataset.cat === cat) {
+          card.classList.remove('hidden');
+        } else {
+          card.classList.add('hidden');
+        }
+      });
+    });
+  });
+</script>

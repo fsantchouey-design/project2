@@ -1290,6 +1290,24 @@ async function deleteVariant(variantId) {
   }
 }
 
+// Auto-open tool if redirected from AI tools page
+(function() {
+  const params = new URLSearchParams(window.location.search);
+  const autoTool = params.get('tool');
+  if (autoTool) {
+    setTimeout(() => {
+      const toolEditor = document.getElementById('tool-editor');
+      if (toolEditor && typeof openToolEditor === 'function') {
+        openToolEditor(autoTool);
+      }
+    }, 400);
+    // Clean URL without reload
+    const url = new URL(window.location.href);
+    url.searchParams.delete('tool');
+    window.history.replaceState({}, '', url.toString());
+  }
+})();
+
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') { closeLightbox(); closeToolEditor(); closeFurnitureModal(); }
   if (e.key === 'ArrowLeft'  && document.getElementById('lightbox-overlay').classList.contains('active')) lightboxNav(-1);
