@@ -31,8 +31,8 @@
     })();
   </script>
   
-  <link rel="stylesheet" href="/css/style.css?v=20260421b">
-  <link rel="stylesheet" href="/css/dashboard.css?v=20260421b">
+  <link rel="stylesheet" href="/css/style.css?v=20260421c">
+  <link rel="stylesheet" href="/css/dashboard.css?v=20260421c">
 </head>
 <body>
   <!-- Mobile Header -->
@@ -369,11 +369,33 @@
         const newTheme = themeToggle.checked ? 'dark' : 'light';
         document.documentElement.setAttribute('data-theme', newTheme);
         localStorage.setItem('theme', newTheme);
+        applySidebarTheme(newTheme);
         if (typeof lucide !== 'undefined') {
           lucide.createIcons();
         }
       });
     }
+
+    // Force sidebar background in JS — belt-and-suspenders fix
+    function applySidebarTheme(theme) {
+      const sidebarEl = document.getElementById('sidebar');
+      if (!sidebarEl) return;
+      if (theme === 'dark') {
+        sidebarEl.style.setProperty('background-color', '#0f172a', 'important');
+        sidebarEl.style.setProperty('border-right-color', '#1f2937', 'important');
+      } else {
+        sidebarEl.style.setProperty('background-color', '#ffffff', 'important');
+        sidebarEl.style.setProperty('border-right-color', '#e2e8f0', 'important');
+      }
+    }
+
+    // Apply on page load immediately
+    applySidebarTheme(document.documentElement.getAttribute('data-theme') || 'light');
+
+    // Also reapply whenever data-theme changes (catches external toggles)
+    new MutationObserver(() => {
+      applySidebarTheme(document.documentElement.getAttribute('data-theme') || 'light');
+    }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
   </script>
 </body>
 </html>

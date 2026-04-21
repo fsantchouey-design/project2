@@ -37,19 +37,28 @@ body {
   border-color: var(--border-color);
 }
 
-/* ===== SIDEBAR DARK MODE — explicit values + !important ===== */
-[data-theme="dark"] .sidebar {
-  background: #0f172a !important;
+/* ===== SIDEBAR DARK MODE — ID selector for maximum specificity ===== */
+/* Using #sidebar (specificity 1,0,0) beats any class-based rule */
+html[data-theme="dark"] #sidebar,
+html[data-theme="dark"] .sidebar {
+  background-color: #0f172a !important;
   border-right-color: #1f2937 !important;
 }
 
-[data-theme="dark"] .sidebar-header {
-  background: #0f172a !important;
+html[data-theme="dark"] #sidebar .sidebar-header,
+html[data-theme="dark"] .sidebar-header {
+  background-color: #0f172a !important;
   border-bottom-color: #1f2937 !important;
 }
 
-[data-theme="dark"] .sidebar-logo {
+html[data-theme="dark"] #sidebar .sidebar-logo,
+html[data-theme="dark"] .sidebar-logo {
   color: #f8fafc !important;
+}
+
+html[data-theme="dark"] #sidebar .sidebar-nav,
+html[data-theme="dark"] #sidebar .sidebar-footer {
+  background-color: #0f172a !important;
 }
 
 /* Fallback: system dark mode even without JS toggling data-theme */
