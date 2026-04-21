@@ -38,6 +38,65 @@ body {
   border-color: var(--border-color);
 }
 
+/* Sidebar header & logo */
+[data-theme="dark"] .sidebar-header {
+  background: var(--bg-secondary);
+  border-bottom-color: var(--border-color);
+}
+
+[data-theme="dark"] .sidebar-logo {
+  color: var(--text-primary);
+}
+
+/* Nav dropdown toggle */
+[data-theme="dark"] .nav-dropdown-toggle {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .nav-dropdown-toggle:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .nav-dropdown.open .nav-dropdown-toggle,
+[data-theme="dark"] .nav-dropdown.active .nav-dropdown-toggle {
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--accent-primary);
+}
+
+/* Nav dropdown items */
+[data-theme="dark"] .nav-dropdown-item {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .nav-dropdown-item:hover {
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .nav-dropdown-item.active {
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--accent-primary);
+  border-left-color: var(--accent-primary);
+}
+
+/* Sidebar footer */
+[data-theme="dark"] .user-profile {
+  background: var(--bg-tertiary);
+}
+
+[data-theme="dark"] .user-name {
+  color: var(--text-primary);
+}
+
+[data-theme="dark"] .user-role {
+  color: var(--text-secondary);
+}
+
+[data-theme="dark"] .logout-link:hover {
+  background: rgba(239, 68, 68, 0.15);
+}
+
 [data-theme="dark"] .mobile-logo,
 [data-theme="dark"] .nav-link,
 [data-theme="dark"] .page-header h1,
