@@ -130,6 +130,34 @@ html[data-theme="dark"] #sidebar .sidebar-footer {
   background: rgba(239, 68, 68, 0.15) !important;
 }
 
+/* ===== SIDEBAR DARK — toutes les variantes possibles de classes dark ===== */
+body.dark-mode aside,
+body.dark-mode .sidebar,
+[data-theme="dark"] aside,
+[data-theme="dark"] .sidebar,
+.dark aside,
+.dark .sidebar {
+  background-color: #1a1a2e !important;
+  color: #ffffff !important;
+  border-right: 1px solid #333 !important;
+}
+
+body.dark-mode aside a,
+body.dark-mode .sidebar a,
+[data-theme="dark"] aside a,
+[data-theme="dark"] .sidebar a,
+.dark aside a,
+.dark .sidebar a {
+  color: #ffffff !important;
+}
+
+/* Renforce avec html + aside pour spécificité maximale */
+html[data-theme="dark"] aside#sidebar,
+html[data-theme="dark"] aside.sidebar {
+  background-color: #1a1a2e !important;
+  border-right: 1px solid #333 !important;
+}
+
 [data-theme="dark"] .mobile-logo,
 [data-theme="dark"] .nav-link,
 [data-theme="dark"] .page-header h1,
