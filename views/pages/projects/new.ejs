@@ -53,18 +53,43 @@
     
     <!-- Step 2: Photos -->
     <div class="form-section">
-      <h2><span class="step-num">2</span> Upload Photos</h2>
-      <p class="section-desc">Upload photos of your current space for AI to transform</p>
-      
-      <div class="upload-area" id="upload-area">
-        <input type="file" name="images" id="images" multiple accept="image/*" class="file-input">
-        <label for="images" class="upload-label">
+      <h2><span class="step-num">2</span> Photos de votre espace</h2>
+      <p class="section-desc">Uploadez les photos de votre espace actuel — l'IA les utilisera pour créer vos designs</p>
+
+      <!-- Input fichier caché -->
+      <input type="file" name="images" id="images" multiple accept="image/*" style="display:none">
+
+      <!-- Zone de dépôt (visible tant qu'aucune image n'est sélectionnée) -->
+      <div class="upload-dropzone" id="upload-dropzone">
+        <label for="images" class="upload-dropzone-label">
           <i data-lucide="upload-cloud"></i>
-          <span>Drop images here or click to browse</span>
-          <span class="upload-hint">Max 5 images, 10MB each (JPG, PNG, WebP)</span>
+          <span>Déposez vos photos ici ou <u>cliquez pour parcourir</u></span>
+          <span class="upload-hint">Max 5 images · 10 Mo chacune · JPG, PNG, WebP</span>
         </label>
       </div>
-      <div id="images-preview" class="file-preview"></div>
+
+      <!-- Prévisualisation portrait 9:16 (cachée au départ) -->
+      <div class="portrait-preview-wrap" id="portrait-preview-wrap">
+        <div class="portrait-preview-box" id="portrait-preview-box">
+          <img id="portrait-main-img" src="" alt="Aperçu principal">
+          <!-- Bouton X pour supprimer / changer l'image -->
+          <button type="button" class="portrait-remove-btn" id="portrait-remove-btn" title="Supprimer">
+            <i data-lucide="x"></i>
+          </button>
+          <!-- Clic sur l'image pour changer -->
+          <label for="images" class="portrait-change-overlay" title="Changer l'image">
+            <i data-lucide="camera"></i>
+            <span>Changer</span>
+          </label>
+        </div>
+
+        <!-- Miniatures des images supplémentaires + bouton d'ajout -->
+        <div class="portrait-thumbs" id="portrait-thumbs">
+          <label for="images" class="portrait-add-btn" title="Ajouter une image">
+            <i data-lucide="plus"></i>
+          </label>
+        </div>
+      </div>
     </div>
     
     <!-- Step 3: Budget -->
@@ -280,29 +305,21 @@
     gap: var(--spacing-lg);
   }
   
-  /* Upload Area */
-  .upload-area {
-    position: relative;
+  /* Upload Dropzone */
+  .upload-dropzone {
     border: 2px dashed var(--border-color);
     border-radius: var(--radius-lg);
-    transition: all var(--transition-base);
-  }
-  
-  .upload-area:hover,
-  .upload-area.dragover {
-    border-color: var(--accent-primary);
-    background: rgba(0, 255, 136, 0.05);
-  }
-  
-  .file-input {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
+    transition: border-color var(--transition-base), background var(--transition-base);
     cursor: pointer;
   }
-  
-  .upload-label {
+
+  .upload-dropzone:hover,
+  .upload-dropzone.dragover {
+    border-color: var(--accent-primary);
+    background: rgba(0, 255, 136, 0.04);
+  }
+
+  .upload-dropzone-label {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -311,50 +328,143 @@
     text-align: center;
     cursor: pointer;
   }
-  
-  .upload-label i {
+
+  .upload-dropzone-label i {
     width: 48px;
     height: 48px;
     color: var(--text-muted);
   }
-  
+
   .upload-hint {
     font-size: 0.85rem;
     color: var(--text-muted);
   }
-  
-  .file-preview {
-    display: flex;
-    flex-wrap: wrap;
-    gap: var(--spacing-md);
-    margin-top: var(--spacing-md);
+
+  /* Portrait 9:16 preview */
+  .portrait-preview-wrap {
+    display: none;
+    gap: var(--spacing-lg);
+    align-items: flex-start;
   }
-  
-  .preview-item {
+
+  .portrait-preview-wrap.visible {
+    display: flex;
+  }
+
+  .portrait-preview-box {
     position: relative;
-    width: 100px;
-    height: 100px;
-    border-radius: var(--radius-md);
+    width: 220px;
+    flex-shrink: 0;
+    aspect-ratio: 9 / 16;
+    border-radius: var(--radius-lg);
     overflow: hidden;
     border: 2px solid var(--border-color);
+    background: var(--bg-secondary);
   }
-  
-  .preview-item img {
+
+  .portrait-preview-box img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    display: block;
   }
-  
-  .preview-item .remove-btn {
+
+  .portrait-remove-btn {
     position: absolute;
-    top: 4px;
-    right: 4px;
-    width: 24px;
-    height: 24px;
-    background: rgba(255, 0, 0, 0.8);
+    top: 8px;
+    right: 8px;
+    width: 28px;
+    height: 28px;
+    background: rgba(0,0,0,0.65);
     border: none;
     border-radius: 50%;
-    color: white;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2;
+    transition: background var(--transition-fast);
+  }
+
+  .portrait-remove-btn:hover {
+    background: rgba(220,38,38,0.85);
+  }
+
+  .portrait-remove-btn i {
+    width: 14px;
+    height: 14px;
+  }
+
+  .portrait-change-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(transparent, rgba(0,0,0,0.6));
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 4px;
+    padding: 14px 8px 10px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+    font-size: 0.8rem;
+    font-weight: 500;
+  }
+
+  .portrait-preview-box:hover .portrait-change-overlay {
+    opacity: 1;
+  }
+
+  .portrait-change-overlay i {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Thumbnail strip */
+  .portrait-thumbs {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    padding-top: 4px;
+  }
+
+  .portrait-thumb {
+    position: relative;
+    width: 72px;
+    aspect-ratio: 9 / 16;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 2px solid var(--border-color);
+    cursor: pointer;
+    transition: border-color var(--transition-fast);
+  }
+
+  .portrait-thumb.active {
+    border-color: var(--accent-primary);
+  }
+
+  .portrait-thumb img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  .portrait-thumb-remove {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 18px;
+    height: 18px;
+    background: rgba(0,0,0,0.65);
+    border: none;
+    border-radius: 50%;
+    color: #fff;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -362,14 +472,37 @@
     opacity: 0;
     transition: opacity var(--transition-fast);
   }
-  
-  .preview-item:hover .remove-btn {
+
+  .portrait-thumb:hover .portrait-thumb-remove {
     opacity: 1;
   }
-  
-  .preview-item .remove-btn i {
-    width: 14px;
-    height: 14px;
+
+  .portrait-thumb-remove i {
+    width: 10px;
+    height: 10px;
+  }
+
+  .portrait-add-btn {
+    width: 72px;
+    aspect-ratio: 9 / 16;
+    border-radius: var(--radius-md);
+    border: 2px dashed var(--border-color);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: border-color var(--transition-fast), color var(--transition-fast);
+  }
+
+  .portrait-add-btn:hover {
+    border-color: var(--accent-primary);
+    color: var(--accent-primary);
+  }
+
+  .portrait-add-btn i {
+    width: 20px;
+    height: 20px;
   }
   
   /* Priority Sliders */
@@ -484,80 +617,143 @@
 </style>
 
 <script>
-  // Drag and drop upload
-  const uploadArea = document.getElementById('upload-area');
-  const fileInput = document.getElementById('images');
-  const previewContainer = document.getElementById('images-preview');
-  
-  ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-    uploadArea.addEventListener(eventName, preventDefaults, false);
-  });
-  
-  function preventDefaults(e) {
-    e.preventDefault();
-    e.stopPropagation();
-  }
-  
-  ['dragenter', 'dragover'].forEach(eventName => {
-    uploadArea.addEventListener(eventName, () => uploadArea.classList.add('dragover'), false);
-  });
-  
-  ['dragleave', 'drop'].forEach(eventName => {
-    uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('dragover'), false);
-  });
-  
-  uploadArea.addEventListener('drop', (e) => {
-    const dt = e.dataTransfer;
-    const files = dt.files;
-    fileInput.files = files;
-    fileInput.dispatchEvent(new Event('change'));
-  });
-  
-  // Image preview
-  fileInput.addEventListener('change', function() {
-    previewContainer.innerHTML = '';
-    
-    if (this.files.length > 5) {
-      alert('Maximum 5 images allowed');
-      this.value = '';
-      return;
+  (() => {
+    const fileInput     = document.getElementById('images');
+    const dropzone      = document.getElementById('upload-dropzone');
+    const previewWrap   = document.getElementById('portrait-preview-wrap');
+    const mainImg       = document.getElementById('portrait-main-img');
+    const removeBtn     = document.getElementById('portrait-remove-btn');
+    const thumbsWrap    = document.getElementById('portrait-thumbs');
+
+    // Internal file list (FileList is read-only, so we manage our own array)
+    let selectedFiles = [];
+    let activeIndex   = 0;
+
+    /* ── helpers ── */
+    function syncInputFiles() {
+      const dt = new DataTransfer();
+      selectedFiles.forEach(f => dt.items.add(f));
+      fileInput.files = dt.files;
     }
-    
-    Array.from(this.files).forEach((file, index) => {
-      if (file.size > 10 * 1024 * 1024) {
-        alert(`File ${file.name} is too large (max 10MB)`);
-        return;
-      }
-      
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const previewItem = document.createElement('div');
-        previewItem.className = 'preview-item';
-        previewItem.innerHTML = `
-          <img src="${e.target.result}" alt="Preview ${index + 1}">
-          <button type="button" class="remove-btn" onclick="removeImage(${index})">
+
+    function readAsDataURL(file) {
+      return new Promise(resolve => {
+        const r = new FileReader();
+        r.onload = e => resolve(e.target.result);
+        r.readAsDataURL(file);
+      });
+    }
+
+    function showDropzone() {
+      dropzone.style.display = '';
+      previewWrap.classList.remove('visible');
+      mainImg.src = '';
+    }
+
+    async function renderPreview() {
+      if (selectedFiles.length === 0) { showDropzone(); return; }
+
+      dropzone.style.display = 'none';
+      previewWrap.classList.add('visible');
+
+      // Main image
+      mainImg.src = await readAsDataURL(selectedFiles[activeIndex]);
+
+      // Rebuild thumbnail strip (keep add button last)
+      thumbsWrap.innerHTML = '';
+
+      for (let i = 0; i < selectedFiles.length; i++) {
+        const url   = await readAsDataURL(selectedFiles[i]);
+        const thumb = document.createElement('div');
+        thumb.className = 'portrait-thumb' + (i === activeIndex ? ' active' : '');
+        thumb.innerHTML = `
+          <img src="${url}" alt="Photo ${i + 1}">
+          <button type="button" class="portrait-thumb-remove" data-idx="${i}" title="Supprimer">
             <i data-lucide="x"></i>
           </button>
         `;
-        previewContainer.appendChild(previewItem);
-        lucide.createIcons();
-      };
-      reader.readAsDataURL(file);
-    });
-  });
-  
-  function removeImage(index) {
-    const dt = new DataTransfer();
-    const files = fileInput.files;
-    
-    for (let i = 0; i < files.length; i++) {
-      if (i !== index) {
-        dt.items.add(files[i]);
+        thumb.addEventListener('click', (e) => {
+          if (e.target.closest('.portrait-thumb-remove')) return;
+          activeIndex = i;
+          renderPreview();
+        });
+        thumbsWrap.appendChild(thumb);
       }
+
+      // Add-more button
+      const addBtn = document.createElement('label');
+      addBtn.setAttribute('for', 'images');
+      addBtn.className = 'portrait-add-btn';
+      addBtn.title = 'Ajouter une image';
+      addBtn.innerHTML = '<i data-lucide="plus"></i>';
+      thumbsWrap.appendChild(addBtn);
+
+      // Bind remove buttons on thumbnails
+      thumbsWrap.querySelectorAll('.portrait-thumb-remove').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const idx = parseInt(btn.dataset.idx, 10);
+          removeFile(idx);
+        });
+      });
+
+      lucide.createIcons();
     }
-    
-    fileInput.files = dt.files;
-    fileInput.dispatchEvent(new Event('change'));
-  }
+
+    function addFiles(newFiles) {
+      Array.from(newFiles).forEach(file => {
+        if (file.size > 10 * 1024 * 1024) {
+          alert(`${file.name} dépasse 10 Mo et ne sera pas ajouté.`);
+          return;
+        }
+        if (selectedFiles.length >= 5) {
+          alert('Maximum 5 images autorisées.');
+          return;
+        }
+        selectedFiles.push(file);
+      });
+      if (selectedFiles.length > 0) activeIndex = 0;
+      syncInputFiles();
+      renderPreview();
+    }
+
+    function removeFile(idx) {
+      selectedFiles.splice(idx, 1);
+      if (activeIndex >= selectedFiles.length) activeIndex = Math.max(0, selectedFiles.length - 1);
+      syncInputFiles();
+      renderPreview();
+    }
+
+    /* ── file input change ── */
+    fileInput.addEventListener('change', function () {
+      if (this.files.length === 0) return;
+      // Replace all when user picks via "Changer" overlay; append otherwise
+      if (selectedFiles.length === 0) {
+        addFiles(this.files);
+      } else {
+        // Merge: add new ones up to limit
+        addFiles(this.files);
+      }
+      // Reset input so same file can be re-selected
+      this.value = '';
+    });
+
+    /* ── remove main image button ── */
+    removeBtn.addEventListener('click', () => {
+      removeFile(activeIndex);
+    });
+
+    /* ── drag & drop on dropzone ── */
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt =>
+      dropzone.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); }, false)
+    );
+    dropzone.addEventListener('dragenter', () => dropzone.classList.add('dragover'));
+    dropzone.addEventListener('dragover',  () => dropzone.classList.add('dragover'));
+    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
+    dropzone.addEventListener('drop', (e) => {
+      dropzone.classList.remove('dragover');
+      addFiles(e.dataTransfer.files);
+    });
+  })();
 </script>
 
