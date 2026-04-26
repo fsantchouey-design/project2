@@ -1335,6 +1335,7 @@ const getAiTools = () => {
   return [
     {
       id: 'beautiful-redesign',
+      slug: 'beautiful_redesign',
       name: 'Beautiful Redesign',
       description: 'Redesign your room with a new style',
       icon: 'sparkles',
@@ -1345,6 +1346,7 @@ const getAiTools = () => {
     },
     {
       id: 'perfect-redesign',
+      slug: 'perfect_redesign',
       name: 'Perfect Redesign',
       description: 'High-quality precision redesign',
       icon: 'gem',
@@ -1355,6 +1357,7 @@ const getAiTools = () => {
     },
     {
       id: 'creative-redesign',
+      slug: 'creative_redesign',
       name: 'Creative Design',
       description: 'Bold, artistic transformations',
       icon: 'wand-2',
@@ -1365,6 +1368,7 @@ const getAiTools = () => {
     },
     {
       id: 'sketch-to-render',
+      slug: 'sketch_to_render',
       name: 'Sketch to Render',
       description: 'Convert sketches to realistic renders',
       icon: 'pencil-ruler',
@@ -1375,6 +1379,7 @@ const getAiTools = () => {
     },
     {
       id: 'precision',
+      slug: 'precision',
       name: 'Precision',
       description: 'Redesign specific masked areas',
       icon: 'target',
@@ -1385,6 +1390,7 @@ const getAiTools = () => {
     },
     {
       id: 'fill-spaces',
+      slug: 'fill_spaces',
       name: 'Fill Spaces',
       description: 'Fill empty areas with furniture & decor',
       icon: 'layout-grid',
@@ -1395,6 +1401,7 @@ const getAiTools = () => {
     },
     {
       id: 'decor-staging',
+      slug: 'decor_staging',
       name: 'Decor Staging',
       description: 'Stage empty rooms (requires transparent PNG)',
       icon: 'lamp',
@@ -1405,6 +1412,7 @@ const getAiTools = () => {
     },
     {
       id: 'furniture-removal',
+      slug: 'furniture_removal',
       name: 'Furniture Removal',
       description: 'Remove furniture from selected areas',
       icon: 'eraser',
@@ -1415,6 +1423,7 @@ const getAiTools = () => {
     },
     {
       id: 'color-textures',
+      slug: 'change_color_textures',
       name: 'Color & Textures',
       description: 'Change colors and materials of surfaces',
       icon: 'palette',
@@ -1425,6 +1434,7 @@ const getAiTools = () => {
     },
     {
       id: 'paint-visualizer',
+      slug: 'paint_visualizer',
       name: 'Paint Visualizer',
       description: 'Change wall paint color with precision',
       icon: 'paintbrush',
@@ -1435,6 +1445,7 @@ const getAiTools = () => {
     },
     {
       id: 'furniture-finder',
+      slug: 'furniture_finder',
       name: 'Furniture Finder',
       description: 'Find matching furniture to buy online',
       icon: 'shopping-bag',
@@ -1445,6 +1456,7 @@ const getAiTools = () => {
     },
     {
       id: 'full-hd',
+      slug: 'full_hd',
       name: 'Full HD',
       description: 'Upscale image to high definition',
       icon: 'monitor',
@@ -1455,6 +1467,7 @@ const getAiTools = () => {
     },
     {
       id: 'sky-colors',
+      slug: 'sky_colors',
       name: 'Sky Colors',
       description: 'Replace sky in exterior photos',
       icon: 'cloud-sun',
@@ -1465,6 +1478,7 @@ const getAiTools = () => {
     },
     {
       id: 'magic-redesign',
+      slug: 'magic_redesign',
       name: 'Magic Redesign',
       description: 'Quick AI-powered room transformation',
       icon: 'zap',
@@ -1475,6 +1489,7 @@ const getAiTools = () => {
     },
     {
       id: 'video-generation',
+      slug: 'video_generation',
       name: 'Video Generation',
       description: 'Generate an animated video from your room',
       icon: 'video',
@@ -1485,6 +1500,7 @@ const getAiTools = () => {
     },
     {
       id: 'virtual-staging',
+      slug: 'virtual_staging',
       name: 'Virtual Staging',
       description: 'Stage empty rooms with virtual furniture',
       icon: 'sofa',
@@ -1495,6 +1511,7 @@ const getAiTools = () => {
     },
     {
       id: 'text-to-design',
+      slug: 'text_to_design',
       name: 'Text to Design',
       description: 'Generate a design from a text description',
       icon: 'type',
@@ -1505,6 +1522,7 @@ const getAiTools = () => {
     },
     {
       id: 'furniture-creator',
+      slug: 'furniture_creator',
       name: 'Furniture Creator',
       description: 'Create custom furniture from a description',
       icon: 'armchair',
@@ -1515,6 +1533,7 @@ const getAiTools = () => {
     },
     {
       id: 'design-advisor',
+      slug: 'design_advisor',
       name: 'Design Advisor',
       description: 'Get AI-powered design advice for your room',
       icon: 'lightbulb',
@@ -1525,6 +1544,7 @@ const getAiTools = () => {
     },
     {
       id: 'design-transfer',
+      slug: 'design_transfer',
       name: 'Design Transfer',
       description: 'Transfer a design style to your room',
       icon: 'arrow-right-left',
@@ -1535,6 +1555,7 @@ const getAiTools = () => {
     },
     {
       id: 'floor-editor',
+      slug: 'floor_editor',
       name: 'Floor Editor',
       description: 'Edit floor material and color',
       icon: 'grid-3x3',
@@ -1545,6 +1566,7 @@ const getAiTools = () => {
     },
     {
       id: 'material-swap',
+      slug: 'material_swap',
       name: 'Material Swap',
       description: 'Swap materials in selected areas',
       icon: 'refresh-cw',
@@ -1555,6 +1577,7 @@ const getAiTools = () => {
     },
     {
       id: 'room-composer',
+      slug: 'room_composer',
       name: 'Room Composer',
       description: 'Compose and arrange room elements',
       icon: 'layout-dashboard',
@@ -1565,6 +1588,7 @@ const getAiTools = () => {
     },
     {
       id: 'design-critique',
+      slug: 'design_critique',
       name: 'Design Critique',
       description: 'Get a detailed AI critique of your design',
       icon: 'message-square',
@@ -1575,6 +1599,7 @@ const getAiTools = () => {
     },
     {
       id: 'create-mask-image',
+      slug: 'create_maskimage',
       name: 'Create Mask Image',
       description: 'Auto-generate a segmentation mask',
       icon: 'scissors',
@@ -1585,6 +1610,7 @@ const getAiTools = () => {
     },
     {
       id: 'smart-home',
+      slug: 'smart_home',
       name: 'Smart Home',
       description: 'Visualize smart home features in your space',
       icon: 'home',

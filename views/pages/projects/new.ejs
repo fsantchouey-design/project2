@@ -1979,22 +1979,45 @@
 
     document.querySelectorAll('.tool-option').forEach((button) => {
       button.addEventListener('click', () => {
-        document.querySelectorAll('.tool-option').forEach((item) => item.classList.remove('active'));
-        button.classList.add('active');
-        selectedEndpoint = button.dataset.endpoint;
-        selectedToolName = button.dataset.toolName;
-        selectedRequiresMask = button.dataset.requiresMask === 'true';
-        selectedToolLabel.textContent = selectedToolName;
-        configToolName.textContent = selectedToolName;
-        configEndpoint.textContent = selectedEndpoint;
-        resultToolName.textContent = selectedToolName;
-        resetMaskCanvas();
-        setSelectionMode('click');
-        updateMaskControls();
-        updateToolOptions();
+        selectToolButton(button);
         setStatus('');
       });
     });
+
+    function normalizeToolSlug(value) {
+      return (value || '').trim().toLowerCase().replace(/^\/api\/v2\//, '').replace(/-/g, '_');
+    }
+
+    function selectToolButton(button) {
+      document.querySelectorAll('.tool-option').forEach((item) => item.classList.remove('active'));
+      button.classList.add('active');
+      selectedEndpoint = button.dataset.endpoint;
+      selectedToolName = button.dataset.toolName;
+      selectedRequiresMask = button.dataset.requiresMask === 'true';
+      selectedToolLabel.textContent = selectedToolName;
+      configToolName.textContent = selectedToolName;
+      configEndpoint.textContent = selectedEndpoint;
+      resultToolName.textContent = selectedToolName;
+      resetMaskCanvas();
+      setSelectionMode('click');
+      updateMaskControls();
+      updateToolOptions();
+    }
+
+    function selectToolFromUrl() {
+      const requestedTool = normalizeToolSlug(new URLSearchParams(window.location.search).get('tool'));
+      if (!requestedTool) return;
+
+      const requestedButton = [...document.querySelectorAll('.tool-option')].find((button) => {
+        return normalizeToolSlug(button.dataset.endpoint) === requestedTool;
+      });
+
+      if (requestedButton) {
+        selectToolButton(requestedButton);
+      } else {
+        setStatus('The requested AI tool was not found. Perfect Redesign is selected by default.', 'error');
+      }
+    }
 
     window.addEventListener('resize', () => {
       if (!sourcePreview.hidden) sizeMaskCanvas();
@@ -2107,6 +2130,7 @@
     generateBtn.addEventListener('click', handleGenerateDesign);
     window.handleGenerateDesign = handleGenerateDesign;
     updateToolOptions();
+    selectToolFromUrl();
 
     if (typeof lucide !== 'undefined') {
       lucide.createIcons();
