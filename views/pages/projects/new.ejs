@@ -536,6 +536,10 @@
     display: block;
   }
 
+  .generated-preview-image {
+    cursor: zoom-in;
+  }
+
   .result-text {
     padding: 18px;
     color: var(--text-primary);
@@ -903,13 +907,18 @@
       applyLightboxTransform();
     }
 
-    function openLightbox() {
-      if (!sourcePreview.src || sourcePreview.hidden) return;
-      lightboxImage.src = sourcePreview.src;
+    function openLightboxWithSrc(src) {
+      if (!src) return;
+      lightboxImage.src = src;
       resetLightboxZoom();
       imageLightbox.hidden = false;
       document.body.style.overflow = 'hidden';
       requestAnimationFrame(() => imageLightbox.classList.add('open'));
+    }
+
+    function openLightbox() {
+      if (!sourcePreview.src || sourcePreview.hidden) return;
+      openLightboxWithSrc(sourcePreview.src);
     }
 
     function closeLightbox() {
@@ -1079,7 +1088,12 @@
       if (data.videoUrl) {
         resultMedia.innerHTML = `<video src="${data.videoUrl}" controls playsinline></video>`;
       } else if (imageUrl) {
-        resultMedia.innerHTML = `<img src="${imageUrl}" alt="${data.tool || selectedToolName} result">`;
+        const resultImage = document.createElement('img');
+        resultImage.src = imageUrl;
+        resultImage.alt = `${data.tool || selectedToolName} result`;
+        resultImage.className = 'generated-preview-image';
+        resultImage.addEventListener('click', () => openLightboxWithSrc(imageUrl));
+        resultMedia.appendChild(resultImage);
       } else if (data.textResult) {
         const text = document.createElement('div');
         text.className = 'result-text';
@@ -1105,20 +1119,26 @@
         setStatus('Upload an image before generating a design.', 'error');
         return;
       }
+      if (!selectedEndpoint) {
+        setStatus('Select an AI tool before generating a design.', 'error');
+        return;
+      }
 
       const formData = new FormData();
       formData.append('image', selectedFile);
-      formData.append('designType', designType);
+      formData.append('selectedToolEndpoint', selectedEndpoint);
+      formData.append('selectedToolName', selectedToolName);
+      formData.append('spaceType', designType);
       formData.append('roomType', document.getElementById('room-type').value);
-      formData.append('style', document.getElementById('design-style').value);
-      formData.append('prompt', document.getElementById('additional-instructions').value);
+      formData.append('designStyle', document.getElementById('design-style').value);
+      formData.append('additionalInstructions', document.getElementById('additional-instructions').value);
 
       generateBtn.disabled = true;
       generateBtn.querySelector('span').textContent = 'Generating...';
-      setStatus(`Calling ${selectedEndpoint}...`);
+      setStatus(`Generating with ${selectedToolName}...`);
 
       try {
-        const response = await fetch(selectedEndpoint, {
+        const response = await fetch('/api/generate-design', {
           method: 'POST',
           body: formData
         });

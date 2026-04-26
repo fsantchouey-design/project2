@@ -21,8 +21,10 @@ const FormData = require('form-data');
 const https = require('https');
 const http = require('http');
 
-const API_URL = process.env.HOMEDESIGNS_API_URL || 'https://homedesigns.ai/api/v2';
-const API_TOKEN = process.env.HOMEDESIGNS_API_TOKEN;
+const rawApiBaseUrl = process.env.HOMEDESIGNS_API_BASE_URL || process.env.HOMEDESIGNS_API_URL || 'https://homedesigns.ai';
+const API_BASE_URL = rawApiBaseUrl.replace(/\/+$/, '').replace(/\/api\/v2$/, '');
+const API_URL = `${API_BASE_URL}/api/v2`;
+const API_TOKEN = process.env.HOMEDESIGNS_API_KEY || process.env.HOMEDESIGNS_API_TOKEN;
 
 // Map our style IDs to the exact names the API expects per design type
 // Interior, Exterior, and Garden each have different valid style lists

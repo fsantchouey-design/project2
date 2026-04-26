@@ -1,5 +1,9 @@
 const express = require('express');
 const router = express.Router();
+const fs = require('fs');
+const https = require('https');
+const http = require('http');
+const zlib = require('zlib');
 const { ensureAuthenticated } = require('../middleware/auth');
 const Project = require('../models/Project');
 const Contractor = require('../models/Contractor');
@@ -164,8 +168,195 @@ const toAbsoluteImageUrl = (imageUrl) => {
   return `${process.env.APP_URL || 'https://craftycrib.com'}${imageUrl}`;
 };
 
+const normalizeToolEndpoint = (endpoint = '') => endpoint.split('?')[0].split('/').filter(Boolean).pop();
+
+const getHomeDesignsBaseUrl = () => {
+  const rawBaseUrl = process.env.HOMEDESIGNS_API_BASE_URL || process.env.HOMEDESIGNS_API_URL || 'https://homedesigns.ai';
+  return rawBaseUrl.replace(/\/+$/, '').replace(/\/api\/v2$/, '');
+};
+
+const downloadBuffer = (url) => new Promise((resolve, reject) => {
+  const client = url.startsWith('https') ? https : http;
+  const req = client.get(url, (res) => {
+    if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+      return downloadBuffer(res.headers.location).then(resolve).catch(reject);
+    }
+    if (res.statusCode !== 200) {
+      return reject(new Error(`Failed to read uploaded image: HTTP ${res.statusCode}`));
+    }
+    const chunks = [];
+    res.on('data', (chunk) => chunks.push(chunk));
+    res.on('end', () => resolve(Buffer.concat(chunks)));
+    res.on('error', reject);
+  });
+  req.setTimeout(30000, () => req.destroy(new Error('Timed out reading uploaded image')));
+  req.on('error', reject);
+});
+
+const getUploadBuffer = async (file) => {
+  if (file.buffer) return file.buffer;
+  if (file.path && /^https?:\/\//.test(file.path)) return downloadBuffer(file.path);
+  if (file.path && fs.existsSync(file.path)) return fs.promises.readFile(file.path);
+  throw new Error('Unable to read uploaded image for mask generation.');
+};
+
+const getImageSize = (buffer) => {
+  if (buffer.length >= 24 && buffer.toString('ascii', 1, 4) === 'PNG') {
+    return { width: buffer.readUInt32BE(16), height: buffer.readUInt32BE(20) };
+  }
+
+  if (buffer.length >= 10 && buffer[0] === 0xff && buffer[1] === 0xd8) {
+    let offset = 2;
+    while (offset < buffer.length) {
+      if (buffer[offset] !== 0xff) break;
+      const marker = buffer[offset + 1];
+      const length = buffer.readUInt16BE(offset + 2);
+      if ([0xc0, 0xc1, 0xc2, 0xc3, 0xc5, 0xc6, 0xc7, 0xc9, 0xca, 0xcb, 0xcd, 0xce, 0xcf].includes(marker)) {
+        return { width: buffer.readUInt16BE(offset + 7), height: buffer.readUInt16BE(offset + 5) };
+      }
+      offset += 2 + length;
+    }
+  }
+
+  return { width: 1024, height: 1024 };
+};
+
+const crcTable = (() => {
+  const table = new Uint32Array(256);
+  for (let i = 0; i < 256; i++) {
+    let c = i;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+    table[i] = c >>> 0;
+  }
+  return table;
+})();
+
+const crc32 = (buffer) => {
+  let crc = 0xffffffff;
+  for (const byte of buffer) crc = crcTable[(crc ^ byte) & 0xff] ^ (crc >>> 8);
+  return (crc ^ 0xffffffff) >>> 0;
+};
+
+const pngChunk = (type, data) => {
+  const typeBuffer = Buffer.from(type);
+  const length = Buffer.alloc(4);
+  const crc = Buffer.alloc(4);
+  length.writeUInt32BE(data.length, 0);
+  crc.writeUInt32BE(crc32(Buffer.concat([typeBuffer, data])), 0);
+  return Buffer.concat([length, typeBuffer, data, crc]);
+};
+
+const createWhiteMaskPng = (width, height) => {
+  const safeWidth = Math.min(Math.max(width || 1024, 1), 4096);
+  const safeHeight = Math.min(Math.max(height || 1024, 1), 4096);
+  const row = Buffer.alloc(1 + safeWidth * 4, 255);
+  row[0] = 0;
+  const raw = Buffer.alloc(row.length * safeHeight);
+  for (let y = 0; y < safeHeight; y++) row.copy(raw, y * row.length);
+
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(safeWidth, 0);
+  header.writeUInt32BE(safeHeight, 4);
+  header[8] = 8;
+  header[9] = 6;
+  header[10] = 0;
+  header[11] = 0;
+  header[12] = 0;
+
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    pngChunk('IHDR', header),
+    pngChunk('IDAT', zlib.deflateSync(raw)),
+    pngChunk('IEND', Buffer.alloc(0))
+  ]);
+};
+
+const createDefaultMaskBase64 = async (file) => {
+  const buffer = await getUploadBuffer(file);
+  const { width, height } = getImageSize(buffer);
+  const mask = createWhiteMaskPng(width, height);
+  return `data:image/png;base64,${mask.toString('base64')}`;
+};
+
+const buildGenerateDesignResponse = (result, toolName, endpoint) => {
+  const images = result.allImages || (result.imageUrl ? [result.imageUrl] : []);
+  return {
+    success: true,
+    tool: toolName,
+    endpoint,
+    imageUrl: result.imageUrl,
+    videoUrl: result.videoUrl,
+    textResult: result.textResult,
+    resultArray: result.resultArray,
+    designs: images.map((url, index) => ({
+      name: `${toolName}${images.length > 1 ? ` #${index + 1}` : ''}`,
+      imageUrl: url
+    }))
+  };
+};
+
+router.post('/generate-design', ensureAuthenticated, uploadProjectImages.single('image'), async (req, res) => {
+  try {
+    const endpoint = req.body.selectedToolEndpoint || req.body.endpoint;
+    const toolKey = normalizeToolEndpoint(endpoint);
+    const tool = aiToolHandlers[toolKey];
+
+    if (!tool) {
+      return res.status(400).json({ success: false, error: 'Please select a valid AI tool.' });
+    }
+
+    if (!process.env.HOMEDESIGNS_API_KEY && !process.env.HOMEDESIGNS_API_TOKEN) {
+      return res.status(500).json({
+        success: false,
+        error: 'HomeDesigns API key is missing. Configure HOMEDESIGNS_API_KEY on the server.'
+      });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'Please upload an image before generating.' });
+    }
+
+    const upstreamEndpoint = `${getHomeDesignsBaseUrl()}${endpoint}`;
+    const imageUrl = toAbsoluteImageUrl(getImageUrl(req.file));
+    const maskBase64 = req.body.maskBase64 || (tool.requiresMask ? await createDefaultMaskBase64(req.file) : undefined);
+    const options = {
+      imageUrl,
+      maskBase64,
+      roomType: req.body.roomType || 'living-room',
+      style: req.body.designStyle || req.body.style || 'modern',
+      prompt: req.body.additionalInstructions || req.body.prompt || undefined,
+      designType: req.body.spaceType || req.body.designType || 'Interior',
+      aiIntervention: req.body.aiIntervention || 'Mid',
+      noDesign: parseInt(req.body.noDesign, 10) || 1,
+      keepStructural: req.body.keepStructural !== 'false',
+      rgbColor: req.body.rgbColor || '255,255,255',
+      color: req.body.color || undefined,
+      materials: req.body.materials || undefined,
+      materialsType: req.body.materialsType || undefined,
+      object: req.body.object || undefined,
+      upstreamEndpoint
+    };
+
+    console.log(`[GenerateDesign] ${tool.name} -> ${upstreamEndpoint}`);
+    const timeout = new Promise((_, reject) => {
+      setTimeout(() => reject(new Error('HomeDesigns request timed out. Please try again.')), 180000);
+    });
+    const result = await Promise.race([tool.run(options), timeout]);
+
+    if (!result || !result.success) {
+      console.error('[GenerateDesign] API failed:', result?.error || 'Invalid response');
+      return res.status(502).json({ success: false, error: result?.error || 'HomeDesigns returned an invalid response.' });
+    }
+
+    res.json(buildGenerateDesignResponse(result, tool.name, endpoint));
+  } catch (err) {
+    console.error('[GenerateDesign] Error:', err);
+    res.status(500).json({ success: false, error: err.message || 'Unable to generate design.' });
+  }
+});
+
 // Dynamic HomeDesignsAI proxy for the new project studio.
-// TODO: Configure HOMEDESIGNS_API_TOKEN in the server environment before production use.
+// TODO: Configure HOMEDESIGNS_API_KEY in the server environment before production use.
 router.post('/v2/:tool', ensureAuthenticated, uploadProjectImages.single('image'), async (req, res) => {
   try {
     const tool = aiToolHandlers[req.params.tool];
