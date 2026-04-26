@@ -61,18 +61,6 @@ router.post('/', ensureAuthenticated, upload.array('images', 5), async (req, res
       description,
       roomType,
       style,
-      budgetMin,
-      budgetMax,
-      length,
-      width,
-      height,
-      colors,
-      materials,
-      mustHave,
-      mustAvoid,
-      priorityQuality,
-      priorityPrice,
-      prioritySpeed,
       isDIY
     } = req.body;
 
@@ -92,27 +80,7 @@ router.post('/', ensureAuthenticated, upload.array('images', 5), async (req, res
       description,
       roomType,
       style: style || undefined,
-      budget: {
-        min: budgetMin ? parseFloat(budgetMin) : undefined,
-        max: budgetMax ? parseFloat(budgetMax) : undefined
-      },
-      dimensions: {
-        length: length ? parseFloat(length) : undefined,
-        width: width ? parseFloat(width) : undefined,
-        height: height ? parseFloat(height) : undefined
-      },
       originalImages,
-      preferences: {
-        colors: colors ? colors.split(',').map(c => c.trim()) : [],
-        materials: materials ? materials.split(',').map(m => m.trim()) : [],
-        mustHave: mustHave ? mustHave.split(',').map(m => m.trim()) : [],
-        mustAvoid: mustAvoid ? mustAvoid.split(',').map(m => m.trim()) : []
-      },
-      priorities: {
-        quality: priorityQuality ? parseInt(priorityQuality) : 3,
-        price: priorityPrice ? parseInt(priorityPrice) : 3,
-        speed: prioritySpeed ? parseInt(prioritySpeed) : 3
-      },
       isDIY: isDIY === 'on',
       shareToken,
       status: 'draft'
@@ -997,4 +965,3 @@ router.post('/:id/set-featured', ensureAuthenticated, async (req, res) => {
 });
 
 module.exports = router;
-
