@@ -105,6 +105,36 @@ const GARDEN_TYPES = ['Backyard', 'Front Yard', 'Courtyard', 'Patio', 'Terrace']
 // Weather options for Sky Colors
 const WEATHER_OPTIONS = ['Sunshine', 'Clear Sky', 'Rainy', 'Cloudy', 'Windy', 'Dawn', 'Dusk', 'Twilight', 'Sunny', 'Night'];
 
+const DESIGN_STYLES = [
+  { id: 'modern', name: 'Modern', description: 'Clean lines, neutral colors, minimal ornamentation' },
+  { id: 'contemporary', name: 'Contemporary', description: 'Current trends, bold colors, mixed materials' },
+  { id: 'minimalist', name: 'Minimalist', description: 'Simple, functional, clutter-free spaces' },
+  { id: 'industrial', name: 'Industrial', description: 'Raw materials, exposed elements, urban feel' },
+  { id: 'scandinavian', name: 'Scandinavian', description: 'Light colors, natural materials, cozy vibes' },
+  { id: 'traditional', name: 'Traditional', description: 'Classic details, warm colors, elegant furnishings' },
+  { id: 'rustic', name: 'Rustic', description: 'Natural wood, earthy tones, country charm' },
+  { id: 'bohemian', name: 'Bohemian', description: 'Eclectic mix, bold patterns, artistic flair' },
+  { id: 'coastal', name: 'Coastal', description: 'Beach-inspired, light blues, natural textures' },
+  { id: 'mid-century', name: 'Mid-Century Modern', description: 'Retro 50s-60s, organic shapes, bold colors' },
+  { id: 'farmhouse', name: 'Farmhouse', description: 'Country living, vintage touches, comfortable spaces' },
+  { id: 'art-deco', name: 'Art Deco', description: 'Glamorous, geometric patterns, rich colors' },
+  { id: 'japanese', name: 'Japanese', description: 'Zen-inspired, natural elements, serene spaces' },
+  { id: 'mediterranean', name: 'Mediterranean', description: 'Warm terracotta, arched doorways, rustic elegance' }
+];
+
+const ROOM_TYPES = [
+  { id: 'living-room', name: 'Living Room', icon: 'sofa' },
+  { id: 'bedroom', name: 'Bedroom', icon: 'bed' },
+  { id: 'kitchen', name: 'Kitchen', icon: 'utensils' },
+  { id: 'bathroom', name: 'Bathroom', icon: 'bath' },
+  { id: 'dining-room', name: 'Dining Room', icon: 'utensils-crossed' },
+  { id: 'office', name: 'Home Office', icon: 'briefcase' },
+  { id: 'outdoor', name: 'Outdoor/Patio', icon: 'tree' },
+  { id: 'kids-room', name: "Kids Room", icon: 'baby' },
+  { id: 'basement', name: 'Basement', icon: 'home' },
+  { id: 'garage', name: 'Garage', icon: 'car' }
+];
+
 /**
  * Download an image from a URL and return it as a Buffer
  */
@@ -397,8 +427,8 @@ const getApiParams = (style, roomType, designType = 'Interior') => {
   else if (designType === 'Garden') styleMap = GARDEN_STYLE_MAP;
 
   return {
-    apiStyle: styleMap[style] || STYLE_MAP[style] || (style ? style.charAt(0).toUpperCase() + style.slice(1) : 'Modern'),
-    apiRoomType: ROOM_TYPE_MAP[roomType] || roomType || 'Living Room'
+    apiStyle: styleMap[style] || STYLE_MAP[style] || 'Modern',
+    apiRoomType: ROOM_TYPE_MAP[roomType] || 'Living Room'
   };
 };
 
@@ -1291,37 +1321,11 @@ const generateDesign = async (options) => {
 // ============================================================
 
 const getStyles = () => {
-  return [
-    { id: 'modern', name: 'Modern', description: 'Clean lines, neutral colors, minimal ornamentation' },
-    { id: 'contemporary', name: 'Contemporary', description: 'Current trends, bold colors, mixed materials' },
-    { id: 'minimalist', name: 'Minimalist', description: 'Simple, functional, clutter-free spaces' },
-    { id: 'industrial', name: 'Industrial', description: 'Raw materials, exposed elements, urban feel' },
-    { id: 'scandinavian', name: 'Scandinavian', description: 'Light colors, natural materials, cozy vibes' },
-    { id: 'traditional', name: 'Traditional', description: 'Classic details, warm colors, elegant furnishings' },
-    { id: 'rustic', name: 'Rustic', description: 'Natural wood, earthy tones, country charm' },
-    { id: 'bohemian', name: 'Bohemian', description: 'Eclectic mix, bold patterns, artistic flair' },
-    { id: 'coastal', name: 'Coastal', description: 'Beach-inspired, light blues, natural textures' },
-    { id: 'mid-century', name: 'Mid-Century Modern', description: 'Retro 50s-60s, organic shapes, bold colors' },
-    { id: 'farmhouse', name: 'Farmhouse', description: 'Country living, vintage touches, comfortable spaces' },
-    { id: 'art-deco', name: 'Art Deco', description: 'Glamorous, geometric patterns, rich colors' },
-    { id: 'japanese', name: 'Japanese', description: 'Zen-inspired, natural elements, serene spaces' },
-    { id: 'mediterranean', name: 'Mediterranean', description: 'Warm terracotta, arched doorways, rustic elegance' }
-  ];
+  return DESIGN_STYLES;
 };
 
 const getRoomTypes = () => {
-  return [
-    { id: 'living-room', name: 'Living Room', icon: 'sofa' },
-    { id: 'bedroom', name: 'Bedroom', icon: 'bed' },
-    { id: 'kitchen', name: 'Kitchen', icon: 'utensils' },
-    { id: 'bathroom', name: 'Bathroom', icon: 'bath' },
-    { id: 'dining-room', name: 'Dining Room', icon: 'utensils-crossed' },
-    { id: 'office', name: 'Home Office', icon: 'briefcase' },
-    { id: 'outdoor', name: 'Outdoor/Patio', icon: 'tree' },
-    { id: 'kids-room', name: "Kids Room", icon: 'baby' },
-    { id: 'basement', name: 'Basement', icon: 'home' },
-    { id: 'garage', name: 'Garage', icon: 'car' }
-  ];
+  return ROOM_TYPES;
 };
 
 /**
@@ -1652,6 +1656,8 @@ module.exports = {
   getAiTools,
   checkCredits,
   // Constants
+  DESIGN_STYLES,
+  ROOM_TYPES,
   WEATHER_OPTIONS,
   HOUSE_ANGLES,
   GARDEN_TYPES

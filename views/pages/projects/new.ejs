@@ -202,7 +202,6 @@
                 <option value="<%= style.id %>" <%= style.id === 'modern' ? 'selected' : '' %>><%= style.name %></option>
               <% }) %>
             <% } %>
-            <option value="luxury">Luxury</option>
           </select>
         </div>
       </div>
@@ -212,91 +211,101 @@
         <textarea id="additional-instructions" class="studio-textarea" rows="5" placeholder="Describe colors, mood, materials, furniture, or anything the AI should respect."></textarea>
       </div>
 
-      <div class="tool-options-panel" id="tool-options-panel">
-        <div class="tool-option-row" id="option-no-design">
-          <label for="option-no-design-select">Variations</label>
-          <select id="option-no-design-select" class="studio-select">
-            <option value="1">1 design</option>
-            <option value="2">2 designs</option>
-            <option value="3">3 designs</option>
-            <option value="4">4 designs</option>
-          </select>
-        </div>
+      <div class="advanced-options" id="advanced-options">
+        <button type="button" class="advanced-toggle" id="advanced-toggle" aria-expanded="false">
+          <span>
+            <i data-lucide="sliders-horizontal"></i>
+            Advanced options
+          </span>
+          <i data-lucide="chevron-down"></i>
+        </button>
 
-        <div class="tool-option-row" id="option-ai-intervention">
-          <label for="option-ai-intervention-select">AI Intervention</label>
-          <select id="option-ai-intervention-select" class="studio-select">
-            <option value="Very Low">Very Low</option>
-            <option value="Low">Low</option>
-            <option value="Mid" selected>Medium</option>
-            <option value="Extreme">Extreme</option>
-          </select>
-        </div>
+        <div class="tool-options-panel collapsed" id="tool-options-panel">
+          <div class="tool-option-row" id="option-no-design">
+            <label for="option-no-design-select">Variations</label>
+            <select id="option-no-design-select" class="studio-select">
+              <option value="1">1 design</option>
+              <option value="2">2 designs</option>
+              <option value="3">3 designs</option>
+              <option value="4">4 designs</option>
+            </select>
+          </div>
 
-        <div class="tool-option-row" id="option-strength" hidden>
-          <label for="option-strength-range">
-            Edit Strength
-            <span id="option-strength-value">5</span>
-          </label>
-          <input type="range" id="option-strength-range" min="1" max="10" value="5">
-        </div>
+          <div class="tool-option-row" id="option-ai-intervention">
+            <label for="option-ai-intervention-select">AI Intervention</label>
+            <select id="option-ai-intervention-select" class="studio-select">
+              <option value="Very Low">Very Low</option>
+              <option value="Low">Low</option>
+              <option value="Mid" selected>Medium</option>
+              <option value="Extreme">Extreme</option>
+            </select>
+          </div>
 
-        <div class="tool-option-row" id="option-weather" hidden>
-          <label for="option-weather-select">Sky Mood</label>
-          <select id="option-weather-select" class="studio-select">
-            <option value="Clear Sky">Clear Sky</option>
-            <option value="Sunshine">Sunshine</option>
-            <option value="Cloudy">Cloudy</option>
-            <option value="Rainy">Rainy</option>
-            <option value="Dawn">Dawn</option>
-            <option value="Dusk">Dusk</option>
-            <option value="Night">Night</option>
-          </select>
-        </div>
+          <div class="tool-option-row" id="option-strength" hidden>
+            <label for="option-strength-range">
+              Edit Strength
+              <span id="option-strength-value">5</span>
+            </label>
+            <input type="range" id="option-strength-range" min="1" max="10" value="5">
+          </div>
 
-        <div class="tool-option-row" id="option-country" hidden>
-          <label for="option-country-select">Shopping Country</label>
-          <select id="option-country-select" class="studio-select">
-            <option value="US">United States</option>
-            <option value="CA">Canada</option>
-            <option value="FR">France</option>
-            <option value="GB">United Kingdom</option>
-          </select>
-        </div>
+          <div class="tool-option-row" id="option-weather" hidden>
+            <label for="option-weather-select">Sky Mood</label>
+            <select id="option-weather-select" class="studio-select">
+              <option value="Clear Sky">Clear Sky</option>
+              <option value="Sunshine">Sunshine</option>
+              <option value="Cloudy">Cloudy</option>
+              <option value="Rainy">Rainy</option>
+              <option value="Dawn">Dawn</option>
+              <option value="Dusk">Dusk</option>
+              <option value="Night">Night</option>
+            </select>
+          </div>
 
-        <div class="tool-option-row" id="option-paint-color" hidden>
-          <label for="option-paint-color-input">Paint Color</label>
-          <input type="color" id="option-paint-color-input" class="studio-color" value="#f8fafc">
-        </div>
+          <div class="tool-option-row" id="option-country" hidden>
+            <label for="option-country-select">Shopping Country</label>
+            <select id="option-country-select" class="studio-select">
+              <option value="US">United States</option>
+              <option value="CA">Canada</option>
+              <option value="FR">France</option>
+              <option value="GB">United Kingdom</option>
+            </select>
+          </div>
 
-        <div class="tool-option-row" id="option-material" hidden>
-          <label for="option-material-select">Material</label>
-          <select id="option-material-select" class="studio-select">
-            <option value="">No material preference</option>
-            <option value="Wood">Wood</option>
-            <option value="Stone">Stone</option>
-            <option value="Metal">Metal</option>
-            <option value="Glass">Glass</option>
-            <option value="Fabrics">Fabrics</option>
-            <option value="Ceramics and Porcelain">Ceramics and Porcelain</option>
-            <option value="Natural Fibers">Natural Fibers</option>
-            <option value="Composite Materials">Composite Materials</option>
-          </select>
-        </div>
+          <div class="tool-option-row" id="option-paint-color" hidden>
+            <label for="option-paint-color-input">Paint Color</label>
+            <input type="color" id="option-paint-color-input" class="studio-color" value="#f8fafc">
+          </div>
 
-        <div class="tool-option-row" id="option-material-type" hidden>
-          <label for="option-material-type-select">Material Type</label>
-          <select id="option-material-type-select" class="studio-select"></select>
-        </div>
+          <div class="tool-option-row" id="option-material" hidden>
+            <label for="option-material-select">Material</label>
+            <select id="option-material-select" class="studio-select">
+              <option value="">No material preference</option>
+              <option value="Wood">Wood</option>
+              <option value="Stone">Stone</option>
+              <option value="Metal">Metal</option>
+              <option value="Glass">Glass</option>
+              <option value="Fabrics">Fabrics</option>
+              <option value="Ceramics and Porcelain">Ceramics and Porcelain</option>
+              <option value="Natural Fibers">Natural Fibers</option>
+              <option value="Composite Materials">Composite Materials</option>
+            </select>
+          </div>
 
-        <div class="tool-option-row" id="option-surface-color" hidden>
-          <label for="option-surface-color-input">Surface Color</label>
-          <input type="color" id="option-surface-color-input" class="studio-color" value="#d1d5db">
-        </div>
+          <div class="tool-option-row" id="option-material-type" hidden>
+            <label for="option-material-type-select">Material Type</label>
+            <select id="option-material-type-select" class="studio-select"></select>
+          </div>
 
-        <div class="tool-option-row" id="option-object" hidden>
-          <label for="option-object-input">Object / Surface</label>
-          <input type="text" id="option-object-input" class="studio-input" placeholder="wall, sofa, cabinet, countertop">
+          <div class="tool-option-row" id="option-surface-color" hidden>
+            <label for="option-surface-color-input">Surface Color</label>
+            <input type="color" id="option-surface-color-input" class="studio-color" value="#d1d5db">
+          </div>
+
+          <div class="tool-option-row" id="option-object" hidden>
+            <label for="option-object-input">Object / Surface</label>
+            <input type="text" id="option-object-input" class="studio-input" placeholder="wall, sofa, cabinet, countertop">
+          </div>
         </div>
       </div>
 
@@ -789,6 +798,43 @@
     line-height: 1.5;
   }
 
+  .advanced-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .advanced-toggle {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font: inherit;
+    font-weight: 900;
+    cursor: pointer;
+  }
+
+  .advanced-toggle span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .advanced-toggle svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .advanced-toggle[aria-expanded="true"] > svg:last-child {
+    transform: rotate(180deg);
+  }
+
   .tool-options-panel {
     display: flex;
     flex-direction: column;
@@ -797,6 +843,10 @@
     border: 1px solid var(--border-color);
     border-radius: 8px;
     background: var(--bg-secondary);
+  }
+
+  .tool-options-panel.collapsed {
+    display: none;
   }
 
   .tool-option-row {
@@ -1148,6 +1198,9 @@
     const lightboxContent = document.getElementById('lightbox-content');
     const lightboxImage = document.getElementById('lightbox-image');
     const lightboxClose = document.getElementById('lightbox-close');
+    const advancedOptions = document.getElementById('advanced-options');
+    const advancedToggle = document.getElementById('advanced-toggle');
+    const toolOptionsPanel = document.getElementById('tool-options-panel');
     const maskToolsPanel = document.getElementById('mask-tools-panel');
     const maskToolTitle = document.getElementById('mask-tool-title');
     const maskToolHelp = document.getElementById('mask-tool-help');
@@ -1191,17 +1244,73 @@
     let maskMode = 'brush';
     let hasMaskPaint = false;
 
-    const maskHelpByTool = {
-      'Furniture Removal': 'Brush over the furniture you want to remove.',
-      'Precision': 'Brush over the exact area you want redesigned.',
-      'Fill Spaces': 'Brush over empty areas where furniture or decor should be added.',
-      'Change Color Textures': 'Brush over the surface whose color or texture should change.',
-      'Floor Editor': 'Brush over the floor area you want to edit.',
-      'Paint Visualizer': 'Brush over the wall or surface you want to repaint.',
-      'Material Swap': 'Brush over the material area you want to replace.'
+    const TOOL_CONFIG = {
+      perfect_redesign: { noDesignMax: 2, aiIntervention: true },
+      beautiful_redesign: { noDesignMax: 4, aiIntervention: true },
+      magic_redesign: { noDesignMax: 4, aiIntervention: true },
+      video_generation: { noDesignMax: 1, aiIntervention: true },
+      creative_redesign: { noDesignMax: 4, aiIntervention: true },
+      sketch_to_render: { noDesignMax: 4, aiIntervention: true },
+      virtual_staging: { noDesignMax: 4, aiIntervention: true },
+      precision: {
+        noDesignMax: 4,
+        mask: true,
+        strength: true,
+        maskHelp: 'Brush over the exact area you want redesigned.'
+      },
+      fill_spaces: {
+        noDesignMax: 4,
+        mask: true,
+        strength: true,
+        maskHelp: 'Brush over empty areas where furniture or decor should be added.'
+      },
+      decor_staging: { noDesignMax: 4 },
+      furniture_removal: {
+        mask: true,
+        maskHelp: 'Brush over the furniture you want to remove.'
+      },
+      change_color_textures: {
+        noDesignMax: 4,
+        mask: true,
+        material: true,
+        surfaceColor: true,
+        object: true,
+        maskHelp: 'Brush over the surface whose color or texture should change.'
+      },
+      furniture_finder: { country: true },
+      full_hd: {},
+      text_to_design: { noDesignMax: 4, aiIntervention: true },
+      furniture_creator: { noDesignMax: 4 },
+      design_advisor: {},
+      sky_colors: { noDesignMax: 4, weather: true },
+      design_transfer: { noDesignMax: 4, aiIntervention: true },
+      floor_editor: {
+        noDesignMax: 4,
+        mask: true,
+        material: true,
+        surfaceColor: true,
+        maskHelp: 'Brush over the floor area you want to edit.'
+      },
+      paint_visualizer: {
+        noDesignMax: 4,
+        mask: true,
+        paintColor: true,
+        maskHelp: 'Brush over the wall or surface you want to repaint.'
+      },
+      material_swap: {
+        noDesignMax: 4,
+        mask: true,
+        material: true,
+        surfaceColor: true,
+        maskHelp: 'Brush over the material area you want to replace.'
+      },
+      room_composer: { noDesignMax: 4, aiIntervention: true },
+      design_critique: {},
+      create_maskimage: {},
+      smart_home: { noDesignMax: 4, aiIntervention: true }
     };
 
-    const materialSubtypes = {
+    const MATERIAL_SUBTYPES = {
       Wood: ['Oak', 'Maple', 'Cherry', 'Walnut', 'Pine', 'Teak', 'Mahogany', 'Bamboo', 'Birch'],
       Stone: ['Marble', 'Granite', 'Limestone', 'Slate', 'Travertine', 'Sandstone'],
       Metal: ['Gold', 'Silver', 'Bronze', 'Copper', 'Brass', 'Steel', 'Chrome'],
@@ -1216,6 +1325,10 @@
       return (selectedEndpoint || '').split('/').filter(Boolean).pop();
     }
 
+    function getCurrentToolConfig() {
+      return TOOL_CONFIG[currentToolKey()] || {};
+    }
+
     function hexToRgbString(hex) {
       const value = hex.replace('#', '');
       const r = parseInt(value.slice(0, 2), 16);
@@ -1226,34 +1339,41 @@
 
     function updateMaterialTypeOptions() {
       const selectedMaterial = materialSelect.value;
-      const subtypes = materialSubtypes[selectedMaterial] || [];
+      const subtypes = MATERIAL_SUBTYPES[selectedMaterial] || [];
       materialTypeSelect.innerHTML = subtypes.map((item) => `<option value="${item}">${item}</option>`).join('');
       materialTypeRow.hidden = subtypes.length === 0 || materialRow.hidden;
     }
 
     function updateToolOptions() {
-      const toolKey = currentToolKey();
-      const materialTool = ['change_color_textures', 'floor_editor', 'material_swap'].includes(toolKey);
-      const simpleUtilityTool = ['full_hd', 'furniture_removal', 'create_maskimage'].includes(toolKey);
-      const textOnlyTool = ['design_advisor', 'design_critique'].includes(toolKey);
-      const supportsVariations = !['furniture_finder', 'design_advisor', 'design_critique', 'full_hd', 'furniture_removal', 'create_maskimage'].includes(toolKey);
+      const config = getCurrentToolConfig();
 
-      noDesignRow.hidden = !supportsVariations;
-      interventionRow.hidden = selectedRequiresMask || simpleUtilityTool || textOnlyTool || materialTool || toolKey === 'sky_colors';
-      strengthRow.hidden = !['precision', 'fill_spaces'].includes(toolKey);
-      weatherRow.hidden = toolKey !== 'sky_colors';
-      countryRow.hidden = toolKey !== 'furniture_finder';
-      paintColorRow.hidden = toolKey !== 'paint_visualizer';
-      materialRow.hidden = !materialTool;
-      surfaceColorRow.hidden = !materialTool;
-      objectRow.hidden = toolKey !== 'change_color_textures';
+      noDesignRow.hidden = !config.noDesignMax;
+      interventionRow.hidden = !config.aiIntervention;
+      strengthRow.hidden = !config.strength;
+      weatherRow.hidden = !config.weather;
+      countryRow.hidden = !config.country;
+      paintColorRow.hidden = !config.paintColor;
+      materialRow.hidden = !config.material;
+      surfaceColorRow.hidden = !config.surfaceColor;
+      objectRow.hidden = !config.object;
       updateMaterialTypeOptions();
 
-      const maxDesign = toolKey === 'perfect_redesign' ? 2 : 4;
+      const maxDesign = config.noDesignMax || 1;
       [...noDesignSelect.options].forEach((option) => {
         option.hidden = parseInt(option.value, 10) > maxDesign;
       });
       if (parseInt(noDesignSelect.value, 10) > maxDesign) noDesignSelect.value = String(maxDesign);
+
+      const optionRows = [
+        noDesignRow, interventionRow, strengthRow, weatherRow, countryRow,
+        paintColorRow, materialRow, materialTypeRow, surfaceColorRow, objectRow
+      ];
+      const hasVisibleOptions = optionRows.some((row) => !row.hidden);
+      advancedOptions.hidden = !hasVisibleOptions;
+      if (!hasVisibleOptions) {
+        advancedToggle.setAttribute('aria-expanded', 'false');
+        toolOptionsPanel.classList.add('collapsed');
+      }
     }
 
     function setStatus(message, type) {
@@ -1324,12 +1444,15 @@
     }
 
     function updateMaskControls() {
-      maskToolsPanel.hidden = !selectedRequiresMask;
-      maskCanvas.hidden = !selectedRequiresMask || sourcePreview.hidden;
-      uploadCanvas.classList.toggle('mask-mode', selectedRequiresMask && !sourcePreview.hidden);
+      const config = getCurrentToolConfig();
+      const needsMask = !!config.mask;
+      selectedRequiresMask = needsMask;
+      maskToolsPanel.hidden = !needsMask;
+      maskCanvas.hidden = !needsMask || sourcePreview.hidden;
+      uploadCanvas.classList.toggle('mask-mode', needsMask && !sourcePreview.hidden);
       maskToolTitle.textContent = `${selectedToolName} selection`;
-      maskToolHelp.textContent = maskHelpByTool[selectedToolName] || 'Brush over the area this tool should affect.';
-      if (selectedRequiresMask && !sourcePreview.hidden) sizeMaskCanvas();
+      maskToolHelp.textContent = config.maskHelp || 'Brush over the area this tool should affect.';
+      if (needsMask && !sourcePreview.hidden) sizeMaskCanvas();
     }
 
     function setMaskMode(mode) {
@@ -1423,6 +1546,11 @@
     });
     materialSelect.addEventListener('change', updateMaterialTypeOptions);
     maskClearBtn.addEventListener('click', resetMaskCanvas);
+    advancedToggle.addEventListener('click', () => {
+      const expanded = advancedToggle.getAttribute('aria-expanded') === 'true';
+      advancedToggle.setAttribute('aria-expanded', String(!expanded));
+      toolOptionsPanel.classList.toggle('collapsed', expanded);
+    });
 
     maskCanvas.addEventListener('pointerdown', (event) => {
       if (!selectedRequiresMask) return;
@@ -1626,9 +1754,9 @@
       formData.append('roomType', document.getElementById('room-type').value);
       formData.append('designStyle', document.getElementById('design-style').value);
       formData.append('additionalInstructions', document.getElementById('additional-instructions').value);
-      formData.append('noDesign', noDesignSelect.value);
-      formData.append('aiIntervention', interventionSelect.value);
 
+      if (!noDesignRow.hidden) formData.append('noDesign', noDesignSelect.value);
+      if (!interventionRow.hidden) formData.append('aiIntervention', interventionSelect.value);
       if (!strengthRow.hidden) formData.append('strength', strengthRange.value);
       if (!weatherRow.hidden) formData.append('weather', weatherSelect.value);
       if (!countryRow.hidden) formData.append('countryCode', countrySelect.value);

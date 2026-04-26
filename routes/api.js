@@ -98,6 +98,10 @@ const aiToolHandlers = {
       imageUrl: options.imageUrl,
       maskBase64: options.maskBase64,
       prompt: options.prompt,
+      color: options.color,
+      materials: options.materials,
+      materialsType: options.materialsType,
+      object: options.object,
       mode: options.designType,
       noDesign: options.noDesign
     })
@@ -169,6 +173,12 @@ const toAbsoluteImageUrl = (imageUrl) => {
 };
 
 const normalizeToolEndpoint = (endpoint = '') => endpoint.split('?')[0].split('/').filter(Boolean).pop();
+
+const clampNumber = (value, min, max, fallback) => {
+  const parsed = parseInt(value, 10);
+  if (Number.isNaN(parsed)) return fallback;
+  return Math.min(max, Math.max(min, parsed));
+};
 
 const getHomeDesignsBaseUrl = () => {
   const rawBaseUrl = process.env.HOMEDESIGNS_API_BASE_URL || process.env.HOMEDESIGNS_API_URL || 'https://homedesigns.ai';
@@ -319,6 +329,7 @@ router.post('/generate-design', ensureAuthenticated, uploadProjectImages.single(
     const upstreamEndpoint = `${getHomeDesignsBaseUrl()}${endpoint}`;
     const imageUrl = toAbsoluteImageUrl(getImageUrl(req.file));
     const maskBase64 = req.body.maskBase64 || (tool.requiresMask ? await createDefaultMaskBase64(req.file) : undefined);
+    const maxDesigns = toolKey === 'perfect_redesign' ? 2 : toolKey === 'video_generation' ? 1 : 4;
     const options = {
       imageUrl,
       maskBase64,
@@ -327,8 +338,8 @@ router.post('/generate-design', ensureAuthenticated, uploadProjectImages.single(
       prompt: req.body.additionalInstructions || req.body.prompt || undefined,
       designType: req.body.spaceType || req.body.designType || 'Interior',
       aiIntervention: req.body.aiIntervention || 'Mid',
-      noDesign: parseInt(req.body.noDesign, 10) || 1,
-      strength: parseInt(req.body.strength, 10) || 5,
+      noDesign: clampNumber(req.body.noDesign, 1, maxDesigns, 1),
+      strength: clampNumber(req.body.strength, 1, 10, 5),
       keepStructural: req.body.keepStructural !== 'false',
       rgbColor: req.body.rgbColor || '255,255,255',
       weather: req.body.weather || undefined,
