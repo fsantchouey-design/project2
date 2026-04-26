@@ -1795,46 +1795,93 @@ body.dark-mode #sidebar .logout-link:hover,
 /* INSPIRATION CAROUSEL */
 /* ==================== */
 
-.insp-carousel {
+.insp-marquee {
   position: relative;
-  border-radius: 10px;
-  overflow: hidden;
-  aspect-ratio: 4/3;
-  background: #0f172a;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border-radius: 14px;
+  padding: 8px 0;
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.04), rgba(16, 185, 129, 0.07));
+  scrollbar-width: thin;
+  scrollbar-color: rgba(16, 185, 129, 0.45) transparent;
+  -webkit-overflow-scrolling: touch;
 }
 
-.insp-track {
+.insp-marquee::before,
+.insp-marquee::after {
+  content: "";
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: block;
+  width: 44px;
+  height: 180px;
+  pointer-events: none;
+}
+
+.insp-marquee::before {
+  left: 0;
+  float: left;
+  margin-right: -44px;
+  background: linear-gradient(to right, var(--bg-card), transparent);
+}
+
+.insp-marquee::after {
+  right: 0;
+  float: right;
+  margin-left: -44px;
+  background: linear-gradient(to left, var(--bg-card), transparent);
+}
+
+.insp-marquee-track {
   display: flex;
-  width: 100%;
-  height: 100%;
-  transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+  gap: 14px;
+  width: max-content;
+  padding: 4px 14px 10px;
+  animation: inspiration-marquee 34s linear infinite;
   will-change: transform;
 }
 
-.insp-slide {
-  flex: 0 0 100%;
-  width: 100%;
-  height: 100%;
+.insp-marquee:hover .insp-marquee-track,
+.insp-marquee:focus-within .insp-marquee-track {
+  animation-play-state: paused;
 }
 
-.insp-slide-inner {
-  display: block;
-  width: 100%;
-  height: 100%;
-  text-decoration: none;
+.insp-marquee-card {
   position: relative;
+  flex: 0 0 210px;
+  height: 150px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 14px;
+  background: #0f172a;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.16);
+  cursor: pointer;
+  padding: 0;
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
 }
 
-.insp-slide-inner img {
+.insp-marquee-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(16, 185, 129, 0.42);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.22);
+}
+
+.insp-marquee-card img {
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: transform 0.4s ease;
+  transition: transform 0.45s ease;
 }
 
-.insp-slide-inner:hover img {
-  transform: scale(1.04);
+.insp-marquee-card:hover img {
+  transform: scale(1.06);
+}
+
+@keyframes inspiration-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(calc(-50% - 7px)); }
 }
 
 .insp-label {
@@ -1850,60 +1897,38 @@ body.dark-mode #sidebar .logout-link:hover,
   letter-spacing: 0.02em;
 }
 
-/* Arrow buttons */
-.insp-btn {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.88);
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 10;
-  color: #1e293b;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-  transition: background 0.2s ease, transform 0.2s ease;
-  padding: 0;
+@media (max-width: 768px) {
+  .insp-marquee::before,
+  .insp-marquee::after {
+    width: 24px;
+    height: 138px;
+  }
+
+  .insp-marquee::before {
+    margin-right: -24px;
+  }
+
+  .insp-marquee::after {
+    margin-left: -24px;
+  }
+
+  .insp-marquee-track {
+    gap: 10px;
+    padding-inline: 10px;
+    animation-duration: 28s;
+  }
+
+  .insp-marquee-card {
+    flex-basis: 160px;
+    height: 118px;
+    border-radius: 12px;
+  }
 }
 
-.insp-btn:hover {
-  background: #ffffff;
-  transform: translateY(-50%) scale(1.1);
-}
-
-.insp-btn-prev { left: 10px; }
-.insp-btn-next { right: 10px; }
-
-/* Navigation dots */
-.insp-dots {
-  position: absolute;
-  bottom: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 7px;
-  z-index: 10;
-}
-
-.insp-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.45);
-  border: none;
-  cursor: pointer;
-  padding: 0;
-  transition: background 0.25s ease, transform 0.25s ease;
-}
-
-.insp-dot.active {
-  background: #ffffff;
-  transform: scale(1.35);
+@media (prefers-reduced-motion: reduce) {
+  .insp-marquee-track {
+    animation: none;
+  }
 }
 
 /* ==================== */

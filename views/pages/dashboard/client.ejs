@@ -165,46 +165,27 @@
         </div>
       </div>
       <div class="card-body" style="padding: 12px;">
-        <div class="insp-carousel" id="insp-carousel">
-          <div class="insp-track" id="insp-track">
-            <div class="insp-slide">
-              <div class="insp-slide-inner" onclick="openCarouselLightbox(0)" style="cursor:pointer;">
-                <img src="/assets/11houses/Modern Arabic.jpeg" alt="Cuisine Moderne">
-                <span class="insp-label">Moderne</span>
-              </div>
-            </div>
-            <div class="insp-slide">
-              <div class="insp-slide-inner" onclick="openCarouselLightbox(1)" style="cursor:pointer;">
-                <img src="/assets/11houses/Rustic.jpeg" alt="Cuisine Rustique">
-                <span class="insp-label">Rustique</span>
-              </div>
-            </div>
-            <div class="insp-slide">
-              <div class="insp-slide-inner" onclick="openCarouselLightbox(2)" style="cursor:pointer;">
-                <img src="/assets/11houses/Industrial.jpeg" alt="Cuisine Industrielle">
-                <span class="insp-label">Industriel</span>
-              </div>
-            </div>
-            <div class="insp-slide">
-              <div class="insp-slide-inner" onclick="openCarouselLightbox(3)" style="cursor:pointer;">
-                <img src="/assets/11houses/Luxury.jpeg" alt="Cuisine Luxe">
-                <span class="insp-label">Luxe</span>
-              </div>
-            </div>
-          </div>
-
-          <button class="insp-btn insp-btn-prev" id="insp-prev" aria-label="Précédent">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-          </button>
-          <button class="insp-btn insp-btn-next" id="insp-next" aria-label="Suivant">
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-          </button>
-
-          <div class="insp-dots" id="insp-dots">
-            <button class="insp-dot active" aria-label="Slide 1"></button>
-            <button class="insp-dot" aria-label="Slide 2"></button>
-            <button class="insp-dot" aria-label="Slide 3"></button>
-            <button class="insp-dot" aria-label="Slide 4"></button>
+        <div class="insp-marquee" id="insp-marquee" aria-label="Galerie d'inspiration cuisine">
+          <div class="insp-marquee-track">
+            <% const inspirationItems = [
+              { src: '/assets/11houses/Modern Arabic.jpeg', label: 'Moderne' },
+              { src: '/assets/11houses/Rustic.jpeg', label: 'Rustique' },
+              { src: '/assets/11houses/Industrial.jpeg', label: 'Industriel' },
+              { src: '/assets/11houses/Luxury.jpeg', label: 'Luxe' },
+              { src: '/assets/11houses/Bois.jpeg', label: 'Bois naturel' },
+              { src: '/assets/11houses/Nordic Black.jpeg', label: 'Nordic Black' },
+              { src: '/assets/11houses/Quartz.jpeg', label: 'Quartz' },
+              { src: '/assets/11houses/Marbre.jpeg', label: 'Marbre' },
+              { src: '/assets/11houses/Bali.jpeg', label: 'Bali' }
+            ]; %>
+            <% inspirationItems.concat(inspirationItems).forEach((item, index) => {
+              const imageIndex = index % inspirationItems.length;
+            %>
+              <button type="button" class="insp-marquee-card" onclick="openCarouselLightbox(<%= imageIndex %>)">
+                <img src="<%= item.src %>" alt="Inspiration <%= item.label %>" loading="lazy">
+                <span class="insp-label"><%= item.label %></span>
+              </button>
+            <% }) %>
           </div>
         </div>
 
@@ -224,7 +205,12 @@
         '/assets/11houses/Modern Arabic.jpeg',
         '/assets/11houses/Rustic.jpeg',
         '/assets/11houses/Industrial.jpeg',
-        '/assets/11houses/Luxury.jpeg'
+        '/assets/11houses/Luxury.jpeg',
+        '/assets/11houses/Bois.jpeg',
+        '/assets/11houses/Nordic Black.jpeg',
+        '/assets/11houses/Quartz.jpeg',
+        '/assets/11houses/Marbre.jpeg',
+        '/assets/11houses/Bali.jpeg'
       ];
       let carouselLbIdx = 0;
 
@@ -256,32 +242,6 @@
         if (e.key === 'ArrowRight') carouselLbNav(1);
       });
 
-      (function() {
-        const track   = document.getElementById('insp-track');
-        const carousel = document.getElementById('insp-carousel');
-        const dots    = Array.from(document.querySelectorAll('#insp-dots .insp-dot'));
-        const slides  = Array.from(track.querySelectorAll('.insp-slide'));
-        let current = 0;
-        let timer;
-
-        function goTo(index) {
-          current = (index + slides.length) % slides.length;
-          track.style.transform = 'translateX(-' + (current * 100) + '%)';
-          dots.forEach(function(d, i) { d.classList.toggle('active', i === current); });
-        }
-
-        function startAuto() { timer = setInterval(function() { goTo(current + 1); }, 3000); }
-        function resetAuto()  { clearInterval(timer); startAuto(); }
-
-        document.getElementById('insp-prev').addEventListener('click', function() { goTo(current - 1); resetAuto(); });
-        document.getElementById('insp-next').addEventListener('click', function() { goTo(current + 1); resetAuto(); });
-        dots.forEach(function(dot, i) { dot.addEventListener('click', function() { goTo(i); resetAuto(); }); });
-
-        carousel.addEventListener('mouseenter', function() { clearInterval(timer); });
-        carousel.addEventListener('mouseleave', startAuto);
-
-        startAuto();
-      })();
     </script>
     
     <!-- Carousel Lightbox -->
