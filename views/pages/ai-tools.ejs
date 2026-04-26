@@ -22,10 +22,10 @@ const TOOL_DETAILS = {
   'design-transfer':    { img: 'photo-1600121848594-d8644e57abab', desc: 'Transférez le style d\'une image de référence vers votre espace.' },
   'floor-editor':       { img: 'photo-1558618666-fcd25c85cd64', desc: 'Changez le revêtement de sol : parquet, carrelage, béton et plus encore.' },
   'material-swap':      { img: 'photo-1600607688969-a5bfcd646154', desc: 'Échangez les matériaux de n\'importe quelle zone sélectionnée.' },
-  'room-composer':      { img: 'photo-1600607687644-c7171b42498b', desc: 'Composez et agencez les éléments de votre pièce librement.' },
+  'room-composer':      { img: '/assets/11houses/Modern Arabic.jpeg', desc: 'Composez et agencez les éléments de votre pièce librement.' },
   'design-critique':    { img: 'photo-1497366216548-37526070297c', desc: 'Recevez une analyse détaillée et des recommandations sur votre design.' },
   'create-mask-image':  { img: 'photo-1617103996702-96ff29b1c467', desc: 'Générez automatiquement un masque de segmentation pour votre image.' },
-  'smart-home':         { img: 'photo-1558002038-1ad5c2a7ba70', desc: 'Visualisez les équipements domotiques intégrés dans votre espace.' },
+  'smart-home':         { img: '/assets/houeses/house1.jpeg', desc: 'Visualisez les équipements domotiques intégrés dans votre espace.' },
   'video-generation':   { img: 'photo-1574717024653-61fd2cf4d44d', desc: 'Générez une vidéo animée immersive à partir de votre design.' }
 };
 
@@ -63,7 +63,9 @@ const CATEGORY_COLORS = {
   <div class="ait-grid" id="ait-grid">
     <% aiTools.forEach(tool => {
       const detail = TOOL_DETAILS[tool.id] || { img: 'photo-1616486338812-3dadae4b4ace', desc: tool.description };
-      const imgUrl = 'https://images.unsplash.com/' + detail.img + '?auto=format&fit=crop&w=600&h=380&q=80';
+      const imgUrl = detail.img.startsWith('/')
+        ? encodeURI(detail.img)
+        : 'https://images.unsplash.com/' + detail.img + '?auto=format&fit=crop&w=600&h=380&q=80';
     %>
       <div class="ait-card" data-cat="<%= tool.category %>">
         <div class="ait-card-img">
