@@ -104,7 +104,7 @@ const aiToolHandlers = {
   },
   furniture_finder: {
     name: 'Furniture Finder',
-    run: ({ imageUrl }) => furnitureFinder({ imageUrl })
+    run: ({ imageUrl, countryCode }) => furnitureFinder({ imageUrl, countryCode })
   },
   full_hd: {
     name: 'Full HD',
@@ -124,7 +124,7 @@ const aiToolHandlers = {
   },
   sky_colors: {
     name: 'Sky Colors',
-    run: ({ imageUrl, noDesign }) => skyColors({ imageUrl, weather: 'Clear Sky', noDesign })
+    run: ({ imageUrl, weather, noDesign }) => skyColors({ imageUrl, weather: weather || 'Clear Sky', noDesign })
   },
   design_transfer: {
     name: 'Design Transfer',
@@ -328,8 +328,11 @@ router.post('/generate-design', ensureAuthenticated, uploadProjectImages.single(
       designType: req.body.spaceType || req.body.designType || 'Interior',
       aiIntervention: req.body.aiIntervention || 'Mid',
       noDesign: parseInt(req.body.noDesign, 10) || 1,
+      strength: parseInt(req.body.strength, 10) || 5,
       keepStructural: req.body.keepStructural !== 'false',
       rgbColor: req.body.rgbColor || '255,255,255',
+      weather: req.body.weather || undefined,
+      countryCode: req.body.countryCode || undefined,
       color: req.body.color || undefined,
       materials: req.body.materials || undefined,
       materialsType: req.body.materialsType || undefined,
