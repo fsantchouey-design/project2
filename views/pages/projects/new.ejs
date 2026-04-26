@@ -311,9 +311,22 @@
 
       <div class="mask-tools-panel" id="mask-tools-panel" hidden>
         <div>
-          <span class="mask-tools-kicker">Selection Required</span>
-          <strong id="mask-tool-title">Paint the area to edit</strong>
-          <p id="mask-tool-help">Brush over the furniture or surface you want this tool to affect.</p>
+          <span class="mask-tools-kicker">Object Selection</span>
+          <strong id="mask-tool-title">Select the area to edit</strong>
+          <p id="mask-tool-help">Click the object or area to target, or switch to brush selection for manual control.</p>
+        </div>
+        <div class="selection-mode-group" aria-label="Selection Mode">
+          <span>Selection Mode</span>
+          <div class="selection-mode-buttons">
+            <button type="button" class="selection-mode-btn active" id="click-selection-btn">
+              <i data-lucide="mouse-pointer-click"></i>
+              Click selection
+            </button>
+            <button type="button" class="selection-mode-btn" id="brush-selection-btn">
+              <i data-lucide="paintbrush"></i>
+              Brush selection
+            </button>
+          </div>
         </div>
         <div class="mask-tool-buttons">
           <button type="button" class="mask-tool-btn active" id="mask-brush-btn">
@@ -639,6 +652,10 @@
     touch-action: none;
   }
 
+  .mask-canvas.click-mode {
+    cursor: pointer;
+  }
+
   .image-action {
     position: absolute;
     top: 14px;
@@ -915,6 +932,46 @@
     color: var(--text-muted);
     font-size: 13px;
     line-height: 1.45;
+  }
+
+  .selection-mode-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .selection-mode-group > span {
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+
+  .selection-mode-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .selection-mode-btn {
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  .selection-mode-btn.active {
+    border-color: rgba(16, 185, 129, 0.45);
+    background: rgba(16, 185, 129, 0.16);
+    color: var(--accent-primary);
   }
 
   .mask-tool-buttons {
@@ -1204,6 +1261,8 @@
     const maskToolsPanel = document.getElementById('mask-tools-panel');
     const maskToolTitle = document.getElementById('mask-tool-title');
     const maskToolHelp = document.getElementById('mask-tool-help');
+    const clickSelectionBtn = document.getElementById('click-selection-btn');
+    const brushSelectionBtn = document.getElementById('brush-selection-btn');
     const maskBrushBtn = document.getElementById('mask-brush-btn');
     const maskEraserBtn = document.getElementById('mask-eraser-btn');
     const maskBrushSize = document.getElementById('mask-brush-size');
@@ -1242,7 +1301,13 @@
     let dragStart = null;
     let isMaskDrawing = false;
     let maskMode = 'brush';
+    let selectionMode = 'click';
     let hasMaskPaint = false;
+    let hasManualBrushPaint = false;
+    let hoverSelection = null;
+    let clickSelections = [];
+    const brushCanvas = document.createElement('canvas');
+    const brushCtx = brushCanvas.getContext('2d');
 
     const TOOL_CONFIG = {
       perfect_redesign: { noDesignMax: 2, aiIntervention: true },
@@ -1427,10 +1492,185 @@
       };
     }
 
+    function makeObjectSelection(point) {
+      // TODO: Replace this local pixel-connected selection with API-backed object segmentation when available.
+      const pixelSelection = makePixelConnectedSelection(point);
+      if (pixelSelection) return pixelSelection;
+      return makePreviewSelection(point);
+    }
+
+    function makePreviewSelection(point) {
+      const radiusX = Math.max(maskCanvas.width * 0.11, 70);
+      const radiusY = Math.max(maskCanvas.height * 0.09, 70);
+      return {
+        type: 'ellipse',
+        x: point.x / maskCanvas.width,
+        y: point.y / maskCanvas.height,
+        rx: radiusX / maskCanvas.width,
+        ry: radiusY / maskCanvas.height
+      };
+    }
+
+    function makePixelConnectedSelection(point) {
+      if (!sourcePreview.complete || !sourcePreview.naturalWidth || !maskCanvas.width || !maskCanvas.height) return null;
+
+      try {
+        const width = maskCanvas.width;
+        const height = maskCanvas.height;
+        const sampleCanvas = document.createElement('canvas');
+        sampleCanvas.width = width;
+        sampleCanvas.height = height;
+        const sampleCtx = sampleCanvas.getContext('2d', { willReadFrequently: true });
+        drawImageCover(sampleCtx, sourcePreview, width, height);
+        const pixels = sampleCtx.getImageData(0, 0, width, height).data;
+        const startX = Math.max(0, Math.min(width - 1, Math.round(point.x)));
+        const startY = Math.max(0, Math.min(height - 1, Math.round(point.y)));
+        const startIndex = (startY * width + startX) * 4;
+        const seed = [pixels[startIndex], pixels[startIndex + 1], pixels[startIndex + 2]];
+        const tolerance = 42;
+        const visited = new Uint8Array(width * height);
+        const selected = new Uint8Array(width * height);
+        const stack = [startY * width + startX];
+        let selectedCount = 0;
+        const maxPixels = Math.floor(width * height * 0.32);
+
+        while (stack.length) {
+          const index = stack.pop();
+          if (visited[index]) continue;
+          visited[index] = 1;
+
+          const offset = index * 4;
+          const distance =
+            Math.abs(pixels[offset] - seed[0]) +
+            Math.abs(pixels[offset + 1] - seed[1]) +
+            Math.abs(pixels[offset + 2] - seed[2]);
+
+          if (distance > tolerance) continue;
+
+          selected[index] = 1;
+          selectedCount += 1;
+          if (selectedCount > maxPixels) return null;
+
+          const x = index % width;
+          const y = Math.floor(index / width);
+          if (x > 0) stack.push(index - 1);
+          if (x < width - 1) stack.push(index + 1);
+          if (y > 0) stack.push(index - width);
+          if (y < height - 1) stack.push(index + width);
+        }
+
+        if (selectedCount < 140) return null;
+
+        const selectionCanvas = document.createElement('canvas');
+        selectionCanvas.width = width;
+        selectionCanvas.height = height;
+        const selectionCtx = selectionCanvas.getContext('2d');
+        const output = selectionCtx.createImageData(width, height);
+        for (let i = 0; i < selected.length; i += 1) {
+          if (!selected[i]) continue;
+          const offset = i * 4;
+          output.data[offset] = 16;
+          output.data[offset + 1] = 185;
+          output.data[offset + 2] = 129;
+          output.data[offset + 3] = 150;
+        }
+        selectionCtx.putImageData(output, 0, 0);
+
+        return {
+          type: 'bitmap',
+          canvas: selectionCanvas,
+          ctx: selectionCtx,
+          width,
+          height
+        };
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function drawImageCover(ctx, image, width, height) {
+      const imageRatio = image.naturalWidth / image.naturalHeight;
+      const canvasRatio = width / height;
+      let sourceWidth = image.naturalWidth;
+      let sourceHeight = image.naturalHeight;
+      let sourceX = 0;
+      let sourceY = 0;
+
+      if (imageRatio > canvasRatio) {
+        sourceWidth = image.naturalHeight * canvasRatio;
+        sourceX = (image.naturalWidth - sourceWidth) / 2;
+      } else {
+        sourceHeight = image.naturalWidth / canvasRatio;
+        sourceY = (image.naturalHeight - sourceHeight) / 2;
+      }
+
+      ctx.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, width, height);
+    }
+
+    function selectionToCanvas(selection) {
+      return {
+        x: selection.x * maskCanvas.width,
+        y: selection.y * maskCanvas.height,
+        rx: selection.rx * maskCanvas.width,
+        ry: selection.ry * maskCanvas.height
+      };
+    }
+
+    function findSelectionAtPoint(point) {
+      return clickSelections.findIndex((selection) => {
+        if (selection.type === 'bitmap' && selection.ctx) {
+          const x = Math.max(0, Math.min(selection.width - 1, Math.round(point.x)));
+          const y = Math.max(0, Math.min(selection.height - 1, Math.round(point.y)));
+          return selection.ctx.getImageData(x, y, 1, 1).data[3] > 0;
+        }
+        const area = selectionToCanvas(selection);
+        const dx = (point.x - area.x) / area.rx;
+        const dy = (point.y - area.y) / area.ry;
+        return dx * dx + dy * dy <= 1;
+      });
+    }
+
+    function drawSelectionShape(ctx, selection, options = {}) {
+      if (selection.type === 'bitmap' && selection.canvas) {
+        ctx.drawImage(selection.canvas, 0, 0, maskCanvas.width, maskCanvas.height);
+        return;
+      }
+
+      const area = selectionToCanvas(selection);
+      ctx.save();
+      ctx.beginPath();
+      ctx.ellipse(area.x, area.y, area.rx, area.ry, 0, 0, Math.PI * 2);
+      ctx.fillStyle = options.preview ? 'rgba(16, 185, 129, 0.22)' : 'rgba(16, 185, 129, 0.55)';
+      ctx.strokeStyle = options.preview ? 'rgba(59, 130, 246, 0.8)' : 'rgba(16, 185, 129, 0.95)';
+      ctx.lineWidth = options.preview ? 2 : 3;
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function renderMaskOverlay() {
+      if (!maskCanvas.width || !maskCanvas.height) return;
+      maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+      clickSelections.forEach((selection) => drawSelectionShape(maskCtx, selection));
+      if (brushCanvas.width && brushCanvas.height) {
+        maskCtx.drawImage(brushCanvas, 0, 0);
+      }
+      if (hoverSelection && selectionMode === 'click') {
+        drawSelectionShape(maskCtx, hoverSelection, { preview: true });
+      }
+      hasMaskPaint = clickSelections.length > 0 || hasManualBrushPaint;
+    }
+
     function resetMaskCanvas() {
       if (!maskCanvas.width || !maskCanvas.height) return;
       maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+      if (brushCanvas.width && brushCanvas.height) {
+        brushCtx.clearRect(0, 0, brushCanvas.width, brushCanvas.height);
+      }
+      clickSelections = [];
+      hoverSelection = null;
       hasMaskPaint = false;
+      hasManualBrushPaint = false;
     }
 
     function sizeMaskCanvas() {
@@ -1440,6 +1680,8 @@
       if (maskCanvas.width === nextWidth && maskCanvas.height === nextHeight) return;
       maskCanvas.width = nextWidth;
       maskCanvas.height = nextHeight;
+      brushCanvas.width = nextWidth;
+      brushCanvas.height = nextHeight;
       resetMaskCanvas();
     }
 
@@ -1453,6 +1695,7 @@
       maskToolTitle.textContent = `${selectedToolName} selection`;
       maskToolHelp.textContent = config.maskHelp || 'Brush over the area this tool should affect.';
       if (needsMask && !sourcePreview.hidden) sizeMaskCanvas();
+      maskCanvas.classList.toggle('click-mode', selectionMode === 'click');
     }
 
     function setMaskMode(mode) {
@@ -1461,17 +1704,58 @@
       maskEraserBtn.classList.toggle('active', mode === 'eraser');
     }
 
+    function setSelectionMode(mode) {
+      selectionMode = mode;
+      clickSelectionBtn.classList.toggle('active', mode === 'click');
+      brushSelectionBtn.classList.toggle('active', mode === 'brush');
+      maskCanvas.classList.toggle('click-mode', mode === 'click');
+      hoverSelection = null;
+      renderMaskOverlay();
+    }
+
+    function toggleClickSelection(event) {
+      const point = getCanvasPoint(event);
+      const existingIndex = findSelectionAtPoint(point);
+      if (existingIndex >= 0) {
+        clickSelections.splice(existingIndex, 1);
+      } else {
+        clickSelections.push(makeObjectSelection(point));
+      }
+      hoverSelection = null;
+      renderMaskOverlay();
+    }
+
+    function eraseClickSelections(point, radius) {
+      clickSelections = clickSelections.filter((selection) => {
+        if (selection.type !== 'bitmap' || !selection.ctx) {
+          const area = selectionToCanvas(selection);
+          const dx = (point.x - area.x) / (area.rx + radius);
+          const dy = (point.y - area.y) / (area.ry + radius);
+          return dx * dx + dy * dy > 1;
+        }
+        selection.ctx.save();
+        selection.ctx.globalCompositeOperation = 'destination-out';
+        selection.ctx.beginPath();
+        selection.ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
+        selection.ctx.fill();
+        selection.ctx.restore();
+        return true;
+      });
+    }
+
     function drawMaskStroke(event) {
       const point = getCanvasPoint(event);
       const radius = parseInt(maskBrushSize.value, 10) / 2;
-      maskCtx.save();
-      maskCtx.globalCompositeOperation = maskMode === 'eraser' ? 'destination-out' : 'source-over';
-      maskCtx.fillStyle = 'rgba(16, 185, 129, 0.58)';
-      maskCtx.beginPath();
-      maskCtx.arc(point.x, point.y, radius, 0, Math.PI * 2);
-      maskCtx.fill();
-      maskCtx.restore();
-      if (maskMode === 'brush') hasMaskPaint = true;
+      brushCtx.save();
+      brushCtx.globalCompositeOperation = maskMode === 'eraser' ? 'destination-out' : 'source-over';
+      brushCtx.fillStyle = 'rgba(16, 185, 129, 0.58)';
+      brushCtx.beginPath();
+      brushCtx.arc(point.x, point.y, radius, 0, Math.PI * 2);
+      brushCtx.fill();
+      brushCtx.restore();
+      if (maskMode === 'eraser') eraseClickSelections(point, radius);
+      if (maskMode === 'brush') hasManualBrushPaint = true;
+      renderMaskOverlay();
     }
 
     function getMaskBase64() {
@@ -1482,15 +1766,18 @@
       const exportCtx = exportCanvas.getContext('2d');
       const sourceData = maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
       const outputData = exportCtx.createImageData(maskCanvas.width, maskCanvas.height);
+      let hasSelectedPixels = false;
 
       for (let i = 0; i < sourceData.data.length; i += 4) {
         const alpha = sourceData.data[i + 3];
+        if (alpha > 0) hasSelectedPixels = true;
         outputData.data[i] = alpha > 0 ? 255 : 0;
         outputData.data[i + 1] = alpha > 0 ? 255 : 0;
         outputData.data[i + 2] = alpha > 0 ? 255 : 0;
         outputData.data[i + 3] = 255;
       }
 
+      if (!hasSelectedPixels) return '';
       exportCtx.putImageData(outputData, 0, 0);
       return exportCanvas.toDataURL('image/png');
     }
@@ -1538,6 +1825,8 @@
 
     maskBrushBtn.addEventListener('click', () => setMaskMode('brush'));
     maskEraserBtn.addEventListener('click', () => setMaskMode('eraser'));
+    clickSelectionBtn.addEventListener('click', () => setSelectionMode('click'));
+    brushSelectionBtn.addEventListener('click', () => setSelectionMode('brush'));
     maskBrushSize.addEventListener('input', () => {
       maskBrushSizeValue.textContent = maskBrushSize.value;
     });
@@ -1557,16 +1846,33 @@
       event.preventDefault();
       event.stopPropagation();
       sizeMaskCanvas();
+      if (selectionMode === 'click') {
+        toggleClickSelection(event);
+        return;
+      }
       isMaskDrawing = true;
       maskCanvas.setPointerCapture(event.pointerId);
       drawMaskStroke(event);
     });
 
     maskCanvas.addEventListener('pointermove', (event) => {
+      if (selectedRequiresMask && selectionMode === 'click') {
+        event.preventDefault();
+        event.stopPropagation();
+        hoverSelection = makePreviewSelection(getCanvasPoint(event));
+        renderMaskOverlay();
+        return;
+      }
       if (!isMaskDrawing) return;
       event.preventDefault();
       event.stopPropagation();
       drawMaskStroke(event);
+    });
+
+    maskCanvas.addEventListener('pointerleave', () => {
+      if (selectionMode !== 'click') return;
+      hoverSelection = null;
+      renderMaskOverlay();
     });
 
     maskCanvas.addEventListener('pointerup', (event) => {
@@ -1682,6 +1988,8 @@
         configToolName.textContent = selectedToolName;
         configEndpoint.textContent = selectedEndpoint;
         resultToolName.textContent = selectedToolName;
+        resetMaskCanvas();
+        setSelectionMode('click');
         updateMaskControls();
         updateToolOptions();
         setStatus('');
@@ -1768,11 +2076,7 @@
 
       if (selectedRequiresMask) {
         const maskBase64 = getMaskBase64();
-        if (!maskBase64) {
-          setStatus(`Brush the area for ${selectedToolName} before generating.`, 'error');
-          return;
-        }
-        formData.append('maskBase64', maskBase64);
+        if (maskBase64) formData.append('maskBase64', maskBase64);
       }
 
       generateBtn.disabled = true;
