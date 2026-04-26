@@ -135,20 +135,17 @@
       <input type="file" id="design-image" accept="image/*" hidden>
 
       <label for="design-image" class="upload-canvas" id="upload-canvas">
-        <span class="upload-icon"><i data-lucide="image-up"></i></span>
-        <strong>Drop your room photo here</strong>
-        <span>or click to upload a JPG, PNG, or WebP image</span>
-      </label>
-
-      <div class="image-frame" id="image-frame" hidden>
-        <img id="source-preview" alt="Uploaded room preview">
-        <div class="image-frame-actions">
-          <label for="design-image" class="image-action">
-            <i data-lucide="refresh-cw"></i>
-            Change
-          </label>
+        <img id="source-preview" class="source-preview" alt="Uploaded room preview" hidden>
+        <div class="upload-placeholder" id="upload-placeholder">
+          <span class="upload-icon"><i data-lucide="image-up"></i></span>
+          <strong>Drop your room photo here</strong>
+          <span>or click to upload a JPG, PNG, or WebP image</span>
         </div>
-      </div>
+        <button type="button" class="image-action" id="change-image-btn" hidden>
+          <i data-lucide="refresh-cw"></i>
+          Change
+        </button>
+      </label>
 
       <section class="result-panel" id="result-panel" hidden>
         <div class="result-heading">
@@ -413,9 +410,9 @@
   }
 
   .upload-canvas {
+    position: relative;
     width: min(100%, 520px);
-    min-height: 620px;
-    aspect-ratio: 4 / 5;
+    aspect-ratio: 9 / 16;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -428,7 +425,12 @@
     color: var(--text-muted);
     text-align: center;
     cursor: pointer;
+    overflow: hidden;
     transition: border-color 0.2s, background 0.2s, transform 0.2s;
+  }
+
+  .upload-canvas [hidden] {
+    display: none !important;
   }
 
   .upload-canvas:hover,
@@ -438,9 +440,25 @@
     transform: translateY(-1px);
   }
 
+  .upload-canvas.has-image {
+    padding: 0;
+    border-style: solid;
+    border-color: rgba(16, 185, 129, 0.55);
+    background: #0f172a;
+    box-shadow: 0 24px 90px rgba(15, 23, 42, 0.24);
+  }
+
   .upload-canvas strong {
     color: var(--text-primary);
     font-size: 20px;
+  }
+
+  .upload-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
   }
 
   .upload-icon {
@@ -459,30 +477,18 @@
     height: 30px;
   }
 
-  .image-frame {
-    position: relative;
-    width: min(100%, 540px);
-    aspect-ratio: 4 / 5;
-    border-radius: 8px;
-    overflow: hidden;
-    background: #0f172a;
-    box-shadow: 0 24px 90px rgba(15, 23, 42, 0.24);
-  }
-
-  .image-frame img {
+  .source-preview {
     width: 100%;
     height: 100%;
     display: block;
     object-fit: cover;
-  }
-
-  .image-frame-actions {
-    position: absolute;
-    top: 14px;
-    right: 14px;
+    object-position: center;
   }
 
   .image-action {
+    position: absolute;
+    top: 14px;
+    right: 14px;
     min-height: 38px;
     background: rgba(15, 23, 42, 0.74);
     border-color: rgba(255, 255, 255, 0.16);
@@ -707,7 +713,7 @@
     }
 
     .upload-canvas {
-      min-height: 460px;
+      width: min(100%, 360px);
     }
 
     .config-grid,
@@ -722,8 +728,9 @@
     const imageInput = document.getElementById('design-image');
     const replaceImageBtn = document.getElementById('replace-image-btn');
     const uploadCanvas = document.getElementById('upload-canvas');
-    const imageFrame = document.getElementById('image-frame');
+    const uploadPlaceholder = document.getElementById('upload-placeholder');
     const sourcePreview = document.getElementById('source-preview');
+    const changeImageBtn = document.getElementById('change-image-btn');
     const toolMenuToggle = document.getElementById('tool-menu-toggle');
     const toolMenu = document.getElementById('tool-menu');
     const selectedToolLabel = document.getElementById('selected-tool-label');
@@ -751,8 +758,10 @@
       const reader = new FileReader();
       reader.onload = (event) => {
         sourcePreview.src = event.target.result;
-        uploadCanvas.hidden = true;
-        imageFrame.hidden = false;
+        sourcePreview.hidden = false;
+        uploadPlaceholder.hidden = true;
+        changeImageBtn.hidden = false;
+        uploadCanvas.classList.add('has-image');
         resultPanel.hidden = true;
         resultMedia.innerHTML = '';
         setStatus('');
@@ -765,6 +774,11 @@
     });
 
     replaceImageBtn.addEventListener('click', () => imageInput.click());
+    changeImageBtn.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      imageInput.click();
+    });
 
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach((eventName) => {
       uploadCanvas.addEventListener(eventName, (event) => {
