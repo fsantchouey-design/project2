@@ -3,7 +3,16 @@ const router = express.Router();
 const { ensureAuthenticated } = require('../middleware/auth');
 const Project = require('../models/Project');
 const Contractor = require('../models/Contractor');
-const { generateDesign, getStyles, getRoomTypes, checkCredits } = require('../utils/homedesigns');
+const {
+  generateDesign, beautifulRedesign, perfectRedesign, creativeRedesign,
+  sketchToRender, precision, fillSpaces, decorStaging, furnitureRemoval,
+  changeColorTextures, paintVisualizer, furnitureFinder, fullHD, skyColors,
+  magicRedesign, videoGeneration, virtualStaging, textToDesign, furnitureCreator,
+  designAdvisor, designTransfer, floorEditor, materialSwap, roomComposer,
+  designCritique, createMaskImage, smartHome,
+  getStyles, getRoomTypes, checkCredits
+} = require('../utils/homedesigns');
+const { uploadProjectImages, getImageUrl } = require('../config/cloudinary');
 
 // API Health Check
 router.get('/health', (req, res) => {
@@ -28,6 +37,194 @@ router.get('/room-types', (req, res) => {
 router.get('/credits', ensureAuthenticated, async (req, res) => {
   const credits = await checkCredits();
   res.json(credits);
+});
+
+const aiToolHandlers = {
+  perfect_redesign: {
+    name: 'Perfect Redesign',
+    run: (options) => perfectRedesign(options)
+  },
+  beautiful_redesign: {
+    name: 'Beautiful Redesign',
+    run: (options) => beautifulRedesign(options)
+  },
+  magic_redesign: {
+    name: 'Magic Redesign',
+    run: (options) => magicRedesign(options)
+  },
+  video_generation: {
+    name: 'Video Generation',
+    run: (options) => videoGeneration(options)
+  },
+  creative_redesign: {
+    name: 'Creative Redesign',
+    run: (options) => creativeRedesign(options)
+  },
+  sketch_to_render: {
+    name: 'Sketch To Render',
+    run: (options) => sketchToRender(options)
+  },
+  virtual_staging: {
+    name: 'Virtual Staging',
+    run: (options) => virtualStaging(options)
+  },
+  precision: {
+    name: 'Precision',
+    requiresMask: true,
+    run: (options) => precision(options)
+  },
+  fill_spaces: {
+    name: 'Fill Spaces',
+    requiresMask: true,
+    run: (options) => fillSpaces(options)
+  },
+  decor_staging: {
+    name: 'Decor Staging',
+    run: (options) => decorStaging(options)
+  },
+  furniture_removal: {
+    name: 'Furniture Removal',
+    requiresMask: true,
+    run: ({ imageUrl, maskBase64 }) => furnitureRemoval({ imageUrl, maskBase64 })
+  },
+  change_color_textures: {
+    name: 'Change Color Textures',
+    requiresMask: true,
+    run: (options) => changeColorTextures({
+      imageUrl: options.imageUrl,
+      maskBase64: options.maskBase64,
+      prompt: options.prompt,
+      mode: options.designType,
+      noDesign: options.noDesign
+    })
+  },
+  furniture_finder: {
+    name: 'Furniture Finder',
+    run: ({ imageUrl }) => furnitureFinder({ imageUrl })
+  },
+  full_hd: {
+    name: 'Full HD',
+    run: ({ imageUrl }) => fullHD({ imageUrl })
+  },
+  text_to_design: {
+    name: 'Text To Design',
+    run: (options) => textToDesign(options)
+  },
+  furniture_creator: {
+    name: 'Furniture Creator',
+    run: (options) => furnitureCreator(options)
+  },
+  design_advisor: {
+    name: 'Design Advisor',
+    run: ({ imageUrl, prompt }) => designAdvisor({ imageUrl, prompt })
+  },
+  sky_colors: {
+    name: 'Sky Colors',
+    run: ({ imageUrl, noDesign }) => skyColors({ imageUrl, weather: 'Clear Sky', noDesign })
+  },
+  design_transfer: {
+    name: 'Design Transfer',
+    run: (options) => designTransfer(options)
+  },
+  floor_editor: {
+    name: 'Floor Editor',
+    requiresMask: true,
+    run: (options) => floorEditor(options)
+  },
+  paint_visualizer: {
+    name: 'Paint Visualizer',
+    requiresMask: true,
+    run: (options) => paintVisualizer(options)
+  },
+  material_swap: {
+    name: 'Material Swap',
+    requiresMask: true,
+    run: (options) => materialSwap(options)
+  },
+  room_composer: {
+    name: 'Room Composer',
+    run: (options) => roomComposer(options)
+  },
+  design_critique: {
+    name: 'Design Critique',
+    run: ({ imageUrl, prompt }) => designCritique({ imageUrl, prompt })
+  },
+  create_maskimage: {
+    name: 'Create Mask Image',
+    run: ({ imageUrl }) => createMaskImage({ imageUrl })
+  },
+  smart_home: {
+    name: 'Smart Home',
+    run: (options) => smartHome(options)
+  }
+};
+
+const toAbsoluteImageUrl = (imageUrl) => {
+  if (!imageUrl || !imageUrl.startsWith('/')) return imageUrl;
+  return `${process.env.APP_URL || 'https://craftycrib.com'}${imageUrl}`;
+};
+
+// Dynamic HomeDesignsAI proxy for the new project studio.
+// TODO: Configure HOMEDESIGNS_API_TOKEN in the server environment before production use.
+router.post('/v2/:tool', ensureAuthenticated, uploadProjectImages.single('image'), async (req, res) => {
+  try {
+    const tool = aiToolHandlers[req.params.tool];
+    if (!tool) {
+      return res.status(404).json({ success: false, error: 'Unknown AI tool endpoint.' });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ success: false, error: 'Please upload an image before generating.' });
+    }
+
+    if (tool.requiresMask && !req.body.maskBase64) {
+      return res.status(400).json({
+        success: false,
+        error: `${tool.name} requires a mask. Mask drawing will be added to this studio in a later step.`
+      });
+    }
+
+    const imageUrl = toAbsoluteImageUrl(getImageUrl(req.file));
+    const options = {
+      imageUrl,
+      maskBase64: req.body.maskBase64,
+      roomType: req.body.roomType || 'living-room',
+      style: req.body.style || 'modern',
+      prompt: req.body.prompt || undefined,
+      designType: req.body.designType || 'Interior',
+      aiIntervention: req.body.aiIntervention || 'Mid',
+      noDesign: parseInt(req.body.noDesign, 10) || 1,
+      keepStructural: req.body.keepStructural !== 'false'
+    };
+
+    const result = await tool.run(options);
+
+    if (!result || !result.success) {
+      return res.status(500).json({
+        success: false,
+        error: result?.error || 'AI generation failed.'
+      });
+    }
+
+    const images = result.allImages || (result.imageUrl ? [result.imageUrl] : []);
+
+    return res.json({
+      success: true,
+      tool: tool.name,
+      endpoint: `/api/v2/${req.params.tool}`,
+      imageUrl: result.imageUrl,
+      videoUrl: result.videoUrl,
+      textResult: result.textResult,
+      resultArray: result.resultArray,
+      designs: images.map((url, index) => ({
+        name: `${tool.name}${images.length > 1 ? ` #${index + 1}` : ''}`,
+        imageUrl: url
+      }))
+    });
+  } catch (err) {
+    console.error('[API v2 studio] error:', err);
+    res.status(500).json({ success: false, error: err.message || 'Internal server error' });
+  }
 });
 
 // Generate Design (AJAX)
@@ -213,4 +410,3 @@ router.get('/stats', ensureAuthenticated, async (req, res) => {
 });
 
 module.exports = router;
-
