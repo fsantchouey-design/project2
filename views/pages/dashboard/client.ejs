@@ -12,7 +12,7 @@
 
 <!-- Stats Grid -->
 <div class="stats-grid">
-  <div class="stat-card">
+  <div class="stat-card stat-total">
     <div class="stat-icon green">
       <i data-lucide="folder"></i>
     </div>
@@ -20,9 +20,10 @@
       <div class="stat-value"><%= stats.totalProjects %></div>
       <div class="stat-label">Projets totaux</div>
     </div>
+    <span class="stat-accent"></span>
   </div>
   
-  <div class="stat-card">
+  <div class="stat-card stat-ai">
     <div class="stat-icon purple">
       <i data-lucide="sparkles"></i>
     </div>
@@ -30,9 +31,10 @@
       <div class="stat-value"><%= stats.totalVariants %></div>
       <div class="stat-label">Designs IA</div>
     </div>
+    <span class="stat-accent"></span>
   </div>
   
-  <div class="stat-card">
+  <div class="stat-card stat-progress">
     <div class="stat-icon orange">
       <i data-lucide="clock"></i>
     </div>
@@ -40,9 +42,10 @@
       <div class="stat-value"><%= stats.inProgress %></div>
       <div class="stat-label">En cours</div>
     </div>
+    <span class="stat-accent"></span>
   </div>
   
-  <div class="stat-card">
+  <div class="stat-card stat-done">
     <div class="stat-icon blue">
       <i data-lucide="check-circle"></i>
     </div>
@@ -50,6 +53,7 @@
       <div class="stat-value"><%= stats.completedDesigns %></div>
       <div class="stat-label">Terminés</div>
     </div>
+    <span class="stat-accent"></span>
   </div>
 </div>
 
