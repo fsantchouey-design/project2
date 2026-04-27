@@ -1,14 +1,27 @@
-<!-- Page Header -->
-<div class="page-header">
-  <div>
-    <h1>Tableau de bord</h1>
-    <p class="subtitle">Bienvenue, <%= user.firstName %>. Voici un aperçu de vos projets.</p>
+<!-- Dashboard Hero -->
+<section class="dashboard-hero">
+  <div class="dashboard-hero-content">
+    <span class="dashboard-kicker">CraftyCrib AI Studio</span>
+    <h1>Bienvenue, <%= user.firstName || 'créateur' %></h1>
+    <p>Gérez vos projets, relancez vos outils IA et transformez chaque espace avec une expérience premium.</p>
+    <div class="dashboard-hero-actions">
+      <a href="/projects/new" class="dashboard-hero-btn primary">
+        <i data-lucide="plus"></i>
+        Nouveau projet
+      </a>
+      <a href="/dashboard/ai-tools" class="dashboard-hero-btn secondary">
+        <i data-lucide="wand-sparkles"></i>
+        Explorer les outils IA
+      </a>
+    </div>
   </div>
-  <a href="/projects/new" class="btn btn-primary">
-    <i data-lucide="plus"></i>
-    Nouveau projet
-  </a>
-</div>
+  <div class="dashboard-hero-panel">
+    <div class="hero-panel-icon"><i data-lucide="sparkles"></i></div>
+    <span>Prochaine action</span>
+    <strong>Uploader une pièce et générer un nouveau design</strong>
+    <a href="/projects/new">Démarrer</a>
+  </div>
+</section>
 
 <!-- Stats Grid -->
 <div class="stats-grid">
@@ -62,16 +75,19 @@
   <!-- Left Column - Projects -->
   <div>
     <!-- Recent Projects -->
-    <div class="content-card">
+    <div class="content-card recent-projects-card">
       <div class="card-header">
-        <h2>Projets récents</h2>
+        <div>
+          <span class="section-kicker">Activité</span>
+          <h2>Projets récents</h2>
+        </div>
         <a href="/projects">Voir tout</a>
       </div>
       
       <% if (projects && projects.length > 0) { %>
         <div class="project-list">
           <% projects.slice(0, 5).forEach(project => { %>
-            <a href="/projects/<%= project._id %>" class="project-item">
+            <a href="/projects/<%= project._id %>" class="project-item" data-project-id="<%= project._id %>" data-title="<%= project.title %>" data-room-type="<%= project.roomType || 'Projet' %>">
               <div class="project-thumb">
                 <% if (project.designVariants && project.designVariants.length > 0) { %>
                   <img src="<%= project.designVariants[project.designVariants.length - 1].imageUrl || project.designVariants[project.designVariants.length - 1].thumbnailUrl %>" alt="<%= project.title %>">
@@ -84,7 +100,10 @@
               <div class="project-info">
                 <h3><%= project.title %></h3>
                 <p><%= project.roomType %><% if (project.style) { %> • <%= project.style %><% } %></p>
-                <span class="project-status <%= project.status %>"><%= project.status %></span>
+                <div class="project-row-meta">
+                  <span class="project-status <%= project.status %>"><%= project.status %></span>
+                  <span><%= project.designVariants ? project.designVariants.length : 0 %> design<%= project.designVariants && project.designVariants.length > 1 ? 's' : '' %></span>
+                </div>
               </div>
             </a>
           <% }) %>
@@ -107,6 +126,47 @@
   
   <!-- Right Column -->
   <div>
+    <!-- Favorites -->
+    <div class="content-card dashboard-favorites-card" id="dashboard-favorites-card" style="margin-bottom: 16px;" hidden>
+      <div class="card-header">
+        <div>
+          <span class="section-kicker">Favoris</span>
+          <h2>Projets favoris</h2>
+        </div>
+        <a href="/projects">Gérer</a>
+      </div>
+      <div class="card-body">
+        <div class="dashboard-favorites-list" id="dashboard-favorites-list"></div>
+      </div>
+    </div>
+
+    <!-- Recommended AI Tools -->
+    <div class="content-card recommended-tools-card" style="margin-bottom: 16px;">
+      <div class="card-header">
+        <div>
+          <span class="section-kicker">IA recommandée</span>
+          <h2>Outils IA</h2>
+        </div>
+        <a href="/dashboard/ai-tools">Tout voir</a>
+      </div>
+      <div class="card-body">
+        <div class="recommended-tools">
+          <a href="/dashboard/new-project?tool=beautiful_redesign" class="recommended-tool">
+            <i data-lucide="sparkles"></i>
+            <span>Beautiful Redesign</span>
+          </a>
+          <a href="/dashboard/new-project?tool=furniture_removal" class="recommended-tool">
+            <i data-lucide="eraser"></i>
+            <span>Furniture Removal</span>
+          </a>
+          <a href="/dashboard/new-project?tool=paint_visualizer" class="recommended-tool">
+            <i data-lucide="paintbrush"></i>
+            <span>Paint Visualizer</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
     <!-- AI Credits -->
     <div class="content-card ai-credits-card" style="margin-bottom: 16px;">
       <div class="card-body ai-credits-body">
@@ -203,6 +263,43 @@
       function changeInspiration(type) {
         window.location.href = '/inspiration/' + type;
       }
+
+      (function renderDashboardFavorites() {
+        const card = document.getElementById('dashboard-favorites-card');
+        const list = document.getElementById('dashboard-favorites-list');
+        if (!card || !list) return;
+
+        let favoriteIds = [];
+        try {
+          favoriteIds = JSON.parse(localStorage.getItem('craftycrib.favoriteProjects') || '[]');
+        } catch (error) {
+          favoriteIds = [];
+        }
+
+        const dashboardProjects = Array.from(document.querySelectorAll('.project-item')).map(item => ({
+          id: item.dataset.projectId,
+          title: item.dataset.title || 'Projet',
+          roomType: item.dataset.roomType || 'Projet',
+          imageUrl: item.querySelector('.project-thumb img')?.getAttribute('src') || ''
+        }));
+        const favorites = dashboardProjects.filter(project => favoriteIds.includes(project.id)).slice(0, 3);
+        card.hidden = favorites.length === 0;
+        list.innerHTML = favorites.map(project => {
+          const media = project.imageUrl
+            ? `<img src="${project.imageUrl}" alt="${project.title}">`
+            : '<span class="favorite-placeholder"><i data-lucide="image"></i></span>';
+          return `
+            <a href="/projects/${project.id}" class="dashboard-favorite-item">
+              ${media}
+              <span>
+                <strong>${project.title}</strong>
+                <small>${project.roomType || 'Projet'}</small>
+              </span>
+            </a>
+          `;
+        }).join('');
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      })();
 
       // Carousel lightbox
       const carouselLbImages = [
