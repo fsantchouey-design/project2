@@ -2069,119 +2069,179 @@
 /* ==================== */
 .specialists-section {
   padding: 6rem 0;
-  background: radial-gradient(circle at 10% 10%, rgba(16, 185, 129, 0.08), transparent 55%);
+  background:
+    radial-gradient(circle at 10% 10%, rgba(16, 185, 129, 0.12), transparent 46%),
+    linear-gradient(180deg, transparent, rgba(15, 23, 42, 0.03));
 }
 
 .specialists-container {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  grid-template-columns: minmax(0, 1.15fr) minmax(340px, 0.85fr);
   gap: 2.5rem;
   align-items: center;
 }
 
-.specialists-controls {
-  margin: 1.5rem 0 1rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  max-width: 320px;
-}
-
-.specialists-label {
-  font-size: 0.8125rem;
-  font-weight: 600;
-  color: var(--text-muted);
-}
-
-.specialists-select {
-  width: 100%;
-  padding: 0.75rem 0.875rem;
-  border-radius: 12px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.specialists-options {
+.specialists-pills {
+  margin-top: 2rem;
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.9rem;
+}
+
+.specialist-pill {
+  min-height: 92px;
+  display: flex;
+  align-items: center;
   gap: 0.75rem;
-}
-
-.specialists-option {
-  padding: 0.875rem 1rem;
-  border-radius: 14px;
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  font-weight: 600;
-  text-align: left;
+  padding: 0.7rem;
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.8);
   color: #0f172a;
-  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+  font: inherit;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 12px 26px rgba(15, 23, 42, 0.08);
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease, background 0.22s ease;
 }
 
-.specialists-option:hover {
-  border-color: #10b981;
-  box-shadow: 0 12px 24px rgba(16, 185, 129, 0.12);
+.specialist-pill:hover,
+.specialist-pill.active {
   transform: translateY(-2px);
+  border-color: rgba(16, 185, 129, 0.62);
+  background: rgba(16, 185, 129, 0.1);
+  box-shadow: 0 16px 34px rgba(16, 185, 129, 0.18);
+}
+
+.specialist-pill-image {
+  width: 62px;
+  height: 62px;
+  flex: 0 0 62px;
+  overflow: hidden;
+  border-radius: 50%;
+  border: 2px solid rgba(16, 185, 129, 0.28);
+  background: #0f172a;
+}
+
+.specialist-pill-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.specialist-pill span:last-child {
+  line-height: 1.2;
 }
 
 [data-theme="dark"] .specialists-section {
   background: radial-gradient(circle at 10% 10%, rgba(16, 185, 129, 0.15), transparent 55%);
 }
 
-[data-theme="dark"] .specialists-select,
-[data-theme="dark"] .specialists-option {
-  background: var(--bg-card);
-  border-color: var(--border-color);
+[data-theme="dark"] .specialist-pill,
+[data-theme="dark"] .specialists-detail {
+  background: rgba(15, 23, 42, 0.72);
+  border-color: rgba(148, 163, 184, 0.22);
   color: var(--text-primary);
 }
 
-[data-theme="dark"] .specialists-option:hover {
-  border-color: rgba(16, 185, 129, 0.6);
-  box-shadow: 0 12px 24px rgba(16, 185, 129, 0.2);
+[data-theme="dark"] .specialist-pill:hover,
+[data-theme="dark"] .specialist-pill.active {
+  background: rgba(16, 185, 129, 0.14);
+  border-color: rgba(16, 185, 129, 0.62);
 }
 
-[data-theme="dark"] .specialists-image-overlay {
-  background: rgba(15, 23, 42, 0.75);
-}
-
-.specialists-visual {
-  display: flex;
-  justify-content: center;
-}
-
-.specialists-image-card {
-  position: relative;
-  border-radius: 24px;
+.specialists-detail {
   overflow: hidden;
-  border: 1px solid rgba(148, 163, 184, 0.25);
-  box-shadow: 0 24px 40px rgba(15, 23, 42, 0.15);
+  border: 1px solid rgba(148, 163, 184, 0.26);
+  border-radius: 28px;
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: 0 24px 54px rgba(15, 23, 42, 0.16);
 }
 
-.specialists-image-card img,
-.specialists-image-card video.specialists-video {
+.specialists-detail-media {
+  position: relative;
+  height: 320px;
+  overflow: hidden;
+  background: #0f172a;
+}
+
+.specialists-detail-media img {
   width: 100%;
-  max-width: 460px;
+  height: 100%;
   display: block;
   object-fit: cover;
+  transition: opacity 0.2s ease, transform 0.45s ease;
 }
 
-.specialists-video {
-  height: auto;
-  min-height: 400px;
+.specialists-detail:hover .specialists-detail-media img {
+  transform: scale(1.04);
 }
 
-.specialists-image-overlay {
+.specialists-detail-media span {
   position: absolute;
-  top: 10px;
-  left: 16px;
-  padding: 10px 14px;
-  background: rgba(15, 23, 42, 0.7);
-  color: #ffffff;
-  font-weight: 600;
+  top: 14px;
+  left: 14px;
+  padding: 0.6rem 0.85rem;
   border-radius: 999px;
-  backdrop-filter: blur(6px);
+  background: rgba(15, 23, 42, 0.76);
+  color: #fff;
+  font-size: 0.78rem;
+  font-weight: 800;
+  backdrop-filter: blur(8px);
+}
+
+.specialists-detail-body {
+  padding: 1.4rem;
+}
+
+.specialists-detail-kicker {
+  display: inline-flex;
+  margin-bottom: 0.55rem;
+  color: #10b981;
+  font-size: 0.72rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.specialists-detail-body h3 {
+  margin: 0 0 0.65rem;
+  color: var(--text-primary);
+  font-size: 1.55rem;
+  letter-spacing: 0;
+}
+
+.specialists-detail-body p {
+  margin: 0 0 1.1rem;
+  color: var(--text-secondary);
+  line-height: 1.65;
+}
+
+.specialists-cta {
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 0 1rem;
+  border-radius: 12px;
+  background: #10b981;
+  color: #00140e;
+  font-weight: 900;
+  text-decoration: none;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.specialists-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(16, 185, 129, 0.28);
+}
+
+.specialists-cta i {
+  width: 18px;
+  height: 18px;
 }
 
 @media (max-width: 960px) {
@@ -2189,12 +2249,28 @@
     grid-template-columns: 1fr;
   }
 
-  .specialists-options {
+  .specialists-pills {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .specialists-detail-media {
+    height: 280px;
+  }
+}
+
+@media (max-width: 560px) {
+  .specialists-pills {
     grid-template-columns: 1fr;
   }
 
-  .specialists-visual {
-    justify-content: flex-start;
+  .specialist-pill {
+    min-height: 78px;
+  }
+
+  .specialist-pill-image {
+    width: 54px;
+    height: 54px;
+    flex-basis: 54px;
   }
 }
 
@@ -2993,4 +3069,3 @@
   display: block !important;
   opacity: 1 !important;
 }
-

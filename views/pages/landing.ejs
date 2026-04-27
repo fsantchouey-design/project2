@@ -639,39 +639,145 @@
 <!-- Finds Your Specialists -->
 <section class="specialists-section" id="specialists">
   <div class="container specialists-container">
-    <script>
-      window.SpecialistsConfig = <%- JSON.stringify(specialistsConfig) %>;
-    </script>
+    <%
+      const specialistTrades = [
+        {
+          key: 'fondations',
+          name: 'Fondation',
+          specialty: 'general',
+          service: 'Fondations',
+          image: 'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=520&h=520&q=80',
+          desc: 'Trouvez un expert pour préparer, renforcer ou couler des fondations solides avant vos travaux.'
+        },
+        {
+          key: 'maconnerie',
+          name: 'Maçonnerie',
+          specialty: 'general',
+          service: 'Maçonnerie',
+          image: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&w=520&h=520&q=80',
+          desc: 'Sélectionnez un maçon qualifié pour briques, blocs, murs porteurs, reprises et réparations.'
+        },
+        {
+          key: 'structure',
+          name: 'Structure',
+          specialty: 'general',
+          service: 'Structure',
+          image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=520&h=520&q=80',
+          desc: 'Faites intervenir un spécialiste structure pour sécuriser vos ouvertures, poutres et transformations.'
+        },
+        {
+          key: 'toiture',
+          name: 'Toiture',
+          specialty: 'general',
+          service: 'Toiture',
+          image: 'https://images.unsplash.com/photo-1632759145351-1d592919f522?auto=format&fit=crop&w=520&h=520&q=80',
+          desc: 'Trouvez un couvreur pour inspection, réparation, remplacement ou amélioration de votre toiture.'
+        },
+        {
+          key: 'plomberie',
+          name: 'Plomberie',
+          specialty: 'plumbing',
+          service: 'Plomberie',
+          image: 'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?auto=format&fit=crop&w=520&h=520&q=80',
+          desc: 'Connectez-vous à un plombier pour conduites, robinetterie, sanitaires, chauffe-eau et évacuations.'
+        },
+        {
+          key: 'electricite',
+          name: 'Électricité',
+          specialty: 'electrical',
+          service: 'Électricité',
+          image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=520&h=520&q=80',
+          desc: 'Trouvez un électricien pour tableau, prises, éclairage, câblage, sécurité et mise aux normes.'
+        },
+        {
+          key: 'peinture',
+          name: 'Peinture',
+          specialty: 'painting',
+          service: 'Peinture',
+          image: 'https://images.unsplash.com/photo-1562259949-e8e7689d7828?auto=format&fit=crop&w=520&h=520&q=80',
+          desc: 'Choisissez un peintre pour rafraîchir vos murs, plafonds, boiseries ou finitions décoratives.'
+        },
+        {
+          key: 'menuiserie',
+          name: 'Menuiserie',
+          specialty: 'general',
+          service: 'Menuiserie',
+          image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=520&h=520&q=80',
+          desc: 'Trouvez un menuisier pour rangements, moulures, portes, meubles intégrés et ajustements sur mesure.'
+        },
+        {
+          key: 'isolation',
+          name: 'Isolation',
+          specialty: 'general',
+          service: 'Isolation thermique',
+          image: 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?auto=format&fit=crop&w=520&h=520&q=80',
+          desc: 'Améliorez confort et efficacité énergétique avec un spécialiste de l’isolation thermique ou phonique.'
+        },
+        {
+          key: 'fenetres-portes',
+          name: 'Fenêtres & portes',
+          specialty: 'general',
+          service: 'Installation fenêtres',
+          image: 'https://images.unsplash.com/photo-1600566752355-35792bedcfea?auto=format&fit=crop&w=520&h=520&q=80',
+          desc: 'Trouvez un installateur pour fenêtres, portes, calfeutrage, remplacement et optimisation énergétique.'
+        },
+        {
+          key: 'revetement-sol',
+          name: 'Revêtement de sol',
+          specialty: 'flooring',
+          service: 'Revêtements de sol',
+          image: 'https://images.unsplash.com/photo-1581858726788-75bc0f6a952d?auto=format&fit=crop&w=520&h=520&q=80',
+          desc: 'Confiez votre sol à un pro pour bois, vinyle, céramique, parquet flottant ou finitions haut de gamme.'
+        },
+        {
+          key: 'renovation-interieure',
+          name: 'Rénovation intérieure',
+          specialty: 'general',
+          service: 'Rénovation intérieure',
+          image: 'https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=520&h=520&q=80',
+          desc: 'Trouvez un entrepreneur général pour coordonner vos travaux et transformer votre intérieur.'
+        }
+      ];
+    %>
     <div class="specialists-content">
       <span class="section-badge">
         <i data-lucide="users"></i>
         Spécialistes
       </span>
-      <h2 class="section-title">Finds your<br><span class="gradient-text">specialists</span></h2>
-      <p class="section-subtitle">Choisissez une catégorie et un besoin précis pour recevoir votre devis.</p>
+      <h2 class="section-title">Trouvez vos<br><span class="gradient-text">spécialistes</span></h2>
+      <p class="section-subtitle">Sélectionnez un métier pour découvrir le bon expert et lancer votre recherche d’entrepreneur.</p>
 
-      <div class="specialists-controls">
-        <label for="specialists-select" class="specialists-label">Catégorie</label>
-        <select id="specialists-select" class="specialists-select">
-          <% specialistsConfig.categories.forEach(category => { %>
-            <option value="<%= category.key %>"><%= category.label %></option>
-          <% }) %>
-        </select>
+      <div class="specialists-pills" id="specialists-pills">
+        <% specialistTrades.forEach((trade, index) => { %>
+          <button
+            type="button"
+            class="specialist-pill <%= index === 0 ? 'active' : '' %>"
+            data-name="<%= trade.name %>"
+            data-desc="<%= trade.desc %>"
+            data-image="<%= trade.image %>"
+            data-url="/contractors?specialty=<%= encodeURIComponent(trade.specialty) %>&service=<%= encodeURIComponent(trade.service) %>&q=<%= encodeURIComponent(trade.name) %>">
+            <span class="specialist-pill-image">
+              <img src="<%= trade.image %>" alt="<%= trade.name %>" loading="lazy" onerror="this.src='/assets/afterhouse.jpeg'">
+            </span>
+            <span><%= trade.name %></span>
+          </button>
+        <% }) %>
       </div>
-
-      <div class="specialists-options" id="specialists-options"></div>
     </div>
 
-    <div class="specialists-visual">
-      <div class="specialists-image-card">
-        <% if (specialistsConfig.mediaType === 'video' && specialistsConfig.videoUrl) { %>
-          <video src="<%= specialistsConfig.videoUrl %>" autoplay muted loop playsinline class="specialists-video"></video>
-        <% } else { %>
-          <img src="<%= specialistsConfig.imageUrl %>" alt="<%= specialistsConfig.imageAlt %>">
-        <% } %>
-        <div class="specialists-image-overlay">
-          <span>Réseau d'experts vérifiés</span>
-        </div>
+    <div class="specialists-detail" id="specialists-detail">
+      <div class="specialists-detail-media">
+        <img id="specialists-detail-image" src="<%= specialistTrades[0].image %>" alt="<%= specialistTrades[0].name %>" onerror="this.src='/assets/afterhouse.jpeg'">
+        <span>Réseau d'experts vérifiés</span>
+      </div>
+      <div class="specialists-detail-body">
+        <span class="specialists-detail-kicker">Métier sélectionné</span>
+        <h3 id="specialists-detail-title"><%= specialistTrades[0].name %></h3>
+        <p id="specialists-detail-desc"><%= specialistTrades[0].desc %></p>
+        <a id="specialists-detail-cta" href="/contractors?specialty=<%= specialistTrades[0].specialty %>&service=<%= encodeURIComponent(specialistTrades[0].service) %>&q=<%= encodeURIComponent(specialistTrades[0].name) %>" class="specialists-cta">
+          Trouver votre entrepreneur
+          <i data-lucide="arrow-right"></i>
+        </a>
       </div>
     </div>
   </div>

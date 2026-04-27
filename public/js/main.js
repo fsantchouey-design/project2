@@ -893,49 +893,30 @@ function initRoomsCarousel() {
  * Specialists section dropdown + options
  */
 function initSpecialistsSection() {
-  const select = document.getElementById('specialists-select');
-  const optionsWrap = document.getElementById('specialists-options');
-  if (!select || !optionsWrap) return;
+  const pills = Array.from(document.querySelectorAll('.specialist-pill'));
+  const detailImage = document.getElementById('specialists-detail-image');
+  const detailTitle = document.getElementById('specialists-detail-title');
+  const detailDesc = document.getElementById('specialists-detail-desc');
+  const detailCta = document.getElementById('specialists-detail-cta');
+  if (!pills.length || !detailImage || !detailTitle || !detailDesc || !detailCta) return;
 
-  const config = window.SpecialistsConfig || {};
-  const optionsByCategory = {};
-  const labelByCategory = {};
+  pills.forEach((pill) => {
+    pill.addEventListener('click', () => {
+      pills.forEach((item) => item.classList.remove('active'));
+      pill.classList.add('active');
 
-  if (Array.isArray(config.categories)) {
-    config.categories.forEach((category) => {
-      optionsByCategory[category.key] = category.options || [];
-      labelByCategory[category.key] = category.label || category.key;
+      detailImage.style.opacity = '0';
+      window.setTimeout(() => {
+        detailImage.src = pill.dataset.image;
+        detailImage.alt = pill.dataset.name;
+        detailImage.style.opacity = '1';
+      }, 140);
+
+      detailTitle.textContent = pill.dataset.name;
+      detailDesc.textContent = pill.dataset.desc;
+      detailCta.href = pill.dataset.url;
     });
-  }
-
-  const renderOptions = () => {
-    const category = select.value;
-    const options = optionsByCategory[category] || [];
-
-    optionsWrap.innerHTML = options
-      .map((option) => `
-        <button type="button" class="specialists-option" data-category="${category}" data-option="${option}">
-          ${option}
-        </button>
-      `)
-      .join('');
-  };
-
-  optionsWrap.addEventListener('click', (event) => {
-    const button = event.target.closest('.specialists-option');
-    if (!button) return;
-    const category = button.getAttribute('data-category');
-    const option = button.getAttribute('data-option');
-    const categoryLabel = labelByCategory[category] || category;
-    const params = new URLSearchParams({
-      service: option,
-      category: categoryLabel
-    });
-    window.location.href = `/contact?${params.toString()}`;
   });
-
-  select.addEventListener('change', renderOptions);
-  renderOptions();
 }
 
 /**
