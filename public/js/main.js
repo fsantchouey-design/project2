@@ -898,24 +898,78 @@ function initSpecialistsSection() {
   const detailTitle = document.getElementById('specialists-detail-title');
   const detailDesc = document.getElementById('specialists-detail-desc');
   const detailCta = document.getElementById('specialists-detail-cta');
+  const modal = document.getElementById('specialists-modal');
+  const modalImage = document.getElementById('specialists-modal-image');
+  const modalTitle = document.getElementById('specialists-modal-title');
+  const modalDesc = document.getElementById('specialists-modal-desc');
   if (!pills.length || !detailImage || !detailTitle || !detailDesc || !detailCta) return;
+
+  let selectedTrade = {
+    name: pills[0].dataset.name || detailTitle.textContent,
+    desc: pills[0].dataset.desc || detailDesc.textContent,
+    details: pills[0].dataset.details || detailDesc.textContent,
+    image: pills[0].dataset.image || detailImage.src
+  };
+
+  const openTradeModal = () => {
+    if (!modal || !modalImage || !modalTitle || !modalDesc) return;
+
+    modalImage.src = selectedTrade.image;
+    modalImage.alt = selectedTrade.name;
+    modalTitle.textContent = selectedTrade.name;
+    modalDesc.textContent = selectedTrade.details || selectedTrade.desc;
+    modal.hidden = false;
+    document.body.style.overflow = 'hidden';
+
+    window.requestAnimationFrame(() => {
+      modal.classList.add('open');
+    });
+  };
+
+  const closeTradeModal = () => {
+    if (!modal) return;
+
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+    window.setTimeout(() => {
+      modal.hidden = true;
+    }, 200);
+  };
 
   pills.forEach((pill) => {
     pill.addEventListener('click', () => {
       pills.forEach((item) => item.classList.remove('active'));
       pill.classList.add('active');
 
+      selectedTrade = {
+        name: pill.dataset.name || '',
+        desc: pill.dataset.desc || '',
+        details: pill.dataset.details || pill.dataset.desc || '',
+        image: pill.dataset.image || ''
+      };
+
       detailImage.style.opacity = '0';
       window.setTimeout(() => {
-        detailImage.src = pill.dataset.image;
-        detailImage.alt = pill.dataset.name;
+        detailImage.src = selectedTrade.image;
+        detailImage.alt = selectedTrade.name;
         detailImage.style.opacity = '1';
       }, 140);
 
-      detailTitle.textContent = pill.dataset.name;
-      detailDesc.textContent = pill.dataset.desc;
-      detailCta.href = pill.dataset.url;
+      detailTitle.textContent = selectedTrade.name;
+      detailDesc.textContent = selectedTrade.desc;
     });
+  });
+
+  detailCta.addEventListener('click', openTradeModal);
+
+  document.querySelectorAll('[data-close-specialists-modal]').forEach((closeButton) => {
+    closeButton.addEventListener('click', closeTradeModal);
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && modal && !modal.hidden) {
+      closeTradeModal();
+    }
   });
 }
 
