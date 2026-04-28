@@ -321,11 +321,13 @@ const buildGenerateDesignResponse = (result, toolName, endpoint) => {
 
 router.post('/generate-design', ensureAuthenticated, uploadProjectImages.fields([
   { name: 'image', maxCount: 1 },
-  { name: 'textureImage', maxCount: 1 }
+  { name: 'textureImage', maxCount: 1 },
+  { name: 'styleImage', maxCount: 1 }
 ]), async (req, res) => {
   try {
     const uploadedImage = req.file || (req.files?.image && req.files.image[0]);
     const textureImage = req.files?.textureImage && req.files.textureImage[0];
+    const styleImage = req.files?.styleImage && req.files.styleImage[0];
     const endpoint = req.body.selectedToolEndpoint || req.body.endpoint;
     const toolKey = normalizeToolEndpoint(endpoint);
     const tool = aiToolHandlers[toolKey];
@@ -378,6 +380,7 @@ router.post('/generate-design', ensureAuthenticated, uploadProjectImages.fields(
       materialsType: req.body.materialsType || undefined,
       materialInstruction: req.body.materialInstruction || undefined,
       textureImageUrl: textureImage ? toAbsoluteImageUrl(getImageUrl(textureImage)) : undefined,
+      styleImageUrl: styleImage ? toAbsoluteImageUrl(getImageUrl(styleImage)) : undefined,
       noOfTexture: req.body.noOfTexture || '3 X 3',
       object: req.body.object || undefined,
       upstreamEndpoint

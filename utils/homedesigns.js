@@ -1258,23 +1258,21 @@ const designAdvisor = async (options) => {
  */
 const designTransfer = async (options) => {
   const {
-    imageUrl, roomType, style, prompt, designType = 'Interior',
-    houseAngle, gardenType, noDesign = 1
+    imageUrl, styleImageUrl, aiIntervention = 'Mid'
   } = options;
 
   try {
     if (!API_TOKEN) throw new Error('HomeDesigns API token is not configured.');
-    console.log('[DesignTransfer] Starting:', { roomType, style });
+    if (!styleImageUrl) throw new Error('Design Transfer requires a reference style image.');
+    console.log('[DesignTransfer] Starting');
 
     const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
-    const { apiStyle, apiRoomType } = getApiParams(style, roomType, designType);
+    const styleImageBuffer = await downloadImage(resolveImageUrl(styleImageUrl));
 
     const formData = new FormData();
     formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
-    formData.append('no_design', String(noDesign));
-    formData.append('design_style', apiStyle);
-    addDesignTypeFields(formData, designType, apiRoomType, houseAngle, gardenType);
-    if (prompt) formData.append('prompt', prompt.trim());
+    formData.append('style_image', styleImageBuffer, { filename: 'style.jpg', contentType: 'image/jpeg' });
+    formData.append('ai_intervention', aiIntervention);
 
     const result = await submitToApi(`${API_URL}/design_transfer`, formData);
     return await parseApiResponse(result, 'design_transfer', '[DesignTransfer]');

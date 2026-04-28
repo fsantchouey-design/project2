@@ -134,6 +134,7 @@
     <main class="preview-stage">
       <input type="file" id="design-image" accept="image/*" hidden>
       <input type="file" id="material-texture-image" accept="image/*" hidden>
+      <input type="file" id="style-reference-image" accept="image/*" hidden>
 
       <label for="design-image" class="upload-canvas" id="upload-canvas">
         <img id="source-preview" class="source-preview" alt="Uploaded room preview" hidden>
@@ -171,7 +172,7 @@
         <small id="config-endpoint">/api/v2/perfect_redesign</small>
       </div>
 
-      <div class="config-group">
+      <div class="config-group" id="space-type-group">
         <label>Select what kind of space you are generating</label>
         <div class="segmented-control" data-input="designType">
           <button type="button" class="segment active" data-value="Interior">
@@ -189,7 +190,7 @@
         </div>
       </div>
 
-      <div class="config-grid">
+      <div class="config-grid" id="design-context-grid">
         <div class="config-group">
           <label for="room-type">Room Type</label>
           <select id="room-type" class="studio-select">
@@ -213,7 +214,7 @@
         </div>
       </div>
 
-      <div class="config-group">
+      <div class="config-group" id="instructions-group">
         <label for="additional-instructions">Additional Instructions</label>
         <textarea id="additional-instructions" class="studio-textarea" rows="5" placeholder="Describe colors, mood, materials, furniture, or anything the AI should respect."></textarea>
       </div>
@@ -271,8 +272,9 @@
           </div>
 
           <div class="tool-option-row" id="option-country" hidden>
-            <label for="option-country-select">Shopping Country</label>
+            <label for="option-country-select">Select Country</label>
             <select id="option-country-select" class="studio-select">
+              <option value="" selected>Worldwide</option>
               <option value="US">United States</option>
               <option value="CA">Canada</option>
               <option value="FR">France</option>
@@ -353,6 +355,15 @@
               <span id="texture-upload-label">Choose texture image</span>
             </button>
             <img id="texture-preview" class="texture-preview" alt="Selected material texture preview" hidden>
+          </div>
+
+          <div class="tool-option-row" id="option-style-reference" hidden>
+            <label>Reference Style Image</label>
+            <button type="button" class="texture-upload-btn" id="style-reference-upload-btn">
+              <i data-lucide="copy-plus"></i>
+              <span id="style-reference-upload-label">Choose reference image</span>
+            </button>
+            <img id="style-reference-preview" class="texture-preview" alt="Selected reference style preview" hidden>
           </div>
 
           <div class="tool-option-row" id="option-video-motion" hidden>
@@ -870,6 +881,53 @@
     color: var(--text-primary);
     line-height: 1.6;
     white-space: pre-wrap;
+  }
+
+  .product-results {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 16px;
+  }
+
+  .product-category h4 {
+    margin: 0 0 10px;
+    color: var(--text-primary);
+    text-transform: capitalize;
+  }
+
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .product-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    border: 1px solid rgba(16, 185, 129, 0.18);
+    border-radius: 8px;
+    background: rgba(16, 185, 129, 0.07);
+    color: var(--text-primary);
+    text-decoration: none;
+  }
+
+  .product-card img {
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: 6px;
+  }
+
+  .product-card strong {
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  .product-card span {
+    color: var(--text-muted);
+    font-size: 12px;
   }
 
   .config-panel {
@@ -1494,6 +1552,7 @@
   (() => {
     const imageInput = document.getElementById('design-image');
     const materialTextureImage = document.getElementById('material-texture-image');
+    const styleReferenceImage = document.getElementById('style-reference-image');
     const replaceImageBtn = document.getElementById('replace-image-btn');
     const uploadCanvas = document.getElementById('upload-canvas');
     const uploadPlaceholder = document.getElementById('upload-placeholder');
@@ -1521,6 +1580,11 @@
     const advancedOptions = document.getElementById('advanced-options');
     const advancedToggle = document.getElementById('advanced-toggle');
     const toolOptionsPanel = document.getElementById('tool-options-panel');
+    const spaceTypeGroup = document.getElementById('space-type-group');
+    const designContextGrid = document.getElementById('design-context-grid');
+    const instructionsGroup = document.getElementById('instructions-group');
+    const instructionsLabel = instructionsGroup.querySelector('label');
+    const instructionsInput = document.getElementById('additional-instructions');
     const maskToolsPanel = document.getElementById('mask-tools-panel');
     const maskToolTitle = document.getElementById('mask-tool-title');
     const maskToolHelp = document.getElementById('mask-tool-help');
@@ -1564,6 +1628,10 @@
     const textureUploadBtn = document.getElementById('texture-upload-btn');
     const textureUploadLabel = document.getElementById('texture-upload-label');
     const texturePreview = document.getElementById('texture-preview');
+    const styleReferenceRow = document.getElementById('option-style-reference');
+    const styleReferenceUploadBtn = document.getElementById('style-reference-upload-btn');
+    const styleReferenceUploadLabel = document.getElementById('style-reference-upload-label');
+    const styleReferencePreview = document.getElementById('style-reference-preview');
     const materialSwapTabs = document.getElementById('material-swap-tabs');
     const materialAutoTab = document.getElementById('material-auto-tab');
     const materialManualTab = document.getElementById('material-manual-tab');
@@ -1573,6 +1641,7 @@
 
     let selectedFile = null;
     let selectedTextureFile = null;
+    let selectedStyleReferenceFile = null;
     let selectedEndpoint = '/api/v2/perfect_redesign';
     let selectedToolName = 'Perfect Redesign';
     let selectedRequiresMask = false;
@@ -1600,7 +1669,12 @@
     const TOOL_CONFIG = {
       perfect_redesign: { noDesignMax: 2, aiIntervention: true },
       beautiful_redesign: { noDesignMax: 4, aiIntervention: true },
-      magic_redesign: { noDesignMax: 4, aiIntervention: true },
+      magic_redesign: {
+        noDesignMax: 4,
+        promptOnly: true,
+        promptLabel: 'Magic Prompt',
+        promptPlaceholder: 'Tell the AI exactly what to change: layout, furniture, colors, materials, mood, or specific objects.'
+      },
       video_generation: { videoMotion: true },
       creative_redesign: { noDesignMax: 4, aiIntervention: true },
       sketch_to_render: { noDesignMax: 4, aiIntervention: true },
@@ -1615,6 +1689,8 @@
         noDesignMax: 4,
         mask: true,
         strength: true,
+        promptLabel: 'What should be added?',
+        promptPlaceholder: 'Describe what the AI should add inside the selected empty area.',
         maskHelp: 'Brush over empty areas where furniture or decor should be added.'
       },
       decor_staging: { noDesignMax: 4 },
@@ -1625,18 +1701,34 @@
       change_color_textures: {
         noDesignMax: 4,
         mask: true,
+        colorTexture: true,
         material: true,
         surfaceColor: true,
         object: true,
+        promptLabel: 'Custom color or texture instruction',
+        promptPlaceholder: 'Optional: describe a custom color, material, or finish if it is not available below.',
         maskHelp: 'Brush over the surface whose color or texture should change.'
       },
-      furniture_finder: { country: true },
+      furniture_finder: {
+        country: true,
+        countryOnly: true,
+        submitLabel: 'Get Products'
+      },
       full_hd: {},
       text_to_design: { noDesignMax: 4, aiIntervention: true },
       furniture_creator: { noDesignMax: 4 },
       design_advisor: {},
-      sky_colors: { noDesignMax: 4, weather: true },
-      design_transfer: { noDesignMax: 4, aiIntervention: true },
+      sky_colors: {
+        noDesignMax: 4,
+        weather: true,
+        weatherOnly: true
+      },
+      design_transfer: {
+        aiIntervention: true,
+        styleReference: true,
+        transferOnly: true,
+        submitLabel: 'Transfer Design'
+      },
       floor_editor: {
         noDesignMax: 4,
         mask: true,
@@ -1749,6 +1841,14 @@
       const config = getCurrentToolConfig();
       const isMaterialSwap = !!config.materialSwap;
       const showMaterialStepOptions = !isMaterialSwap || materialSwapReady;
+      const hideDesignContext = !!(config.countryOnly || config.weatherOnly || config.transferOnly || config.promptOnly || config.videoMotion);
+      const hideInstructions = !!(config.countryOnly || config.weatherOnly || config.videoMotion || config.transferOnly);
+
+      spaceTypeGroup.hidden = hideDesignContext;
+      designContextGrid.hidden = hideDesignContext;
+      instructionsGroup.hidden = hideInstructions;
+      instructionsLabel.textContent = config.promptLabel || 'Additional Instructions';
+      instructionsInput.placeholder = config.promptPlaceholder || 'Describe colors, mood, materials, furniture, or anything the AI should respect.';
 
       noDesignRow.hidden = !config.noDesignMax || (isMaterialSwap && !showMaterialStepOptions);
       interventionRow.hidden = !config.aiIntervention;
@@ -1764,6 +1864,7 @@
       materialInstructionRow.hidden = !(config.materialInstruction && showMaterialStepOptions);
       textureGridRow.hidden = !(config.textureGrid && showMaterialStepOptions);
       textureUploadRow.hidden = !(config.textureUpload && showMaterialStepOptions);
+      styleReferenceRow.hidden = !config.styleReference;
       updateMaterialTypeOptions();
 
       const maxDesign = config.noDesignMax || 1;
@@ -1778,7 +1879,7 @@
       const optionRows = [
         noDesignRow, interventionRow, strengthRow, weatherRow, countryRow,
         paintColorRow, materialRow, materialTypeRow, surfaceColorRow, objectRow, videoMotionRow,
-        materialPresetRow, materialInstructionRow, textureGridRow, textureUploadRow
+        materialPresetRow, materialInstructionRow, textureGridRow, textureUploadRow, styleReferenceRow
       ];
       const hasVisibleOptions = optionRows.some((row) => !row.hidden);
       advancedOptions.hidden = !hasVisibleOptions;
@@ -1789,6 +1890,7 @@
         advancedToggle.setAttribute('aria-expanded', 'true');
         toolOptionsPanel.classList.remove('collapsed');
       }
+      generateBtn.querySelector('span').textContent = config.submitLabel || (config.videoMotion ? 'Generate Video' : 'Generate Design');
     }
 
     function setStatus(message, type) {
@@ -2182,8 +2284,21 @@
       reader.readAsDataURL(selectedTextureFile);
     });
 
+    styleReferenceImage.addEventListener('change', () => {
+      selectedStyleReferenceFile = styleReferenceImage.files && styleReferenceImage.files[0];
+      if (!selectedStyleReferenceFile) return;
+      styleReferenceUploadLabel.textContent = selectedStyleReferenceFile.name;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        styleReferencePreview.src = event.target.result;
+        styleReferencePreview.hidden = false;
+      };
+      reader.readAsDataURL(selectedStyleReferenceFile);
+    });
+
     replaceImageBtn.addEventListener('click', () => imageInput.click());
     textureUploadBtn.addEventListener('click', () => materialTextureImage.click());
+    styleReferenceUploadBtn.addEventListener('click', () => styleReferenceImage.click());
     sourcePreview.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
@@ -2417,8 +2532,6 @@
       configToolName.textContent = selectedToolName;
       configEndpoint.textContent = selectedEndpoint;
       resultToolName.textContent = selectedToolName;
-      const isVideoTool = currentToolKey() === 'video_generation';
-      generateBtn.querySelector('span').textContent = isVideoTool ? 'Generate Video' : 'Generate Design';
       materialSwapReady = false;
       resetMaskCanvas();
       resetPreviewTransform();
@@ -2464,6 +2577,27 @@
 
       if (data.videoUrl) {
         resultMedia.innerHTML = `<video src="${data.videoUrl}" controls playsinline></video>`;
+      } else if (data.resultArray) {
+        const products = document.createElement('div');
+        products.className = 'product-results';
+        products.innerHTML = Object.entries(data.resultArray).map(([category, items]) => {
+          const safeItems = Array.isArray(items) ? items.slice(0, 4) : [];
+          return `
+            <section class="product-category">
+              <h4>${category}</h4>
+              <div class="product-grid">
+                ${safeItems.map((item) => `
+                  <a class="product-card" href="${item.link || '#'}" target="_blank" rel="noopener">
+                    ${item.thumbnail ? `<img src="${item.thumbnail}" alt="${item.title || category}">` : ''}
+                    <strong>${item.title || 'Product match'}</strong>
+                    <span>${item.source || ''}${item.price?.value ? ` · ${item.price.value}` : ''}</span>
+                  </a>
+                `).join('')}
+              </div>
+            </section>
+          `;
+        }).join('');
+        resultMedia.appendChild(products);
       } else if (imageUrl) {
         if (isMaterialSwapTool() && sourcePreview.src) {
           const compare = document.createElement('div');
@@ -2493,11 +2627,6 @@
         text.className = 'result-text';
         text.textContent = data.textResult;
         resultMedia.appendChild(text);
-      } else if (data.resultArray) {
-        const text = document.createElement('div');
-        text.className = 'result-text';
-        text.textContent = JSON.stringify(data.resultArray, null, 2);
-        resultMedia.appendChild(text);
       } else {
         const text = document.createElement('div');
         text.className = 'result-text';
@@ -2523,12 +2652,17 @@
         return;
       }
       const isMaterialSwap = isMaterialSwapTool();
+      const isDesignTransfer = currentToolKey() === 'design_transfer';
       if (isMaterialSwap && !hasMaskPaint) {
         setStatus('Select an object or draw a mask before generating.', 'error');
         return;
       }
       if (isMaterialSwap && !materialSwapReady) {
         setStatus('Click Continue after selecting the object, then choose the material.', 'error');
+        return;
+      }
+      if (isDesignTransfer && !selectedStyleReferenceFile) {
+        setStatus('Upload a reference style image before transferring a design.', 'error');
         return;
       }
 
@@ -2552,6 +2686,7 @@
       if (!surfaceColorRow.hidden) formData.append('color', surfaceColorInput.value);
       if (!objectRow.hidden && objectInput.value.trim()) formData.append('object', objectInput.value.trim());
       if (isVideoTool) formData.append('tool_name', videoMotionSelect.value);
+      if (isDesignTransfer && selectedStyleReferenceFile) formData.append('styleImage', selectedStyleReferenceFile);
       if (isMaterialSwap) {
         formData.append('materials', materialPresetSelect.value);
         formData.append('materialInstruction', materialInstructionInput.value.trim() || materialPresetSelect.value);
@@ -2565,8 +2700,8 @@
       }
 
       generateBtn.disabled = true;
-      generateBtn.querySelector('span').textContent = isVideoTool ? 'Generating video...' : 'Generating...';
-      setStatus(isVideoTool ? 'Processing video...' : `Generating with ${selectedToolName}...`);
+      generateBtn.querySelector('span').textContent = isVideoTool ? 'Generating video...' : currentToolKey() === 'furniture_finder' ? 'Finding products...' : 'Generating...';
+      setStatus(isVideoTool ? 'Processing video...' : currentToolKey() === 'furniture_finder' ? 'Finding matching products...' : `Generating with ${selectedToolName}...`);
 
       try {
         const response = await fetch('/api/generate-design', {
@@ -2585,7 +2720,7 @@
         setStatus(error.message, 'error');
       } finally {
         generateBtn.disabled = false;
-        generateBtn.querySelector('span').textContent = isVideoTool ? 'Generate Video' : 'Generate Design';
+        generateBtn.querySelector('span').textContent = getCurrentToolConfig().submitLabel || (isVideoTool ? 'Generate Video' : 'Generate Design');
       }
     }
 
