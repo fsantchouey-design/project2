@@ -104,6 +104,19 @@ const GARDEN_TYPES = ['Backyard', 'Front Yard', 'Courtyard', 'Patio', 'Terrace']
 
 // Weather options for Sky Colors
 const WEATHER_OPTIONS = ['Sunshine', 'Clear Sky', 'Rainy', 'Cloudy', 'Windy', 'Dawn', 'Dusk', 'Twilight', 'Sunny', 'Night'];
+const VIDEO_GENERATION_MOTIONS = [
+  'pan_up',
+  'pan_down',
+  'pan_left_right',
+  'zoom_in',
+  'zoom_out',
+  'camera_pullback',
+  'rotate_cw',
+  'rotate_ccw',
+  'combining_motions',
+  'look_up',
+  'look_down'
+];
 
 const DESIGN_STYLES = [
   { id: 'modern', name: 'Modern', description: 'Clean lines, neutral colors, minimal ornamentation' },
@@ -181,15 +194,15 @@ const apiGet = (endpoint) => {
  * Submit form data to the HomeDesigns API
  * Automatically injects tool_name (required by the API) from the endpoint path
  */
-const submitToApi = (endpoint, formData) => {
+const submitToApi = (endpoint, formData, submitOptions = {}) => {
   return new Promise((resolve, reject) => {
     // The HomeDesigns API requires tool_name in every request
     // Extract it from the last path segment of the endpoint URL
     const toolName = endpoint.split('/').pop();
-    if (toolName) formData.append('tool_name', toolName);
+    if (toolName && !submitOptions.skipToolName) formData.append('tool_name', toolName);
 
     const url = new URL(endpoint);
-    const options = {
+    const requestOptions = {
       hostname: url.hostname,
       port: url.port || undefined,
       path: url.pathname,
@@ -201,7 +214,7 @@ const submitToApi = (endpoint, formData) => {
     };
 
     const client = url.protocol === 'https:' ? https : http;
-    const req = client.request(options, (res) => {
+    const req = client.request(requestOptions, (res) => {
       let body = '';
       res.on('data', (chunk) => body += chunk);
       res.on('end', () => resolve({ statusCode: res.statusCode, body }));
@@ -278,6 +291,65 @@ const pollForResult = async (apiEndpoint, queueId, maxAttempts = 60) => {
       console.error('[HomeDesigns] Poll error:', pollErr.message);
     }
   }
+  return null;
+};
+
+const pollForVideoResult = async (queueId, maxAttempts = 80) => {
+  for (let i = 0; i < maxAttempts; i++) {
+    await new Promise(resolve => setTimeout(resolve, 3000));
+
+    try {
+      const statusResult = await apiGet(`${API_URL}/video_generation/status_check/${queueId}`);
+
+      if (statusResult.statusCode !== 200) {
+        console.error('[VideoGeneration] Status check failed:', statusResult.statusCode, statusResult.body.substring(0, 240));
+        continue;
+      }
+
+      const statusData = JSON.parse(statusResult.body);
+      const status = String(statusData.status || statusData.data?.status || '').toLowerCase();
+      console.log(`[VideoGeneration] Poll [${i + 1}/${maxAttempts}] status: ${status || 'unknown'}`);
+
+      if (['in_queue', 'starting', 'processing', 'in_progress', 'pending'].includes(status)) {
+        continue;
+      }
+
+      if (['failed', 'error'].includes(status)) {
+        return { success: false, error: statusData.message || statusData.error || 'Video generation failed on server.' };
+      }
+
+      const outputVideo = statusData.output_video || statusData.outputVideo || statusData.video_url ||
+        statusData.videoUrl || statusData.data?.output_video || statusData.data?.video_url;
+
+      if (status === 'success' && outputVideo) {
+        return {
+          success: true,
+          videoUrl: outputVideo,
+          originalImageUrl: statusData.input_image || statusData.data?.input_image,
+          queueId,
+          creditsUsed: 1
+        };
+      }
+
+      if (status === 'success') {
+        const bodyStr = JSON.stringify(statusData);
+        const videoMatch = bodyStr.match(/https:\/\/[^"]+\.(?:mp4|mov|webm)(?:\?[^"]*)?/i);
+        if (videoMatch) {
+          return {
+            success: true,
+            videoUrl: videoMatch[0],
+            originalImageUrl: statusData.input_image || statusData.data?.input_image,
+            queueId,
+            creditsUsed: 1
+          };
+        }
+        return { success: false, error: 'Video generation completed but no video URL was returned.' };
+      }
+    } catch (pollErr) {
+      console.error('[VideoGeneration] Poll error:', pollErr.message);
+    }
+  }
+
   return null;
 };
 
@@ -893,24 +965,22 @@ const magicRedesign = async (options) => {
  */
 const videoGeneration = async (options) => {
   const {
-    imageUrl, roomType, style, prompt, designType = 'Interior',
-    houseAngle, gardenType
+    imageUrl, videoMotion = 'zoom_in'
   } = options;
 
   try {
     if (!API_TOKEN) throw new Error('HomeDesigns API token is not configured.');
-    console.log('[VideoGeneration] Starting:', { roomType, style });
+    if (!VIDEO_GENERATION_MOTIONS.includes(videoMotion)) {
+      throw new Error('Invalid camera motion for Video Generation.');
+    }
+    console.log('[VideoGeneration] Starting:', { videoMotion });
 
     const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
-    const { apiStyle, apiRoomType } = getApiParams(style, roomType, designType);
-
     const formData = new FormData();
     formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
-    formData.append('design_style', apiStyle);
-    addDesignTypeFields(formData, designType, apiRoomType, houseAngle, gardenType);
-    if (prompt) formData.append('prompt', prompt.trim());
+    formData.append('tool_name', videoMotion);
 
-    const result = await submitToApi(`${API_URL}/video_generation`, formData);
+    const result = await submitToApi(`${API_URL}/video_generation`, formData, { skipToolName: true });
 
     if (result.statusCode !== 200) {
       return await parseApiResponse(result, 'video_generation', '[VideoGeneration]');
@@ -919,20 +989,18 @@ const videoGeneration = async (options) => {
     const data = JSON.parse(result.body);
     console.log('[VideoGeneration] Response keys:', Object.keys(data).join(', '));
 
-    // Check for video URL in response
     const videoUrl = data.video_url || data.videoUrl || data.output_video ||
       (data.result && data.result.video_url) || (data.success && data.success.video_url);
     if (videoUrl) {
       console.log('[VideoGeneration] Got video URL');
-      return { success: true, videoUrl, imageUrl: videoUrl, allImages: [videoUrl], creditsUsed: 1 };
+      return { success: true, videoUrl, queueId: data.id || data.queue_id, creditsUsed: 1 };
     }
 
-    // Handle async queue
     const queueId = data.queue_id || data.queueId ||
-      (data.id && (!data.status || ['IN_QUEUE', 'PROCESSING', 'PENDING'].includes(data.status)) ? data.id : null);
+      (data.id && (!data.status || ['IN_QUEUE', 'starting', 'processing', 'PROCESSING', 'PENDING'].includes(data.status)) ? data.id : null);
     if (queueId) {
-      const pollResult = await pollForResult('video_generation', queueId);
-      if (pollResult) return { ...pollResult, videoUrl: pollResult.imageUrl };
+      const pollResult = await pollForVideoResult(queueId);
+      if (pollResult) return pollResult;
       throw new Error('Video generation timed out. Please try again.');
     }
 

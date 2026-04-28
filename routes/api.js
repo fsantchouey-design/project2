@@ -18,6 +18,20 @@ const {
 } = require('../utils/homedesigns');
 const { uploadProjectImages, getImageUrl } = require('../config/cloudinary');
 
+const VIDEO_GENERATION_MOTIONS = [
+  'pan_up',
+  'pan_down',
+  'pan_left_right',
+  'zoom_in',
+  'zoom_out',
+  'camera_pullback',
+  'rotate_cw',
+  'rotate_ccw',
+  'combining_motions',
+  'look_up',
+  'look_down'
+];
+
 // API Health Check
 router.get('/health', (req, res) => {
   res.json({
@@ -328,10 +342,19 @@ router.post('/generate-design', ensureAuthenticated, uploadProjectImages.single(
 
     const upstreamEndpoint = `${getHomeDesignsBaseUrl()}${endpoint}`;
     const imageUrl = toAbsoluteImageUrl(getImageUrl(req.file));
+    const videoMotion = req.body.tool_name || req.body.videoMotion || 'zoom_in';
+    if (toolKey === 'video_generation' && !VIDEO_GENERATION_MOTIONS.includes(videoMotion)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Veuillez choisir un mouvement caméra.'
+      });
+    }
+
     const maskBase64 = req.body.maskBase64 || (tool.requiresMask ? await createDefaultMaskBase64(req.file) : undefined);
     const maxDesigns = toolKey === 'perfect_redesign' ? 2 : toolKey === 'video_generation' ? 1 : 4;
     const options = {
       imageUrl,
+      videoMotion,
       maskBase64,
       roomType: req.body.roomType || 'living-room',
       style: req.body.designStyle || req.body.style || 'modern',

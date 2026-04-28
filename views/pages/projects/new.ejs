@@ -306,6 +306,23 @@
             <label for="option-object-input">Object / Surface</label>
             <input type="text" id="option-object-input" class="studio-input" placeholder="wall, sofa, cabinet, countertop">
           </div>
+
+          <div class="tool-option-row" id="option-video-motion" hidden>
+            <label for="option-video-motion-select">Camera Motion</label>
+            <select id="option-video-motion-select" class="studio-select" required>
+              <option value="pan_up">Pan Up</option>
+              <option value="pan_down">Pan Down</option>
+              <option value="pan_left_right">Pan Left / Right</option>
+              <option value="zoom_in" selected>Zoom In</option>
+              <option value="zoom_out">Zoom Out</option>
+              <option value="camera_pullback">Camera Pullback</option>
+              <option value="rotate_cw">Rotate Clockwise</option>
+              <option value="rotate_ccw">Rotate Counterclockwise</option>
+              <option value="combining_motions">Combining Motions</option>
+              <option value="look_up">Look Up</option>
+              <option value="look_down">Look Down</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -1289,6 +1306,8 @@
     const surfaceColorInput = document.getElementById('option-surface-color-input');
     const objectRow = document.getElementById('option-object');
     const objectInput = document.getElementById('option-object-input');
+    const videoMotionRow = document.getElementById('option-video-motion');
+    const videoMotionSelect = document.getElementById('option-video-motion-select');
 
     let selectedFile = null;
     let selectedEndpoint = '/api/v2/perfect_redesign';
@@ -1313,7 +1332,7 @@
       perfect_redesign: { noDesignMax: 2, aiIntervention: true },
       beautiful_redesign: { noDesignMax: 4, aiIntervention: true },
       magic_redesign: { noDesignMax: 4, aiIntervention: true },
-      video_generation: { noDesignMax: 1, aiIntervention: true },
+      video_generation: { videoMotion: true },
       creative_redesign: { noDesignMax: 4, aiIntervention: true },
       sketch_to_render: { noDesignMax: 4, aiIntervention: true },
       virtual_staging: { noDesignMax: 4, aiIntervention: true },
@@ -1421,6 +1440,7 @@
       materialRow.hidden = !config.material;
       surfaceColorRow.hidden = !config.surfaceColor;
       objectRow.hidden = !config.object;
+      videoMotionRow.hidden = !config.videoMotion;
       updateMaterialTypeOptions();
 
       const maxDesign = config.noDesignMax || 1;
@@ -1431,13 +1451,16 @@
 
       const optionRows = [
         noDesignRow, interventionRow, strengthRow, weatherRow, countryRow,
-        paintColorRow, materialRow, materialTypeRow, surfaceColorRow, objectRow
+        paintColorRow, materialRow, materialTypeRow, surfaceColorRow, objectRow, videoMotionRow
       ];
       const hasVisibleOptions = optionRows.some((row) => !row.hidden);
       advancedOptions.hidden = !hasVisibleOptions;
       if (!hasVisibleOptions) {
         advancedToggle.setAttribute('aria-expanded', 'false');
         toolOptionsPanel.classList.add('collapsed');
+      } else if (config.videoMotion) {
+        advancedToggle.setAttribute('aria-expanded', 'true');
+        toolOptionsPanel.classList.remove('collapsed');
       }
     }
 
@@ -1998,6 +2021,8 @@
       configToolName.textContent = selectedToolName;
       configEndpoint.textContent = selectedEndpoint;
       resultToolName.textContent = selectedToolName;
+      const isVideoTool = currentToolKey() === 'video_generation';
+      generateBtn.querySelector('span').textContent = isVideoTool ? 'Generate Video' : 'Generate Design';
       resetMaskCanvas();
       setSelectionMode('click');
       updateMaskControls();
@@ -2076,6 +2101,11 @@
         setStatus('Select an AI tool before generating a design.', 'error');
         return;
       }
+      const isVideoTool = currentToolKey() === 'video_generation';
+      if (isVideoTool && !videoMotionSelect.value) {
+        setStatus('Veuillez choisir un mouvement caméra.', 'error');
+        return;
+      }
 
       const formData = new FormData();
       formData.append('image', selectedFile);
@@ -2096,6 +2126,7 @@
       if (!materialTypeRow.hidden && materialTypeSelect.value) formData.append('materialsType', materialTypeSelect.value);
       if (!surfaceColorRow.hidden) formData.append('color', surfaceColorInput.value);
       if (!objectRow.hidden && objectInput.value.trim()) formData.append('object', objectInput.value.trim());
+      if (isVideoTool) formData.append('tool_name', videoMotionSelect.value);
 
       if (selectedRequiresMask) {
         const maskBase64 = getMaskBase64();
@@ -2103,8 +2134,8 @@
       }
 
       generateBtn.disabled = true;
-      generateBtn.querySelector('span').textContent = 'Generating...';
-      setStatus(`Generating with ${selectedToolName}...`);
+      generateBtn.querySelector('span').textContent = isVideoTool ? 'Generating video...' : 'Generating...';
+      setStatus(isVideoTool ? 'Processing video...' : `Generating with ${selectedToolName}...`);
 
       try {
         const response = await fetch('/api/generate-design', {
@@ -2118,12 +2149,12 @@
         }
 
         renderResult(data);
-        setStatus('Design generated successfully.', 'success');
+        setStatus(isVideoTool ? 'Video generated successfully.' : 'Design generated successfully.', 'success');
       } catch (error) {
         setStatus(error.message, 'error');
       } finally {
         generateBtn.disabled = false;
-        generateBtn.querySelector('span').textContent = 'Generate Design';
+        generateBtn.querySelector('span').textContent = isVideoTool ? 'Generate Video' : 'Generate Design';
       }
     }
 
