@@ -147,6 +147,12 @@
           Change
         </button>
       </label>
+      <div class="image-zoom-controls" id="image-zoom-controls" hidden>
+        <i data-lucide="zoom-out"></i>
+        <input type="range" id="image-zoom-range" min="1" max="2.6" step="0.05" value="1" aria-label="Image zoom">
+        <i data-lucide="zoom-in"></i>
+        <button type="button" id="image-pan-toggle" class="image-pan-toggle">Pan</button>
+      </div>
 
       <section class="result-panel" id="result-panel" hidden>
         <div class="result-heading">
@@ -228,6 +234,7 @@
               <option value="2">2 designs</option>
               <option value="3">3 designs</option>
               <option value="4">4 designs</option>
+              <option value="5">5 designs</option>
             </select>
           </div>
 
@@ -307,6 +314,33 @@
             <input type="text" id="option-object-input" class="studio-input" placeholder="wall, sofa, cabinet, countertop">
           </div>
 
+          <div class="tool-option-row" id="option-material-preset" hidden>
+            <label for="option-material-preset-select">Material</label>
+            <select id="option-material-preset-select" class="studio-select">
+              <option value="wood">wood</option>
+              <option value="marble">marble</option>
+              <option value="concrete">concrete</option>
+              <option value="fabric">fabric</option>
+              <option value="metal">metal</option>
+            </select>
+          </div>
+
+          <div class="tool-option-row" id="option-material-instruction" hidden>
+            <label for="option-material-instruction-input">Describe the material you want</label>
+            <input type="text" id="option-material-instruction-input" class="studio-input" placeholder="warm oak wood, white marble, brushed metal">
+          </div>
+
+          <div class="tool-option-row" id="option-texture-grid" hidden>
+            <label for="option-texture-grid-select">Texture Grid</label>
+            <select id="option-texture-grid-select" class="studio-select">
+              <option value="1 X 1">1 X 1</option>
+              <option value="2 X 2">2 X 2</option>
+              <option value="3 X 3" selected>3 X 3</option>
+              <option value="4 X 4">4 X 4</option>
+              <option value="5 X 5">5 X 5</option>
+            </select>
+          </div>
+
           <div class="tool-option-row" id="option-video-motion" hidden>
             <label for="option-video-motion-select">Camera Motion</label>
             <select id="option-video-motion-select" class="studio-select" required>
@@ -327,6 +361,21 @@
       </div>
 
       <div class="mask-tools-panel" id="mask-tools-panel" hidden>
+        <div class="material-swap-tabs" id="material-swap-tabs" hidden>
+          <div class="material-tab-buttons" role="tablist" aria-label="Material Swap selection mode">
+            <button type="button" class="material-tab-btn active" id="material-auto-tab" data-material-tab="automatic">Automatic Selection</button>
+            <button type="button" class="material-tab-btn" id="material-manual-tab" data-material-tab="manual">Manual Selection</button>
+          </div>
+          <div class="material-tab-copy" id="material-tab-copy">
+            Click directly on the image to automatically select an object. Our AI will help you precisely mask it for modifications.
+          </div>
+          <div class="material-selection-label" id="material-selection-label" hidden>
+            Selected object: <strong>surface</strong>
+          </div>
+          <button type="button" class="material-continue-btn" id="material-continue-btn">
+            Continue
+          </button>
+        </div>
         <div>
           <span class="mask-tools-kicker">Object Selection</span>
           <strong id="mask-tool-title">Select the area to edit</strong>
@@ -348,11 +397,11 @@
         <div class="mask-tool-buttons">
           <button type="button" class="mask-tool-btn active" id="mask-brush-btn">
             <i data-lucide="paintbrush"></i>
-            Brush
+            Draw mask
           </button>
           <button type="button" class="mask-tool-btn" id="mask-eraser-btn">
             <i data-lucide="eraser"></i>
-            Eraser
+            Erase mask
           </button>
         </div>
         <label class="mask-size-label" for="mask-brush-size">
@@ -653,6 +702,9 @@
     object-fit: cover;
     object-position: center;
     cursor: zoom-in;
+    transform: translate(var(--preview-pan-x, 0px), var(--preview-pan-y, 0px)) scale(var(--preview-zoom, 1));
+    transform-origin: center;
+    transition: transform 0.12s ease;
   }
 
   .upload-canvas.mask-mode .source-preview {
@@ -667,6 +719,8 @@
     z-index: 2;
     cursor: crosshair;
     touch-action: none;
+    transform: translate(var(--preview-pan-x, 0px), var(--preview-pan-y, 0px)) scale(var(--preview-zoom, 1));
+    transform-origin: center;
   }
 
   .mask-canvas.click-mode {
@@ -683,6 +737,50 @@
     color: #fff;
     backdrop-filter: blur(10px);
     z-index: 3;
+  }
+
+  .image-zoom-controls {
+    width: min(100%, 520px);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid rgba(16, 185, 129, 0.22);
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.72);
+    color: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.18);
+    backdrop-filter: blur(12px);
+  }
+
+  .image-zoom-controls[hidden] {
+    display: none !important;
+  }
+
+  .image-zoom-controls i {
+    width: 17px;
+    height: 17px;
+  }
+
+  .image-zoom-controls input {
+    width: 100%;
+    accent-color: var(--accent-primary);
+  }
+
+  .image-pan-toggle {
+    min-height: 30px;
+    padding: 0 10px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-weight: 900;
+    cursor: pointer;
+  }
+
+  .image-pan-toggle.active {
+    border-color: rgba(16, 185, 129, 0.6);
+    background: rgba(16, 185, 129, 0.24);
   }
 
   .result-panel {
@@ -927,6 +1025,64 @@
 
   .mask-tools-panel[hidden] {
     display: none !important;
+  }
+
+  .material-swap-tabs {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid rgba(124, 58, 237, 0.26);
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.14), rgba(16, 185, 129, 0.08));
+  }
+
+  .material-swap-tabs[hidden] {
+    display: none !important;
+  }
+
+  .material-tab-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .material-tab-btn,
+  .material-continue-btn {
+    min-height: 40px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-weight: 900;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  }
+
+  .material-tab-btn.active,
+  .material-continue-btn {
+    border-color: rgba(16, 185, 129, 0.5);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.92), rgba(124, 58, 237, 0.74));
+    color: #ecfeff;
+  }
+
+  .material-tab-btn:hover,
+  .material-continue-btn:hover {
+    transform: translateY(-1px);
+  }
+
+  .material-tab-copy,
+  .material-selection-label {
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .material-selection-label {
+    padding: 8px 10px;
+    border: 1px solid rgba(16, 185, 129, 0.22);
+    border-radius: 8px;
+    background: rgba(16, 185, 129, 0.09);
   }
 
   .mask-tools-kicker {
@@ -1257,6 +1413,9 @@
     const sourcePreview = document.getElementById('source-preview');
     const maskCanvas = document.getElementById('mask-canvas');
     const maskCtx = maskCanvas.getContext('2d');
+    const imageZoomControls = document.getElementById('image-zoom-controls');
+    const imageZoomRange = document.getElementById('image-zoom-range');
+    const imagePanToggle = document.getElementById('image-pan-toggle');
     const changeImageBtn = document.getElementById('change-image-btn');
     const toolMenuToggle = document.getElementById('tool-menu-toggle');
     const toolMenu = document.getElementById('tool-menu');
@@ -1308,6 +1467,18 @@
     const objectInput = document.getElementById('option-object-input');
     const videoMotionRow = document.getElementById('option-video-motion');
     const videoMotionSelect = document.getElementById('option-video-motion-select');
+    const materialPresetRow = document.getElementById('option-material-preset');
+    const materialPresetSelect = document.getElementById('option-material-preset-select');
+    const materialInstructionRow = document.getElementById('option-material-instruction');
+    const materialInstructionInput = document.getElementById('option-material-instruction-input');
+    const textureGridRow = document.getElementById('option-texture-grid');
+    const textureGridSelect = document.getElementById('option-texture-grid-select');
+    const materialSwapTabs = document.getElementById('material-swap-tabs');
+    const materialAutoTab = document.getElementById('material-auto-tab');
+    const materialManualTab = document.getElementById('material-manual-tab');
+    const materialTabCopy = document.getElementById('material-tab-copy');
+    const materialSelectionLabel = document.getElementById('material-selection-label');
+    const materialContinueBtn = document.getElementById('material-continue-btn');
 
     let selectedFile = null;
     let selectedEndpoint = '/api/v2/perfect_redesign';
@@ -1323,6 +1494,12 @@
     let selectionMode = 'click';
     let hasMaskPaint = false;
     let hasManualBrushPaint = false;
+    let materialSwapReady = false;
+    let previewZoom = 1;
+    let previewPanX = 0;
+    let previewPanY = 0;
+    let previewPanStart = null;
+    let previewPanMode = false;
     let hoverSelection = null;
     let clickSelections = [];
     const brushCanvas = document.createElement('canvas');
@@ -1382,11 +1559,15 @@
         maskHelp: 'Brush over the wall or surface you want to repaint.'
       },
       material_swap: {
-        noDesignMax: 4,
+        noDesignMin: 2,
+        noDesignMax: 5,
         mask: true,
-        material: true,
+        materialPreset: true,
+        materialInstruction: true,
+        textureGrid: true,
         surfaceColor: true,
-        maskHelp: 'Brush over the material area you want to replace.'
+        materialSwap: true,
+        maskHelp: 'Click the object automatically or use the manual brush to draw the exact material area.'
       },
       room_composer: { noDesignMax: 4, aiIntervention: true },
       design_critique: {},
@@ -1413,6 +1594,49 @@
       return TOOL_CONFIG[currentToolKey()] || {};
     }
 
+    function isMaterialSwapTool() {
+      return currentToolKey() === 'material_swap';
+    }
+
+    function applyPreviewTransform() {
+      uploadCanvas.style.setProperty('--preview-zoom', previewZoom);
+      uploadCanvas.style.setProperty('--preview-pan-x', `${previewPanX}px`);
+      uploadCanvas.style.setProperty('--preview-pan-y', `${previewPanY}px`);
+      uploadCanvas.classList.toggle('is-pannable', previewZoom > 1);
+      if (previewZoom <= 1 && previewPanMode) {
+        previewPanMode = false;
+        imagePanToggle.classList.remove('active');
+      }
+    }
+
+    function resetPreviewTransform() {
+      previewZoom = 1;
+      previewPanX = 0;
+      previewPanY = 0;
+      previewPanMode = false;
+      imageZoomRange.value = '1';
+      imagePanToggle.classList.remove('active');
+      applyPreviewTransform();
+    }
+
+    function setMaterialSwapTab(mode) {
+      const automatic = mode === 'automatic';
+      materialAutoTab.classList.toggle('active', automatic);
+      materialManualTab.classList.toggle('active', !automatic);
+      materialTabCopy.textContent = automatic
+        ? 'Click directly on the image to automatically select an object. Our AI will help you precisely mask it for modifications.'
+        : 'Use Draw mask and Erase mask to manually paint the surface or object you want to transform.';
+      setSelectionMode(automatic ? 'click' : 'brush');
+    }
+
+    function updateMaterialSelectionLabel() {
+      const hasSelection = clickSelections.length > 0 || hasManualBrushPaint;
+      materialSelectionLabel.hidden = !hasSelection;
+      if (hasSelection) {
+        materialSelectionLabel.querySelector('strong').textContent = clickSelections.length > 0 ? 'selected surface' : 'manual mask';
+      }
+    }
+
     function hexToRgbString(hex) {
       const value = hex.replace('#', '');
       const r = parseInt(value.slice(0, 2), 16);
@@ -1430,8 +1654,10 @@
 
     function updateToolOptions() {
       const config = getCurrentToolConfig();
+      const isMaterialSwap = !!config.materialSwap;
+      const showMaterialStepOptions = !isMaterialSwap || materialSwapReady;
 
-      noDesignRow.hidden = !config.noDesignMax;
+      noDesignRow.hidden = !config.noDesignMax || (isMaterialSwap && !showMaterialStepOptions);
       interventionRow.hidden = !config.aiIntervention;
       strengthRow.hidden = !config.strength;
       weatherRow.hidden = !config.weather;
@@ -1441,24 +1667,31 @@
       surfaceColorRow.hidden = !config.surfaceColor;
       objectRow.hidden = !config.object;
       videoMotionRow.hidden = !config.videoMotion;
+      materialPresetRow.hidden = !(config.materialPreset && showMaterialStepOptions);
+      materialInstructionRow.hidden = !(config.materialInstruction && showMaterialStepOptions);
+      textureGridRow.hidden = !(config.textureGrid && showMaterialStepOptions);
       updateMaterialTypeOptions();
 
       const maxDesign = config.noDesignMax || 1;
+      const minDesign = config.noDesignMin || 1;
       [...noDesignSelect.options].forEach((option) => {
-        option.hidden = parseInt(option.value, 10) > maxDesign;
+        const optionValue = parseInt(option.value, 10);
+        option.hidden = optionValue > maxDesign || optionValue < minDesign;
       });
       if (parseInt(noDesignSelect.value, 10) > maxDesign) noDesignSelect.value = String(maxDesign);
+      if (parseInt(noDesignSelect.value, 10) < minDesign) noDesignSelect.value = String(minDesign);
 
       const optionRows = [
         noDesignRow, interventionRow, strengthRow, weatherRow, countryRow,
-        paintColorRow, materialRow, materialTypeRow, surfaceColorRow, objectRow, videoMotionRow
+        paintColorRow, materialRow, materialTypeRow, surfaceColorRow, objectRow, videoMotionRow,
+        materialPresetRow, materialInstructionRow, textureGridRow
       ];
       const hasVisibleOptions = optionRows.some((row) => !row.hidden);
       advancedOptions.hidden = !hasVisibleOptions;
       if (!hasVisibleOptions) {
         advancedToggle.setAttribute('aria-expanded', 'false');
         toolOptionsPanel.classList.add('collapsed');
-      } else if (config.videoMotion) {
+      } else if (config.videoMotion || (isMaterialSwap && showMaterialStepOptions)) {
         advancedToggle.setAttribute('aria-expanded', 'true');
         toolOptionsPanel.classList.remove('collapsed');
       }
@@ -1682,6 +1915,7 @@
         drawSelectionShape(maskCtx, hoverSelection, { preview: true });
       }
       hasMaskPaint = clickSelections.length > 0 || hasManualBrushPaint;
+      if (isMaterialSwapTool()) updateMaterialSelectionLabel();
     }
 
     function resetMaskCanvas() {
@@ -1694,6 +1928,8 @@
       hoverSelection = null;
       hasMaskPaint = false;
       hasManualBrushPaint = false;
+      materialSwapReady = false;
+      if (isMaterialSwapTool()) updateMaterialSelectionLabel();
     }
 
     function sizeMaskCanvas() {
@@ -1713,12 +1949,15 @@
       const needsMask = !!config.mask;
       selectedRequiresMask = needsMask;
       maskToolsPanel.hidden = !needsMask;
+      materialSwapTabs.hidden = !config.materialSwap;
+      imageZoomControls.hidden = !config.materialSwap || sourcePreview.hidden;
       maskCanvas.hidden = !needsMask || sourcePreview.hidden;
       uploadCanvas.classList.toggle('mask-mode', needsMask && !sourcePreview.hidden);
       maskToolTitle.textContent = `${selectedToolName} selection`;
       maskToolHelp.textContent = config.maskHelp || 'Brush over the area this tool should affect.';
       if (needsMask && !sourcePreview.hidden) sizeMaskCanvas();
       maskCanvas.classList.toggle('click-mode', selectionMode === 'click');
+      if (config.materialSwap && !sourcePreview.hidden) updateMaterialSelectionLabel();
     }
 
     function setMaskMode(mode) {
@@ -1745,7 +1984,9 @@
         clickSelections.push(makeObjectSelection(point));
       }
       hoverSelection = null;
+      if (isMaterialSwapTool()) materialSwapReady = false;
       renderMaskOverlay();
+      if (isMaterialSwapTool()) updateToolOptions();
     }
 
     function eraseClickSelections(point, radius) {
@@ -1778,7 +2019,9 @@
       brushCtx.restore();
       if (maskMode === 'eraser') eraseClickSelections(point, radius);
       if (maskMode === 'brush') hasManualBrushPaint = true;
+      if (isMaterialSwapTool()) materialSwapReady = false;
       renderMaskOverlay();
+      if (isMaterialSwapTool()) updateToolOptions();
     }
 
     function getMaskBase64() {
@@ -1820,6 +2063,7 @@
         changeImageBtn.hidden = false;
         uploadCanvas.classList.add('has-image');
         resetMaskCanvas();
+        resetPreviewTransform();
         updateMaskControls();
         resultPanel.hidden = true;
         resultMedia.innerHTML = '';
@@ -1850,6 +2094,30 @@
     maskEraserBtn.addEventListener('click', () => setMaskMode('eraser'));
     clickSelectionBtn.addEventListener('click', () => setSelectionMode('click'));
     brushSelectionBtn.addEventListener('click', () => setSelectionMode('brush'));
+    materialAutoTab.addEventListener('click', () => setMaterialSwapTab('automatic'));
+    materialManualTab.addEventListener('click', () => setMaterialSwapTab('manual'));
+    materialContinueBtn.addEventListener('click', () => {
+      if (!hasMaskPaint) {
+        setStatus('Select an object or draw a mask before continuing.', 'error');
+        return;
+      }
+      materialSwapReady = true;
+      updateToolOptions();
+      setStatus('Selection ready. Choose a material, then generate.', 'success');
+    });
+    imageZoomRange.addEventListener('input', () => {
+      previewZoom = parseFloat(imageZoomRange.value);
+      if (previewZoom <= 1) {
+        previewPanX = 0;
+        previewPanY = 0;
+      }
+      applyPreviewTransform();
+    });
+    imagePanToggle.addEventListener('click', () => {
+      previewPanMode = previewZoom > 1 && !previewPanMode;
+      imagePanToggle.classList.toggle('active', previewPanMode);
+      setStatus(previewPanMode ? 'Drag the image to reposition it.' : '');
+    });
     maskBrushSize.addEventListener('input', () => {
       maskBrushSizeValue.textContent = maskBrushSize.value;
     });
@@ -1869,6 +2137,17 @@
       event.preventDefault();
       event.stopPropagation();
       sizeMaskCanvas();
+      if (previewPanMode && previewZoom > 1) {
+        previewPanStart = {
+          pointerId: event.pointerId,
+          startX: event.clientX,
+          startY: event.clientY,
+          panX: previewPanX,
+          panY: previewPanY
+        };
+        maskCanvas.setPointerCapture(event.pointerId);
+        return;
+      }
       if (selectionMode === 'click') {
         toggleClickSelection(event);
         return;
@@ -1879,6 +2158,14 @@
     });
 
     maskCanvas.addEventListener('pointermove', (event) => {
+      if (previewPanStart) {
+        event.preventDefault();
+        event.stopPropagation();
+        previewPanX = previewPanStart.panX + event.clientX - previewPanStart.startX;
+        previewPanY = previewPanStart.panY + event.clientY - previewPanStart.startY;
+        applyPreviewTransform();
+        return;
+      }
       if (selectedRequiresMask && selectionMode === 'click') {
         event.preventDefault();
         event.stopPropagation();
@@ -1899,6 +2186,7 @@
     });
 
     maskCanvas.addEventListener('pointerup', (event) => {
+      previewPanStart = null;
       isMaskDrawing = false;
       try {
         maskCanvas.releasePointerCapture(event.pointerId);
@@ -1906,6 +2194,7 @@
     });
 
     maskCanvas.addEventListener('pointercancel', () => {
+      previewPanStart = null;
       isMaskDrawing = false;
     });
 
@@ -2023,8 +2312,11 @@
       resultToolName.textContent = selectedToolName;
       const isVideoTool = currentToolKey() === 'video_generation';
       generateBtn.querySelector('span').textContent = isVideoTool ? 'Generate Video' : 'Generate Design';
+      materialSwapReady = false;
       resetMaskCanvas();
+      resetPreviewTransform();
       setSelectionMode('click');
+      if (currentToolKey() === 'material_swap') setMaterialSwapTab('automatic');
       updateMaskControls();
       updateToolOptions();
     }
@@ -2106,6 +2398,15 @@
         setStatus('Veuillez choisir un mouvement caméra.', 'error');
         return;
       }
+      const isMaterialSwap = isMaterialSwapTool();
+      if (isMaterialSwap && !hasMaskPaint) {
+        setStatus('Select an object or draw a mask before generating.', 'error');
+        return;
+      }
+      if (isMaterialSwap && !materialSwapReady) {
+        setStatus('Click Continue after selecting the object, then choose the material.', 'error');
+        return;
+      }
 
       const formData = new FormData();
       formData.append('image', selectedFile);
@@ -2127,6 +2428,11 @@
       if (!surfaceColorRow.hidden) formData.append('color', surfaceColorInput.value);
       if (!objectRow.hidden && objectInput.value.trim()) formData.append('object', objectInput.value.trim());
       if (isVideoTool) formData.append('tool_name', videoMotionSelect.value);
+      if (isMaterialSwap) {
+        formData.append('materials', materialPresetSelect.value);
+        formData.append('materialInstruction', materialInstructionInput.value.trim() || materialPresetSelect.value);
+        formData.append('noOfTexture', textureGridSelect.value);
+      }
 
       if (selectedRequiresMask) {
         const maskBase64 = getMaskBase64();

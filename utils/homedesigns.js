@@ -20,6 +20,7 @@
 const FormData = require('form-data');
 const https = require('https');
 const http = require('http');
+const zlib = require('zlib');
 
 const rawApiBaseUrl = process.env.HOMEDESIGNS_API_BASE_URL || process.env.HOMEDESIGNS_API_URL || 'https://homedesigns.ai';
 const API_BASE_URL = rawApiBaseUrl.replace(/\/+$/, '').replace(/\/api\/v2$/, '');
@@ -117,6 +118,16 @@ const VIDEO_GENERATION_MOTIONS = [
   'look_up',
   'look_down'
 ];
+const TEXTURE_GRID_OPTIONS = ['1 X 1', '2 X 2', '3 X 3', '4 X 4', '5 X 5'];
+const MATERIAL_TEXTURE_COLORS = {
+  wood: [139, 92, 45],
+  marble: [222, 226, 232],
+  concrete: [132, 140, 148],
+  fabric: [100, 116, 139],
+  metal: [164, 170, 178],
+  stone: [150, 139, 122],
+  glass: [159, 220, 230]
+};
 
 const DESIGN_STYLES = [
   { id: 'modern', name: 'Modern', description: 'Clean lines, neutral colors, minimal ornamentation' },
@@ -502,6 +513,95 @@ const getApiParams = (style, roomType, designType = 'Interior') => {
     apiStyle: styleMap[style] || STYLE_MAP[style] || 'Modern',
     apiRoomType: ROOM_TYPE_MAP[roomType] || 'Living Room'
   };
+};
+
+const textureCrcTable = (() => {
+  const table = new Uint32Array(256);
+  for (let i = 0; i < 256; i++) {
+    let c = i;
+    for (let k = 0; k < 8; k++) c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+    table[i] = c >>> 0;
+  }
+  return table;
+})();
+
+const textureCrc32 = (buffer) => {
+  let crc = 0xffffffff;
+  for (const byte of buffer) crc = textureCrcTable[(crc ^ byte) & 0xff] ^ (crc >>> 8);
+  return (crc ^ 0xffffffff) >>> 0;
+};
+
+const texturePngChunk = (type, data) => {
+  const typeBuffer = Buffer.from(type);
+  const length = Buffer.alloc(4);
+  const crc = Buffer.alloc(4);
+  length.writeUInt32BE(data.length, 0);
+  crc.writeUInt32BE(textureCrc32(Buffer.concat([typeBuffer, data])), 0);
+  return Buffer.concat([length, typeBuffer, data, crc]);
+};
+
+const parseHexColor = (value) => {
+  if (!value || !/^#[0-9a-f]{6}$/i.test(value)) return null;
+  return [
+    parseInt(value.slice(1, 3), 16),
+    parseInt(value.slice(3, 5), 16),
+    parseInt(value.slice(5, 7), 16)
+  ];
+};
+
+const clampColor = (value) => Math.max(0, Math.min(255, Math.round(value)));
+
+const normalizeMaterialTexture = (value = '') => {
+  const normalized = value.trim().toLowerCase();
+  if (normalized.includes('marble')) return 'marble';
+  if (normalized.includes('concrete')) return 'concrete';
+  if (normalized.includes('fabric') || normalized.includes('linen') || normalized.includes('velvet')) return 'fabric';
+  if (normalized.includes('metal') || normalized.includes('steel') || normalized.includes('chrome')) return 'metal';
+  if (normalized.includes('stone')) return 'stone';
+  if (normalized.includes('glass')) return 'glass';
+  return normalized || 'wood';
+};
+
+const createTexturePng = ({ material = 'wood', color, noOfTexture = '3 X 3' } = {}) => {
+  const size = 768;
+  const materialKey = normalizeMaterialTexture(material);
+  const baseColor = parseHexColor(color) || MATERIAL_TEXTURE_COLORS[materialKey] || MATERIAL_TEXTURE_COLORS.wood;
+  const gridSize = Math.max(1, Math.min(5, parseInt(String(noOfTexture).split(' ')[0], 10) || 3));
+  const tileSize = size / gridSize;
+  const raw = Buffer.alloc((1 + size * 4) * size);
+
+  for (let y = 0; y < size; y++) {
+    const rowOffset = y * (1 + size * 4);
+    raw[rowOffset] = 0;
+    for (let x = 0; x < size; x++) {
+      const tileX = Math.floor(x / tileSize);
+      const tileY = Math.floor(y / tileSize);
+      const wave = Math.sin((x + tileX * 37) / 18) + Math.cos((y + tileY * 29) / 23);
+      const grain = ((x * 13 + y * 7 + tileX * 31 + tileY * 17) % 19) - 9;
+      const variation = wave * 9 + grain + (tileX + tileY) * 3;
+      const offset = rowOffset + 1 + x * 4;
+      raw[offset] = clampColor(baseColor[0] + variation);
+      raw[offset + 1] = clampColor(baseColor[1] + variation);
+      raw[offset + 2] = clampColor(baseColor[2] + variation);
+      raw[offset + 3] = 255;
+    }
+  }
+
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(size, 0);
+  header.writeUInt32BE(size, 4);
+  header[8] = 8;
+  header[9] = 6;
+  header[10] = 0;
+  header[11] = 0;
+  header[12] = 0;
+
+  return Buffer.concat([
+    Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+    texturePngChunk('IHDR', header),
+    texturePngChunk('IDAT', zlib.deflateSync(raw)),
+    texturePngChunk('IEND', Buffer.alloc(0))
+  ]);
 };
 
 /**
@@ -1223,25 +1323,31 @@ const floorEditor = async (options) => {
 const materialSwap = async (options) => {
   const {
     imageUrl, maskBase64, prompt, materials, materialsType, color,
-    designType = 'Interior', noDesign = 1
+    materialInstruction, noDesign = 2, noOfTexture = '3 X 3'
   } = options;
 
   try {
     if (!API_TOKEN) throw new Error('HomeDesigns API token is not configured.');
-    console.log('[MaterialSwap] Starting:', { materials, materialsType });
+    if (!maskBase64) throw new Error('Material Swap requires a selected object or mask.');
+    if (!TEXTURE_GRID_OPTIONS.includes(noOfTexture)) throw new Error('Invalid texture grid for Material Swap.');
+    const designCount = Math.max(2, Math.min(5, parseInt(noDesign, 10) || 2));
+    const materialChoice = materialInstruction || materialsType || materials || 'wood';
+    console.log('[MaterialSwap] Starting:', { materialChoice, noOfTexture, designCount });
 
     const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
     const maskBuffer = Buffer.from(maskBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+    const textureBuffer = createTexturePng({
+      material: materialChoice,
+      color,
+      noOfTexture
+    });
 
     const formData = new FormData();
     formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
     formData.append('masked_image', maskBuffer, { filename: 'mask.png', contentType: 'image/png' });
-    formData.append('design_type', designType);
-    formData.append('no_design', String(noDesign));
-    if (prompt) formData.append('prompt', prompt.trim());
-    if (materials) formData.append('materials', materials);
-    if (materialsType) formData.append('materials_type', materialsType);
-    if (color) formData.append('color', color);
+    formData.append('no_design', String(designCount));
+    formData.append('texture_image', textureBuffer, { filename: 'texture.png', contentType: 'image/png' });
+    formData.append('no_of_texture', noOfTexture);
 
     const result = await submitToApi(`${API_URL}/material_swap`, formData);
     return await parseApiResponse(result, 'material_swap', '[MaterialSwap]');

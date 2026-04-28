@@ -351,7 +351,8 @@ router.post('/generate-design', ensureAuthenticated, uploadProjectImages.single(
     }
 
     const maskBase64 = req.body.maskBase64 || (tool.requiresMask ? await createDefaultMaskBase64(req.file) : undefined);
-    const maxDesigns = toolKey === 'perfect_redesign' ? 2 : toolKey === 'video_generation' ? 1 : 4;
+    const maxDesigns = toolKey === 'material_swap' ? 5 : toolKey === 'perfect_redesign' ? 2 : toolKey === 'video_generation' ? 1 : 4;
+    const minDesigns = toolKey === 'material_swap' ? 2 : 1;
     const options = {
       imageUrl,
       videoMotion,
@@ -361,7 +362,7 @@ router.post('/generate-design', ensureAuthenticated, uploadProjectImages.single(
       prompt: req.body.additionalInstructions || req.body.prompt || undefined,
       designType: req.body.spaceType || req.body.designType || 'Interior',
       aiIntervention: req.body.aiIntervention || 'Mid',
-      noDesign: clampNumber(req.body.noDesign, 1, maxDesigns, 1),
+      noDesign: clampNumber(req.body.noDesign, minDesigns, maxDesigns, minDesigns),
       strength: clampNumber(req.body.strength, 1, 10, 5),
       keepStructural: req.body.keepStructural !== 'false',
       rgbColor: req.body.rgbColor || '255,255,255',
@@ -370,6 +371,8 @@ router.post('/generate-design', ensureAuthenticated, uploadProjectImages.single(
       color: req.body.color || undefined,
       materials: req.body.materials || undefined,
       materialsType: req.body.materialsType || undefined,
+      materialInstruction: req.body.materialInstruction || undefined,
+      noOfTexture: req.body.noOfTexture || '3 X 3',
       object: req.body.object || undefined,
       upstreamEndpoint
     };
