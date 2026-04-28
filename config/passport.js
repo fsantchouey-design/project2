@@ -1,28 +1,26 @@
 const LocalStrategy = require('passport-local').Strategy;
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 
 module.exports = function(passport) {
+  // ── Local Strategy ──
   passport.use(
     new LocalStrategy({ usernameField: 'email' }, async (email, password, done) => {
       try {
-        // Find user by email
         const user = await User.findOne({ email: email.toLowerCase() });
-        
+
         if (!user) {
           return done(null, false, { message: 'Email not registered' });
         }
 
-        // Check if account is verified
         if (!user.isVerified) {
           return done(null, false, { message: 'Please verify your email before logging in' });
         }
 
-        // Match password
         const isMatch = await bcrypt.compare(password, user.password);
-        
+
         if (isMatch) {
-          // Update last login
           user.lastLogin = new Date();
           await user.save();
           return done(null, user);
@@ -35,6 +33,52 @@ module.exports = function(passport) {
     })
   );
 
+  // ── Google OAuth Strategy ──
+  passport.use(new GoogleStrategy({
+    clientID: process.env.GOOGLE_CLIENT_ID,
+    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    callbackURL: process.env.GOOGLE_CALLBACK_URL || 'https://craftycrib.com/auth/callback'
+  }, async (accessToken, refreshToken, profile, done) => {
+    try {
+      // Check if user already exists with this Google ID
+      let user = await User.findOne({ googleId: profile.id });
+
+      if (user) {
+        user.lastLogin = new Date();
+        await user.save();
+        return done(null, user);
+      }
+
+      // Check if email already registered (link accounts)
+      const email = profile.emails?.[0]?.value;
+      if (email) {
+        user = await User.findOne({ email: email.toLowerCase() });
+        if (user) {
+          user.googleId = profile.id;
+          user.isVerified = true;
+          user.lastLogin = new Date();
+          await user.save();
+          return done(null, user);
+        }
+      }
+
+      // Create new user
+      user = await User.create({
+        googleId: profile.id,
+        firstName: profile.name?.givenName || profile.displayName,
+        lastName: profile.name?.familyName || '',
+        email: email?.toLowerCase(),
+        isVerified: true,
+        lastLogin: new Date()
+      });
+
+      return done(null, user);
+    } catch (err) {
+      return done(err);
+    }
+  }));
+
+  // ── Serialize / Deserialize ──
   passport.serializeUser((user, done) => {
     done(null, user.id);
   });

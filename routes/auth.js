@@ -263,6 +263,23 @@ router.post('/reset-password/:token', ensureGuest, [
   }
 });
 
+// Google OAuth — initiate
+router.get('/google', ensureGuest, passport.authenticate('google', {
+  scope: ['profile', 'email']
+}));
+
+// Google OAuth — callback
+router.get('/callback', passport.authenticate('google', {
+  failureRedirect: '/auth/login',
+  failureFlash: true
+}), (req, res) => {
+  req.flash('success_msg', `Bienvenue, ${req.user.firstName} !`);
+  if (req.user.role === 'contractor') {
+    return res.redirect('/contractors/setup');
+  }
+  res.redirect('/dashboard');
+});
+
 // Logout
 router.get('/logout', ensureAuthenticated, (req, res, next) => {
   req.logout((err) => {
