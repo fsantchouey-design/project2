@@ -100,7 +100,7 @@
           <i data-lucide="copy-plus"></i>
           <span>Design Transfer</span>
         </button>
-        <button type="button" class="tool-option" data-tool-name="Floor Editor" data-endpoint="/api/v2/floor_editor" data-requires-mask="true">
+        <button type="button" class="tool-option" data-tool-name="Floor Editor" data-endpoint="/api/v2/floor_editor" data-requires-mask="false">
           <i data-lucide="panel-bottom"></i>
           <span>Floor Editor</span>
         </button>
@@ -112,7 +112,7 @@
           <i data-lucide="swatch-book"></i>
           <span>Material Swap</span>
         </button>
-        <button type="button" class="tool-option" data-tool-name="Room Composer" data-endpoint="/api/v2/room_composer" data-requires-mask="false">
+        <button type="button" class="tool-option" data-tool-name="Room Composer" data-endpoint="/api/v2/room_composer" data-requires-mask="true">
           <i data-lucide="blocks"></i>
           <span>Room Composer</span>
         </button>
@@ -1666,99 +1666,7 @@
     const brushCanvas = document.createElement('canvas');
     const brushCtx = brushCanvas.getContext('2d');
 
-    const TOOL_CONFIG = {
-      perfect_redesign: { noDesignMax: 2, aiIntervention: true },
-      beautiful_redesign: { noDesignMax: 4, aiIntervention: true },
-      magic_redesign: {
-        noDesignMax: 4,
-        promptOnly: true,
-        promptLabel: 'Magic Prompt',
-        promptPlaceholder: 'Tell the AI exactly what to change: layout, furniture, colors, materials, mood, or specific objects.'
-      },
-      video_generation: { videoMotion: true },
-      creative_redesign: { noDesignMax: 4, aiIntervention: true },
-      sketch_to_render: { noDesignMax: 4, aiIntervention: true },
-      virtual_staging: { noDesignMax: 4, aiIntervention: true },
-      precision: {
-        noDesignMax: 4,
-        mask: true,
-        strength: true,
-        maskHelp: 'Brush over the exact area you want redesigned.'
-      },
-      fill_spaces: {
-        noDesignMax: 4,
-        mask: true,
-        strength: true,
-        promptLabel: 'What should be added?',
-        promptPlaceholder: 'Describe what the AI should add inside the selected empty area.',
-        maskHelp: 'Brush over empty areas where furniture or decor should be added.'
-      },
-      decor_staging: { noDesignMax: 4 },
-      furniture_removal: {
-        mask: true,
-        maskHelp: 'Brush over the furniture you want to remove.'
-      },
-      change_color_textures: {
-        noDesignMax: 4,
-        mask: true,
-        colorTexture: true,
-        material: true,
-        surfaceColor: true,
-        object: true,
-        promptLabel: 'Custom color or texture instruction',
-        promptPlaceholder: 'Optional: describe a custom color, material, or finish if it is not available below.',
-        maskHelp: 'Brush over the surface whose color or texture should change.'
-      },
-      furniture_finder: {
-        country: true,
-        countryOnly: true,
-        submitLabel: 'Get Products'
-      },
-      full_hd: {},
-      text_to_design: { noDesignMax: 4, aiIntervention: true },
-      furniture_creator: { noDesignMax: 4 },
-      design_advisor: {},
-      sky_colors: {
-        noDesignMax: 4,
-        weather: true,
-        weatherOnly: true
-      },
-      design_transfer: {
-        aiIntervention: true,
-        styleReference: true,
-        transferOnly: true,
-        submitLabel: 'Transfer Design'
-      },
-      floor_editor: {
-        noDesignMax: 4,
-        mask: true,
-        material: true,
-        surfaceColor: true,
-        maskHelp: 'Brush over the floor area you want to edit.'
-      },
-      paint_visualizer: {
-        noDesignMax: 4,
-        mask: true,
-        paintColor: true,
-        maskHelp: 'Brush over the wall or surface you want to repaint.'
-      },
-      material_swap: {
-        noDesignMin: 2,
-        noDesignMax: 5,
-        mask: true,
-        materialPreset: true,
-        materialInstruction: true,
-        textureGrid: true,
-        textureUpload: true,
-        surfaceColor: true,
-        materialSwap: true,
-        maskHelp: 'Click the object automatically or use the manual brush to draw the exact material area.'
-      },
-      room_composer: { noDesignMax: 4, aiIntervention: true },
-      design_critique: {},
-      create_maskimage: {},
-      smart_home: { noDesignMax: 4, aiIntervention: true }
-    };
+    const TOOL_CONFIG = <%- JSON.stringify(aiToolsConfig || {}) %>;
 
     const MATERIAL_SUBTYPES = {
       Wood: ['Oak', 'Maple', 'Cherry', 'Walnut', 'Pine', 'Teak', 'Mahogany', 'Bamboo', 'Birch'],
@@ -1839,32 +1747,41 @@
 
     function updateToolOptions() {
       const config = getCurrentToolConfig();
+      const fields = config.fields || [];
       const isMaterialSwap = !!config.materialSwap;
       const showMaterialStepOptions = !isMaterialSwap || materialSwapReady;
-      const hideDesignContext = !!(config.countryOnly || config.weatherOnly || config.transferOnly || config.promptOnly || config.videoMotion);
-      const hideInstructions = !!(config.countryOnly || config.weatherOnly || config.videoMotion || config.transferOnly);
 
-      spaceTypeGroup.hidden = hideDesignContext;
-      designContextGrid.hidden = hideDesignContext;
-      instructionsGroup.hidden = hideInstructions;
+      spaceTypeGroup.hidden = !(fields.includes('design_type') || fields.includes('image_type'));
+      designContextGrid.hidden = !(fields.includes('room_type') || fields.includes('design_style'));
+      instructionsGroup.hidden = !(fields.includes('prompt') || fields.includes('custom_instruction') || fields.includes('custom_message'));
+      spaceTypeGroup.querySelector('label').textContent = fields.includes('image_type')
+        ? 'Select image type'
+        : 'Select what kind of space you are generating';
       instructionsLabel.textContent = config.promptLabel || 'Additional Instructions';
       instructionsInput.placeholder = config.promptPlaceholder || 'Describe colors, mood, materials, furniture, or anything the AI should respect.';
 
       noDesignRow.hidden = !config.noDesignMax || (isMaterialSwap && !showMaterialStepOptions);
       interventionRow.hidden = !config.aiIntervention;
       strengthRow.hidden = !config.strength;
-      weatherRow.hidden = !config.weather;
-      countryRow.hidden = !config.country;
-      paintColorRow.hidden = !config.paintColor;
-      materialRow.hidden = !config.material;
-      surfaceColorRow.hidden = !config.surfaceColor;
-      objectRow.hidden = !config.object;
+      weatherRow.hidden = !fields.includes('weather');
+      countryRow.hidden = !fields.includes('country');
+      paintColorRow.hidden = !fields.includes('rgb_color');
+      materialRow.hidden = !fields.includes('materials');
+      surfaceColorRow.hidden = !fields.includes('color');
+      objectRow.hidden = !fields.includes('object');
       videoMotionRow.hidden = !config.videoMotion;
       materialPresetRow.hidden = !(config.materialPreset && showMaterialStepOptions);
       materialInstructionRow.hidden = !(config.materialInstruction && showMaterialStepOptions);
       textureGridRow.hidden = !(config.textureGrid && showMaterialStepOptions);
       textureUploadRow.hidden = !(config.textureUpload && showMaterialStepOptions);
       styleReferenceRow.hidden = !config.styleReference;
+      const textureOptions = config.textureOptions || [];
+      [...textureGridSelect.options].forEach((option) => {
+        option.hidden = textureOptions.length > 0 && !textureOptions.includes(option.value);
+      });
+      if (textureOptions.length > 0 && !textureOptions.includes(textureGridSelect.value)) {
+        textureGridSelect.value = textureOptions[textureOptions.length - 1];
+      }
       updateMaterialTypeOptions();
 
       const maxDesign = config.noDesignMax || 1;
@@ -2638,7 +2555,8 @@
     }
 
     async function handleGenerateDesign() {
-      if (!selectedFile) {
+      const currentConfig = getCurrentToolConfig();
+      if (!selectedFile && !currentConfig.imageOptional) {
         setStatus('Upload an image before generating a design.', 'error');
         return;
       }
@@ -2647,6 +2565,7 @@
         return;
       }
       const isVideoTool = currentToolKey() === 'video_generation';
+      const isFloorEditor = currentToolKey() === 'floor_editor';
       if (isVideoTool && !videoMotionSelect.value) {
         setStatus('Veuillez choisir un mouvement caméra.', 'error');
         return;
@@ -2665,9 +2584,13 @@
         setStatus('Upload a reference style image before transferring a design.', 'error');
         return;
       }
+      if (isFloorEditor && !selectedTextureFile) {
+        setStatus('Upload a texture image before editing the floor.', 'error');
+        return;
+      }
 
       const formData = new FormData();
-      formData.append('image', selectedFile);
+      if (selectedFile) formData.append('image', selectedFile);
       formData.append('selectedToolEndpoint', selectedEndpoint);
       formData.append('selectedToolName', selectedToolName);
       formData.append('spaceType', designType);
@@ -2687,11 +2610,11 @@
       if (!objectRow.hidden && objectInput.value.trim()) formData.append('object', objectInput.value.trim());
       if (isVideoTool) formData.append('tool_name', videoMotionSelect.value);
       if (isDesignTransfer && selectedStyleReferenceFile) formData.append('styleImage', selectedStyleReferenceFile);
+      if (!textureGridRow.hidden) formData.append('noOfTexture', textureGridSelect.value);
+      if (!textureUploadRow.hidden && selectedTextureFile) formData.append('textureImage', selectedTextureFile);
       if (isMaterialSwap) {
         formData.append('materials', materialPresetSelect.value);
         formData.append('materialInstruction', materialInstructionInput.value.trim() || materialPresetSelect.value);
-        formData.append('noOfTexture', textureGridSelect.value);
-        if (selectedTextureFile) formData.append('textureImage', selectedTextureFile);
       }
 
       if (selectedRequiresMask) {

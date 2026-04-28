@@ -119,6 +119,7 @@ const VIDEO_GENERATION_MOTIONS = [
   'look_down'
 ];
 const TEXTURE_GRID_OPTIONS = ['1 X 1', '2 X 2', '3 X 3', '4 X 4', '5 X 5'];
+const FLOOR_TEXTURE_GRID_OPTIONS = ['1 X 1', '2 X 2', '3 X 3', '4 X 4'];
 const MATERIAL_TEXTURE_COLORS = {
   wood: [139, 92, 45],
   marble: [222, 226, 232],
@@ -1151,27 +1152,15 @@ const virtualStaging = async (options) => {
  * Text to Design - Generate a room design from a text description
  */
 const textToDesign = async (options) => {
-  const {
-    imageUrl, roomType, style, prompt, designType = 'Interior',
-    houseAngle, gardenType, noDesign = 1
-  } = options;
+  const { prompt, mode = 'faster' } = options;
 
   try {
     if (!API_TOKEN) throw new Error('HomeDesigns API token is not configured.');
-    console.log('[TextToDesign] Starting:', { roomType, style });
-
-    const { apiStyle, apiRoomType } = getApiParams(style, roomType, designType);
+    if (!prompt || !prompt.trim()) throw new Error('Text to Design requires instructions.');
+    console.log('[TextToDesign] Starting');
     const formData = new FormData();
-
-    if (imageUrl) {
-      const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
-      formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
-    }
-
-    formData.append('no_design', String(noDesign));
-    formData.append('design_style', apiStyle);
-    addDesignTypeFields(formData, designType, apiRoomType, houseAngle, gardenType);
-    if (prompt) formData.append('prompt', prompt.trim());
+    formData.append('custom_instruction', prompt.trim());
+    formData.append('mode', mode);
 
     const result = await submitToApi(`${API_URL}/text_to_design`, formData);
     return await parseApiResponse(result, 'text_to_design', '[TextToDesign]');
@@ -1185,25 +1174,16 @@ const textToDesign = async (options) => {
  * Furniture Creator - Create custom furniture from a description
  */
 const furnitureCreator = async (options) => {
-  const { imageUrl, style, prompt, noDesign = 1 } = options;
+  const { prompt, mode = 'faster' } = options;
 
   try {
     if (!API_TOKEN) throw new Error('HomeDesigns API token is not configured.');
-    console.log('[FurnitureCreator] Starting:', { prompt });
+    if (!prompt || !prompt.trim()) throw new Error('Furniture Creator requires instructions.');
+    console.log('[FurnitureCreator] Starting');
 
     const formData = new FormData();
-
-    if (imageUrl) {
-      const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
-      formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
-    }
-
-    formData.append('no_design', String(noDesign));
-    if (style) {
-      const { apiStyle } = getApiParams(style, null, 'Interior');
-      formData.append('design_style', apiStyle);
-    }
-    if (prompt) formData.append('prompt', prompt.trim());
+    formData.append('custom_instruction', prompt.trim());
+    formData.append('mode', mode);
 
     const result = await submitToApi(`${API_URL}/furniture_creator`, formData);
     return await parseApiResponse(result, 'furniture_creator', '[FurnitureCreator]');
@@ -1217,16 +1197,15 @@ const furnitureCreator = async (options) => {
  * Design Advisor - Get AI-powered design advice for a room
  */
 const designAdvisor = async (options) => {
-  const { imageUrl, prompt } = options;
+  const { prompt } = options;
 
   try {
     if (!API_TOKEN) throw new Error('HomeDesigns API token is not configured.');
+    if (!prompt || !prompt.trim()) throw new Error('Design Advisor requires a message.');
     console.log('[DesignAdvisor] Starting');
 
-    const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
     const formData = new FormData();
-    formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
-    if (prompt) formData.append('prompt', prompt.trim());
+    formData.append('custom_message', prompt.trim());
 
     const result = await submitToApi(`${API_URL}/design_advisor`, formData);
 
@@ -1283,34 +1262,26 @@ const designTransfer = async (options) => {
 };
 
 /**
- * Floor Editor - Edit floor material and color in masked areas
+ * Floor Editor - replace the visible floor texture with a supplied texture image
  */
 const floorEditor = async (options) => {
   const {
-    imageUrl, maskBase64, prompt, style, materials, materialsType,
-    color, designType = 'Interior', noDesign = 1
+    imageUrl, textureImageUrl, noOfTexture = '3 X 3'
   } = options;
 
   try {
     if (!API_TOKEN) throw new Error('HomeDesigns API token is not configured.');
-    console.log('[FloorEditor] Starting:', { materials, materialsType });
+    if (!textureImageUrl) throw new Error('Floor Editor requires a texture image.');
+    if (!FLOOR_TEXTURE_GRID_OPTIONS.includes(noOfTexture)) throw new Error('Invalid texture grid for Floor Editor.');
+    console.log('[FloorEditor] Starting:', { noOfTexture });
 
     const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
-    const maskBuffer = Buffer.from(maskBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+    const textureBuffer = await downloadImage(resolveImageUrl(textureImageUrl));
 
     const formData = new FormData();
     formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
-    formData.append('masked_image', maskBuffer, { filename: 'mask.png', contentType: 'image/png' });
-    formData.append('design_type', designType);
-    formData.append('no_design', String(noDesign));
-    if (style) {
-      const { apiStyle } = getApiParams(style, null, designType);
-      formData.append('design_style', apiStyle);
-    }
-    if (prompt) formData.append('prompt', prompt.trim());
-    if (materials) formData.append('materials', materials);
-    if (materialsType) formData.append('materials_type', materialsType);
-    if (color) formData.append('color', color);
+    formData.append('texture_image', textureBuffer, { filename: 'texture.png', contentType: 'image/png' });
+    formData.append('no_of_texture', noOfTexture);
 
     const result = await submitToApi(`${API_URL}/floor_editor`, formData);
     return await parseApiResponse(result, 'floor_editor', '[FloorEditor]');
@@ -1367,24 +1338,24 @@ const materialSwap = async (options) => {
  */
 const roomComposer = async (options) => {
   const {
-    imageUrl, roomType, style, prompt, designType = 'Interior',
-    houseAngle, gardenType, aiIntervention = 'Mid', noDesign = 1
+    imageUrl, maskBase64, roomType, style, aiIntervention = 'Mid'
   } = options;
 
   try {
     if (!API_TOKEN) throw new Error('HomeDesigns API token is not configured.');
+    if (!maskBase64) throw new Error('Room Composer requires a selected area or mask.');
     console.log('[RoomComposer] Starting:', { roomType, style });
 
     const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
-    const { apiStyle, apiRoomType } = getApiParams(style, roomType, designType);
+    const maskBuffer = Buffer.from(maskBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+    const { apiStyle, apiRoomType } = getApiParams(style, roomType, 'Interior');
 
     const formData = new FormData();
     formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
-    formData.append('no_design', String(noDesign));
+    formData.append('masked_image', maskBuffer, { filename: 'mask.png', contentType: 'image/png' });
+    formData.append('room_type', apiRoomType);
     formData.append('design_style', apiStyle);
     formData.append('ai_intervention', aiIntervention);
-    addDesignTypeFields(formData, designType, apiRoomType, houseAngle, gardenType);
-    if (prompt) formData.append('prompt', prompt.trim());
 
     const result = await submitToApi(`${API_URL}/room_composer`, formData);
     return await parseApiResponse(result, 'room_composer', '[RoomComposer]');
@@ -1398,7 +1369,7 @@ const roomComposer = async (options) => {
  * Design Critique - Get a detailed AI critique of your room design
  */
 const designCritique = async (options) => {
-  const { imageUrl, prompt } = options;
+  const { imageUrl, designType = 'Interior' } = options;
 
   try {
     if (!API_TOKEN) throw new Error('HomeDesigns API token is not configured.');
@@ -1407,7 +1378,7 @@ const designCritique = async (options) => {
     const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
     const formData = new FormData();
     formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
-    if (prompt) formData.append('prompt', prompt.trim());
+    formData.append('image_type', designType);
 
     const result = await submitToApi(`${API_URL}/design_critique`, formData);
 
@@ -1460,24 +1431,16 @@ const createMaskImage = async (options) => {
  * Smart Home - Visualize smart home features and devices in your space
  */
 const smartHome = async (options) => {
-  const {
-    imageUrl, roomType, style, prompt, designType = 'Interior',
-    houseAngle, gardenType, noDesign = 1
-  } = options;
+  const { imageUrl } = options;
 
   try {
     if (!API_TOKEN) throw new Error('HomeDesigns API token is not configured.');
-    console.log('[SmartHome] Starting:', { roomType, style });
+    console.log('[SmartHome] Starting');
 
     const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
-    const { apiStyle, apiRoomType } = getApiParams(style, roomType, designType);
 
     const formData = new FormData();
     formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
-    formData.append('no_design', String(noDesign));
-    formData.append('design_style', apiStyle);
-    addDesignTypeFields(formData, designType, apiRoomType, houseAngle, gardenType);
-    if (prompt) formData.append('prompt', prompt.trim());
 
     const result = await submitToApi(`${API_URL}/smart_home`, formData);
     return await parseApiResponse(result, 'smart_home', '[SmartHome]');
@@ -1738,8 +1701,8 @@ const getAiTools = () => {
       name: 'Floor Editor',
       description: 'Edit floor material and color',
       icon: 'grid-3x3',
-      category: 'mask',
-      requiresMask: true,
+      category: 'utility',
+      requiresMask: false,
       requiresStyle: false,
       maxDesigns: 4
     },
@@ -1760,8 +1723,8 @@ const getAiTools = () => {
       name: 'Room Composer',
       description: 'Compose and arrange room elements',
       icon: 'layout-dashboard',
-      category: 'redesign',
-      requiresMask: false,
+      category: 'mask',
+      requiresMask: true,
       requiresStyle: true,
       maxDesigns: 4
     },

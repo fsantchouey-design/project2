@@ -17,6 +17,7 @@ const {
   getStyles, getRoomTypes, checkCredits
 } = require('../utils/homedesigns');
 const { uploadProjectImages, getImageUrl } = require('../config/cloudinary');
+const aiToolsConfig = require('../config/toolsConfig');
 
 const VIDEO_GENERATION_MOTIONS = [
   'pan_up',
@@ -138,7 +139,7 @@ const aiToolHandlers = {
   },
   design_advisor: {
     name: 'Design Advisor',
-    run: ({ imageUrl, prompt }) => designAdvisor({ imageUrl, prompt })
+    run: (options) => designAdvisor(options)
   },
   sky_colors: {
     name: 'Sky Colors',
@@ -150,7 +151,6 @@ const aiToolHandlers = {
   },
   floor_editor: {
     name: 'Floor Editor',
-    requiresMask: true,
     run: (options) => floorEditor(options)
   },
   paint_visualizer: {
@@ -165,11 +165,12 @@ const aiToolHandlers = {
   },
   room_composer: {
     name: 'Room Composer',
+    requiresMask: true,
     run: (options) => roomComposer(options)
   },
   design_critique: {
     name: 'Design Critique',
-    run: ({ imageUrl, prompt }) => designCritique({ imageUrl, prompt })
+    run: (options) => designCritique(options)
   },
   create_maskimage: {
     name: 'Create Mask Image',
@@ -343,12 +344,12 @@ router.post('/generate-design', ensureAuthenticated, uploadProjectImages.fields(
       });
     }
 
-    if (!uploadedImage) {
+    if (!uploadedImage && !aiToolsConfig[toolKey]?.imageOptional) {
       return res.status(400).json({ success: false, error: 'Please upload an image before generating.' });
     }
 
     const upstreamEndpoint = `${getHomeDesignsBaseUrl()}${endpoint}`;
-    const imageUrl = toAbsoluteImageUrl(getImageUrl(uploadedImage));
+    const imageUrl = uploadedImage ? toAbsoluteImageUrl(getImageUrl(uploadedImage)) : undefined;
     const videoMotion = req.body.tool_name || req.body.videoMotion || 'zoom_in';
     if (toolKey === 'video_generation' && !VIDEO_GENERATION_MOTIONS.includes(videoMotion)) {
       return res.status(400).json({
@@ -357,7 +358,7 @@ router.post('/generate-design', ensureAuthenticated, uploadProjectImages.fields(
       });
     }
 
-    const maskBase64 = req.body.maskBase64 || (tool.requiresMask ? await createDefaultMaskBase64(uploadedImage) : undefined);
+    const maskBase64 = req.body.maskBase64 || (uploadedImage && tool.requiresMask ? await createDefaultMaskBase64(uploadedImage) : undefined);
     const maxDesigns = toolKey === 'material_swap' ? 5 : toolKey === 'perfect_redesign' ? 2 : toolKey === 'video_generation' ? 1 : 4;
     const minDesigns = toolKey === 'material_swap' ? 2 : 1;
     const options = {

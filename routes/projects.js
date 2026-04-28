@@ -13,6 +13,7 @@ const {
   getStyles, getRoomTypes, getAiTools, WEATHER_OPTIONS
 } = require('../utils/homedesigns');
 const { uploadProjectImages, deleteImage, getImageUrl, isCloudinaryConfigured } = require('../config/cloudinary');
+const aiToolsConfig = require('../config/toolsConfig');
 
 // Use Cloudinary storage for uploads (or local fallback)
 const upload = uploadProjectImages;
@@ -49,7 +50,8 @@ router.get('/new', ensureAuthenticated, (req, res) => {
     layout: 'layouts/dashboard',
     activePage: 'new-project',
     styles: getStyles(),
-    roomTypes: getRoomTypes()
+    roomTypes: getRoomTypes(),
+    aiToolsConfig
   });
 });
 
