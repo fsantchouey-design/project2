@@ -133,6 +133,7 @@
 
     <main class="preview-stage">
       <input type="file" id="design-image" accept="image/*" hidden>
+      <input type="file" id="material-texture-image" accept="image/*" hidden>
 
       <label for="design-image" class="upload-canvas" id="upload-canvas">
         <img id="source-preview" class="source-preview" alt="Uploaded room preview" hidden>
@@ -322,6 +323,10 @@
               <option value="concrete">concrete</option>
               <option value="fabric">fabric</option>
               <option value="metal">metal</option>
+              <option value="stone">stone</option>
+              <option value="leather">leather</option>
+              <option value="tiles">tiles</option>
+              <option value="custom">Custom material</option>
             </select>
           </div>
 
@@ -339,6 +344,15 @@
               <option value="4 X 4">4 X 4</option>
               <option value="5 X 5">5 X 5</option>
             </select>
+          </div>
+
+          <div class="tool-option-row" id="option-texture-upload" hidden>
+            <label>Upload your material</label>
+            <button type="button" class="texture-upload-btn" id="texture-upload-btn">
+              <i data-lucide="image-up"></i>
+              <span id="texture-upload-label">Choose texture image</span>
+            </button>
+            <img id="texture-preview" class="texture-preview" alt="Selected material texture preview" hidden>
           </div>
 
           <div class="tool-option-row" id="option-video-motion" hidden>
@@ -812,6 +826,41 @@
     display: block;
   }
 
+  .before-after-result {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border-color);
+  }
+
+  .before-after-frame {
+    position: relative;
+    min-height: 260px;
+    overflow: hidden;
+    background: #0f172a;
+  }
+
+  .before-after-frame img {
+    width: 100%;
+    height: 100%;
+    min-height: 260px;
+    object-fit: cover;
+  }
+
+  .before-after-frame span {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    padding: 6px 9px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.74);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
   .generated-preview-image {
     cursor: zoom-in;
   }
@@ -1001,6 +1050,39 @@
   .tool-option-row input[type="range"] {
     width: 100%;
     accent-color: var(--accent-primary);
+  }
+
+  .texture-upload-btn {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    border: 1px solid rgba(16, 185, 129, 0.28);
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.13), rgba(124, 58, 237, 0.12));
+    color: var(--text-primary);
+    font-weight: 900;
+    cursor: pointer;
+  }
+
+  .texture-upload-btn i {
+    width: 18px;
+    height: 18px;
+  }
+
+  .texture-preview {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    display: block;
+    object-fit: cover;
+    border: 1px solid rgba(16, 185, 129, 0.24);
+    border-radius: 8px;
+  }
+
+  .texture-preview[hidden] {
+    display: none !important;
   }
 
   .studio-color {
@@ -1394,6 +1476,10 @@
       grid-template-columns: 1fr;
     }
 
+    .before-after-result {
+      grid-template-columns: 1fr;
+    }
+
     .image-lightbox {
       padding: 16px;
     }
@@ -1407,6 +1493,7 @@
 <script>
   (() => {
     const imageInput = document.getElementById('design-image');
+    const materialTextureImage = document.getElementById('material-texture-image');
     const replaceImageBtn = document.getElementById('replace-image-btn');
     const uploadCanvas = document.getElementById('upload-canvas');
     const uploadPlaceholder = document.getElementById('upload-placeholder');
@@ -1473,6 +1560,10 @@
     const materialInstructionInput = document.getElementById('option-material-instruction-input');
     const textureGridRow = document.getElementById('option-texture-grid');
     const textureGridSelect = document.getElementById('option-texture-grid-select');
+    const textureUploadRow = document.getElementById('option-texture-upload');
+    const textureUploadBtn = document.getElementById('texture-upload-btn');
+    const textureUploadLabel = document.getElementById('texture-upload-label');
+    const texturePreview = document.getElementById('texture-preview');
     const materialSwapTabs = document.getElementById('material-swap-tabs');
     const materialAutoTab = document.getElementById('material-auto-tab');
     const materialManualTab = document.getElementById('material-manual-tab');
@@ -1481,6 +1572,7 @@
     const materialContinueBtn = document.getElementById('material-continue-btn');
 
     let selectedFile = null;
+    let selectedTextureFile = null;
     let selectedEndpoint = '/api/v2/perfect_redesign';
     let selectedToolName = 'Perfect Redesign';
     let selectedRequiresMask = false;
@@ -1565,6 +1657,7 @@
         materialPreset: true,
         materialInstruction: true,
         textureGrid: true,
+        textureUpload: true,
         surfaceColor: true,
         materialSwap: true,
         maskHelp: 'Click the object automatically or use the manual brush to draw the exact material area.'
@@ -1670,6 +1763,7 @@
       materialPresetRow.hidden = !(config.materialPreset && showMaterialStepOptions);
       materialInstructionRow.hidden = !(config.materialInstruction && showMaterialStepOptions);
       textureGridRow.hidden = !(config.textureGrid && showMaterialStepOptions);
+      textureUploadRow.hidden = !(config.textureUpload && showMaterialStepOptions);
       updateMaterialTypeOptions();
 
       const maxDesign = config.noDesignMax || 1;
@@ -1684,7 +1778,7 @@
       const optionRows = [
         noDesignRow, interventionRow, strengthRow, weatherRow, countryRow,
         paintColorRow, materialRow, materialTypeRow, surfaceColorRow, objectRow, videoMotionRow,
-        materialPresetRow, materialInstructionRow, textureGridRow
+        materialPresetRow, materialInstructionRow, textureGridRow, textureUploadRow
       ];
       const hasVisibleOptions = optionRows.some((row) => !row.hidden);
       advancedOptions.hidden = !hasVisibleOptions;
@@ -2076,7 +2170,20 @@
       setImage(imageInput.files && imageInput.files[0]);
     });
 
+    materialTextureImage.addEventListener('change', () => {
+      selectedTextureFile = materialTextureImage.files && materialTextureImage.files[0];
+      if (!selectedTextureFile) return;
+      textureUploadLabel.textContent = selectedTextureFile.name;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        texturePreview.src = event.target.result;
+        texturePreview.hidden = false;
+      };
+      reader.readAsDataURL(selectedTextureFile);
+    });
+
     replaceImageBtn.addEventListener('click', () => imageInput.click());
+    textureUploadBtn.addEventListener('click', () => materialTextureImage.click());
     sourcePreview.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
@@ -2358,12 +2465,29 @@
       if (data.videoUrl) {
         resultMedia.innerHTML = `<video src="${data.videoUrl}" controls playsinline></video>`;
       } else if (imageUrl) {
-        const resultImage = document.createElement('img');
-        resultImage.src = imageUrl;
-        resultImage.alt = `${data.tool || selectedToolName} result`;
-        resultImage.className = 'generated-preview-image';
-        resultImage.addEventListener('click', () => openLightboxWithSrc(imageUrl));
-        resultMedia.appendChild(resultImage);
+        if (isMaterialSwapTool() && sourcePreview.src) {
+          const compare = document.createElement('div');
+          compare.className = 'before-after-result';
+          compare.innerHTML = `
+            <div class="before-after-frame">
+              <img src="${sourcePreview.src}" alt="Before Material Swap">
+              <span>Before</span>
+            </div>
+            <div class="before-after-frame">
+              <img src="${imageUrl}" alt="${data.tool || selectedToolName} result" class="generated-preview-image">
+              <span>After</span>
+            </div>
+          `;
+          compare.querySelector('.generated-preview-image').addEventListener('click', () => openLightboxWithSrc(imageUrl));
+          resultMedia.appendChild(compare);
+        } else {
+          const resultImage = document.createElement('img');
+          resultImage.src = imageUrl;
+          resultImage.alt = `${data.tool || selectedToolName} result`;
+          resultImage.className = 'generated-preview-image';
+          resultImage.addEventListener('click', () => openLightboxWithSrc(imageUrl));
+          resultMedia.appendChild(resultImage);
+        }
       } else if (data.textResult) {
         const text = document.createElement('div');
         text.className = 'result-text';
@@ -2432,6 +2556,7 @@
         formData.append('materials', materialPresetSelect.value);
         formData.append('materialInstruction', materialInstructionInput.value.trim() || materialPresetSelect.value);
         formData.append('noOfTexture', textureGridSelect.value);
+        if (selectedTextureFile) formData.append('textureImage', selectedTextureFile);
       }
 
       if (selectedRequiresMask) {

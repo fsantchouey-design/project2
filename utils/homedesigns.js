@@ -125,6 +125,9 @@ const MATERIAL_TEXTURE_COLORS = {
   concrete: [132, 140, 148],
   fabric: [100, 116, 139],
   metal: [164, 170, 178],
+  leather: [106, 62, 38],
+  tiles: [205, 213, 224],
+  custom: [139, 92, 45],
   stone: [150, 139, 122],
   glass: [159, 220, 230]
 };
@@ -557,6 +560,8 @@ const normalizeMaterialTexture = (value = '') => {
   if (normalized.includes('concrete')) return 'concrete';
   if (normalized.includes('fabric') || normalized.includes('linen') || normalized.includes('velvet')) return 'fabric';
   if (normalized.includes('metal') || normalized.includes('steel') || normalized.includes('chrome')) return 'metal';
+  if (normalized.includes('leather')) return 'leather';
+  if (normalized.includes('tile')) return 'tiles';
   if (normalized.includes('stone')) return 'stone';
   if (normalized.includes('glass')) return 'glass';
   return normalized || 'wood';
@@ -1323,7 +1328,7 @@ const floorEditor = async (options) => {
 const materialSwap = async (options) => {
   const {
     imageUrl, maskBase64, prompt, materials, materialsType, color,
-    materialInstruction, noDesign = 2, noOfTexture = '3 X 3'
+    materialInstruction, textureImageUrl, noDesign = 2, noOfTexture = '3 X 3'
   } = options;
 
   try {
@@ -1336,11 +1341,13 @@ const materialSwap = async (options) => {
 
     const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
     const maskBuffer = Buffer.from(maskBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64');
-    const textureBuffer = createTexturePng({
-      material: materialChoice,
-      color,
-      noOfTexture
-    });
+    const textureBuffer = textureImageUrl
+      ? await downloadImage(resolveImageUrl(textureImageUrl))
+      : createTexturePng({
+          material: materialChoice,
+          color,
+          noOfTexture
+        });
 
     const formData = new FormData();
     formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });

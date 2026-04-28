@@ -319,8 +319,13 @@ const buildGenerateDesignResponse = (result, toolName, endpoint) => {
   };
 };
 
-router.post('/generate-design', ensureAuthenticated, uploadProjectImages.single('image'), async (req, res) => {
+router.post('/generate-design', ensureAuthenticated, uploadProjectImages.fields([
+  { name: 'image', maxCount: 1 },
+  { name: 'textureImage', maxCount: 1 }
+]), async (req, res) => {
   try {
+    const uploadedImage = req.file || (req.files?.image && req.files.image[0]);
+    const textureImage = req.files?.textureImage && req.files.textureImage[0];
     const endpoint = req.body.selectedToolEndpoint || req.body.endpoint;
     const toolKey = normalizeToolEndpoint(endpoint);
     const tool = aiToolHandlers[toolKey];
@@ -336,12 +341,12 @@ router.post('/generate-design', ensureAuthenticated, uploadProjectImages.single(
       });
     }
 
-    if (!req.file) {
+    if (!uploadedImage) {
       return res.status(400).json({ success: false, error: 'Please upload an image before generating.' });
     }
 
     const upstreamEndpoint = `${getHomeDesignsBaseUrl()}${endpoint}`;
-    const imageUrl = toAbsoluteImageUrl(getImageUrl(req.file));
+    const imageUrl = toAbsoluteImageUrl(getImageUrl(uploadedImage));
     const videoMotion = req.body.tool_name || req.body.videoMotion || 'zoom_in';
     if (toolKey === 'video_generation' && !VIDEO_GENERATION_MOTIONS.includes(videoMotion)) {
       return res.status(400).json({
@@ -350,7 +355,7 @@ router.post('/generate-design', ensureAuthenticated, uploadProjectImages.single(
       });
     }
 
-    const maskBase64 = req.body.maskBase64 || (tool.requiresMask ? await createDefaultMaskBase64(req.file) : undefined);
+    const maskBase64 = req.body.maskBase64 || (tool.requiresMask ? await createDefaultMaskBase64(uploadedImage) : undefined);
     const maxDesigns = toolKey === 'material_swap' ? 5 : toolKey === 'perfect_redesign' ? 2 : toolKey === 'video_generation' ? 1 : 4;
     const minDesigns = toolKey === 'material_swap' ? 2 : 1;
     const options = {
@@ -372,6 +377,7 @@ router.post('/generate-design', ensureAuthenticated, uploadProjectImages.single(
       materials: req.body.materials || undefined,
       materialsType: req.body.materialsType || undefined,
       materialInstruction: req.body.materialInstruction || undefined,
+      textureImageUrl: textureImage ? toAbsoluteImageUrl(getImageUrl(textureImage)) : undefined,
       noOfTexture: req.body.noOfTexture || '3 X 3',
       object: req.body.object || undefined,
       upstreamEndpoint
