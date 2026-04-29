@@ -361,31 +361,35 @@ router.post('/generate-design', ensureAuthenticated, uploadProjectImages.fields(
     const maskBase64 = req.body.maskBase64 || (uploadedImage && tool.requiresMask ? await createDefaultMaskBase64(uploadedImage) : undefined);
     const maxDesigns = toolKey === 'material_swap' ? 5 : toolKey === 'perfect_redesign' ? 2 : toolKey === 'video_generation' ? 1 : 4;
     const minDesigns = toolKey === 'material_swap' ? 2 : 1;
+    const toolConfig = aiToolsConfig[toolKey] || {};
+    const toolFields = toolConfig.fields || [];
     const options = {
       imageUrl,
       videoMotion,
       maskBase64,
-      roomType: req.body.roomType || 'living-room',
-      style: req.body.designStyle || req.body.style || 'modern',
-      prompt: req.body.additionalInstructions || req.body.prompt || undefined,
-      designType: req.body.spaceType || req.body.designType || 'Interior',
-      aiIntervention: req.body.aiIntervention || 'Mid',
-      noDesign: clampNumber(req.body.noDesign, minDesigns, maxDesigns, minDesigns),
-      strength: clampNumber(req.body.strength, 1, 10, 5),
-      keepStructural: req.body.keepStructural !== 'false',
-      rgbColor: req.body.rgbColor || '255,255,255',
-      weather: req.body.weather || undefined,
-      countryCode: req.body.countryCode || undefined,
-      color: req.body.color || undefined,
-      materials: req.body.materials || undefined,
-      materialsType: req.body.materialsType || undefined,
-      materialInstruction: req.body.materialInstruction || undefined,
-      textureImageUrl: textureImage ? toAbsoluteImageUrl(getImageUrl(textureImage)) : undefined,
-      styleImageUrl: styleImage ? toAbsoluteImageUrl(getImageUrl(styleImage)) : undefined,
-      noOfTexture: req.body.noOfTexture || '3 X 3',
-      object: req.body.object || undefined,
       upstreamEndpoint
     };
+    if (toolFields.includes('room_type')) options.roomType = req.body.roomType || 'living-room';
+    if (toolFields.includes('design_style')) options.style = req.body.designStyle || req.body.style || 'modern';
+    if (toolFields.includes('prompt') || toolFields.includes('custom_instruction') || toolFields.includes('custom_message')) {
+      options.prompt = req.body.additionalInstructions || req.body.prompt || undefined;
+    }
+    if (toolFields.includes('design_type') || toolFields.includes('image_type')) options.designType = req.body.spaceType || req.body.designType || 'Interior';
+    if (toolFields.includes('ai_intervention')) options.aiIntervention = req.body.aiIntervention || 'Mid';
+    if (toolFields.includes('no_design')) options.noDesign = clampNumber(req.body.noDesign, minDesigns, maxDesigns, minDesigns);
+    if (toolFields.includes('strength')) options.strength = clampNumber(req.body.strength, 1, 10, 5);
+    if (toolFields.includes('keep_structural_element')) options.keepStructural = req.body.keepStructural !== 'false';
+    if (toolFields.includes('rgb_color')) options.rgbColor = req.body.rgbColor || '255,255,255';
+    if (toolFields.includes('weather')) options.weather = req.body.weather || undefined;
+    if (toolFields.includes('country')) options.countryCode = req.body.countryCode || undefined;
+    if (toolFields.includes('color')) options.color = req.body.color || undefined;
+    if (toolFields.includes('materials') || toolFields.includes('material')) options.materials = req.body.materials || undefined;
+    if (toolFields.includes('materials_type')) options.materialsType = req.body.materialsType || undefined;
+    if (toolFields.includes('material')) options.materialInstruction = req.body.materialInstruction || undefined;
+    if (toolFields.includes('texture_image')) options.textureImageUrl = textureImage ? toAbsoluteImageUrl(getImageUrl(textureImage)) : undefined;
+    if (toolFields.includes('style_image')) options.styleImageUrl = styleImage ? toAbsoluteImageUrl(getImageUrl(styleImage)) : undefined;
+    if (toolFields.includes('no_of_texture')) options.noOfTexture = req.body.noOfTexture || '3 X 3';
+    if (toolFields.includes('object')) options.object = req.body.object || undefined;
 
     console.log(`[GenerateDesign] ${tool.name} -> ${upstreamEndpoint}`);
     const timeout = new Promise((_, reject) => {

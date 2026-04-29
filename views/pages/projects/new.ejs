@@ -112,7 +112,7 @@
           <i data-lucide="swatch-book"></i>
           <span>Material Swap</span>
         </button>
-        <button type="button" class="tool-option" data-tool-name="Room Composer" data-endpoint="/api/v2/room_composer" data-requires-mask="true">
+        <button type="button" class="tool-option" data-tool-name="Room Composer" data-endpoint="/api/v2/room_composer" data-requires-mask="false">
           <i data-lucide="blocks"></i>
           <span>Room Composer</span>
         </button>
@@ -171,6 +171,8 @@
         <strong id="config-tool-name">Perfect Redesign</strong>
         <small id="config-endpoint">/api/v2/perfect_redesign</small>
       </div>
+
+      <div class="tool-interface" id="tool-interface"></div>
 
       <div class="config-group" id="space-type-group">
         <label>Select what kind of space you are generating</label>
@@ -265,8 +267,11 @@
               <option value="Sunshine">Sunshine</option>
               <option value="Cloudy">Cloudy</option>
               <option value="Rainy">Rainy</option>
+              <option value="Windy">Windy</option>
               <option value="Dawn">Dawn</option>
               <option value="Dusk">Dusk</option>
+              <option value="Twilight">Twilight</option>
+              <option value="Sunny">Sunny</option>
               <option value="Night">Night</option>
             </select>
           </div>
@@ -958,6 +963,150 @@
     font-size: 20px;
   }
 
+  .tool-interface {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .tool-interface:empty {
+    display: none;
+  }
+
+  .tool-panel-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .tool-panel-section h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 17px;
+    letter-spacing: 0;
+  }
+
+  .tool-panel-section p {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+
+  .control-input {
+    width: 100%;
+    padding: 13px 14px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.72);
+    color: var(--text-primary);
+    font: inherit;
+  }
+
+  textarea.control-input {
+    resize: vertical;
+    min-height: 150px;
+  }
+
+  .large-upload-zone {
+    width: 100%;
+    min-height: 190px;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    border: 1px dashed rgba(124, 58, 237, 0.78);
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.54);
+    color: var(--text-primary);
+    font-size: 20px;
+    font-weight: 900;
+    text-align: center;
+    cursor: pointer;
+  }
+
+  .large-upload-zone.compact {
+    min-height: 140px;
+    font-size: 17px;
+  }
+
+  .tool-card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .tool-card-grid.three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .tool-choice-card,
+  .weather-choice-card {
+    min-height: 72px;
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-start;
+    padding: 12px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 8px;
+    background:
+      linear-gradient(180deg, rgba(15, 23, 42, 0.12), rgba(15, 23, 42, 0.88)),
+      linear-gradient(135deg, rgba(16, 185, 129, 0.14), rgba(124, 58, 237, 0.18));
+    color: #fff;
+    font-weight: 900;
+    text-align: left;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  .tool-choice-card:hover,
+  .weather-choice-card:hover,
+  .tool-choice-card.active,
+  .weather-choice-card.active {
+    transform: translateY(-1px);
+    border-color: rgba(16, 185, 129, 0.62);
+    box-shadow: 0 18px 34px rgba(16, 185, 129, 0.14);
+  }
+
+  .tool-form-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 15px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.42);
+  }
+
+  .tool-action-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    color: var(--text-secondary);
+    font-weight: 800;
+  }
+
+  .tool-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-secondary);
+    font-weight: 800;
+  }
+
+  .tool-switch input {
+    width: 38px;
+    height: 22px;
+    accent-color: var(--accent-primary);
+  }
+
+  .generated-control textarea {
+    min-height: 160px;
+  }
+
+  .legacy-tool-controls {
+    display: none !important;
+  }
+
   .config-group {
     display: flex;
     flex-direction: column;
@@ -1580,6 +1729,7 @@
     const advancedOptions = document.getElementById('advanced-options');
     const advancedToggle = document.getElementById('advanced-toggle');
     const toolOptionsPanel = document.getElementById('tool-options-panel');
+    const toolInterface = document.getElementById('tool-interface');
     const spaceTypeGroup = document.getElementById('space-type-group');
     const designContextGrid = document.getElementById('design-context-grid');
     const instructionsGroup = document.getElementById('instructions-group');
@@ -1665,6 +1815,9 @@
     let clickSelections = [];
     const brushCanvas = document.createElement('canvas');
     const brushCtx = brushCanvas.getContext('2d');
+    [spaceTypeGroup, designContextGrid, instructionsGroup, advancedOptions].forEach((element) => {
+      element.classList.add('legacy-tool-controls');
+    });
 
     const TOOL_CONFIG = <%- JSON.stringify(aiToolsConfig || {}) %>;
 
@@ -1745,6 +1898,404 @@
       materialTypeRow.hidden = subtypes.length === 0 || materialRow.hidden;
     }
 
+    function getSelectOptions(select) {
+      return [...select.options].filter((option) => !option.hidden).map((option) => ({
+        value: option.value,
+        label: option.textContent.trim()
+      }));
+    }
+
+    function toolCard(label, value, activeValue, dataName, extraClass = '') {
+      const isActive = String(value) === String(activeValue);
+      return `
+        <button type="button" class="tool-choice-card ${extraClass} ${isActive ? 'active' : ''}" data-${dataName}="${value}">
+          <span>${label}</span>
+        </button>
+      `;
+    }
+
+    function renderSpaceTypePanel(label = 'Select what kind of space you are generating') {
+      return `
+        <div class="tool-panel-section">
+          <h3>${label}</h3>
+          <div class="tool-card-grid three">
+            ${['Interior', 'Exterior', 'Garden'].map((item) => toolCard(item, item, designType, 'set-design-type')).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSyncedSelect(label, select, dataName) {
+      return `
+        <div class="tool-panel-section">
+          <h3>${label}</h3>
+          <select class="control-input" data-sync-select="${dataName}">
+            ${getSelectOptions(select).map((option) => `<option value="${option.value}" ${option.value === select.value ? 'selected' : ''}>${option.label}</option>`).join('')}
+          </select>
+        </div>
+      `;
+    }
+
+    function renderSyncedRange(label, input, dataName) {
+      return `
+        <div class="tool-panel-section">
+          <h3>${label}</h3>
+          <input type="range" class="control-input" min="${input.min}" max="${input.max}" step="${input.step || 1}" value="${input.value}" data-sync-input="${dataName}">
+        </div>
+      `;
+    }
+
+    function renderSyncedTextarea(label, placeholder) {
+      return `
+        <div class="tool-panel-section">
+          <h3>${label}</h3>
+          <textarea class="control-input" rows="5" data-sync-textarea="additional-instructions" placeholder="${placeholder || ''}">${instructionsInput.value || ''}</textarea>
+        </div>
+      `;
+    }
+
+    function renderNoDesignPanel() {
+      return renderSyncedSelect('Select the number of designs you want to generate at once.', noDesignSelect, 'option-no-design-select');
+    }
+
+    function renderAiInterventionPanel() {
+      return renderSyncedSelect('AI Intervention', interventionSelect, 'option-ai-intervention-select');
+    }
+
+    function renderRoomStylePanel(fields) {
+      let html = '';
+      if (fields.includes('room_type')) html += renderSyncedSelect('1. Select Room Type', document.getElementById('room-type'), 'room-type');
+      if (fields.includes('design_style')) html += renderSyncedSelect('2. Select Design Style', document.getElementById('design-style'), 'design-style');
+      return html;
+    }
+
+    function renderPromptPanel(config, fallbackLabel = 'Enter your prompt below:') {
+      const label = config.promptLabel || fallbackLabel;
+      const placeholder = config.promptPlaceholder || 'Enter your custom prompt here. What do you want to change on this image?';
+      return renderSyncedTextarea(label, placeholder);
+    }
+
+    function renderSelectionPanel(config) {
+      return `
+        <div class="tool-panel-section">
+          <h3>Automatic Selection</h3>
+          <p>${config.maskHelp || 'Click directly on the image to automatically select an object. Our AI will help you precisely mask it for modifications.'}</p>
+          <div class="tool-action-row">
+            <button type="button" class="btn btn-secondary" id="tool-clear-selection">Clear selection</button>
+            <button type="button" class="btn btn-primary" id="tool-continue-selection">Continue</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderMagicRedesignPanel(config) {
+      const actions = [
+        ['Redesign', 'perfect_redesign'],
+        ['Virtual Staging', 'virtual_staging'],
+        ['Remodel', 'creative_redesign'],
+        ['Remove Furniture', 'furniture_removal'],
+        ['Landscaping', 'creative_redesign'],
+        ['Paint Walls', 'paint_visualizer'],
+        ['Renovate', 'beautiful_redesign'],
+        ['Exterior Design', 'creative_redesign'],
+        ['Others', 'magic_redesign']
+      ];
+      return `
+        <div class="tool-panel-section">
+          <h3>Select Your AI Design Action</h3>
+          <div class="tool-card-grid">
+            ${actions.map(([label, tool]) => toolCard(label, tool, currentToolKey(), 'tool-key')).join('')}
+          </div>
+        </div>
+        ${renderPromptPanel(config, 'Enter your prompt below:')}
+        <label class="tool-switch">
+          <input type="checkbox" checked>
+          <span>Optimize Prompt With AI</span>
+        </label>
+      `;
+    }
+
+    function renderRedesignPanel(config, fields) {
+      const modeTools = [
+        ['Perfect Redesign', 'perfect_redesign'],
+        ['Beautiful Redesign', 'beautiful_redesign'],
+        ['Creative Redesign', 'creative_redesign']
+      ];
+      return `
+        ${fields.includes('design_type') ? renderSpaceTypePanel() : ''}
+        <div class="tool-form-card">
+          ${renderRoomStylePanel(fields)}
+          ${['perfect_redesign', 'beautiful_redesign', 'creative_redesign'].includes(currentToolKey()) ? `
+            <div class="tool-panel-section">
+              <h3>3. Select Mode Type</h3>
+              <div class="tool-card-grid three">
+                ${modeTools.map(([label, tool]) => toolCard(label, tool, currentToolKey(), 'tool-key')).join('')}
+              </div>
+            </div>
+          ` : ''}
+          ${config.keepStructural ? `
+            <label class="tool-switch">
+              <input type="checkbox" id="tool-keep-structural" ${document.getElementById('keep-structural-element')?.checked ? 'checked' : ''}>
+              <span>Keep structural elements</span>
+            </label>
+          ` : ''}
+        </div>
+        ${config.aiIntervention ? renderAiInterventionPanel() : ''}
+        ${config.noDesignMax ? renderNoDesignPanel() : ''}
+        ${fields.includes('prompt') || fields.includes('custom_instruction') ? renderPromptPanel(config) : ''}
+      `;
+    }
+
+    function renderWeatherPanel() {
+      const weatherOptions = ['Sunshine', 'Rainy', 'Cloudy', 'Clear Sky', 'Windy', 'Dawn', 'Dusk', 'Twilight', 'Sunny', 'Night'];
+      return `
+        <div class="tool-panel-section">
+          <h3>Change Sky Colors to:</h3>
+          <div class="tool-card-grid">
+            ${weatherOptions.map((item) => toolCard(item, item, weatherSelect.value, 'weather', 'weather-choice-card')).join('')}
+          </div>
+        </div>
+        ${renderNoDesignPanel()}
+      `;
+    }
+
+    function renderMaterialSwapPanel(config) {
+      const materials = [
+        ['Wood', 'wood'],
+        ['Marble', 'marble'],
+        ['Concrete', 'concrete'],
+        ['Fabric', 'fabric'],
+        ['Metal', 'metal'],
+        ['Stone', 'stone'],
+        ['Leather', 'leather'],
+        ['Tiles', 'tiles'],
+        ['Custom material', 'custom']
+      ];
+      const selectedMaterial = materialPresetSelect.value;
+      return `
+        ${renderSelectionPanel(config)}
+        <div class="tool-panel-section">
+          <h3>Choose new material</h3>
+          <div class="tool-card-grid three">
+            ${materials.map(([label, value]) => toolCard(label, value, selectedMaterial, 'material-preset')).join('')}
+          </div>
+        </div>
+        <div class="tool-panel-section">
+          <h3>Describe the material you want</h3>
+          <input class="control-input" data-sync-input="option-material-instruction-input" value="${materialInstructionInput.value || ''}" placeholder="Describe the new material or finish">
+        </div>
+      `;
+    }
+
+    function renderMaskPanel(config, fields) {
+      let html = renderSelectionPanel(config);
+      if (config.removeAllToggle) {
+        html += `
+          <label class="tool-switch">
+            <input type="checkbox" id="tool-remove-all-furniture">
+            <span>Remove all furniture</span>
+          </label>
+        `;
+      }
+      if (fields.includes('room_type') || fields.includes('design_style')) html += `<div class="tool-form-card">${renderRoomStylePanel(fields)}</div>`;
+      if (fields.includes('rgb_color')) {
+        html += `<div class="tool-panel-section"><h3>Wall color</h3><input type="color" class="control-input" data-sync-input="option-paint-color-input" value="${paintColorInput.value}"></div>`;
+      }
+      if (fields.includes('color')) {
+        html += `<div class="tool-panel-section"><h3>Surface color</h3><input type="color" class="control-input" data-sync-input="option-surface-color-input" value="${surfaceColorInput.value}"></div>`;
+      }
+      if (fields.includes('materials')) html += renderSyncedSelect('Material', materialSelect, 'option-material-select');
+      if (fields.includes('object')) {
+        html += `<div class="tool-panel-section"><h3>Object</h3><input class="control-input" data-sync-input="option-object-input" value="${objectInput.value || ''}" placeholder="Object to modify"></div>`;
+      }
+      if (config.strength) html += renderSyncedRange('Strength', strengthRange, 'option-strength-range');
+      if (config.noDesignMax) html += renderNoDesignPanel();
+      if (fields.includes('prompt')) html += renderPromptPanel(config);
+      return html;
+    }
+
+    function renderCountryPanel() {
+      return renderSyncedSelect('Select Country:', countrySelect, 'option-country-select');
+    }
+
+    function renderReferencePanel() {
+      return `
+        <div class="tool-panel-section">
+          <h3>Upload Design Inspiration</h3>
+          <button type="button" class="large-upload-zone compact" data-trigger-upload="style-reference">
+            Upload an image with a style you love (.jpeg, .png)
+          </button>
+        </div>
+        ${renderAiInterventionPanel()}
+      `;
+    }
+
+    function renderTexturePanel(config) {
+      return `
+        ${renderSyncedSelect('Select repeat of image', textureGridSelect, 'option-texture-grid-select')}
+        <div class="tool-panel-section">
+          <h3>Upload Texture Image</h3>
+          <button type="button" class="large-upload-zone compact" data-trigger-upload="texture">Upload your material (.jpeg, .png)</button>
+        </div>
+      `;
+    }
+
+    function renderVideoPanel() {
+      return renderSyncedSelect('Camera Motion', videoMotionSelect, 'option-video-motion-select');
+    }
+
+    function renderCritiquePanel() {
+      return renderSpaceTypePanel('Select what kind of space you’ve uploaded');
+    }
+
+    function renderTextPanel(config) {
+      return `
+        ${renderPromptPanel(config, 'Type your custom instructions below and our AI will take them into account when generating your designs:')}
+        <label class="tool-switch">
+          <input type="checkbox">
+          <span>Enable Queue</span>
+        </label>
+      `;
+    }
+
+    function renderAdvisorPanel(config) {
+      return `
+        <div class="tool-panel-section">
+          <h3>Design Advisor</h3>
+          <p>Ask your design question and receive tailored guidance for your project.</p>
+        </div>
+        ${renderPromptPanel(config, 'You can ask me anything! I am here to help.')}
+      `;
+    }
+
+    function renderObjectPositionPanel() {
+      const actions = ['Flip Horizontal', 'Flip Vertical', "Rotate 90° left", "Rotate 90° right", "Rotate 180°", 'Zoom In', 'Zoom Out'];
+      return `
+        <div class="tool-panel-section">
+          <h3>Position Object</h3>
+          <p>Drag and resize your object on the canvas to your desired position.</p>
+          <div class="tool-card-grid three">
+            ${actions.map((item) => `<button type="button" class="tool-choice-card"><span>${item}</span></button>`).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderRoomComposerPanel() {
+      return `
+        <div class="tool-panel-section">
+          <h3>Custom Elements (0)</h3>
+          <button type="button" class="large-upload-zone compact" data-trigger-upload="texture">Click Here to Upload Custom Image</button>
+        </div>
+        <div class="tool-panel-section">
+          <h3>Add elements</h3>
+          <div class="tool-card-grid three">
+            ${['Arm Chair', 'Bed', 'Chair', 'Sofa', 'Table', 'Plants'].map((item) => `<button type="button" class="tool-choice-card"><span>${item}</span></button>`).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSingleActionPanel(config) {
+      return `
+        <div class="tool-panel-section">
+          <p>This tool runs directly on the uploaded image.</p>
+        </div>
+      `;
+    }
+
+    function selectToolByKey(toolKey) {
+      const button = [...document.querySelectorAll('.tool-option')].find((item) => (item.dataset.endpoint || '').endsWith(`/${toolKey}`));
+      if (button) button.click();
+    }
+
+    function wireToolInterface() {
+      toolInterface.querySelectorAll('[data-set-design-type]').forEach((button) => {
+        button.addEventListener('click', () => {
+          designType = button.dataset.setDesignType;
+          document.querySelectorAll('[data-set-design-type]').forEach((item) => item.classList.toggle('active', item === button));
+        });
+      });
+      toolInterface.querySelectorAll('[data-tool-key]').forEach((button) => {
+        button.addEventListener('click', () => selectToolByKey(button.dataset.toolKey));
+      });
+      toolInterface.querySelectorAll('[data-sync-select]').forEach((select) => {
+        select.addEventListener('change', () => {
+          const target = document.getElementById(select.dataset.syncSelect);
+          if (target) {
+            target.value = select.value;
+            target.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        });
+      });
+      toolInterface.querySelectorAll('[data-sync-textarea]').forEach((textarea) => {
+        textarea.addEventListener('input', () => {
+          const target = document.getElementById(textarea.dataset.syncTextarea);
+          if (target) target.value = textarea.value;
+        });
+      });
+      toolInterface.querySelectorAll('[data-sync-input]').forEach((input) => {
+        input.addEventListener('input', () => {
+          const target = document.getElementById(input.dataset.syncInput);
+          if (target) target.value = input.value;
+        });
+      });
+      toolInterface.querySelectorAll('[data-weather]').forEach((button) => {
+        button.addEventListener('click', () => {
+          weatherSelect.value = button.dataset.weather;
+          document.querySelectorAll('[data-weather]').forEach((item) => item.classList.toggle('active', item === button));
+        });
+      });
+      toolInterface.querySelectorAll('[data-material-preset]').forEach((button) => {
+        button.addEventListener('click', () => {
+          materialPresetSelect.value = button.dataset.materialPreset;
+          document.querySelectorAll('[data-material-preset]').forEach((item) => item.classList.toggle('active', item === button));
+        });
+      });
+      toolInterface.querySelector('[data-trigger-upload="texture"]')?.addEventListener('click', () => materialTextureImage.click());
+      toolInterface.querySelector('[data-trigger-upload="style-reference"]')?.addEventListener('click', () => styleReferenceImage.click());
+      toolInterface.querySelector('#tool-clear-selection')?.addEventListener('click', resetMaskCanvas);
+      toolInterface.querySelector('#tool-continue-selection')?.addEventListener('click', () => {
+        if (!hasMaskPaint) {
+          setStatus('Select an object or draw a mask before continuing.', 'error');
+          return;
+        }
+        materialSwapReady = true;
+        updateToolOptions();
+        setStatus('Selection ready. Choose the next option, then generate.', 'success');
+      });
+      toolInterface.querySelector('#tool-keep-structural')?.addEventListener('change', (event) => {
+        const target = document.getElementById('keep-structural-element');
+        if (target) target.checked = event.target.checked;
+      });
+    }
+
+    function renderToolInterface() {
+      const config = getCurrentToolConfig();
+      const fields = config.fields || [];
+      let html = '';
+
+      if (config.uiType === 'magic-redesign') html = renderMagicRedesignPanel(config);
+      else if (config.uiType === 'redesign') html = renderRedesignPanel(config, fields);
+      else if (config.uiType === 'mask') html = renderMaskPanel(config, fields);
+      else if (config.uiType === 'material-swap') html = renderMaterialSwapPanel(config);
+      else if (config.uiType === 'country') html = renderCountryPanel();
+      else if (config.uiType === 'weather') html = renderWeatherPanel();
+      else if (config.uiType === 'reference') html = renderReferencePanel();
+      else if (config.uiType === 'texture') html = renderTexturePanel(config);
+      else if (config.uiType === 'video') html = renderVideoPanel();
+      else if (config.uiType === 'critique') html = renderCritiquePanel();
+      else if (config.uiType === 'text') html = renderTextPanel(config);
+      else if (config.uiType === 'advisor') html = renderAdvisorPanel(config);
+      else if (config.uiType === 'object-position') html = renderObjectPositionPanel();
+      else if (config.uiType === 'room-composer') html = renderRoomComposerPanel();
+      else html = renderSingleActionPanel(config);
+
+      toolInterface.innerHTML = html;
+      wireToolInterface();
+      if (window.lucide) lucide.createIcons();
+    }
+
     function updateToolOptions() {
       const config = getCurrentToolConfig();
       const fields = config.fields || [];
@@ -1799,15 +2350,13 @@
         materialPresetRow, materialInstructionRow, textureGridRow, textureUploadRow, styleReferenceRow
       ];
       const hasVisibleOptions = optionRows.some((row) => !row.hidden);
-      advancedOptions.hidden = !hasVisibleOptions;
+      advancedOptions.hidden = true;
       if (!hasVisibleOptions) {
         advancedToggle.setAttribute('aria-expanded', 'false');
         toolOptionsPanel.classList.add('collapsed');
-      } else if (config.videoMotion || (isMaterialSwap && showMaterialStepOptions)) {
-        advancedToggle.setAttribute('aria-expanded', 'true');
-        toolOptionsPanel.classList.remove('collapsed');
       }
       generateBtn.querySelector('span').textContent = config.submitLabel || (config.videoMotion ? 'Generate Video' : 'Generate Design');
+      renderToolInterface();
     }
 
     function setStatus(message, type) {
@@ -2593,10 +3142,13 @@
       if (selectedFile) formData.append('image', selectedFile);
       formData.append('selectedToolEndpoint', selectedEndpoint);
       formData.append('selectedToolName', selectedToolName);
-      formData.append('spaceType', designType);
-      formData.append('roomType', document.getElementById('room-type').value);
-      formData.append('designStyle', document.getElementById('design-style').value);
-      formData.append('additionalInstructions', document.getElementById('additional-instructions').value);
+      const fields = currentConfig.fields || [];
+      if (fields.includes('design_type') || fields.includes('image_type')) formData.append('spaceType', designType);
+      if (fields.includes('room_type')) formData.append('roomType', document.getElementById('room-type').value);
+      if (fields.includes('design_style')) formData.append('designStyle', document.getElementById('design-style').value);
+      if (fields.includes('prompt') || fields.includes('custom_instruction') || fields.includes('custom_message')) {
+        formData.append('additionalInstructions', document.getElementById('additional-instructions').value);
+      }
 
       if (!noDesignRow.hidden) formData.append('noDesign', noDesignSelect.value);
       if (!interventionRow.hidden) formData.append('aiIntervention', interventionSelect.value);
