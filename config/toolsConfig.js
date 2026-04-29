@@ -1,4 +1,32 @@
 const toolsConfig = {
+  redesign: {
+    endpoint: '/api/v2/perfect_redesign',
+    uiType: 'redesign',
+    fields: ['design_type', 'room_type', 'design_style', 'mode_type', 'ai_intervention', 'no_design', 'custom_instruction', 'keep_structural_element'],
+    noDesignMax: 4,
+    aiIntervention: true,
+    keepStructural: true,
+    modeTools: [
+      {
+        label: 'Perfect Redesign',
+        value: 'perfect_redesign',
+        endpoint: '/api/v2/perfect_redesign',
+        noDesignMax: 2
+      },
+      {
+        label: 'Beautiful Redesign',
+        value: 'beautiful_redesign',
+        endpoint: '/api/v2/beautiful_redesign',
+        noDesignMax: 4
+      },
+      {
+        label: 'Creative Redesign',
+        value: 'creative_redesign',
+        endpoint: '/api/v2/creative_redesign',
+        noDesignMax: 4
+      }
+    ]
+  },
   perfect_redesign: {
     endpoint: '/api/v2/perfect_redesign',
     uiType: 'redesign',

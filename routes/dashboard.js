@@ -218,7 +218,7 @@ router.get('/ai-tools', ensureAuthenticated, async (req, res) => {
   try {
     res.render('pages/ai-tools', {
       title: 'Outils IA — CraftyCrib',
-      metaDescription: 'Découvrez les 26 outils IA de CraftyCrib pour transformer vos espaces.',
+      metaDescription: 'Découvrez les outils IA de CraftyCrib pour transformer vos espaces.',
       layout: 'layouts/dashboard',
       activePage: 'ai-tools',
       aiTools: getAiTools()

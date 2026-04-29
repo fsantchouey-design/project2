@@ -3,9 +3,7 @@
  * Documentation: https://api.homedesigns.ai/homedesignsai-api-documentation
  *
  * Supported endpoints:
- *  - Perfect Redesign
- *  - Beautiful Redesign
- *  - Creative Redesign
+ *  - Redesign (Perfect, Beautiful, Creative modes)
  *  - Sketch to Render
  *  - Precision (mask-based inpainting)
  *  - Fill Spaces (mask-based filling)
@@ -1476,33 +1474,11 @@ const getRoomTypes = () => {
 const getAiTools = () => {
   return [
     {
-      id: 'beautiful-redesign',
-      slug: 'beautiful_redesign',
-      name: 'Beautiful Redesign',
-      description: 'Redesign your room with a new style',
-      icon: 'sparkles',
-      category: 'redesign',
-      requiresMask: false,
-      requiresStyle: true,
-      maxDesigns: 4
-    },
-    {
-      id: 'perfect-redesign',
-      slug: 'perfect_redesign',
-      name: 'Perfect Redesign',
-      description: 'High-quality precision redesign',
-      icon: 'gem',
-      category: 'redesign',
-      requiresMask: false,
-      requiresStyle: true,
-      maxDesigns: 2
-    },
-    {
-      id: 'creative-redesign',
-      slug: 'creative_redesign',
-      name: 'Creative Design',
-      description: 'Bold, artistic transformations',
-      icon: 'wand-2',
+      id: 'redesign',
+      slug: 'redesign',
+      name: 'Redesign',
+      description: 'Choose Perfect, Beautiful, or Creative redesign modes in one workflow',
+      icon: 'pencil-ruler',
       category: 'redesign',
       requiresMask: false,
       requiresStyle: true,

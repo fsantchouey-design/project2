@@ -16,21 +16,17 @@
   <div class="studio-shell">
     <aside class="tool-rail">
       <button type="button" class="tool-menu-toggle" id="tool-menu-toggle" aria-expanded="true">
-        <span>
-          <span class="tool-kicker">Standard Tools</span>
-          <strong id="selected-tool-label">Perfect Redesign</strong>
-        </span>
-        <i data-lucide="chevron-down"></i>
-      </button>
+          <span>
+            <span class="tool-kicker">Standard Tools</span>
+          <strong id="selected-tool-label">Redesign</strong>
+          </span>
+          <i data-lucide="chevron-down"></i>
+        </button>
 
       <div class="tool-menu" id="tool-menu">
-        <button type="button" class="tool-option active" data-tool-name="Perfect Redesign" data-endpoint="/api/v2/perfect_redesign" data-requires-mask="false">
-          <i data-lucide="gem"></i>
-          <span>Perfect Redesign</span>
-        </button>
-        <button type="button" class="tool-option" data-tool-name="Beautiful Redesign" data-endpoint="/api/v2/beautiful_redesign" data-requires-mask="false">
-          <i data-lucide="sparkles"></i>
-          <span>Beautiful Redesign</span>
+        <button type="button" class="tool-option active" data-tool-name="Redesign" data-tool-key="redesign" data-endpoint="/api/v2/perfect_redesign" data-requires-mask="false">
+          <i data-lucide="pencil-ruler"></i>
+          <span>Redesign</span>
         </button>
         <button type="button" class="tool-option" data-tool-name="Magic Redesign" data-endpoint="/api/v2/magic_redesign" data-requires-mask="false">
           <i data-lucide="zap"></i>
@@ -39,10 +35,6 @@
         <button type="button" class="tool-option" data-tool-name="Video Generation" data-endpoint="/api/v2/video_generation" data-requires-mask="false">
           <i data-lucide="video"></i>
           <span>Video Generation</span>
-        </button>
-        <button type="button" class="tool-option" data-tool-name="Creative Redesign" data-endpoint="/api/v2/creative_redesign" data-requires-mask="false">
-          <i data-lucide="wand-2"></i>
-          <span>Creative Redesign</span>
         </button>
         <button type="button" class="tool-option" data-tool-name="Sketch To Render" data-endpoint="/api/v2/sketch_to_render" data-requires-mask="false">
           <i data-lucide="pencil-ruler"></i>
@@ -159,7 +151,7 @@
       <section class="result-panel" id="result-panel" hidden>
         <div class="result-heading">
           <span>Generated Result</span>
-          <strong id="result-tool-name">Perfect Redesign</strong>
+          <strong id="result-tool-name">Redesign</strong>
         </div>
         <div class="result-media" id="result-media"></div>
       </section>
@@ -168,7 +160,7 @@
     <aside class="config-panel">
       <div class="selected-tool-card">
         <span>Selected AI Tool</span>
-        <strong id="config-tool-name">Perfect Redesign</strong>
+        <strong id="config-tool-name">Redesign</strong>
         <small id="config-endpoint">/api/v2/perfect_redesign</small>
       </div>
 
@@ -1793,7 +1785,9 @@
     let selectedTextureFile = null;
     let selectedStyleReferenceFile = null;
     let selectedEndpoint = '/api/v2/perfect_redesign';
-    let selectedToolName = 'Perfect Redesign';
+    let selectedToolName = 'Redesign';
+    let selectedToolKey = 'redesign';
+    let selectedRedesignMode = 'perfect_redesign';
     let selectedRequiresMask = false;
     let designType = 'Interior';
     let lightboxZoom = 1;
@@ -1832,12 +1826,29 @@
       'Composite Materials': ['MDF', 'Plywood', 'Laminate', 'Corian', 'Quartz']
     };
 
+    function endpointToolKey(endpoint = selectedEndpoint) {
+      return (endpoint || '').split('/').filter(Boolean).pop();
+    }
+
     function currentToolKey() {
-      return (selectedEndpoint || '').split('/').filter(Boolean).pop();
+      return selectedToolKey || endpointToolKey();
     }
 
     function getCurrentToolConfig() {
       return TOOL_CONFIG[currentToolKey()] || {};
+    }
+
+    function getRedesignModeConfig(mode = selectedRedesignMode) {
+      return (TOOL_CONFIG.redesign?.modeTools || []).find((item) => item.value === mode);
+    }
+
+    function setRedesignMode(mode, render = true) {
+      const modeConfig = getRedesignModeConfig(mode) || getRedesignModeConfig('perfect_redesign');
+      if (!modeConfig) return;
+      selectedRedesignMode = modeConfig.value;
+      selectedEndpoint = modeConfig.endpoint;
+      configEndpoint.textContent = selectedEndpoint;
+      if (render) updateToolOptions();
     }
 
     function isMaterialSwapTool() {
@@ -1989,47 +2000,20 @@
     }
 
     function renderMagicRedesignPanel(config) {
-      const actions = [
-        ['Redesign', 'perfect_redesign'],
-        ['Virtual Staging', 'virtual_staging'],
-        ['Remodel', 'creative_redesign'],
-        ['Remove Furniture', 'furniture_removal'],
-        ['Landscaping', 'creative_redesign'],
-        ['Paint Walls', 'paint_visualizer'],
-        ['Renovate', 'beautiful_redesign'],
-        ['Exterior Design', 'creative_redesign'],
-        ['Others', 'magic_redesign']
-      ];
-      return `
-        <div class="tool-panel-section">
-          <h3>Select Your AI Design Action</h3>
-          <div class="tool-card-grid">
-            ${actions.map(([label, tool]) => toolCard(label, tool, currentToolKey(), 'tool-key')).join('')}
-          </div>
-        </div>
-        ${renderPromptPanel(config, 'Enter your prompt below:')}
-        <label class="tool-switch">
-          <input type="checkbox" checked>
-          <span>Optimize Prompt With AI</span>
-        </label>
-      `;
+      return renderPromptPanel(config, 'Magic Prompt');
     }
 
     function renderRedesignPanel(config, fields) {
-      const modeTools = [
-        ['Perfect Redesign', 'perfect_redesign'],
-        ['Beautiful Redesign', 'beautiful_redesign'],
-        ['Creative Redesign', 'creative_redesign']
-      ];
+      const modeTools = config.modeTools || [];
       return `
         ${fields.includes('design_type') ? renderSpaceTypePanel() : ''}
         <div class="tool-form-card">
           ${renderRoomStylePanel(fields)}
-          ${['perfect_redesign', 'beautiful_redesign', 'creative_redesign'].includes(currentToolKey()) ? `
+          ${fields.includes('mode_type') && modeTools.length ? `
             <div class="tool-panel-section">
               <h3>3. Select Mode Type</h3>
               <div class="tool-card-grid three">
-                ${modeTools.map(([label, tool]) => toolCard(label, tool, currentToolKey(), 'tool-key')).join('')}
+                ${modeTools.map((mode) => toolCard(mode.label, mode.value, selectedRedesignMode, 'redesign-mode')).join('')}
               </div>
             </div>
           ` : ''}
@@ -2205,7 +2189,9 @@
     }
 
     function selectToolByKey(toolKey) {
-      const button = [...document.querySelectorAll('.tool-option')].find((item) => (item.dataset.endpoint || '').endsWith(`/${toolKey}`));
+      const button = [...document.querySelectorAll('.tool-option')].find((item) => {
+        return item.dataset.toolKey === toolKey || endpointToolKey(item.dataset.endpoint) === toolKey;
+      });
       if (button) button.click();
     }
 
@@ -2218,6 +2204,11 @@
       });
       toolInterface.querySelectorAll('[data-tool-key]').forEach((button) => {
         button.addEventListener('click', () => selectToolByKey(button.dataset.toolKey));
+      });
+      toolInterface.querySelectorAll('[data-redesign-mode]').forEach((button) => {
+        button.addEventListener('click', () => {
+          setRedesignMode(button.dataset.redesignMode);
+        });
       });
       toolInterface.querySelectorAll('[data-sync-select]').forEach((select) => {
         select.addEventListener('change', () => {
@@ -2299,6 +2290,7 @@
     function updateToolOptions() {
       const config = getCurrentToolConfig();
       const fields = config.fields || [];
+      const activeModeConfig = currentToolKey() === 'redesign' ? getRedesignModeConfig() : null;
       const isMaterialSwap = !!config.materialSwap;
       const showMaterialStepOptions = !isMaterialSwap || materialSwapReady;
 
@@ -2335,7 +2327,7 @@
       }
       updateMaterialTypeOptions();
 
-      const maxDesign = config.noDesignMax || 1;
+      const maxDesign = activeModeConfig?.noDesignMax || config.noDesignMax || 1;
       const minDesign = config.noDesignMin || 1;
       [...noDesignSelect.options].forEach((option) => {
         const optionValue = parseInt(option.value, 10);
@@ -2993,6 +2985,10 @@
       button.classList.add('active');
       selectedEndpoint = button.dataset.endpoint;
       selectedToolName = button.dataset.toolName;
+      selectedToolKey = button.dataset.toolKey || endpointToolKey(selectedEndpoint);
+      if (selectedToolKey === 'redesign') {
+        setRedesignMode(selectedRedesignMode || 'perfect_redesign', false);
+      }
       selectedRequiresMask = button.dataset.requiresMask === 'true';
       selectedToolLabel.textContent = selectedToolName;
       configToolName.textContent = selectedToolName;
@@ -3010,15 +3006,25 @@
     function selectToolFromUrl() {
       const requestedTool = normalizeToolSlug(new URLSearchParams(window.location.search).get('tool'));
       if (!requestedTool) return;
+      const redesignModes = ['perfect_redesign', 'beautiful_redesign', 'creative_redesign'];
+
+      if (requestedTool === 'redesign' || redesignModes.includes(requestedTool)) {
+        const redesignButton = [...document.querySelectorAll('.tool-option')].find((button) => button.dataset.toolKey === 'redesign');
+        if (redesignButton) {
+          if (redesignModes.includes(requestedTool)) selectedRedesignMode = requestedTool;
+          selectToolButton(redesignButton);
+          return;
+        }
+      }
 
       const requestedButton = [...document.querySelectorAll('.tool-option')].find((button) => {
-        return normalizeToolSlug(button.dataset.endpoint) === requestedTool;
+        return normalizeToolSlug(button.dataset.endpoint) === requestedTool || normalizeToolSlug(button.dataset.toolKey) === requestedTool;
       });
 
       if (requestedButton) {
         selectToolButton(requestedButton);
       } else {
-        setStatus('The requested AI tool was not found. Perfect Redesign is selected by default.', 'error');
+        setStatus('The requested AI tool was not found. Redesign is selected by default.', 'error');
       }
     }
 
@@ -3148,6 +3154,9 @@
       if (fields.includes('design_style')) formData.append('designStyle', document.getElementById('design-style').value);
       if (fields.includes('prompt') || fields.includes('custom_instruction') || fields.includes('custom_message')) {
         formData.append('additionalInstructions', document.getElementById('additional-instructions').value);
+      }
+      if (fields.includes('keep_structural_element')) {
+        formData.append('keepStructural', document.getElementById('tool-keep-structural')?.checked ? 'true' : 'false');
       }
 
       if (!noDesignRow.hidden) formData.append('noDesign', noDesignSelect.value);

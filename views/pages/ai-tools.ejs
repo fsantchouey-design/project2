@@ -1,10 +1,8 @@
 <%
 /* ── Curated Unsplash image + description for each tool ─────────────── */
 const TOOL_DETAILS = {
-  'perfect-redesign':   { img: 'photo-1586023492125-27b2c045efd7', desc: 'Redesign haute précision avec rendus photoréalistes de qualité professionnelle.' },
-  'beautiful-redesign': { img: 'photo-1616486338812-3dadae4b4ace', desc: 'Transformez votre pièce avec un nouveau style IA en quelques secondes.' },
+  'redesign':           { img: 'photo-1616486338812-3dadae4b4ace', desc: 'Un outil unique pour choisir entre Perfect, Beautiful et Creative Redesign selon le rendu souhaité.' },
   'magic-redesign':     { img: 'photo-1618221195710-dd6b41faaea6', desc: 'Transformation instantanée de votre espace grâce à la magie de l\'IA.' },
-  'creative-redesign':  { img: 'photo-1600607687939-ce8a6c25118c', desc: 'Designs audacieux et artistiques qui repoussent les limites de la créativité.' },
   'sketch-to-render':   { img: 'photo-1503387762-592deb58ef4e', desc: 'Convertissez vos croquis en rendus 3D photoréalistes en un instant.' },
   'virtual-staging':    { img: 'photo-1555041469-a586c61ea9bc', desc: 'Meublez virtuellement des pièces vides pour les projections et la vente.' },
   'precision':          { img: 'photo-1600566752355-35792bedcfea', desc: 'Retouchez des zones précises de votre pièce avec un masque personnalisé.' },
@@ -50,10 +48,10 @@ const CATEGORY_COLORS = {
         <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent-primary);flex-shrink:0"><rect x="16" y="16" width="6" height="6" rx="1"/><rect x="2" y="16" width="6" height="6" rx="1"/><rect x="9" y="2" width="6" height="6" rx="1"/><path d="M5 16v-4h14v4"/><path d="M12 12V8"/></svg>
         Outils IA
       </h1>
-      <p>26 outils propulsés par l'IA pour transformer vos espaces en designs professionnels</p>
+      <p><%= aiTools.length %> outils propulsés par l'IA pour transformer vos espaces en designs professionnels</p>
     </div>
     <div class="ait-filters" id="ait-filters">
-      <button class="ait-filter active" data-cat="all">Tous <span>26</span></button>
+      <button class="ait-filter active" data-cat="all">Tous <span><%= aiTools.length %></span></button>
       <button class="ait-filter" data-cat="redesign">Redesign</button>
       <button class="ait-filter" data-cat="mask">Masque</button>
       <button class="ait-filter" data-cat="utility">Utilitaire</button>
