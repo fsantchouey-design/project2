@@ -13,6 +13,7 @@ const {
   getStyles, getRoomTypes, getAiTools, WEATHER_OPTIONS
 } = require('../utils/homedesigns');
 const { uploadProjectImages, deleteImage, getImageUrl, isCloudinaryConfigured } = require('../config/cloudinary');
+const aiToolsConfig = require('../config/toolsConfig');
 
 // Use Cloudinary storage for uploads (or local fallback)
 const upload = uploadProjectImages;
@@ -49,7 +50,8 @@ router.get('/new', ensureAuthenticated, (req, res) => {
     layout: 'layouts/dashboard',
     activePage: 'new-project',
     styles: getStyles(),
-    roomTypes: getRoomTypes()
+    roomTypes: getRoomTypes(),
+    aiToolsConfig
   });
 });
 
@@ -61,18 +63,6 @@ router.post('/', ensureAuthenticated, upload.array('images', 5), async (req, res
       description,
       roomType,
       style,
-      budgetMin,
-      budgetMax,
-      length,
-      width,
-      height,
-      colors,
-      materials,
-      mustHave,
-      mustAvoid,
-      priorityQuality,
-      priorityPrice,
-      prioritySpeed,
       isDIY
     } = req.body;
 
@@ -92,27 +82,7 @@ router.post('/', ensureAuthenticated, upload.array('images', 5), async (req, res
       description,
       roomType,
       style: style || undefined,
-      budget: {
-        min: budgetMin ? parseFloat(budgetMin) : undefined,
-        max: budgetMax ? parseFloat(budgetMax) : undefined
-      },
-      dimensions: {
-        length: length ? parseFloat(length) : undefined,
-        width: width ? parseFloat(width) : undefined,
-        height: height ? parseFloat(height) : undefined
-      },
       originalImages,
-      preferences: {
-        colors: colors ? colors.split(',').map(c => c.trim()) : [],
-        materials: materials ? materials.split(',').map(m => m.trim()) : [],
-        mustHave: mustHave ? mustHave.split(',').map(m => m.trim()) : [],
-        mustAvoid: mustAvoid ? mustAvoid.split(',').map(m => m.trim()) : []
-      },
-      priorities: {
-        quality: priorityQuality ? parseInt(priorityQuality) : 3,
-        price: priorityPrice ? parseInt(priorityPrice) : 3,
-        speed: prioritySpeed ? parseInt(prioritySpeed) : 3
-      },
       isDIY: isDIY === 'on',
       shareToken,
       status: 'draft'
@@ -130,6 +100,59 @@ router.post('/', ensureAuthenticated, upload.array('images', 5), async (req, res
 });
 
 // View Project
+router.get('/:id/studio', ensureAuthenticated, async (req, res) => {
+  try {
+    const project = await Project.findOne({
+      _id: req.params.id,
+      user: req.user.id
+    });
+
+    if (!project) {
+      req.flash('error', 'Project not found.');
+      return res.redirect('/projects');
+    }
+
+    res.render('pages/projects/new', {
+      title: `${project.title || 'Project'} - AI Studio - CraftyCrib`,
+      layout: 'layouts/dashboard',
+      activePage: 'projects',
+      styles: PROJECT_STYLES,
+      roomTypes: ROOM_TYPES,
+      aiToolsConfig,
+      studioProject: project
+    });
+  } catch (error) {
+    console.error('Studio route error:', error);
+    req.flash('error', 'Unable to open the project studio.');
+    res.redirect('/projects');
+  }
+});
+
+router.get('/:id/view', ensureAuthenticated, async (req, res) => {
+  try {
+    const project = await Project.findOne({
+      _id: req.params.id,
+      user: req.user.id
+    });
+
+    if (!project) {
+      req.flash('error', 'Project not found.');
+      return res.redirect('/projects');
+    }
+
+    res.render('pages/projects/view-slider', {
+      title: `${project.title || 'Project'} - Preview - CraftyCrib`,
+      layout: 'layouts/dashboard',
+      activePage: 'projects',
+      project
+    });
+  } catch (error) {
+    console.error('Project view route error:', error);
+    req.flash('error', 'Unable to open the project preview.');
+    res.redirect('/projects');
+  }
+});
+
 router.get('/:id', ensureAuthenticated, async (req, res) => {
   try {
     const project = await Project.findOne({
@@ -997,4 +1020,3 @@ router.post('/:id/set-featured', ensureAuthenticated, async (req, res) => {
 });
 
 module.exports = router;
-
