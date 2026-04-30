@@ -147,9 +147,9 @@
     </aside>
 
     <main class="preview-stage">
-      <input type="file" id="design-image" accept="image/*" hidden>
-      <input type="file" id="material-texture-image" accept="image/*" hidden>
-      <input type="file" id="style-reference-image" accept="image/*" hidden>
+      <input type="file" id="design-image" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" hidden>
+      <input type="file" id="material-texture-image" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" hidden>
+      <input type="file" id="style-reference-image" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" hidden>
 
       <label for="design-image" class="upload-canvas" id="upload-canvas">
         <img id="source-preview" class="source-preview" alt="Uploaded room preview" hidden>
@@ -692,13 +692,23 @@
     gap: 12px;
     padding: 28px;
     border: 2px dashed rgba(16, 185, 129, 0.4);
-    border-radius: 8px;
+    border-radius: 16px;
     background: var(--bg-card);
     color: var(--text-muted);
     text-align: center;
     cursor: pointer;
     overflow: hidden;
     transition: border-color 0.2s, background 0.2s, transform 0.2s;
+  }
+
+  .upload-canvas.is-portrait {
+    width: min(100%, 520px);
+    aspect-ratio: 9 / 16;
+  }
+
+  .upload-canvas.is-landscape {
+    width: min(100%, 860px);
+    aspect-ratio: 16 / 9;
   }
 
   .upload-canvas [hidden] {
@@ -759,6 +769,7 @@
     display: block;
     object-fit: cover;
     object-position: center;
+    border-radius: inherit;
     cursor: zoom-in;
     transform: translate(var(--preview-pan-x, 0px), var(--preview-pan-y, 0px)) scale(var(--preview-zoom, 1));
     transform-origin: center;
@@ -1910,9 +1921,15 @@
     const materialSelectionLabel = document.getElementById('material-selection-label');
     const materialContinueBtn = document.getElementById('material-continue-btn');
 
+  const TOOL_CONFIG = <%- JSON.stringify(aiToolsConfig || {}) %>;
+  const STUDIO_PROJECT = <%- JSON.stringify(studioProjectData || null) %>;
+  const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+  const ACCEPTED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
+
   let selectedFile = null;
   let projectSourceImageUrl = STUDIO_PROJECT?.imageUrl || '';
   let latestDesigns = STUDIO_PROJECT?.latestDesigns || [];
+    let isGenerating = false;
     let selectedTextureFile = null;
     let selectedStyleReferenceFile = null;
     let selectedEndpoint = '/api/v2/perfect_redesign';
@@ -1943,9 +1960,6 @@
     [spaceTypeGroup, designContextGrid, instructionsGroup, advancedOptions].forEach((element) => {
       element.classList.add('legacy-tool-controls');
     });
-
-  const TOOL_CONFIG = <%- JSON.stringify(aiToolsConfig || {}) %>;
-  const STUDIO_PROJECT = <%- JSON.stringify(studioProjectData || null) %>;
 
     const MATERIAL_SUBTYPES = {
       Wood: ['Oak', 'Maple', 'Cherry', 'Walnut', 'Pine', 'Teak', 'Mahogany', 'Bamboo', 'Birch'],
@@ -2482,6 +2496,7 @@
       }
       generateBtn.querySelector('span').textContent = config.submitLabel || (config.videoMotion ? 'Generate Video' : 'Generate Design');
       renderToolInterface();
+      updateGenerateButtonState();
     }
 
     function setStatus(message, type) {
@@ -2839,13 +2854,38 @@
     return Boolean(selectedFile || projectSourceImageUrl || (!sourcePreview.hidden && sourcePreview.src));
   }
 
+  function isSupportedImageFile(file) {
+    if (!file) return false;
+    if (ACCEPTED_IMAGE_TYPES.includes(file.type)) return true;
+    const extension = (file.name || '').split('.').pop()?.toLowerCase();
+    return ACCEPTED_IMAGE_EXTENSIONS.includes(extension);
+  }
+
+  function applyPreviewOrientation(imageElement) {
+    const isLandscape = imageElement.naturalWidth >= imageElement.naturalHeight;
+    uploadCanvas.classList.toggle('is-landscape', isLandscape);
+    uploadCanvas.classList.toggle('is-portrait', !isLandscape);
+  }
+
+  function updateGenerateButtonState() {
+    const currentConfig = getCurrentToolConfig();
+    const requiresImage = !currentConfig.imageOptional;
+    generateBtn.disabled = isGenerating || (requiresImage && !hasSourceImage());
+  }
+
   function setPreviewFromUrl(url, options = {}) {
     if (!url) return;
     selectedFile = null;
     projectSourceImageUrl = url;
     sourcePreview.onload = () => {
+      applyPreviewOrientation(sourcePreview);
       sizeMaskCanvas();
       updateMaskControls();
+      updateGenerateButtonState();
+    };
+    sourcePreview.onerror = () => {
+      setStatus('Unable to load the project image preview.', 'error');
+      updateGenerateButtonState();
     };
     sourcePreview.src = url;
     sourcePreview.hidden = false;
@@ -2859,6 +2899,7 @@
       resultPanel.hidden = true;
       resultMedia.innerHTML = '';
     }
+    updateGenerateButtonState();
   }
 
   function renderLatestDesigns() {
@@ -2921,13 +2962,25 @@
 
   function setImage(file) {
     if (!file) return;
+    if (!isSupportedImageFile(file)) {
+      setStatus('Please upload a JPG, PNG, or WebP image.', 'error');
+      imageInput.value = '';
+      updateGenerateButtonState();
+      return;
+    }
     selectedFile = file;
     projectSourceImageUrl = '';
     const reader = new FileReader();
       reader.onload = (event) => {
         sourcePreview.onload = () => {
+          applyPreviewOrientation(sourcePreview);
           sizeMaskCanvas();
           updateMaskControls();
+          updateGenerateButtonState();
+        };
+        sourcePreview.onerror = () => {
+          setStatus('Unable to preview this image. Please try another JPG, PNG, or WebP file.', 'error');
+          updateGenerateButtonState();
         };
         sourcePreview.src = event.target.result;
         sourcePreview.hidden = false;
@@ -2939,13 +2992,19 @@
         updateMaskControls();
         resultPanel.hidden = true;
         resultMedia.innerHTML = '';
-        setStatus('');
+        setStatus('Image ready.', 'success');
+        updateGenerateButtonState();
+      };
+      reader.onerror = () => {
+        setStatus('Unable to read this image. Please try another file.', 'error');
+        updateGenerateButtonState();
       };
       reader.readAsDataURL(file);
     }
 
     imageInput.addEventListener('change', () => {
       setImage(imageInput.files && imageInput.files[0]);
+      imageInput.value = '';
     });
 
     materialTextureImage.addEventListener('change', () => {
@@ -3331,7 +3390,8 @@
     async function handleGenerateDesign() {
       const currentConfig = getCurrentToolConfig();
     if (!hasSourceImage() && !currentConfig.imageOptional) {
-      setStatus('Upload an image before generating a design.', 'error');
+      setStatus('Image is required', 'error');
+      updateGenerateButtonState();
       return;
     }
       if (!selectedEndpoint) {
@@ -3404,7 +3464,8 @@
         if (maskBase64) formData.append('maskBase64', maskBase64);
       }
 
-      generateBtn.disabled = true;
+      isGenerating = true;
+      updateGenerateButtonState();
       generateBtn.querySelector('span').textContent = isVideoTool ? 'Generating video...' : currentToolKey() === 'furniture_finder' ? 'Finding products...' : 'Generating...';
       setStatus(isVideoTool ? 'Processing video...' : currentToolKey() === 'furniture_finder' ? 'Finding matching products...' : `Generating with ${selectedToolName}...`);
 
@@ -3424,8 +3485,9 @@
       } catch (error) {
         setStatus(error.message, 'error');
       } finally {
-        generateBtn.disabled = false;
+        isGenerating = false;
         generateBtn.querySelector('span').textContent = getCurrentToolConfig().submitLabel || (isVideoTool ? 'Generate Video' : 'Generate Design');
+        updateGenerateButtonState();
       }
     }
 

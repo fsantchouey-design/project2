@@ -379,7 +379,7 @@ router.post('/generate-design', ensureAuthenticated, uploadProjectImages.fields(
     if (!uploadedImage && !projectSourceImageUrl && !aiToolsConfig[toolKey]?.imageOptional) {
       return res.status(400).json({
         success: false,
-        message: 'Please upload an image before generating a design.'
+        error: 'Image is required'
       });
     }
 
