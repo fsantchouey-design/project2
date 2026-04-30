@@ -96,6 +96,7 @@ app.use('/projects', require('./routes/projects'));
 app.use('/contractors', require('./routes/contractors'));
 app.use('/admin', adminGuard, require('./routes/admin'));
 app.use('/api', require('./routes/api'));
+app.use('/api/homedesigns', require('./routes/homedesigns'));
 
 // 404 Handler
 app.use((req, res) => {
