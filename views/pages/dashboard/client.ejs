@@ -87,7 +87,7 @@
       <% if (projects && projects.length > 0) { %>
         <div class="project-list">
           <% projects.slice(0, 5).forEach(project => { %>
-            <a href="/projects/<%= project._id %>" class="project-item" data-project-id="<%= project._id %>" data-title="<%= project.title %>" data-room-type="<%= project.roomType || 'Projet' %>">
+            <a href="/projects/<%= project._id %>/studio" class="project-item" data-project-id="<%= project._id %>" data-title="<%= project.title %>" data-room-type="<%= project.roomType || 'Projet' %>">
               <div class="project-thumb">
                 <% if (project.designVariants && project.designVariants.length > 0) { %>
                   <img src="<%= project.designVariants[project.designVariants.length - 1].imageUrl || project.designVariants[project.designVariants.length - 1].thumbnailUrl %>" alt="<%= project.title %>">

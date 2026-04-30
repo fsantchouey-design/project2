@@ -136,11 +136,11 @@
             </div>
 
             <div class="project-actions">
-              <a href="/projects/<%= project._id %>" class="project-action primary">
+              <a href="/projects/<%= project._id %>/studio" class="project-action primary">
                 <i data-lucide="eye"></i>
                 View
               </a>
-              <a href="/projects/<%= project._id %>/edit" class="project-action">
+              <a href="/projects/<%= project._id %>/studio" class="project-action">
                 <i data-lucide="edit-3"></i>
                 Edit
               </a>
@@ -692,7 +692,7 @@
       favoritesSection.hidden = favoriteCards.length === 0;
       favoritesCount.textContent = `${favoriteCards.length} projet${favoriteCards.length > 1 ? 's' : ''}`;
       favoritesStrip.innerHTML = favoriteCards.map((card) => {
-        const link = `/projects/${card.dataset.projectId}`;
+        const link = `/projects//studio`;
         const title = card.querySelector('h3')?.textContent || 'Project';
         const image = card.querySelector('.project-media img')?.getAttribute('src');
         const media = image

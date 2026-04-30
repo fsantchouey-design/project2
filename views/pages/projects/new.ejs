@@ -1,3 +1,26 @@
+<%
+  const studioProjectData = typeof studioProject !== 'undefined' && studioProject ? {
+    id: String(studioProject._id),
+    title: studioProject.title || '',
+    description: studioProject.description || '',
+    roomType: studioProject.roomType || '',
+    style: studioProject.style || '',
+    instructions: studioProject.requirements || studioProject.description || '',
+    imageUrl: (studioProject.originalImages && studioProject.originalImages[0] && studioProject.originalImages[0].url)
+      || (studioProject.designVariants && studioProject.designVariants[0] && (studioProject.designVariants[0].imageUrl || studioProject.designVariants[0].thumbnailUrl))
+      || '',
+    latestDesigns: (studioProject.designVariants || []).slice(-6).reverse().map(function(variant) {
+      return {
+        id: variant._id ? String(variant._id) : '',
+        name: variant.name || variant.tool || 'Generated design',
+        imageUrl: variant.imageUrl || variant.thumbnailUrl || '',
+        thumbnailUrl: variant.thumbnailUrl || variant.imageUrl || '',
+        tool: variant.tool || '',
+        generatedAt: variant.generatedAt || variant.createdAt || null
+      };
+    })
+  } : null;
+%>
 <div class="ai-studio-page">
   <header class="studio-topbar">
     <div>
@@ -5,7 +28,7 @@
         <i data-lucide="arrow-left"></i>
         Back to Projects
       </a>
-      <h1>AI Design Studio</h1>
+      <h1><%= studioProjectData ? `${studioProjectData.title || 'Project'} Studio` : 'AI Design Studio' %></h1>
     </div>
     <button type="button" class="studio-secondary-btn" id="replace-image-btn">
       <i data-lucide="upload"></i>
@@ -154,6 +177,19 @@
           <strong id="result-tool-name">Redesign</strong>
         </div>
         <div class="result-media" id="result-media"></div>
+      </section>
+      <section class="latest-designs-panel" id="latest-designs-panel">
+        <div class="latest-designs-panel__header">
+          <div>
+            <span class="eyebrow">Project Gallery</span>
+            <h2>Latest Designs</h2>
+          </div>
+          <span id="latest-designs-count">0 designs</span>
+        </div>
+        <div class="latest-designs-grid" id="latest-designs-grid"></div>
+        <div class="latest-designs-empty" id="latest-designs-empty">
+          No generated designs yet. Your latest results will appear here.
+        </div>
       </section>
     </main>
 
@@ -1687,6 +1723,96 @@
       display: none;
     }
   }
+  .latest-designs-panel {
+    margin-top: 24px;
+    padding: 22px;
+    border: 1px solid rgba(76, 211, 194, 0.18);
+    border-radius: 20px;
+    background: rgba(12, 20, 34, 0.86);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.22);
+  }
+
+  .latest-designs-panel__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .latest-designs-panel__header h2 {
+    margin: 4px 0 0;
+    color: #f8fafc;
+    font-size: 1.25rem;
+  }
+
+  #latest-designs-count {
+    color: #94a3b8;
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+
+  .latest-designs-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .latest-design-card {
+    position: relative;
+    overflow: hidden;
+    min-height: 128px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    border-radius: 14px;
+    background: #0f172a;
+    cursor: pointer;
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  .latest-design-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(76, 211, 194, 0.58);
+    box-shadow: 0 18px 38px rgba(20, 184, 166, 0.14);
+  }
+
+  .latest-design-card img {
+    width: 100%;
+    height: 100%;
+    min-height: 128px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .latest-design-card span {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+  }
+
+  .latest-designs-empty {
+    display: none;
+    padding: 20px;
+    border: 1px dashed rgba(76, 211, 194, 0.28);
+    border-radius: 14px;
+    color: #94a3b8;
+    text-align: center;
+    background: rgba(15, 23, 42, 0.72);
+  }
+
+  .latest-designs-empty.is-visible {
+    display: block;
+  }
+
+  @media (max-width: 760px) {
+    .latest-designs-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
 </style>
 
 <script>
@@ -1712,7 +1838,10 @@
     const generateBtn = document.getElementById('generate-btn');
     const studioStatus = document.getElementById('studio-status');
     const resultPanel = document.getElementById('result-panel');
-    const resultMedia = document.getElementById('result-media');
+  const resultMedia = document.getElementById('result-media');
+  const latestDesignsGrid = document.getElementById('latest-designs-grid');
+  const latestDesignsEmpty = document.getElementById('latest-designs-empty');
+  const latestDesignsCount = document.getElementById('latest-designs-count');
     const resultToolName = document.getElementById('result-tool-name');
     const imageLightbox = document.getElementById('image-lightbox');
     const lightboxContent = document.getElementById('lightbox-content');
@@ -1781,7 +1910,9 @@
     const materialSelectionLabel = document.getElementById('material-selection-label');
     const materialContinueBtn = document.getElementById('material-continue-btn');
 
-    let selectedFile = null;
+  let selectedFile = null;
+  let projectSourceImageUrl = STUDIO_PROJECT?.imageUrl || '';
+  let latestDesigns = STUDIO_PROJECT?.latestDesigns || [];
     let selectedTextureFile = null;
     let selectedStyleReferenceFile = null;
     let selectedEndpoint = '/api/v2/perfect_redesign';
@@ -1813,7 +1944,8 @@
       element.classList.add('legacy-tool-controls');
     });
 
-    const TOOL_CONFIG = <%- JSON.stringify(aiToolsConfig || {}) %>;
+  const TOOL_CONFIG = <%- JSON.stringify(aiToolsConfig || {}) %>;
+  const STUDIO_PROJECT = <%- JSON.stringify(studioProjectData || null) %>;
 
     const MATERIAL_SUBTYPES = {
       Wood: ['Oak', 'Maple', 'Cherry', 'Walnut', 'Pine', 'Teak', 'Mahogany', 'Bamboo', 'Birch'],
@@ -2252,7 +2384,8 @@
           return;
         }
         materialSwapReady = true;
-        updateToolOptions();
+  updateToolOptions();
+  preloadStudioProject();
         setStatus('Selection ready. Choose the next option, then generate.', 'success');
       });
       toolInterface.querySelector('#tool-keep-structural')?.addEventListener('change', (event) => {
@@ -2702,10 +2835,95 @@
       return exportCanvas.toDataURL('image/png');
     }
 
-    function setImage(file) {
-      if (!file) return;
-      selectedFile = file;
-      const reader = new FileReader();
+  function hasSourceImage() {
+    return Boolean(selectedFile || projectSourceImageUrl || (!sourcePreview.hidden && sourcePreview.src));
+  }
+
+  function setPreviewFromUrl(url, options = {}) {
+    if (!url) return;
+    selectedFile = null;
+    projectSourceImageUrl = url;
+    sourcePreview.onload = () => {
+      sizeMaskCanvas();
+      updateMaskControls();
+    };
+    sourcePreview.src = url;
+    sourcePreview.hidden = false;
+    uploadPlaceholder.hidden = true;
+    changeImageBtn.hidden = false;
+    uploadCanvas.classList.add('has-image');
+    resetMaskCanvas();
+    resetPreviewTransform();
+    updateMaskControls();
+    if (!options.keepResult) {
+      resultPanel.hidden = true;
+      resultMedia.innerHTML = '';
+    }
+  }
+
+  function renderLatestDesigns() {
+    if (!latestDesignsGrid || !latestDesignsEmpty || !latestDesignsCount) return;
+    const visibleDesigns = latestDesigns.filter((design) => design.imageUrl || design.thumbnailUrl).slice(0, 6);
+    latestDesignsCount.textContent = `${visibleDesigns.length} ${visibleDesigns.length === 1 ? 'design' : 'designs'}`;
+    latestDesignsGrid.innerHTML = visibleDesigns.map((design, index) => `
+      <button type="button" class="latest-design-card" data-design-index="${index}">
+        <img src="${design.thumbnailUrl || design.imageUrl}" alt="${design.name || 'Generated design'}">
+        <span>${design.name || design.tool || 'Generated design'}</span>
+      </button>
+    `).join('');
+    latestDesignsEmpty.classList.toggle('is-visible', visibleDesigns.length === 0);
+  }
+
+  function addLatestDesignsFromResponse(data) {
+    const incoming = data.savedDesigns || data.designs || [];
+    if (!incoming.length) return;
+    const normalized = incoming
+      .map((design) => ({
+        id: design.id || `${Date.now()}-${Math.random()}`,
+        name: design.name || selectedToolName,
+        imageUrl: design.imageUrl || design.url || '',
+        thumbnailUrl: design.thumbnailUrl || design.imageUrl || design.url || '',
+        tool: design.tool || selectedToolName,
+        generatedAt: design.generatedAt || new Date().toISOString()
+      }))
+      .filter((design) => design.imageUrl || design.thumbnailUrl);
+    latestDesigns = [...normalized, ...latestDesigns].slice(0, 6);
+    renderLatestDesigns();
+  }
+
+  function preloadStudioProject() {
+    if (!STUDIO_PROJECT) {
+      renderLatestDesigns();
+      return;
+    }
+    if (STUDIO_PROJECT.imageUrl) {
+      setPreviewFromUrl(STUDIO_PROJECT.imageUrl, { keepResult: true });
+    }
+    const roomTypeSelect = document.getElementById('room-type');
+    const styleSelect = document.getElementById('design-style');
+    const instructionsInput = document.getElementById('additional-instructions');
+    if (roomTypeSelect && STUDIO_PROJECT.roomType) roomTypeSelect.value = STUDIO_PROJECT.roomType;
+    if (styleSelect && STUDIO_PROJECT.style) styleSelect.value = STUDIO_PROJECT.style;
+    if (instructionsInput && STUDIO_PROJECT.instructions) instructionsInput.value = STUDIO_PROJECT.instructions;
+    renderLatestDesigns();
+  }
+
+  latestDesignsGrid?.addEventListener('click', (event) => {
+    const card = event.target.closest('.latest-design-card');
+    if (!card) return;
+    const design = latestDesigns[Number(card.dataset.designIndex)];
+    const previewUrl = design?.imageUrl || design?.thumbnailUrl;
+    if (previewUrl) {
+      setPreviewFromUrl(previewUrl);
+      setStatus('Design loaded in the main preview.', 'success');
+    }
+  });
+
+  function setImage(file) {
+    if (!file) return;
+    selectedFile = file;
+    projectSourceImageUrl = '';
+    const reader = new FileReader();
       reader.onload = (event) => {
         sourcePreview.onload = () => {
           sizeMaskCanvas();
@@ -3106,15 +3324,16 @@
         resultMedia.appendChild(text);
       }
 
-      resultPanel.hidden = false;
+    resultPanel.hidden = false;
+    addLatestDesignsFromResponse(data);
     }
 
     async function handleGenerateDesign() {
       const currentConfig = getCurrentToolConfig();
-      if (!selectedFile && !currentConfig.imageOptional) {
-        setStatus('Upload an image before generating a design.', 'error');
-        return;
-      }
+    if (!hasSourceImage() && !currentConfig.imageOptional) {
+      setStatus('Upload an image before generating a design.', 'error');
+      return;
+    }
       if (!selectedEndpoint) {
         setStatus('Select an AI tool before generating a design.', 'error');
         return;
@@ -3145,7 +3364,9 @@
       }
 
       const formData = new FormData();
-      if (selectedFile) formData.append('image', selectedFile);
+    if (selectedFile) formData.append('image', selectedFile);
+    if (STUDIO_PROJECT?.id) formData.append('projectId', STUDIO_PROJECT.id);
+    if (!selectedFile && projectSourceImageUrl) formData.append('sourceImageUrl', projectSourceImageUrl);
       formData.append('selectedToolEndpoint', selectedEndpoint);
       formData.append('selectedToolName', selectedToolName);
       const fields = currentConfig.fields || [];

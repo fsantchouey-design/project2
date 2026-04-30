@@ -330,6 +330,8 @@ router.post('/generate-design', ensureAuthenticated, uploadProjectImages.fields(
     const textureImage = req.files?.textureImage && req.files.textureImage[0];
     const styleImage = req.files?.styleImage && req.files.styleImage[0];
     const endpoint = req.body.selectedToolEndpoint || req.body.endpoint;
+    const projectId = req.body.projectId;
+    const requestedSourceImageUrl = req.body.sourceImageUrl;
     const toolKey = normalizeToolEndpoint(endpoint);
     const tool = aiToolHandlers[toolKey];
 
@@ -344,12 +346,46 @@ router.post('/generate-design', ensureAuthenticated, uploadProjectImages.fields(
       });
     }
 
-    if (!uploadedImage && !aiToolsConfig[toolKey]?.imageOptional) {
-      return res.status(400).json({ success: false, error: 'Please upload an image before generating.' });
+    let project = null;
+    let projectSourceImageUrl = '';
+
+    if (projectId) {
+      project = await Project.findOne({ _id: projectId, user: req.user.id });
+      if (!project) {
+        return res.status(404).json({ success: false, message: 'Project not found.' });
+      }
+
+      const originalImages = project.originalImages || [];
+      const generatedImages = project.designVariants || [];
+      const knownUrls = [
+        ...originalImages.map((image) => image.url),
+        ...generatedImages.map((design) => design.imageUrl || design.thumbnailUrl)
+      ].filter(Boolean);
+      const knownUrlSet = new Set([
+        ...knownUrls,
+        ...knownUrls.map((url) => toAbsoluteImageUrl(url))
+      ]);
+
+      if (requestedSourceImageUrl && knownUrlSet.has(requestedSourceImageUrl)) {
+        projectSourceImageUrl = requestedSourceImageUrl;
+      } else {
+        projectSourceImageUrl = originalImages[0]?.url
+          || generatedImages[generatedImages.length - 1]?.imageUrl
+          || generatedImages[generatedImages.length - 1]?.thumbnailUrl
+          || '';
+      }
+    }
+
+    if (!uploadedImage && !projectSourceImageUrl && !aiToolsConfig[toolKey]?.imageOptional) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please upload an image before generating a design.'
+      });
     }
 
     const upstreamEndpoint = `${getHomeDesignsBaseUrl()}${endpoint}`;
-    const imageUrl = uploadedImage ? toAbsoluteImageUrl(getImageUrl(uploadedImage)) : undefined;
+    const uploadedImageUrl = uploadedImage ? getImageUrl(uploadedImage) : '';
+    const imageUrl = uploadedImageUrl ? toAbsoluteImageUrl(uploadedImageUrl) : toAbsoluteImageUrl(projectSourceImageUrl);
     const videoMotion = req.body.tool_name || req.body.videoMotion || 'zoom_in';
     if (toolKey === 'video_generation' && !VIDEO_GENERATION_MOTIONS.includes(videoMotion)) {
       return res.status(400).json({
@@ -402,7 +438,59 @@ router.post('/generate-design', ensureAuthenticated, uploadProjectImages.fields(
       return res.status(502).json({ success: false, error: result?.error || 'HomeDesigns returned an invalid response.' });
     }
 
-    res.json(buildGenerateDesignResponse(result, tool.name, endpoint));
+    const responsePayload = buildGenerateDesignResponse(result, tool.name, endpoint);
+
+    if (project) {
+      if (uploadedImageUrl) {
+        project.originalImages.push({ url: uploadedImageUrl, uploadedAt: new Date() });
+      }
+
+      const savedDesigns = [];
+      (responsePayload.designs || []).slice(0, 6).forEach((design) => {
+        if (!design.imageUrl) return;
+        project.designVariants.push({
+          name: design.name || tool.name,
+          tool: tool.name,
+          imageUrl: design.imageUrl,
+          thumbnailUrl: design.thumbnailUrl || design.imageUrl,
+          aiParameters: {
+            endpoint,
+            toolKey,
+            sourceImageUrl: projectSourceImageUrl || uploadedImageUrl,
+            roomType: req.body.roomType,
+            style: req.body.designStyle,
+            instructions: req.body.additionalInstructions || req.body.prompt
+          },
+          generatedAt: new Date()
+        });
+        const saved = project.designVariants[project.designVariants.length - 1];
+        savedDesigns.push({
+          id: String(saved._id),
+          name: saved.name,
+          imageUrl: saved.imageUrl,
+          thumbnailUrl: saved.thumbnailUrl || saved.imageUrl,
+          tool: saved.tool,
+          generatedAt: saved.generatedAt
+        });
+      });
+
+      if (project.aiGenerationHistory) {
+        project.aiGenerationHistory.push({
+          tool: tool.name,
+          endpoint,
+          prompt: req.body.additionalInstructions || req.body.prompt || '',
+          status: 'completed',
+          result: responsePayload.imageUrl || responsePayload.videoUrl || responsePayload.textResult || '',
+          createdAt: new Date()
+        });
+      }
+
+      await project.save();
+      responsePayload.projectId = String(project._id);
+      responsePayload.savedDesigns = savedDesigns;
+    }
+
+    res.json(responsePayload);
   } catch (err) {
     console.error('[GenerateDesign] Error:', err);
     res.status(500).json({ success: false, error: err.message || 'Unable to generate design.' });

@@ -100,6 +100,59 @@ router.post('/', ensureAuthenticated, upload.array('images', 5), async (req, res
 });
 
 // View Project
+router.get('/:id/studio', ensureAuthenticated, async (req, res) => {
+  try {
+    const project = await Project.findOne({
+      _id: req.params.id,
+      user: req.user.id
+    });
+
+    if (!project) {
+      req.flash('error', 'Project not found.');
+      return res.redirect('/projects');
+    }
+
+    res.render('pages/projects/new', {
+      title: `${project.title || 'Project'} - AI Studio - CraftyCrib`,
+      layout: 'layouts/dashboard',
+      activePage: 'projects',
+      styles: PROJECT_STYLES,
+      roomTypes: ROOM_TYPES,
+      aiToolsConfig,
+      studioProject: project
+    });
+  } catch (error) {
+    console.error('Studio route error:', error);
+    req.flash('error', 'Unable to open the project studio.');
+    res.redirect('/projects');
+  }
+});
+
+router.get('/:id/view', ensureAuthenticated, async (req, res) => {
+  try {
+    const project = await Project.findOne({
+      _id: req.params.id,
+      user: req.user.id
+    });
+
+    if (!project) {
+      req.flash('error', 'Project not found.');
+      return res.redirect('/projects');
+    }
+
+    res.render('pages/projects/view-slider', {
+      title: `${project.title || 'Project'} - Preview - CraftyCrib`,
+      layout: 'layouts/dashboard',
+      activePage: 'projects',
+      project
+    });
+  } catch (error) {
+    console.error('Project view route error:', error);
+    req.flash('error', 'Unable to open the project preview.');
+    res.redirect('/projects');
+  }
+});
+
 router.get('/:id', ensureAuthenticated, async (req, res) => {
   try {
     const project = await Project.findOne({
