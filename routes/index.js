@@ -10,7 +10,7 @@ const ContactMessage = require('../models/ContactMessage');
 const InspirationImage = require('../models/InspirationImage');
 const GalleryVideo = require('../models/GalleryVideo');
 const PricingConfig = require('../models/PricingConfig');
-const { mergePricingConfig } = require('../utils/pricingConfig');
+const { mergePricingConfig, contractorPlans } = require('../utils/pricingConfig');
 
 // Landing Page
 router.get('/', async (req, res) => {
@@ -79,7 +79,8 @@ router.get('/pricing', async (req, res) => {
     metaDescription: 'Choose the perfect CraftyCrib plan. Free with contractor partners, or pay-as-you-go for DIY projects. Start with 3 free AI generations.',
     keywords: 'interior design pricing, AI design cost, renovation platform pricing, home design subscription',
     layout: 'layouts/landing',
-    plans: pricingConfig
+    plans: pricingConfig,
+    contractorPlans
   });
 });
 

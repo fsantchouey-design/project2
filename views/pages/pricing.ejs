@@ -8,28 +8,56 @@
     <h1>Choisissez votre <span class="gradient-text">forfait idéal</span></h1>
     <p class="hero-subtitle">Commencez gratuitement ou débloquez tout le potentiel du design d'intérieur par IA.</p>
   </div>
-  
+
   <div class="hero-bg">
     <div class="gradient-orb hero-orb-1"></div>
     <div class="gradient-orb hero-orb-2"></div>
   </div>
 </section>
 
-<!-- Main Pricing Section -->
+<!-- Main Pricing Section — Plans IA -->
 <section class="pricing-section">
   <div class="container">
+    <h2 class="plans-section-title">Abonnements IA</h2>
+    <p class="plans-section-subtitle">Visualisez vos espaces avec la puissance de l'intelligence artificielle.</p>
+
+    <!-- AI Billing Toggle -->
+    <div class="billing-toggle-wrapper">
+      <div class="billing-toggle">
+        <span class="toggle-option" id="ai-monthly-label">Mensuel</span>
+        <label class="toggle-switch" for="ai-billing-switch">
+          <input type="checkbox" id="ai-billing-switch" checked>
+          <span class="toggle-slider"></span>
+        </label>
+        <span class="toggle-option active" id="ai-annual-label">
+          Annuel
+          <span class="toggle-badge-pill">2 mois offerts</span>
+        </span>
+      </div>
+    </div>
+
     <!-- Pricing Cards Grid -->
-    <div class="pricing-grid three-cards">
-      
-      <!-- Régulier (Free) Plan -->
+    <div class="pricing-grid three-cards" id="ai-plans-grid">
+
+      <!-- Régulier Plan -->
       <div class="pricing-card">
         <div class="card-header">
           <span class="plan-name"><%= plans.regular.name %></span>
           <span class="plan-subtitle"><%= plans.regular.subtitle %></span>
         </div>
         <div class="card-price">
-          <span class="price-amount">0$</span>
-          <span class="price-period">gratuit</span>
+          <span class="price-amount"
+                data-monthly="<%= plans.regular.price %>"
+                data-annual="<%= plans.regular.priceMonthlyEquivalent %>"><%= plans.regular.priceMonthlyEquivalent %>$</span>
+          <span class="price-period">CAD /mois</span>
+        </div>
+        <div class="annual-price-info ai-annual-info">
+          <span class="annual-total-text"><%= plans.regular.priceAnnual %>$ CAD / an</span>
+          <span class="annual-savings-badge">Économisez <%= plans.regular.savings %>$</span>
+        </div>
+        <div class="generations-badge">
+          <i data-lucide="zap"></i>
+          <span><%= plans.regular.generations %> crédits IA / mois</span>
         </div>
         <p class="plan-description"><%= plans.regular.description %></p>
         <ul class="features-list">
@@ -45,9 +73,9 @@
             <%= plans.regular.bonus %>
           </div>
         <% } %>
-        <a href="<%= plans.regular.ctaLink %>" class="btn btn-secondary btn-full"><%= plans.regular.cta %></a>
+        <a href="<%= plans.regular.ctaLink %>" class="btn btn-secondary btn-full" data-stripe-plan="regular"><%= plans.regular.cta %></a>
       </div>
-      
+
       <!-- Avancé Plan (Popular) -->
       <div class="pricing-card popular-card">
         <% if (plans.advanced.badge) { %>
@@ -59,12 +87,18 @@
           <span class="plan-subtitle"><%= plans.advanced.subtitle %></span>
         </div>
         <div class="card-price">
-          <span class="price-amount"><%= plans.advanced.price %>$</span>
-          <span class="price-period">CAD <%= plans.advanced.period %></span>
+          <span class="price-amount"
+                data-monthly="<%= plans.advanced.price %>"
+                data-annual="<%= plans.advanced.priceMonthlyEquivalent %>"><%= plans.advanced.priceMonthlyEquivalent %>$</span>
+          <span class="price-period">CAD /mois</span>
+        </div>
+        <div class="annual-price-info ai-annual-info">
+          <span class="annual-total-text"><%= plans.advanced.priceAnnual %>$ CAD / an</span>
+          <span class="annual-savings-badge">Économisez <%= plans.advanced.savings %>$</span>
         </div>
         <div class="generations-badge">
           <i data-lucide="zap"></i>
-          <span><%= plans.advanced.generations %> générations / mois</span>
+          <span><%= plans.advanced.generations %> générations IA / mois</span>
         </div>
         <p class="plan-description"><%= plans.advanced.description %></p>
         <ul class="features-list">
@@ -75,12 +109,12 @@
             </li>
           <% }) %>
         </ul>
-        <a href="<%= plans.advanced.ctaLink %>" class="btn btn-primary btn-full">
+        <a href="<%= plans.advanced.ctaLink %>" class="btn btn-primary btn-full" data-stripe-plan="advanced">
           <i data-lucide="sparkles"></i>
           <%= plans.advanced.cta %>
         </a>
       </div>
-      
+
       <!-- Premium Plan -->
       <div class="pricing-card premium-card">
         <% if (plans.premium.badge) { %>
@@ -91,12 +125,18 @@
           <span class="plan-subtitle"><%= plans.premium.subtitle %></span>
         </div>
         <div class="card-price">
-          <span class="price-amount"><%= plans.premium.price %>$</span>
-          <span class="price-period">CAD <%= plans.premium.period %></span>
+          <span class="price-amount"
+                data-monthly="<%= plans.premium.price %>"
+                data-annual="<%= plans.premium.priceMonthlyEquivalent %>"><%= plans.premium.priceMonthlyEquivalent %>$</span>
+          <span class="price-period">CAD /mois</span>
         </div>
-        <div class="generations-badge unlimited">
-          <i data-lucide="infinity"></i>
-          <span>Générations illimitées</span>
+        <div class="annual-price-info ai-annual-info">
+          <span class="annual-total-text"><%= plans.premium.priceAnnual %>$ CAD / an</span>
+          <span class="annual-savings-badge">Économisez <%= plans.premium.savings %>$</span>
+        </div>
+        <div class="generations-badge<%= plans.premium.generations === 0 ? ' unlimited' : '' %>">
+          <i data-lucide="<%= plans.premium.generations === 0 ? 'infinity' : 'zap' %>"></i>
+          <span><%= plans.premium.generations === 0 ? 'Générations illimitées' : plans.premium.generations + ' générations / mois' %></span>
         </div>
         <p class="plan-description"><%= plans.premium.description %></p>
         <ul class="features-list">
@@ -107,13 +147,106 @@
             </li>
           <% }) %>
         </ul>
-        <a href="<%= plans.premium.ctaLink %>" class="btn btn-outline btn-full">
+        <a href="<%= plans.premium.ctaLink %>" class="btn btn-outline btn-full" data-stripe-plan="premium">
           <i data-lucide="crown"></i>
           <%= plans.premium.cta %>
         </a>
       </div>
-      
+
     </div>
+  </div>
+</section>
+
+<!-- Contractor Plans Section -->
+<section class="pricing-section contractor-plans-section">
+  <div class="container">
+    <h2 class="plans-section-title">Abonnements entrepreneurs</h2>
+    <p class="plans-section-subtitle">Recevez des projets qualifiés, sans commission.</p>
+
+    <!-- Contractor Billing Toggle -->
+    <div class="billing-toggle-wrapper">
+      <div class="billing-toggle">
+        <span class="toggle-option" id="contractor-monthly-label">Mensuel</span>
+        <label class="toggle-switch" for="contractor-billing-switch">
+          <input type="checkbox" id="contractor-billing-switch" checked>
+          <span class="toggle-slider"></span>
+        </label>
+        <span class="toggle-option active" id="contractor-annual-label">
+          Annuel
+          <span class="toggle-badge-pill">2 mois offerts</span>
+        </span>
+      </div>
+    </div>
+
+    <!-- Contractor Cards Grid -->
+    <div class="pricing-grid" id="contractor-plans-grid">
+
+      <% contractorPlans.forEach(function(plan) { %>
+        <div class="pricing-card<%= plan.popular ? ' popular-card' : '' %><%= plan.id === 'elite' ? ' premium-card' : '' %>">
+          <% if (plan.badge) { %>
+            <span class="card-badge popular"><%= plan.badge %></span>
+          <% } %>
+          <% if (plan.popular) { %>
+            <div class="popular-ribbon">Plus populaire</div>
+          <% } %>
+
+          <div class="card-header">
+            <span class="plan-name"><%= plan.name %></span>
+            <span class="plan-subtitle"><%= plan.subtitle %></span>
+          </div>
+
+          <% if (plan.price === 0) { %>
+            <div class="card-price">
+              <span class="price-amount">0$</span>
+              <span class="price-period">/ mois</span>
+            </div>
+          <% } else { %>
+            <div class="card-price">
+              <span class="price-amount"
+                    data-monthly="<%= plan.price %>"
+                    data-annual="<%= plan.priceMonthlyEquivalent %>"><%= plan.priceMonthlyEquivalent %>$</span>
+              <span class="price-period">CAD /mois</span>
+            </div>
+            <div class="annual-price-info contractor-annual-info">
+              <span class="annual-total-text"><%= plan.priceAnnual %>$ CAD / an</span>
+              <span class="annual-savings-badge">Économisez <%= plan.savings %>$</span>
+            </div>
+          <% } %>
+
+          <ul class="features-list">
+            <% plan.features.forEach(function(feature) { %>
+              <li class="<%= feature.addon ? 'addon' : '' %>">
+                <i data-lucide="<%= feature.addon ? 'minus-circle' : 'check' %>"></i>
+                <%= feature.text %>
+              </li>
+            <% }) %>
+          </ul>
+
+          <% if (plan.popular) { %>
+            <a href="<%= plan.ctaLink %>" class="btn btn-primary btn-full" data-stripe-plan="contractor-<%= plan.id %>">
+              <i data-lucide="sparkles"></i>
+              <%= plan.cta %>
+            </a>
+          <% } else if (plan.id === 'elite') { %>
+            <a href="<%= plan.ctaLink %>" class="btn btn-outline btn-full" data-stripe-plan="contractor-<%= plan.id %>">
+              <i data-lucide="crown"></i>
+              <%= plan.cta %>
+            </a>
+          <% } else if (plan.price === 0) { %>
+            <a href="<%= plan.ctaLink %>" class="btn btn-secondary btn-full" data-stripe-plan="contractor-<%= plan.id %>">
+              <%= plan.cta %>
+            </a>
+          <% } else { %>
+            <a href="<%= plan.ctaLink %>" class="btn btn-secondary btn-full" data-stripe-plan="contractor-<%= plan.id %>">
+              <%= plan.cta %>
+            </a>
+          <% } %>
+        </div>
+      <% }) %>
+
+    </div>
+
+    <p class="contractor-bonus-text">💡 1 seul projet peut rentabiliser votre abonnement.</p>
   </div>
 </section>
 
@@ -168,7 +301,7 @@
           <% } %>
           <tr>
             <td><strong>Prix</strong></td>
-            <td><strong><%= plans.regular.price === 0 ? 'Gratuit' : plans.regular.price + '$ ' + plans.regular.period %></strong></td>
+            <td><strong><%= plans.regular.price %>$ <%= plans.regular.period %></strong></td>
             <td class="highlight"><strong><%= plans.advanced.price %>$ <%= plans.advanced.period %></strong></td>
             <td><strong><%= plans.premium.price %>$ <%= plans.premium.period %></strong></td>
           </tr>
@@ -227,6 +360,39 @@
   </div>
 </section>
 
+<script>
+(function () {
+  function initBillingToggle(switchId, gridId, annualInfoClass, monthlyLabelId, annualLabelId) {
+    var switchEl = document.getElementById(switchId);
+    var grid = document.getElementById(gridId);
+    if (!switchEl || !grid) return;
+
+    var priceEls = grid.querySelectorAll('.price-amount[data-monthly]');
+    var annualInfoEls = grid.querySelectorAll('.' + annualInfoClass);
+    var monthlyLabel = document.getElementById(monthlyLabelId);
+    var annualLabel = document.getElementById(annualLabelId);
+
+    function update() {
+      var isAnnual = switchEl.checked;
+      priceEls.forEach(function (el) {
+        el.textContent = (isAnnual ? el.dataset.annual : el.dataset.monthly) + '$';
+      });
+      annualInfoEls.forEach(function (el) {
+        el.style.display = isAnnual ? 'flex' : 'none';
+      });
+      if (monthlyLabel) monthlyLabel.classList.toggle('active', !isAnnual);
+      if (annualLabel) annualLabel.classList.toggle('active', isAnnual);
+    }
+
+    switchEl.addEventListener('change', update);
+    update();
+  }
+
+  initBillingToggle('ai-billing-switch', 'ai-plans-grid', 'ai-annual-info', 'ai-monthly-label', 'ai-annual-label');
+  initBillingToggle('contractor-billing-switch', 'contractor-plans-grid', 'contractor-annual-info', 'contractor-monthly-label', 'contractor-annual-label');
+})();
+</script>
+
 <style>
   /* Pricing Hero */
   .pricing-hero {
@@ -234,13 +400,13 @@
     padding: 140px 2rem 60px;
     text-align: center;
   }
-  
+
   .pricing-hero h1 {
     font-size: clamp(2rem, 5vw, 3.5rem);
     font-weight: 800;
     margin-bottom: var(--spacing-lg);
   }
-  
+
   .pricing-hero .hero-subtitle {
     font-size: 1.1rem;
     color: var(--text-secondary);
@@ -249,12 +415,144 @@
     margin-left: auto;
     margin-right: auto;
   }
-  
+
   /* Pricing Section */
   .pricing-section {
     padding: var(--spacing-2xl) 2rem var(--spacing-3xl);
   }
-  
+
+  .contractor-plans-section {
+    background: var(--bg-secondary);
+  }
+
+  .plans-section-title {
+    text-align: center;
+    margin-bottom: var(--spacing-sm);
+  }
+
+  .plans-section-subtitle {
+    text-align: center;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-2xl);
+  }
+
+  /* Billing Toggle */
+  .billing-toggle-wrapper {
+    display: flex;
+    justify-content: center;
+    margin-bottom: var(--spacing-2xl);
+  }
+
+  .billing-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-md);
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-full);
+    padding: 0.5rem 1.5rem;
+  }
+
+  .toggle-option {
+    font-size: 0.95rem;
+    color: var(--text-muted);
+    font-weight: 500;
+    transition: color var(--transition-base);
+  }
+
+  .toggle-option.active {
+    color: var(--text-primary);
+    font-weight: 600;
+  }
+
+  .toggle-switch {
+    position: relative;
+    display: inline-block;
+    width: 44px;
+    height: 24px;
+    cursor: pointer;
+  }
+
+  .toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  .toggle-slider {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 24px;
+    transition: var(--transition-base);
+  }
+
+  .toggle-slider:before {
+    content: '';
+    position: absolute;
+    height: 16px;
+    width: 16px;
+    left: 3px;
+    bottom: 3px;
+    background: var(--text-muted);
+    border-radius: 50%;
+    transition: var(--transition-base);
+  }
+
+  .toggle-switch input:checked + .toggle-slider {
+    background: rgba(0, 255, 136, 0.15);
+    border-color: var(--accent-primary);
+  }
+
+  .toggle-switch input:checked + .toggle-slider:before {
+    background: var(--accent-primary);
+    transform: translateX(20px);
+  }
+
+  .toggle-badge-pill {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    background: var(--accent-gradient);
+    color: #000;
+    border-radius: var(--radius-full);
+    font-size: 0.7rem;
+    font-weight: 700;
+    margin-left: 0.25rem;
+    vertical-align: middle;
+  }
+
+  /* Annual info */
+  .annual-price-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: var(--spacing-sm);
+    font-size: 0.8rem;
+  }
+
+  .annual-total-text {
+    color: var(--text-muted);
+  }
+
+  .annual-savings-badge {
+    padding: 0.2rem 0.5rem;
+    background: rgba(16, 185, 129, 0.15);
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    border-radius: var(--radius-full);
+    color: var(--accent-primary);
+    font-weight: 600;
+    font-size: 0.75rem;
+  }
+
+  .contractor-bonus-text {
+    text-align: center;
+    color: var(--text-secondary);
+    margin-top: var(--spacing-xl);
+    font-size: 1rem;
+  }
+
   .pricing-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -262,12 +560,12 @@
     max-width: 1400px;
     margin: 0 auto;
   }
-  
+
   .pricing-grid.three-cards {
     grid-template-columns: repeat(3, 1fr);
     max-width: 1100px;
   }
-  
+
   /* Pricing Card */
   .pricing-card {
     background: var(--bg-card);
@@ -279,27 +577,27 @@
     flex-direction: column;
     transition: all var(--transition-base);
   }
-  
+
   .pricing-card:hover {
     border-color: var(--border-color-hover);
     transform: translateY(-4px);
   }
-  
+
   .pricing-card.popular-card {
     border-color: var(--accent-primary);
     background: linear-gradient(135deg, rgba(0, 255, 136, 0.05), rgba(0, 212, 255, 0.02));
     transform: scale(1.02);
   }
-  
+
   .pricing-card.popular-card:hover {
     transform: scale(1.04);
   }
-  
+
   .pricing-card.premium-card {
     background: linear-gradient(135deg, rgba(124, 58, 237, 0.05), rgba(168, 85, 247, 0.02));
     border-color: rgba(124, 58, 237, 0.3);
   }
-  
+
   .card-badge {
     position: absolute;
     top: var(--spacing-lg);
@@ -310,17 +608,17 @@
     font-size: 0.75rem;
     font-weight: 600;
   }
-  
+
   .card-badge.popular {
     background: var(--accent-gradient);
     color: #000;
   }
-  
+
   .card-badge.premium {
     background: linear-gradient(135deg, #8b5cf6, #a855f7);
     color: #fff;
   }
-  
+
   .popular-ribbon {
     position: absolute;
     top: -1px;
@@ -334,28 +632,28 @@
     text-transform: uppercase;
     border-radius: 0 0 var(--radius-md) var(--radius-md);
   }
-  
+
   .card-header {
     margin-bottom: var(--spacing-lg);
     padding-top: var(--spacing-md);
   }
-  
+
   .plan-name {
     display: block;
     font-size: 1.5rem;
     font-weight: 700;
     margin-bottom: var(--spacing-xs);
   }
-  
+
   .plan-subtitle {
     font-size: 0.85rem;
     color: var(--text-muted);
   }
-  
+
   .card-price {
     margin-bottom: var(--spacing-sm);
   }
-  
+
   .price-amount {
     font-family: var(--font-display);
     font-size: 3rem;
@@ -364,12 +662,12 @@
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
   }
-  
+
   .price-period {
     font-size: 0.9rem;
     color: var(--text-muted);
   }
-  
+
   .generations-badge {
     display: inline-flex;
     align-items: center;
@@ -383,31 +681,31 @@
     color: var(--accent-primary);
     margin-bottom: var(--spacing-lg);
   }
-  
+
   .generations-badge.unlimited {
     background: rgba(139, 92, 246, 0.1);
     border-color: rgba(139, 92, 246, 0.2);
     color: #8b5cf6;
   }
-  
+
   .generations-badge i {
     width: 16px;
     height: 16px;
   }
-  
+
   .plan-description {
     font-size: 0.9rem;
     color: var(--text-secondary);
     line-height: 1.5;
     margin-bottom: var(--spacing-lg);
   }
-  
+
   .features-list {
     flex: 1;
     list-style: none;
     margin-bottom: var(--spacing-xl);
   }
-  
+
   .features-list li {
     display: flex;
     align-items: center;
@@ -416,23 +714,23 @@
     font-size: 0.9rem;
     color: var(--text-secondary);
   }
-  
+
   .features-list li i {
     width: 18px;
     height: 18px;
     color: var(--success);
     flex-shrink: 0;
   }
-  
+
   .features-list li.addon {
     color: var(--text-muted);
     font-size: 0.85rem;
   }
-  
+
   .features-list li.addon i {
     color: var(--text-muted);
   }
-  
+
   .bonus-box {
     background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(0, 212, 255, 0.05));
     border: 1px solid rgba(16, 185, 129, 0.2);
@@ -443,17 +741,17 @@
     color: var(--text-secondary);
     line-height: 1.5;
   }
-  
+
   .btn-full {
     width: 100%;
     justify-content: center;
   }
-  
+
   /* Partner Bonus Section */
   .partner-bonus {
     padding: var(--spacing-2xl) 2rem;
   }
-  
+
   .bonus-card {
     display: flex;
     align-items: center;
@@ -465,7 +763,7 @@
     border: 1px solid rgba(16, 185, 129, 0.2);
     border-radius: var(--radius-xl);
   }
-  
+
   .bonus-icon {
     width: 80px;
     height: 80px;
@@ -476,28 +774,28 @@
     border-radius: var(--radius-lg);
     flex-shrink: 0;
   }
-  
+
   .bonus-icon i {
     width: 40px;
     height: 40px;
     color: #000;
   }
-  
+
   .bonus-content h2 {
     font-size: 1.5rem;
     margin-bottom: var(--spacing-md);
   }
-  
+
   .bonus-content p {
     color: var(--text-secondary);
     margin-bottom: var(--spacing-md);
   }
-  
+
   .bonus-content ul {
     list-style: none;
     margin-bottom: var(--spacing-lg);
   }
-  
+
   .bonus-content ul li {
     display: flex;
     align-items: center;
@@ -505,80 +803,80 @@
     padding: var(--spacing-xs) 0;
     color: var(--text-secondary);
   }
-  
+
   .bonus-content ul li i {
     width: 18px;
     height: 18px;
     color: var(--success);
   }
-  
+
   /* Comparison Table */
   .comparison-section {
     padding: var(--spacing-3xl) 2rem;
     background: var(--bg-secondary);
   }
-  
+
   .comparison-section h2 {
     text-align: center;
     margin-bottom: var(--spacing-2xl);
   }
-  
+
   .comparison-table-wrapper {
     overflow-x: auto;
     max-width: 900px;
     margin: 0 auto;
   }
-  
+
   .comparison-table {
     width: 100%;
     border-collapse: collapse;
   }
-  
+
   .comparison-table th,
   .comparison-table td {
     padding: var(--spacing-md) var(--spacing-lg);
     text-align: center;
     border-bottom: 1px solid var(--border-color);
   }
-  
+
   .comparison-table th {
     background: var(--bg-card);
     font-weight: 600;
   }
-  
+
   .comparison-table th:first-child,
   .comparison-table td:first-child {
     text-align: left;
   }
-  
+
   .comparison-table th.highlight,
   .comparison-table td.highlight {
     background: rgba(0, 255, 136, 0.05);
   }
-  
+
   .comparison-table td i {
     width: 18px;
     height: 18px;
   }
-  
+
   .comparison-table td i[data-lucide="check"] {
     color: var(--success);
   }
-  
+
   .comparison-table td i[data-lucide="x"] {
     color: var(--text-muted);
   }
-  
+
   /* FAQ Section */
   .faq-section {
     padding: var(--spacing-3xl) 2rem;
   }
-  
+
   .faq-section h2 {
     text-align: center;
     margin-bottom: var(--spacing-2xl);
   }
-  
+
   .faq-grid {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -586,54 +884,70 @@
     max-width: 1000px;
     margin: 0 auto;
   }
-  
+
   .faq-item {
     background: var(--bg-card);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-lg);
     padding: var(--spacing-xl);
   }
-  
+
   .faq-item h4 {
     margin-bottom: var(--spacing-md);
     font-size: 1rem;
   }
-  
+
   .faq-item p {
     font-size: 0.9rem;
     color: var(--text-secondary);
     line-height: 1.6;
   }
-  
+
   /* Responsive */
+  @media (max-width: 1200px) {
+    .pricing-grid:not(.three-cards) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
   @media (max-width: 1024px) {
     .pricing-grid.three-cards {
       grid-template-columns: 1fr;
       max-width: 450px;
     }
-    
+
     .pricing-card.popular-card {
       transform: none;
       order: -1;
     }
-    
+
     .pricing-card.popular-card:hover {
       transform: translateY(-4px);
     }
-    
+
     .bonus-card {
       flex-direction: column;
       text-align: center;
     }
   }
-  
+
   @media (max-width: 768px) {
     .faq-grid {
       grid-template-columns: 1fr;
     }
-    
+
     .bonus-content ul {
       text-align: left;
+    }
+
+    .pricing-grid:not(.three-cards) {
+      grid-template-columns: 1fr;
+      max-width: 450px;
+    }
+
+    .billing-toggle {
+      padding: 0.5rem 1rem;
+      gap: var(--spacing-sm);
     }
   }
 </style>
