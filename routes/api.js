@@ -12,7 +12,7 @@ const {
   sketchToRender, precision, fillSpaces, decorStaging, furnitureRemoval,
   changeColorTextures, paintVisualizer, furnitureFinder, fullHD, skyColors,
   magicRedesign, videoGeneration, virtualStaging, textToDesign, furnitureCreator,
-  designAdvisor, designTransfer, floorEditor, materialSwap, roomComposer, smartRoomComposer,
+  designAdvisor, designTransfer, floorEditor, materialSwap, roomComposer,
   designCritique, createMaskImage, smartHome,
   getStyles, getRoomTypes, checkCredits
 } = require('../utils/homedesigns');
@@ -168,17 +168,13 @@ const aiToolHandlers = {
     requiresMask: true,
     run: (options) => roomComposer(options)
   },
-  smart_room_composer: {
-    name: 'Smart Room Composer',
-    run: (options) => smartRoomComposer(options)
-  },
   design_critique: {
     name: 'Design Critique',
     run: (options) => designCritique(options)
   },
   create_maskimage: {
     name: 'Create Mask Image',
-    run: ({ imageUrl, labels }) => createMaskImage({ imageUrl, labels })
+    run: ({ imageUrl }) => createMaskImage({ imageUrl })
   },
   smart_home: {
     name: 'Smart Home',
@@ -317,7 +313,6 @@ const buildGenerateDesignResponse = (result, toolName, endpoint) => {
     videoUrl: result.videoUrl,
     textResult: result.textResult,
     resultArray: result.resultArray,
-    maskData: result.maskData,
     designs: images.map((url, index) => ({
       name: `${toolName}${images.length > 1 ? ` #${index + 1}` : ''}`,
       imageUrl: url
@@ -328,14 +323,12 @@ const buildGenerateDesignResponse = (result, toolName, endpoint) => {
 router.post('/generate-design', ensureAuthenticated, uploadProjectImages.fields([
   { name: 'image', maxCount: 1 },
   { name: 'textureImage', maxCount: 1 },
-  { name: 'styleImage', maxCount: 1 },
-  { name: 'furnitureImages', maxCount: 4 }
+  { name: 'styleImage', maxCount: 1 }
 ]), async (req, res) => {
   try {
     const uploadedImage = req.file || (req.files?.image && req.files.image[0]);
     const textureImage = req.files?.textureImage && req.files.textureImage[0];
     const styleImage = req.files?.styleImage && req.files.styleImage[0];
-    const furnitureImages = req.files?.furnitureImages || [];
     const endpoint = req.body.selectedToolEndpoint || req.body.endpoint;
     const projectId = req.body.projectId;
     const requestedSourceImageUrl = req.body.sourceImageUrl;
@@ -386,7 +379,7 @@ router.post('/generate-design', ensureAuthenticated, uploadProjectImages.fields(
     if (!uploadedImage && !projectSourceImageUrl && !aiToolsConfig[toolKey]?.imageOptional) {
       return res.status(400).json({
         success: false,
-        message: 'Please upload an image before generating a design.'
+        error: 'Image is required'
       });
     }
 
@@ -433,16 +426,6 @@ router.post('/generate-design', ensureAuthenticated, uploadProjectImages.fields(
     if (toolFields.includes('style_image')) options.styleImageUrl = styleImage ? toAbsoluteImageUrl(getImageUrl(styleImage)) : undefined;
     if (toolFields.includes('no_of_texture')) options.noOfTexture = req.body.noOfTexture || '3 X 3';
     if (toolFields.includes('object')) options.object = req.body.object || undefined;
-    if (toolKey === 'smart_room_composer') {
-      options.furnitureImageUrls = furnitureImages.map((file) => toAbsoluteImageUrl(getImageUrl(file)));
-    }
-    if (toolKey === 'magic_redesign') {
-      options.designAction = req.body.designAction || 'Others';
-      options.optimizePrompt = req.body.optimizePrompt !== 'false';
-    }
-    if (toolKey === 'create_maskimage') {
-      options.labels = req.body.labels || 'floor|wall';
-    }
 
     console.log(`[GenerateDesign] ${tool.name} -> ${upstreamEndpoint}`);
     const timeout = new Promise((_, reject) => {
@@ -760,4 +743,3 @@ router.get('/stats', ensureAuthenticated, async (req, res) => {
 });
 
 module.exports = router;
-

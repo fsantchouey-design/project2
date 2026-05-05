@@ -69,9 +69,8 @@ const toolsConfig = {
   virtual_staging: {
     endpoint: '/api/v2/virtual_staging',
     uiType: 'redesign',
-    fields: ['room_type', 'design_style', 'ai_intervention', 'no_design', 'custom_instruction'],
-    noDesignMax: 4,
-    aiIntervention: true
+    fields: ['room_type', 'design_style', 'no_design', 'prompt'],
+    noDesignMax: 4
   },
   precision: {
     endpoint: '/api/v2/precision',
@@ -95,9 +94,8 @@ const toolsConfig = {
   },
   decor_staging: {
     endpoint: '/api/v2/decor_staging',
-    uiType: 'redesign',
-    fields: ['design_type', 'room_type', 'design_style', 'no_design', 'prompt'],
-    noDesignMax: 4
+    uiType: 'object-position',
+    fields: ['object_position']
   },
   furniture_removal: {
     endpoint: '/api/v2/furniture_removal',
@@ -137,7 +135,7 @@ const toolsConfig = {
   text_to_design: {
     endpoint: '/api/v2/text_to_design',
     uiType: 'text',
-    fields: ['custom_instruction'],
+    fields: ['custom_instruction', 'mode'],
     textOnly: true,
     imageOptional: true,
     promptOnly: true,
@@ -215,15 +213,7 @@ const toolsConfig = {
   room_composer: {
     endpoint: '/api/v2/room_composer',
     uiType: 'room-composer',
-    fields: ['mask', 'room_type', 'design_style', 'ai_intervention'],
-    mask: true,
-    aiIntervention: true,
-    imageLabel: 'Drag and drop room image'
-  },
-  smart_room_composer: {
-    endpoint: '/api/v2/smart_room_composer',
-    uiType: 'room-composer',
-    fields: ['furniture_images', 'additional_instructions'],
+    fields: ['room_image', 'custom_elements'],
     imageLabel: 'Drag and drop room image'
   },
   design_critique: {
@@ -236,7 +226,7 @@ const toolsConfig = {
   create_maskimage: {
     endpoint: '/api/v2/create_maskimage',
     uiType: 'single-action',
-    fields: ['labels']
+    fields: []
   },
   smart_home: {
     endpoint: '/api/v2/smart_home',

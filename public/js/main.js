@@ -893,49 +893,84 @@ function initRoomsCarousel() {
  * Specialists section dropdown + options
  */
 function initSpecialistsSection() {
-  const select = document.getElementById('specialists-select');
-  const optionsWrap = document.getElementById('specialists-options');
-  if (!select || !optionsWrap) return;
+  const pills = Array.from(document.querySelectorAll('.specialist-pill'));
+  const detailImage = document.getElementById('specialists-detail-image');
+  const detailTitle = document.getElementById('specialists-detail-title');
+  const detailDesc = document.getElementById('specialists-detail-desc');
+  const detailCta = document.getElementById('specialists-detail-cta');
+  const modal = document.getElementById('specialists-modal');
+  const modalImage = document.getElementById('specialists-modal-image');
+  const modalTitle = document.getElementById('specialists-modal-title');
+  const modalDesc = document.getElementById('specialists-modal-desc');
+  if (!pills.length || !detailImage || !detailTitle || !detailDesc || !detailCta) return;
 
-  const config = window.SpecialistsConfig || {};
-  const optionsByCategory = {};
-  const labelByCategory = {};
-
-  if (Array.isArray(config.categories)) {
-    config.categories.forEach((category) => {
-      optionsByCategory[category.key] = category.options || [];
-      labelByCategory[category.key] = category.label || category.key;
-    });
-  }
-
-  const renderOptions = () => {
-    const category = select.value;
-    const options = optionsByCategory[category] || [];
-
-    optionsWrap.innerHTML = options
-      .map((option) => `
-        <button type="button" class="specialists-option" data-category="${category}" data-option="${option}">
-          ${option}
-        </button>
-      `)
-      .join('');
+  let selectedTrade = {
+    name: pills[0].dataset.name || detailTitle.textContent,
+    desc: pills[0].dataset.desc || detailDesc.textContent,
+    details: pills[0].dataset.details || detailDesc.textContent,
+    image: pills[0].dataset.image || detailImage.src
   };
 
-  optionsWrap.addEventListener('click', (event) => {
-    const button = event.target.closest('.specialists-option');
-    if (!button) return;
-    const category = button.getAttribute('data-category');
-    const option = button.getAttribute('data-option');
-    const categoryLabel = labelByCategory[category] || category;
-    const params = new URLSearchParams({
-      service: option,
-      category: categoryLabel
+  const openTradeModal = () => {
+    if (!modal || !modalImage || !modalTitle || !modalDesc) return;
+
+    modalImage.src = selectedTrade.image;
+    modalImage.alt = selectedTrade.name;
+    modalTitle.textContent = selectedTrade.name;
+    modalDesc.textContent = selectedTrade.details || selectedTrade.desc;
+    modal.hidden = false;
+    document.body.style.overflow = 'hidden';
+
+    window.requestAnimationFrame(() => {
+      modal.classList.add('open');
     });
-    window.location.href = `/contact?${params.toString()}`;
+  };
+
+  const closeTradeModal = () => {
+    if (!modal) return;
+
+    modal.classList.remove('open');
+    document.body.style.overflow = '';
+    window.setTimeout(() => {
+      modal.hidden = true;
+    }, 200);
+  };
+
+  pills.forEach((pill) => {
+    pill.addEventListener('click', () => {
+      pills.forEach((item) => item.classList.remove('active'));
+      pill.classList.add('active');
+
+      selectedTrade = {
+        name: pill.dataset.name || '',
+        desc: pill.dataset.desc || '',
+        details: pill.dataset.details || pill.dataset.desc || '',
+        image: pill.dataset.image || ''
+      };
+
+      detailImage.style.opacity = '0';
+      window.setTimeout(() => {
+        detailImage.src = selectedTrade.image;
+        detailImage.alt = selectedTrade.name;
+        detailImage.style.opacity = '1';
+      }, 140);
+
+      detailTitle.textContent = selectedTrade.name;
+      detailDesc.textContent = selectedTrade.desc;
+    });
   });
 
-  select.addEventListener('change', renderOptions);
-  renderOptions();
+  detailCta.addEventListener('click', openTradeModal);
+
+  document.querySelectorAll('[data-close-specialists-modal]').forEach((closeButton) => {
+    closeButton.addEventListener('click', closeTradeModal);
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && modal && !modal.hidden) {
+      closeTradeModal();
+    }
+  });
 }
 
 /**

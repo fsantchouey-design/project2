@@ -1,0 +1,391 @@
+<%
+  const originalImage = (project.originalImages && project.originalImages[0] && project.originalImages[0].url) || '';
+  const latestVariant = (project.designVariants && project.designVariants.length)
+    ? project.designVariants[project.designVariants.length - 1]
+    : null;
+  const generatedImage = latestVariant ? (latestVariant.imageUrl || latestVariant.thumbnailUrl || '') : '';
+  const latestDesigns = (project.designVariants || []).slice(-6).reverse().map(function(variant) {
+    return {
+      id: variant._id ? String(variant._id) : '',
+      name: variant.name || variant.tool || 'Generated design',
+      imageUrl: variant.imageUrl || variant.thumbnailUrl || '',
+      thumbnailUrl: variant.thumbnailUrl || variant.imageUrl || '',
+      tool: variant.tool || '',
+      style: variant.aiParameters && variant.aiParameters.style ? variant.aiParameters.style : (project.style || ''),
+      generatedAt: variant.generatedAt || variant.createdAt || null
+    };
+  }).filter(function(design) {
+    return design.imageUrl || design.thumbnailUrl;
+  });
+%>
+
+<div class="project-compare-page">
+  <header class="project-compare-header">
+    <a href="/projects/<%= project._id %>/studio" class="back-link">Back to Studio</a>
+    <div>
+      <p class="eyebrow">Project Preview</p>
+      <h1><%= project.title || 'Project' %></h1>
+      <p>Compare the original image with the latest generated design.</p>
+      <div class="project-compare-meta">
+        <% if (project.style) { %><span>Style: <%= project.style %></span><% } %>
+        <% if (project.status) { %><span>Status: <%= project.status %></span><% } %>
+        <% if (latestVariant && latestVariant.tool) { %><span>Tool: <%= latestVariant.tool %></span><% } %>
+      </div>
+    </div>
+    <a href="/projects/<%= project._id %>/studio" class="studio-link">Open AI Studio</a>
+  </header>
+
+  <% if (originalImage && generatedImage) { %>
+    <section class="before-after" id="before-after">
+      <img class="before-after__image before-after__image--after" id="after-image" src="<%= generatedImage %>" alt="Latest generated design">
+      <div class="before-after__before" id="before-layer">
+        <img class="before-after__image" src="<%= originalImage %>" alt="Original project image">
+      </div>
+      <div class="before-after__handle" id="compare-handle" aria-hidden="true">
+        <span></span>
+      </div>
+      <input class="before-after__range" id="compare-range" type="range" min="0" max="100" value="50" aria-label="Before after comparison">
+      <div class="before-after__labels">
+        <span>Original</span>
+        <span id="after-label">Latest Design</span>
+      </div>
+    </section>
+
+    <% if (latestDesigns.length) { %>
+      <section class="compare-latest">
+        <div class="compare-latest__header">
+          <div>
+            <p class="eyebrow">Latest Designs</p>
+            <h2>Select a design to compare</h2>
+          </div>
+          <span><%= latestDesigns.length %> designs</span>
+        </div>
+        <div class="compare-latest__grid" id="compare-latest-grid">
+          <% latestDesigns.forEach(function(design, index) { %>
+            <button
+              type="button"
+              class="compare-design-card <%= index === 0 ? 'is-active' : '' %>"
+              data-index="<%= index %>"
+            >
+              <img src="<%= design.thumbnailUrl || design.imageUrl %>" alt="<%= design.name %>">
+              <span><%= design.name %></span>
+            </button>
+          <% }); %>
+        </div>
+      </section>
+    <% } %>
+  <% } else { %>
+    <section class="project-compare-empty">
+      <h2>No comparison available yet</h2>
+      <p>Open the AI Studio, generate a design, then come back to compare the result.</p>
+      <a href="/projects/<%= project._id %>/studio" class="studio-link">Open AI Studio</a>
+    </section>
+  <% } %>
+</div>
+
+<style>
+  .project-compare-page {
+    min-height: calc(100vh - 80px);
+    padding: 32px;
+    color: #f8fafc;
+    background:
+      radial-gradient(circle at top left, rgba(20, 184, 166, 0.18), transparent 34%),
+      #07111f;
+  }
+
+  .project-compare-header {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 24px;
+    align-items: center;
+    margin-bottom: 28px;
+  }
+
+  .project-compare-header h1 {
+    margin: 4px 0 8px;
+    font-size: clamp(2rem, 3vw, 3.2rem);
+  }
+
+  .project-compare-header p {
+    margin: 0;
+    color: #94a3b8;
+  }
+
+  .project-compare-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .project-compare-meta span {
+    padding: 7px 11px;
+    border: 1px solid rgba(94, 234, 212, 0.2);
+    border-radius: 999px;
+    color: #cbd5e1;
+    background: rgba(15, 23, 42, 0.72);
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+
+  .eyebrow {
+    color: #5eead4;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .back-link,
+  .studio-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 18px;
+    border: 1px solid rgba(94, 234, 212, 0.28);
+    border-radius: 12px;
+    color: #f8fafc;
+    text-decoration: none;
+    background: rgba(15, 23, 42, 0.72);
+  }
+
+  .studio-link {
+    background: linear-gradient(135deg, #14b8a6, #2563eb);
+    border-color: transparent;
+    font-weight: 800;
+  }
+
+  .before-after {
+    position: relative;
+    overflow: hidden;
+    max-width: 1180px;
+    aspect-ratio: 16 / 10;
+    margin: 0 auto;
+    border: 1px solid rgba(94, 234, 212, 0.22);
+    border-radius: 24px;
+    background: #020617;
+    box-shadow: 0 32px 90px rgba(0, 0, 0, 0.34);
+  }
+
+  .before-after__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    user-select: none;
+    pointer-events: none;
+  }
+
+  .before-after__before {
+    position: absolute;
+    inset: 0;
+    width: 50%;
+    overflow: hidden;
+  }
+
+  .before-after__handle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 3px;
+    background: #5eead4;
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
+
+  .before-after__handle span {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 54px;
+    height: 54px;
+    border: 2px solid rgba(255, 255, 255, 0.88);
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.84);
+    transform: translate(-50%, -50%);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  }
+
+  .before-after__handle span::before,
+  .before-after__handle span::after {
+    position: absolute;
+    top: 50%;
+    color: #e2e8f0;
+    font-size: 18px;
+    line-height: 1;
+    transform: translateY(-50%);
+  }
+
+  .before-after__handle span::before {
+    content: '<';
+    left: 12px;
+  }
+
+  .before-after__handle span::after {
+    content: '>';
+    right: 12px;
+  }
+
+  .before-after__range {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: ew-resize;
+  }
+
+  .before-after__labels {
+    position: absolute;
+    left: 18px;
+    right: 18px;
+    bottom: 18px;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    pointer-events: none;
+  }
+
+  .before-after__labels span {
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(2, 6, 23, 0.74);
+    color: #f8fafc;
+    font-weight: 800;
+  }
+
+  .project-compare-empty {
+    max-width: 720px;
+    margin: 80px auto 0;
+    padding: 36px;
+    border: 1px dashed rgba(94, 234, 212, 0.32);
+    border-radius: 24px;
+    text-align: center;
+    background: rgba(15, 23, 42, 0.78);
+  }
+
+  .compare-latest {
+    max-width: 1180px;
+    margin: 26px auto 0;
+    padding: 22px;
+    border: 1px solid rgba(94, 234, 212, 0.18);
+    border-radius: 22px;
+    background: rgba(15, 23, 42, 0.78);
+  }
+
+  .compare-latest__header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .compare-latest__header h2 {
+    margin: 4px 0 0;
+    font-size: 1.25rem;
+  }
+
+  .compare-latest__header span {
+    color: #94a3b8;
+    font-weight: 800;
+  }
+
+  .compare-latest__grid {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .compare-design-card {
+    position: relative;
+    overflow: hidden;
+    min-height: 110px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    border-radius: 14px;
+    background: #020617;
+    cursor: pointer;
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  .compare-design-card:hover,
+  .compare-design-card.is-active {
+    transform: translateY(-2px);
+    border-color: rgba(94, 234, 212, 0.72);
+    box-shadow: 0 18px 36px rgba(20, 184, 166, 0.16);
+  }
+
+  .compare-design-card img {
+    width: 100%;
+    height: 100%;
+    min-height: 110px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .compare-design-card span {
+    position: absolute;
+    left: 8px;
+    right: 8px;
+    bottom: 8px;
+    color: #fff;
+    font-size: 0.76rem;
+    font-weight: 800;
+    text-align: left;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.78);
+  }
+
+  @media (max-width: 760px) {
+    .project-compare-page {
+      padding: 20px;
+    }
+
+    .project-compare-header {
+      grid-template-columns: 1fr;
+    }
+
+    .before-after {
+      aspect-ratio: 4 / 5;
+    }
+
+    .compare-latest__grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+  }
+</style>
+
+<script>
+  const range = document.getElementById('compare-range');
+  const beforeLayer = document.getElementById('before-layer');
+  const handle = document.getElementById('compare-handle');
+  const afterImage = document.getElementById('after-image');
+  const afterLabel = document.getElementById('after-label');
+  const latestGrid = document.getElementById('compare-latest-grid');
+  const latestDesigns = <%- JSON.stringify(latestDesigns || []) %>;
+
+  function updateComparison(value) {
+    if (!beforeLayer || !handle) return;
+    beforeLayer.style.width = `${value}%`;
+    handle.style.left = `${value}%`;
+  }
+
+  range?.addEventListener('input', (event) => {
+    updateComparison(event.target.value);
+  });
+
+  latestGrid?.addEventListener('click', (event) => {
+    const card = event.target.closest('.compare-design-card');
+    if (!card || !afterImage) return;
+    const design = latestDesigns[Number(card.dataset.index)];
+    if (!design) return;
+
+    afterImage.src = design.imageUrl || design.thumbnailUrl;
+    if (afterLabel) afterLabel.textContent = design.name || 'Selected Design';
+    latestGrid.querySelectorAll('.compare-design-card').forEach((item) => {
+      item.classList.toggle('is-active', item === card);
+    });
+  });
+
+  updateComparison(range?.value || 50);
+</script>

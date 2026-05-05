@@ -1,759 +1,3503 @@
-<div class="page-container">
-  <div class="page-header">
-    <a href="/projects" class="back-link">
-      <i data-lucide="arrow-left"></i>
-      Back to Projects
-    </a>
-    <h1>Create New Project</h1>
-    <p class="text-muted">Describe your renovation project and let AI create stunning designs</p>
-  </div>
-  
-  <form action="/projects" method="POST" enctype="multipart/form-data" class="project-form">
-    <!-- Step 1: Basic Info -->
-    <div class="form-section">
-      <h2><span class="step-num">1</span> Project Details</h2>
-      
-      <div class="form-group">
-        <label class="form-label">Project Title *</label>
-        <input type="text" name="title" class="form-input" placeholder="e.g., Modern Kitchen Renovation" required>
+<%
+  const studioProjectData = typeof studioProject !== 'undefined' && studioProject ? {
+    id: String(studioProject._id),
+    title: studioProject.title || '',
+    description: studioProject.description || '',
+    roomType: studioProject.roomType || '',
+    style: studioProject.style || '',
+    instructions: studioProject.requirements || studioProject.description || '',
+    imageUrl: (studioProject.originalImages && studioProject.originalImages[0] && studioProject.originalImages[0].url)
+      || (studioProject.designVariants && studioProject.designVariants[0] && (studioProject.designVariants[0].imageUrl || studioProject.designVariants[0].thumbnailUrl))
+      || '',
+    latestDesigns: (studioProject.designVariants || []).slice(-6).reverse().map(function(variant) {
+      return {
+        id: variant._id ? String(variant._id) : '',
+        name: variant.name || variant.tool || 'Generated design',
+        imageUrl: variant.imageUrl || variant.thumbnailUrl || '',
+        thumbnailUrl: variant.thumbnailUrl || variant.imageUrl || '',
+        tool: variant.tool || '',
+        generatedAt: variant.generatedAt || variant.createdAt || null
+      };
+    })
+  } : null;
+%>
+<div class="ai-studio-page">
+  <header class="studio-topbar">
+    <div>
+      <a href="/projects" class="studio-back">
+        <i data-lucide="arrow-left"></i>
+        Back to Projects
+      </a>
+      <h1><%= studioProjectData ? `${studioProjectData.title || 'Project'} Studio` : 'AI Design Studio' %></h1>
+    </div>
+    <button type="button" class="studio-secondary-btn" id="replace-image-btn">
+      <i data-lucide="upload"></i>
+      Upload New
+    </button>
+  </header>
+
+  <div class="studio-shell">
+    <aside class="tool-rail">
+      <button type="button" class="tool-menu-toggle" id="tool-menu-toggle" aria-expanded="true">
+          <span>
+            <span class="tool-kicker">Standard Tools</span>
+          <strong id="selected-tool-label">Redesign</strong>
+          </span>
+          <i data-lucide="chevron-down"></i>
+        </button>
+
+      <div class="tool-menu" id="tool-menu">
+        <button type="button" class="tool-option active" data-tool-name="Redesign" data-tool-key="redesign" data-endpoint="/api/v2/perfect_redesign" data-requires-mask="false">
+          <i data-lucide="pencil-ruler"></i>
+          <span>Redesign</span>
+        </button>
+        <button type="button" class="tool-option" data-tool-name="Magic Redesign" data-endpoint="/api/v2/magic_redesign" data-requires-mask="false">
+          <i data-lucide="zap"></i>
+          <span>Magic Redesign</span>
+        </button>
+        <button type="button" class="tool-option" data-tool-name="Video Generation" data-endpoint="/api/v2/video_generation" data-requires-mask="false">
+          <i data-lucide="video"></i>
+          <span>Video Generation</span>
+        </button>
+        <button type="button" class="tool-option" data-tool-name="Sketch To Render" data-endpoint="/api/v2/sketch_to_render" data-requires-mask="false">
+          <i data-lucide="pencil-ruler"></i>
+          <span>Sketch To Render</span>
+        </button>
+        <button type="button" class="tool-option" data-tool-name="Virtual Staging" data-endpoint="/api/v2/virtual_staging" data-requires-mask="false">
+          <i data-lucide="sofa"></i>
+          <span>Virtual Staging</span>
+        </button>
+        <button type="button" class="tool-option" data-tool-name="Precision" data-endpoint="/api/v2/precision" data-requires-mask="true">
+          <i data-lucide="target"></i>
+          <span>Precision</span>
+        </button>
+        <button type="button" class="tool-option" data-tool-name="Fill Spaces" data-endpoint="/api/v2/fill_spaces" data-requires-mask="true">
+          <i data-lucide="layout-grid"></i>
+          <span>Fill Spaces</span>
+        </button>
+        <button type="button" class="tool-option" data-tool-name="Decor Staging" data-endpoint="/api/v2/decor_staging" data-requires-mask="false">
+          <i data-lucide="lamp"></i>
+          <span>Decor Staging</span>
+        </button>
+        <button type="button" class="tool-option" data-tool-name="Furniture Removal" data-endpoint="/api/v2/furniture_removal" data-requires-mask="true">
+          <i data-lucide="eraser"></i>
+          <span>Furniture Removal</span>
+        </button>
+        <button type="button" class="tool-option" data-tool-name="Change Color Textures" data-endpoint="/api/v2/change_color_textures" data-requires-mask="true">
+          <i data-lucide="palette"></i>
+          <span>Change Color Textures</span>
+        </button>
+        <button type="button" class="tool-option" data-tool-name="Furniture Finder" data-endpoint="/api/v2/furniture_finder" data-requires-mask="false">
+          <i data-lucide="shopping-bag"></i>
+          <span>Furniture Finder</span>
+        </button>
+        <button type="button" class="tool-option" data-tool-name="Full HD" data-endpoint="/api/v2/full_hd" data-requires-mask="false">
+          <i data-lucide="monitor"></i>
+          <span>Full HD</span>
+        </button>
+        <button type="button" class="tool-option" data-tool-name="Text To Design" data-endpoint="/api/v2/text_to_design" data-requires-mask="false">
+          <i data-lucide="type"></i>
+          <span>Text To Design</span>
+        </button>
+        <button type="button" class="tool-option" data-tool-name="Furniture Creator" data-endpoint="/api/v2/furniture_creator" data-requires-mask="false">
+          <i data-lucide="armchair"></i>
+          <span>Furniture Creator</span>
+        </button>
+        <button type="button" class="tool-option" data-tool-name="Design Advisor" data-endpoint="/api/v2/design_advisor" data-requires-mask="false">
+          <i data-lucide="messages-square"></i>
+          <span>Design Advisor</span>
+        </button>
+        <button type="button" class="tool-option" data-tool-name="Sky Colors" data-endpoint="/api/v2/sky_colors" data-requires-mask="false">
+          <i data-lucide="cloud-sun"></i>
+          <span>Sky Colors</span>
+        </button>
+        <button type="button" class="tool-option" data-tool-name="Design Transfer" data-endpoint="/api/v2/design_transfer" data-requires-mask="false">
+          <i data-lucide="copy-plus"></i>
+          <span>Design Transfer</span>
+        </button>
+        <button type="button" class="tool-option" data-tool-name="Floor Editor" data-endpoint="/api/v2/floor_editor" data-requires-mask="false">
+          <i data-lucide="panel-bottom"></i>
+          <span>Floor Editor</span>
+        </button>
+        <button type="button" class="tool-option" data-tool-name="Paint Visualizer" data-endpoint="/api/v2/paint_visualizer" data-requires-mask="true">
+          <i data-lucide="paintbrush"></i>
+          <span>Paint Visualizer</span>
+        </button>
+        <button type="button" class="tool-option" data-tool-name="Material Swap" data-endpoint="/api/v2/material_swap" data-requires-mask="true">
+          <i data-lucide="swatch-book"></i>
+          <span>Material Swap</span>
+        </button>
+        <button type="button" class="tool-option" data-tool-name="Room Composer" data-endpoint="/api/v2/room_composer" data-requires-mask="false">
+          <i data-lucide="blocks"></i>
+          <span>Room Composer</span>
+        </button>
+        <button type="button" class="tool-option" data-tool-name="Design Critique" data-endpoint="/api/v2/design_critique" data-requires-mask="false">
+          <i data-lucide="search-check"></i>
+          <span>Design Critique</span>
+        </button>
+        <button type="button" class="tool-option" data-tool-name="Create Mask Image" data-endpoint="/api/v2/create_maskimage" data-requires-mask="false">
+          <i data-lucide="scan-line"></i>
+          <span>Create Mask Image</span>
+        </button>
+        <button type="button" class="tool-option" data-tool-name="Smart Home" data-endpoint="/api/v2/smart_home" data-requires-mask="false">
+          <i data-lucide="house-plug"></i>
+          <span>Smart Home</span>
+        </button>
       </div>
-      
-      <div class="form-group">
-        <label class="form-label">Description *</label>
-        <textarea name="description" class="form-textarea" rows="4" placeholder="Describe your vision for this space..." required maxlength="1000"></textarea>
-        <p class="form-hint">Be as detailed as possible - mention colors, styles, materials, and any specific requirements</p>
+    </aside>
+
+    <main class="preview-stage">
+      <input type="file" id="design-image" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" hidden>
+      <input type="file" id="material-texture-image" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" hidden>
+      <input type="file" id="style-reference-image" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" hidden>
+
+      <label for="design-image" class="upload-canvas" id="upload-canvas">
+        <img id="source-preview" class="source-preview" alt="Uploaded room preview" hidden>
+        <canvas id="mask-canvas" class="mask-canvas" hidden></canvas>
+        <div class="upload-placeholder" id="upload-placeholder">
+          <span class="upload-icon"><i data-lucide="image-up"></i></span>
+          <strong>Drop your room photo here</strong>
+          <span>or click to upload a JPG, PNG, or WebP image</span>
+        </div>
+        <button type="button" class="image-action" id="change-image-btn" hidden>
+          <i data-lucide="refresh-cw"></i>
+          Change
+        </button>
+      </label>
+      <div class="image-zoom-controls" id="image-zoom-controls" hidden>
+        <i data-lucide="zoom-out"></i>
+        <input type="range" id="image-zoom-range" min="1" max="2.6" step="0.05" value="1" aria-label="Image zoom">
+        <i data-lucide="zoom-in"></i>
+        <button type="button" id="image-pan-toggle" class="image-pan-toggle">Pan</button>
       </div>
-      
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Room Type *</label>
-          <select name="roomType" class="form-select" required>
-            <option value="">Select room type</option>
+
+      <section class="result-panel" id="result-panel" hidden>
+        <div class="result-heading">
+          <span>Generated Result</span>
+          <strong id="result-tool-name">Redesign</strong>
+        </div>
+        <div class="result-media" id="result-media"></div>
+      </section>
+      <section class="latest-designs-panel" id="latest-designs-panel">
+        <div class="latest-designs-panel__header">
+          <div>
+            <span class="eyebrow">Project Gallery</span>
+            <h2>Latest Designs</h2>
+          </div>
+          <span id="latest-designs-count">0 designs</span>
+        </div>
+        <div class="latest-designs-grid" id="latest-designs-grid"></div>
+        <div class="latest-designs-empty" id="latest-designs-empty">
+          No generated designs yet. Your latest results will appear here.
+        </div>
+      </section>
+    </main>
+
+    <aside class="config-panel">
+      <div class="selected-tool-card">
+        <span>Selected AI Tool</span>
+        <strong id="config-tool-name">Redesign</strong>
+        <small id="config-endpoint">/api/v2/perfect_redesign</small>
+      </div>
+
+      <div class="tool-interface" id="tool-interface"></div>
+
+      <div class="config-group" id="space-type-group">
+        <label>Select what kind of space you are generating</label>
+        <div class="segmented-control" data-input="designType">
+          <button type="button" class="segment active" data-value="Interior">
+            <i data-lucide="sofa"></i>
+            Interior
+          </button>
+          <button type="button" class="segment" data-value="Exterior">
+            <i data-lucide="home"></i>
+            Exterior
+          </button>
+          <button type="button" class="segment" data-value="Garden">
+            <i data-lucide="flower-2"></i>
+            Garden
+          </button>
+        </div>
+      </div>
+
+      <div class="config-grid" id="design-context-grid">
+        <div class="config-group">
+          <label for="room-type">Room Type</label>
+          <select id="room-type" class="studio-select">
             <% if (typeof roomTypes !== 'undefined') { %>
               <% roomTypes.forEach(room => { %>
-                <option value="<%= room.id %>"><%= room.name %></option>
+                <option value="<%= room.id %>" <%= room.id === 'living-room' ? 'selected' : '' %>><%= room.name %></option>
               <% }) %>
             <% } %>
           </select>
         </div>
-        
-        <div class="form-group">
-          <label class="form-label">Design Style</label>
-          <select name="style" class="form-select">
-            <option value="">Let AI decide</option>
+
+        <div class="config-group">
+          <label for="design-style">Design Style</label>
+          <select id="design-style" class="studio-select">
             <% if (typeof styles !== 'undefined') { %>
               <% styles.forEach(style => { %>
-                <option value="<%= style.id %>"><%= style.name %></option>
+                <option value="<%= style.id %>" <%= style.id === 'modern' ? 'selected' : '' %>><%= style.name %></option>
               <% }) %>
             <% } %>
           </select>
         </div>
       </div>
-    </div>
-    
-    <!-- Step 2: Photos -->
-    <div class="form-section">
-      <h2><span class="step-num">2</span> Photos de votre espace</h2>
-      <p class="section-desc">Uploadez les photos de votre espace actuel — l'IA les utilisera pour créer vos designs</p>
 
-      <!-- Input fichier caché -->
-      <input type="file" name="images" id="images" multiple accept="image/*" style="display:none">
-
-      <!-- Zone de dépôt (visible tant qu'aucune image n'est sélectionnée) -->
-      <div class="upload-dropzone" id="upload-dropzone">
-        <label for="images" class="upload-dropzone-label">
-          <i data-lucide="upload-cloud"></i>
-          <span>Déposez vos photos ici ou <u>cliquez pour parcourir</u></span>
-          <span class="upload-hint">Max 5 images · 10 Mo chacune · JPG, PNG, WebP</span>
-        </label>
+      <div class="config-group" id="instructions-group">
+        <label for="additional-instructions">Additional Instructions</label>
+        <textarea id="additional-instructions" class="studio-textarea" rows="5" placeholder="Describe colors, mood, materials, furniture, or anything the AI should respect."></textarea>
       </div>
 
-      <!-- Prévisualisation portrait 9:16 (cachée au départ) -->
-      <div class="portrait-preview-wrap" id="portrait-preview-wrap">
-        <div class="portrait-preview-box" id="portrait-preview-box">
-          <img id="portrait-main-img" src="" alt="Aperçu principal">
-          <!-- Bouton X pour supprimer / changer l'image -->
-          <button type="button" class="portrait-remove-btn" id="portrait-remove-btn" title="Supprimer">
-            <i data-lucide="x"></i>
-          </button>
-          <!-- Clic sur l'image pour changer -->
-          <label for="images" class="portrait-change-overlay" title="Changer l'image">
-            <i data-lucide="camera"></i>
-            <span>Changer</span>
-          </label>
-        </div>
+      <div class="advanced-options" id="advanced-options">
+        <button type="button" class="advanced-toggle" id="advanced-toggle" aria-expanded="false">
+          <span>
+            <i data-lucide="sliders-horizontal"></i>
+            Advanced options
+          </span>
+          <i data-lucide="chevron-down"></i>
+        </button>
 
-        <!-- Miniatures des images supplémentaires + bouton d'ajout -->
-        <div class="portrait-thumbs" id="portrait-thumbs">
-          <label for="images" class="portrait-add-btn" title="Ajouter une image">
-            <i data-lucide="plus"></i>
-          </label>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Step 3: Budget -->
-    <div class="form-section">
-      <h2><span class="step-num">3</span> Budget (Optional)</h2>
-      
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Minimum Budget (€)</label>
-          <input type="number" name="budgetMin" class="form-input" placeholder="5000" min="0">
-        </div>
-        
-        <div class="form-group">
-          <label class="form-label">Maximum Budget (€)</label>
-          <input type="number" name="budgetMax" class="form-input" placeholder="15000" min="0">
-        </div>
-      </div>
-    </div>
-    
-    <!-- Step 4: Dimensions -->
-    <div class="form-section">
-      <h2><span class="step-num">4</span> Room Dimensions (Optional)</h2>
-      
-      <div class="form-row-3">
-        <div class="form-group">
-          <label class="form-label">Length (m)</label>
-          <input type="number" name="length" class="form-input" placeholder="4.5" step="0.1" min="0">
-        </div>
-        
-        <div class="form-group">
-          <label class="form-label">Width (m)</label>
-          <input type="number" name="width" class="form-input" placeholder="3.5" step="0.1" min="0">
-        </div>
-        
-        <div class="form-group">
-          <label class="form-label">Height (m)</label>
-          <input type="number" name="height" class="form-input" placeholder="2.7" step="0.1" min="0">
-        </div>
-      </div>
-    </div>
-    
-    <!-- Step 5: Preferences -->
-    <div class="form-section">
-      <h2><span class="step-num">5</span> Preferences (Optional)</h2>
-      
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Preferred Colors</label>
-          <input type="text" name="colors" class="form-input" placeholder="White, Gray, Wood tones">
-          <p class="form-hint">Separate with commas</p>
-        </div>
-        
-        <div class="form-group">
-          <label class="form-label">Preferred Materials</label>
-          <input type="text" name="materials" class="form-input" placeholder="Marble, Oak, Brass">
-          <p class="form-hint">Separate with commas</p>
-        </div>
-      </div>
-      
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Must Have</label>
-          <input type="text" name="mustHave" class="form-input" placeholder="Island, Pendant lights">
-          <p class="form-hint">Essential elements for your design</p>
-        </div>
-        
-        <div class="form-group">
-          <label class="form-label">Must Avoid</label>
-          <input type="text" name="mustAvoid" class="form-input" placeholder="Carpet, Dark colors">
-          <p class="form-hint">Elements you don't want</p>
-        </div>
-      </div>
-    </div>
-    
-    <!-- Step 6: Priorities -->
-    <div class="form-section">
-      <h2><span class="step-num">6</span> Priorities</h2>
-      
-      <div class="priority-sliders">
-        <div class="priority-item">
-          <label>Quality</label>
-          <input type="range" name="priorityQuality" min="1" max="5" value="3" class="priority-slider">
-          <span class="priority-labels"><span>Budget</span><span>Premium</span></span>
-        </div>
-        
-        <div class="priority-item">
-          <label>Price Focus</label>
-          <input type="range" name="priorityPrice" min="1" max="5" value="3" class="priority-slider">
-          <span class="priority-labels"><span>Flexible</span><span>Strict</span></span>
-        </div>
-        
-        <div class="priority-item">
-          <label>Timeline</label>
-          <input type="range" name="prioritySpeed" min="1" max="5" value="3" class="priority-slider">
-          <span class="priority-labels"><span>Relaxed</span><span>Urgent</span></span>
-        </div>
-      </div>
-    </div>
-    
-    <!-- DIY Option -->
-    <div class="form-section">
-      <div class="diy-option">
-        <input type="checkbox" name="isDIY" id="isDIY">
-        <label for="isDIY">
-          <div class="diy-icon"><i data-lucide="hammer"></i></div>
-          <div>
-            <strong>DIY Project</strong>
-            <p>I plan to do this myself without hiring a contractor</p>
+        <div class="tool-options-panel collapsed" id="tool-options-panel">
+          <div class="tool-option-row" id="option-no-design">
+            <label for="option-no-design-select">Variations</label>
+            <select id="option-no-design-select" class="studio-select">
+              <option value="1">1 design</option>
+              <option value="2">2 designs</option>
+              <option value="3">3 designs</option>
+              <option value="4">4 designs</option>
+              <option value="5">5 designs</option>
+            </select>
           </div>
-        </label>
+
+          <div class="tool-option-row" id="option-ai-intervention">
+            <label for="option-ai-intervention-select">AI Intervention</label>
+            <select id="option-ai-intervention-select" class="studio-select">
+              <option value="Very Low">Very Low</option>
+              <option value="Low">Low</option>
+              <option value="Mid" selected>Medium</option>
+              <option value="Extreme">Extreme</option>
+            </select>
+          </div>
+
+          <div class="tool-option-row" id="option-strength" hidden>
+            <label for="option-strength-range">
+              Edit Strength
+              <span id="option-strength-value">5</span>
+            </label>
+            <input type="range" id="option-strength-range" min="1" max="10" value="5">
+          </div>
+
+          <div class="tool-option-row" id="option-weather" hidden>
+            <label for="option-weather-select">Sky Mood</label>
+            <select id="option-weather-select" class="studio-select">
+              <option value="Clear Sky">Clear Sky</option>
+              <option value="Sunshine">Sunshine</option>
+              <option value="Cloudy">Cloudy</option>
+              <option value="Rainy">Rainy</option>
+              <option value="Windy">Windy</option>
+              <option value="Dawn">Dawn</option>
+              <option value="Dusk">Dusk</option>
+              <option value="Twilight">Twilight</option>
+              <option value="Sunny">Sunny</option>
+              <option value="Night">Night</option>
+            </select>
+          </div>
+
+          <div class="tool-option-row" id="option-country" hidden>
+            <label for="option-country-select">Select Country</label>
+            <select id="option-country-select" class="studio-select">
+              <option value="" selected>Worldwide</option>
+              <option value="US">United States</option>
+              <option value="CA">Canada</option>
+              <option value="FR">France</option>
+              <option value="GB">United Kingdom</option>
+            </select>
+          </div>
+
+          <div class="tool-option-row" id="option-paint-color" hidden>
+            <label for="option-paint-color-input">Paint Color</label>
+            <input type="color" id="option-paint-color-input" class="studio-color" value="#f8fafc">
+          </div>
+
+          <div class="tool-option-row" id="option-material" hidden>
+            <label for="option-material-select">Material</label>
+            <select id="option-material-select" class="studio-select">
+              <option value="">No material preference</option>
+              <option value="Wood">Wood</option>
+              <option value="Stone">Stone</option>
+              <option value="Metal">Metal</option>
+              <option value="Glass">Glass</option>
+              <option value="Fabrics">Fabrics</option>
+              <option value="Ceramics and Porcelain">Ceramics and Porcelain</option>
+              <option value="Natural Fibers">Natural Fibers</option>
+              <option value="Composite Materials">Composite Materials</option>
+            </select>
+          </div>
+
+          <div class="tool-option-row" id="option-material-type" hidden>
+            <label for="option-material-type-select">Material Type</label>
+            <select id="option-material-type-select" class="studio-select"></select>
+          </div>
+
+          <div class="tool-option-row" id="option-surface-color" hidden>
+            <label for="option-surface-color-input">Surface Color</label>
+            <input type="color" id="option-surface-color-input" class="studio-color" value="#d1d5db">
+          </div>
+
+          <div class="tool-option-row" id="option-object" hidden>
+            <label for="option-object-input">Object / Surface</label>
+            <input type="text" id="option-object-input" class="studio-input" placeholder="wall, sofa, cabinet, countertop">
+          </div>
+
+          <div class="tool-option-row" id="option-material-preset" hidden>
+            <label for="option-material-preset-select">Material</label>
+            <select id="option-material-preset-select" class="studio-select">
+              <option value="wood">wood</option>
+              <option value="marble">marble</option>
+              <option value="concrete">concrete</option>
+              <option value="fabric">fabric</option>
+              <option value="metal">metal</option>
+              <option value="stone">stone</option>
+              <option value="leather">leather</option>
+              <option value="tiles">tiles</option>
+              <option value="custom">Custom material</option>
+            </select>
+          </div>
+
+          <div class="tool-option-row" id="option-material-instruction" hidden>
+            <label for="option-material-instruction-input">Describe the material you want</label>
+            <input type="text" id="option-material-instruction-input" class="studio-input" placeholder="warm oak wood, white marble, brushed metal">
+          </div>
+
+          <div class="tool-option-row" id="option-texture-grid" hidden>
+            <label for="option-texture-grid-select">Texture Grid</label>
+            <select id="option-texture-grid-select" class="studio-select">
+              <option value="1 X 1">1 X 1</option>
+              <option value="2 X 2">2 X 2</option>
+              <option value="3 X 3" selected>3 X 3</option>
+              <option value="4 X 4">4 X 4</option>
+              <option value="5 X 5">5 X 5</option>
+            </select>
+          </div>
+
+          <div class="tool-option-row" id="option-texture-upload" hidden>
+            <label>Upload your material</label>
+            <button type="button" class="texture-upload-btn" id="texture-upload-btn">
+              <i data-lucide="image-up"></i>
+              <span id="texture-upload-label">Choose texture image</span>
+            </button>
+            <img id="texture-preview" class="texture-preview" alt="Selected material texture preview" hidden>
+          </div>
+
+          <div class="tool-option-row" id="option-style-reference" hidden>
+            <label>Reference Style Image</label>
+            <button type="button" class="texture-upload-btn" id="style-reference-upload-btn">
+              <i data-lucide="copy-plus"></i>
+              <span id="style-reference-upload-label">Choose reference image</span>
+            </button>
+            <img id="style-reference-preview" class="texture-preview" alt="Selected reference style preview" hidden>
+          </div>
+
+          <div class="tool-option-row" id="option-video-motion" hidden>
+            <label for="option-video-motion-select">Camera Motion</label>
+            <select id="option-video-motion-select" class="studio-select" required>
+              <option value="pan_up">Pan Up</option>
+              <option value="pan_down">Pan Down</option>
+              <option value="pan_left_right">Pan Left / Right</option>
+              <option value="zoom_in" selected>Zoom In</option>
+              <option value="zoom_out">Zoom Out</option>
+              <option value="camera_pullback">Camera Pullback</option>
+              <option value="rotate_cw">Rotate Clockwise</option>
+              <option value="rotate_ccw">Rotate Counterclockwise</option>
+              <option value="combining_motions">Combining Motions</option>
+              <option value="look_up">Look Up</option>
+              <option value="look_down">Look Down</option>
+            </select>
+          </div>
+        </div>
       </div>
-    </div>
-    
-    <!-- Submit -->
-    <div class="form-actions">
-      <a href="/projects" class="btn btn-ghost">Cancel</a>
-      <button type="submit" class="btn btn-primary btn-lg">
+
+      <div class="mask-tools-panel" id="mask-tools-panel" hidden>
+        <div class="material-swap-tabs" id="material-swap-tabs" hidden>
+          <div class="material-tab-buttons" role="tablist" aria-label="Material Swap selection mode">
+            <button type="button" class="material-tab-btn active" id="material-auto-tab" data-material-tab="automatic">Automatic Selection</button>
+            <button type="button" class="material-tab-btn" id="material-manual-tab" data-material-tab="manual">Manual Selection</button>
+          </div>
+          <div class="material-tab-copy" id="material-tab-copy">
+            Click directly on the image to automatically select an object. Our AI will help you precisely mask it for modifications.
+          </div>
+          <div class="material-selection-label" id="material-selection-label" hidden>
+            Selected object: <strong>surface</strong>
+          </div>
+          <button type="button" class="material-continue-btn" id="material-continue-btn">
+            Continue
+          </button>
+        </div>
+        <div>
+          <span class="mask-tools-kicker">Object Selection</span>
+          <strong id="mask-tool-title">Select the area to edit</strong>
+          <p id="mask-tool-help">Click the object or area to target, or switch to brush selection for manual control.</p>
+        </div>
+        <div class="selection-mode-group" aria-label="Selection Mode">
+          <span>Selection Mode</span>
+          <div class="selection-mode-buttons">
+            <button type="button" class="selection-mode-btn active" id="click-selection-btn">
+              <i data-lucide="mouse-pointer-click"></i>
+              Click selection
+            </button>
+            <button type="button" class="selection-mode-btn" id="brush-selection-btn">
+              <i data-lucide="paintbrush"></i>
+              Brush selection
+            </button>
+          </div>
+        </div>
+        <div class="mask-tool-buttons">
+          <button type="button" class="mask-tool-btn active" id="mask-brush-btn">
+            <i data-lucide="paintbrush"></i>
+            Draw mask
+          </button>
+          <button type="button" class="mask-tool-btn" id="mask-eraser-btn">
+            <i data-lucide="eraser"></i>
+            Erase mask
+          </button>
+        </div>
+        <label class="mask-size-label" for="mask-brush-size">
+          Brush Size
+          <span id="mask-brush-size-value">34</span>
+        </label>
+        <input type="range" id="mask-brush-size" min="8" max="90" value="34">
+        <button type="button" class="mask-clear-btn" id="mask-clear-btn">
+          <i data-lucide="trash-2"></i>
+          Clear Selection
+        </button>
+      </div>
+
+      <button type="button" class="generate-btn" id="generate-btn">
         <i data-lucide="sparkles"></i>
-        Create Project
+        <span>Generate Design</span>
       </button>
-    </div>
-  </form>
+
+      <div class="studio-status" id="studio-status" aria-live="polite"></div>
+    </aside>
+  </div>
+</div>
+
+<div class="image-lightbox" id="image-lightbox" hidden>
+  <button type="button" class="lightbox-close" id="lightbox-close" aria-label="Close image preview">
+    <i data-lucide="x"></i>
+  </button>
+  <div class="lightbox-content" id="lightbox-content">
+    <img id="lightbox-image" alt="Full screen room preview">
+  </div>
+  <div class="lightbox-hint">Double-click or scroll to zoom · Drag when zoomed</div>
 </div>
 
 <style>
-  .page-container {
-    max-width: 800px;
-    margin: 0 auto;
-    padding: var(--spacing-xl);
-  }
-  
-  .page-header {
-    margin-bottom: var(--spacing-2xl);
-  }
-  
-  .back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-    color: var(--text-muted);
-    font-size: 0.9rem;
-    margin-bottom: var(--spacing-md);
-    transition: color var(--transition-fast);
-  }
-  
-  .back-link:hover {
+  .ai-studio-page {
+    min-height: calc(100vh - 48px);
+    padding: 20px;
     color: var(--text-primary);
   }
-  
-  .back-link i {
-    width: 16px;
-    height: 16px;
-  }
-  
-  .page-header h1 {
-    font-size: 2rem;
-    margin-bottom: var(--spacing-sm);
-  }
-  
-  .text-muted {
-    color: var(--text-muted);
-  }
-  
-  .project-form {
+
+  .studio-topbar {
     display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xl);
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 18px;
   }
-  
-  .form-section {
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-xl);
-  }
-  
-  .form-section h2 {
-    display: flex;
+
+  .studio-back {
+    display: inline-flex;
     align-items: center;
-    gap: var(--spacing-md);
-    font-size: 1.25rem;
-    margin-bottom: var(--spacing-lg);
+    gap: 8px;
+    margin-bottom: 8px;
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 600;
   }
-  
-  .step-num {
-    width: 32px;
-    height: 32px;
-    display: flex;
+
+  .studio-back:hover {
+    color: var(--accent-primary);
+  }
+
+  .studio-back i {
+    width: 17px;
+    height: 17px;
+  }
+
+  .studio-topbar h1 {
+    margin: 0;
+    font-size: 30px;
+    letter-spacing: 0;
+  }
+
+  .studio-secondary-btn,
+  .image-action {
+    display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: var(--accent-gradient);
-    border-radius: 50%;
-    font-size: 0.9rem;
+    gap: 8px;
+    min-height: 42px;
+    padding: 0 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-card);
+    color: var(--text-primary);
     font-weight: 700;
-    color: #000;
+    cursor: pointer;
+    transition: border-color 0.2s, background 0.2s, color 0.2s;
   }
-  
-  .section-desc {
-    color: var(--text-muted);
-    margin-bottom: var(--spacing-lg);
-    margin-top: calc(-1 * var(--spacing-sm));
+
+  .studio-secondary-btn:hover,
+  .image-action:hover {
+    border-color: rgba(16, 185, 129, 0.45);
+    background: rgba(16, 185, 129, 0.08);
+    color: var(--accent-primary);
   }
-  
-  .form-row {
+
+  .studio-secondary-btn i,
+  .image-action i {
+    width: 18px;
+    height: 18px;
+  }
+
+  .studio-shell {
     display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: var(--spacing-lg);
+    grid-template-columns: 240px minmax(360px, 1fr) minmax(320px, 420px);
+    gap: 18px;
+    align-items: start;
   }
-  
-  .form-row-3 {
-    display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: var(--spacing-lg);
+
+  .tool-rail,
+  .config-panel {
+    position: sticky;
+    top: 20px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-card);
+    box-shadow: 0 18px 60px rgba(15, 23, 42, 0.08);
   }
-  
-  /* Upload Dropzone */
-  .upload-dropzone {
-    border: 2px dashed var(--border-color);
-    border-radius: var(--radius-lg);
-    transition: border-color var(--transition-base), background var(--transition-base);
+
+  .tool-rail {
+    overflow: hidden;
+  }
+
+  .tool-menu-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 15px;
+    border: 0;
+    border-bottom: 1px solid var(--border-color);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(14, 165, 233, 0.08));
+    color: var(--text-primary);
+    text-align: left;
     cursor: pointer;
   }
 
-  .upload-dropzone:hover,
-  .upload-dropzone.dragover {
-    border-color: var(--accent-primary);
-    background: rgba(0, 255, 136, 0.04);
+  .tool-kicker {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.4px;
+    text-transform: uppercase;
+    color: var(--text-muted);
   }
 
-  .upload-dropzone-label {
+  .tool-menu-toggle strong {
+    display: block;
+    font-size: 15px;
+  }
+
+  .tool-menu-toggle i {
+    width: 18px;
+    height: 18px;
+    transition: transform 0.2s;
+  }
+
+  .tool-menu-toggle.collapsed i {
+    transform: rotate(-90deg);
+  }
+
+  .tool-menu {
+    max-height: 66vh;
+    overflow-y: auto;
+    padding: 8px;
+  }
+
+  .tool-menu.collapsed {
+    display: none;
+  }
+
+  .tool-option {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-weight: 700;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+  }
+
+  .tool-option:hover {
+    background: var(--bg-tertiary);
+    color: var(--text-primary);
+  }
+
+  .tool-option.active {
+    border-color: rgba(16, 185, 129, 0.45);
+    background: rgba(16, 185, 129, 0.12);
+    color: var(--accent-primary);
+  }
+
+  .tool-option i {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+  }
+
+  .preview-stage {
+    min-height: 76vh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: var(--spacing-md);
-    padding: var(--spacing-3xl);
+    gap: 18px;
+    padding: 24px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background:
+      radial-gradient(circle at top left, rgba(16, 185, 129, 0.08), transparent 34%),
+      var(--bg-secondary);
+  }
+
+  .upload-canvas {
+    position: relative;
+    width: min(100%, 520px);
+    aspect-ratio: 9 / 16;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 28px;
+    border: 2px dashed rgba(16, 185, 129, 0.4);
+    border-radius: 16px;
+    background: var(--bg-card);
+    color: var(--text-muted);
+    text-align: center;
+    cursor: pointer;
+    overflow: hidden;
+    transition: border-color 0.2s, background 0.2s, transform 0.2s;
+  }
+
+  .upload-canvas.is-portrait {
+    width: min(100%, 520px);
+    aspect-ratio: 9 / 16;
+  }
+
+  .upload-canvas.is-landscape {
+    width: min(100%, 860px);
+    aspect-ratio: 16 / 9;
+  }
+
+  .upload-canvas [hidden] {
+    display: none !important;
+  }
+
+  .upload-canvas:hover,
+  .upload-canvas.dragover {
+    border-color: var(--accent-primary);
+    background: rgba(16, 185, 129, 0.08);
+    transform: translateY(-1px);
+  }
+
+  .upload-canvas.has-image {
+    padding: 0;
+    border-style: solid;
+    border-color: rgba(16, 185, 129, 0.55);
+    background: #0f172a;
+    box-shadow: 0 24px 90px rgba(15, 23, 42, 0.24);
+  }
+
+  .upload-canvas.mask-mode {
+    cursor: crosshair;
+  }
+
+  .upload-canvas strong {
+    color: var(--text-primary);
+    font-size: 20px;
+  }
+
+  .upload-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .upload-icon {
+    width: 62px;
+    height: 62px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: rgba(16, 185, 129, 0.12);
+    color: var(--accent-primary);
+  }
+
+  .upload-icon i {
+    width: 30px;
+    height: 30px;
+  }
+
+  .source-preview {
+    width: 100%;
+    height: 100%;
+    display: block;
+    object-fit: cover;
+    object-position: center;
+    border-radius: inherit;
+    cursor: zoom-in;
+    transform: translate(var(--preview-pan-x, 0px), var(--preview-pan-y, 0px)) scale(var(--preview-zoom, 1));
+    transform-origin: center;
+    transition: transform 0.12s ease;
+  }
+
+  .upload-canvas.mask-mode .source-preview {
+    cursor: crosshair;
+  }
+
+  .mask-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 2;
+    cursor: crosshair;
+    touch-action: none;
+    transform: translate(var(--preview-pan-x, 0px), var(--preview-pan-y, 0px)) scale(var(--preview-zoom, 1));
+    transform-origin: center;
+  }
+
+  .mask-canvas.click-mode {
+    cursor: pointer;
+  }
+
+  .image-action {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    min-height: 38px;
+    background: rgba(15, 23, 42, 0.74);
+    border-color: rgba(255, 255, 255, 0.16);
+    color: #fff;
+    backdrop-filter: blur(10px);
+    z-index: 3;
+  }
+
+  .image-zoom-controls {
+    width: min(100%, 520px);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid rgba(16, 185, 129, 0.22);
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.72);
+    color: rgba(255, 255, 255, 0.85);
+    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.18);
+    backdrop-filter: blur(12px);
+  }
+
+  .image-zoom-controls[hidden] {
+    display: none !important;
+  }
+
+  .image-zoom-controls i {
+    width: 17px;
+    height: 17px;
+  }
+
+  .image-zoom-controls input {
+    width: 100%;
+    accent-color: var(--accent-primary);
+  }
+
+  .image-pan-toggle {
+    min-height: 30px;
+    padding: 0 10px;
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-weight: 900;
+    cursor: pointer;
+  }
+
+  .image-pan-toggle.active {
+    border-color: rgba(16, 185, 129, 0.6);
+    background: rgba(16, 185, 129, 0.24);
+  }
+
+  .result-panel {
+    width: min(100%, 540px);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-card);
+    overflow: hidden;
+  }
+
+  .result-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  .result-heading strong {
+    color: var(--accent-primary);
+  }
+
+  .result-media img,
+  .result-media video {
+    width: 100%;
+    display: block;
+  }
+
+  .before-after-result {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border-color);
+  }
+
+  .before-after-frame {
+    position: relative;
+    min-height: 260px;
+    overflow: hidden;
+    background: #0f172a;
+  }
+
+  .before-after-frame img {
+    width: 100%;
+    height: 100%;
+    min-height: 260px;
+    object-fit: cover;
+  }
+
+  .before-after-frame span {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    padding: 6px 9px;
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.74);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .generated-preview-image {
+    cursor: zoom-in;
+  }
+
+  .result-text {
+    padding: 18px;
+    color: var(--text-primary);
+    line-height: 1.6;
+    white-space: pre-wrap;
+  }
+
+  .product-results {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 16px;
+  }
+
+  .product-category h4 {
+    margin: 0 0 10px;
+    color: var(--text-primary);
+    text-transform: capitalize;
+  }
+
+  .product-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .product-card {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px;
+    border: 1px solid rgba(16, 185, 129, 0.18);
+    border-radius: 8px;
+    background: rgba(16, 185, 129, 0.07);
+    color: var(--text-primary);
+    text-decoration: none;
+  }
+
+  .product-card img {
+    aspect-ratio: 4 / 3;
+    object-fit: cover;
+    border-radius: 6px;
+  }
+
+  .product-card strong {
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  .product-card span {
+    color: var(--text-muted);
+    font-size: 12px;
+  }
+
+  .config-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 18px;
+  }
+
+  .selected-tool-card {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    padding: 15px;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.12), rgba(14, 165, 233, 0.08));
+  }
+
+  .selected-tool-card span,
+  .selected-tool-card small {
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  .selected-tool-card strong {
+    font-size: 20px;
+  }
+
+  .tool-interface {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .tool-interface:empty {
+    display: none;
+  }
+
+  .tool-panel-section {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .tool-panel-section h3 {
+    margin: 0;
+    color: var(--text-primary);
+    font-size: 17px;
+    letter-spacing: 0;
+  }
+
+  .tool-panel-section p {
+    margin: 0;
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+
+  .control-input {
+    width: 100%;
+    padding: 13px 14px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.72);
+    color: var(--text-primary);
+    font: inherit;
+  }
+
+  textarea.control-input {
+    resize: vertical;
+    min-height: 150px;
+  }
+
+  .large-upload-zone {
+    width: 100%;
+    min-height: 190px;
+    display: grid;
+    place-items: center;
+    padding: 24px;
+    border: 1px dashed rgba(124, 58, 237, 0.78);
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.54);
+    color: var(--text-primary);
+    font-size: 20px;
+    font-weight: 900;
     text-align: center;
     cursor: pointer;
   }
 
-  .upload-dropzone-label i {
-    width: 48px;
-    height: 48px;
-    color: var(--text-muted);
+  .large-upload-zone.compact {
+    min-height: 140px;
+    font-size: 17px;
   }
 
-  .upload-hint {
-    font-size: 0.85rem;
-    color: var(--text-muted);
+  .tool-card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
   }
 
-  /* Portrait 9:16 preview */
-  .portrait-preview-wrap {
-    display: none;
-    gap: var(--spacing-lg);
-    align-items: flex-start;
+  .tool-card-grid.three {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .portrait-preview-wrap.visible {
+  .tool-choice-card,
+  .weather-choice-card {
+    min-height: 72px;
     display: flex;
+    align-items: flex-end;
+    justify-content: flex-start;
+    padding: 12px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 8px;
+    background:
+      linear-gradient(180deg, rgba(15, 23, 42, 0.12), rgba(15, 23, 42, 0.88)),
+      linear-gradient(135deg, rgba(16, 185, 129, 0.14), rgba(124, 58, 237, 0.18));
+    color: #fff;
+    font-weight: 900;
+    text-align: left;
+    cursor: pointer;
+    transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   }
 
-  .portrait-preview-box {
-    position: relative;
-    width: 220px;
-    flex-shrink: 0;
-    aspect-ratio: 9 / 16;
-    border-radius: var(--radius-lg);
-    overflow: hidden;
-    border: 2px solid var(--border-color);
+  .tool-choice-card:hover,
+  .weather-choice-card:hover,
+  .tool-choice-card.active,
+  .weather-choice-card.active {
+    transform: translateY(-1px);
+    border-color: rgba(16, 185, 129, 0.62);
+    box-shadow: 0 18px 34px rgba(16, 185, 129, 0.14);
+  }
+
+  .tool-form-card {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 15px;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.42);
+  }
+
+  .tool-action-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    color: var(--text-secondary);
+    font-weight: 800;
+  }
+
+  .tool-switch {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-secondary);
+    font-weight: 800;
+  }
+
+  .tool-switch input {
+    width: 38px;
+    height: 22px;
+    accent-color: var(--accent-primary);
+  }
+
+  .generated-control textarea {
+    min-height: 160px;
+  }
+
+  .legacy-tool-controls {
+    display: none !important;
+  }
+
+  .config-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .config-group label {
+    color: var(--text-primary);
+    font-size: 14px;
+    font-weight: 800;
+  }
+
+  .segmented-control {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .segment {
+    min-height: 54px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-weight: 800;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+  }
+
+  .segment.active {
+    border-color: rgba(16, 185, 129, 0.55);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.95), rgba(14, 165, 233, 0.8));
+    color: #052e2b;
+  }
+
+  .segment i {
+    width: 17px;
+    height: 17px;
+  }
+
+  .config-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .studio-select,
+  .studio-input,
+  .studio-textarea {
+    width: 100%;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font: inherit;
+    font-weight: 600;
+  }
+
+  .studio-select {
+    min-height: 44px;
+    padding: 0 12px;
+  }
+
+  .studio-input {
+    min-height: 44px;
+    padding: 0 12px;
+  }
+
+  .studio-textarea {
+    resize: vertical;
+    min-height: 120px;
+    padding: 12px;
+    line-height: 1.5;
+  }
+
+  .advanced-options {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .advanced-toggle {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font: inherit;
+    font-weight: 900;
+    cursor: pointer;
+  }
+
+  .advanced-toggle span {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .advanced-toggle svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .advanced-toggle[aria-expanded="true"] > svg:last-child {
+    transform: rotate(180deg);
+  }
+
+  .tool-options-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 15px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
     background: var(--bg-secondary);
   }
 
-  .portrait-preview-box img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
+  .tool-options-panel.collapsed {
+    display: none;
   }
 
-  .portrait-remove-btn {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 28px;
-    height: 28px;
-    background: rgba(0,0,0,0.65);
-    border: none;
-    border-radius: 50%;
-    color: #fff;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 2;
-    transition: background var(--transition-fast);
-  }
-
-  .portrait-remove-btn:hover {
-    background: rgba(220,38,38,0.85);
-  }
-
-  .portrait-remove-btn i {
-    width: 14px;
-    height: 14px;
-  }
-
-  .portrait-change-overlay {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: linear-gradient(transparent, rgba(0,0,0,0.6));
-    color: #fff;
+  .tool-option-row {
     display: flex;
     flex-direction: column;
+    gap: 8px;
+  }
+
+  .tool-option-row[hidden] {
+    display: none !important;
+  }
+
+  .tool-option-row label {
+    display: flex !important;
     align-items: center;
-    justify-content: flex-end;
-    gap: 4px;
-    padding: 14px 8px 10px;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .tool-option-row input[type="range"] {
+    width: 100%;
+    accent-color: var(--accent-primary);
+  }
+
+  .texture-upload-btn {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    border: 1px solid rgba(16, 185, 129, 0.28);
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.13), rgba(124, 58, 237, 0.12));
+    color: var(--text-primary);
+    font-weight: 900;
     cursor: pointer;
-    opacity: 0;
-    transition: opacity var(--transition-fast);
-    font-size: 0.8rem;
-    font-weight: 500;
   }
 
-  .portrait-preview-box:hover .portrait-change-overlay {
-    opacity: 1;
-  }
-
-  .portrait-change-overlay i {
+  .texture-upload-btn i {
     width: 18px;
     height: 18px;
   }
 
-  /* Thumbnail strip */
-  .portrait-thumbs {
+  .texture-preview {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+    display: block;
+    object-fit: cover;
+    border: 1px solid rgba(16, 185, 129, 0.24);
+    border-radius: 8px;
+  }
+
+  .texture-preview[hidden] {
+    display: none !important;
+  }
+
+  .studio-color {
+    width: 100%;
+    height: 44px;
+    padding: 4px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-secondary);
+    cursor: pointer;
+  }
+
+  .mask-tools-panel {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-sm);
-    padding-top: 4px;
+    gap: 12px;
+    padding: 15px;
+    border: 1px solid rgba(16, 185, 129, 0.28);
+    border-radius: 8px;
+    background: rgba(16, 185, 129, 0.08);
   }
 
-  .portrait-thumb {
-    position: relative;
-    width: 72px;
-    aspect-ratio: 9 / 16;
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    border: 2px solid var(--border-color);
+  .mask-tools-panel[hidden] {
+    display: none !important;
+  }
+
+  .material-swap-tabs {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px;
+    border: 1px solid rgba(124, 58, 237, 0.26);
+    border-radius: 8px;
+    background: linear-gradient(135deg, rgba(124, 58, 237, 0.14), rgba(16, 185, 129, 0.08));
+  }
+
+  .material-swap-tabs[hidden] {
+    display: none !important;
+  }
+
+  .material-tab-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .material-tab-btn,
+  .material-continue-btn {
+    min-height: 40px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-weight: 900;
     cursor: pointer;
-    transition: border-color var(--transition-fast);
+    transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
   }
 
-  .portrait-thumb.active {
-    border-color: var(--accent-primary);
+  .material-tab-btn.active,
+  .material-continue-btn {
+    border-color: rgba(16, 185, 129, 0.5);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.92), rgba(124, 58, 237, 0.74));
+    color: #ecfeff;
   }
 
-  .portrait-thumb img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
+  .material-tab-btn:hover,
+  .material-continue-btn:hover {
+    transform: translateY(-1px);
+  }
+
+  .material-tab-copy,
+  .material-selection-label {
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.55;
+  }
+
+  .material-selection-label {
+    padding: 8px 10px;
+    border: 1px solid rgba(16, 185, 129, 0.22);
+    border-radius: 8px;
+    background: rgba(16, 185, 129, 0.09);
+  }
+
+  .mask-tools-kicker {
     display: block;
+    margin-bottom: 5px;
+    color: var(--accent-primary);
+    font-size: 11px;
+    font-weight: 900;
+    letter-spacing: 1px;
+    text-transform: uppercase;
   }
 
-  .portrait-thumb-remove {
-    position: absolute;
-    top: 3px;
-    right: 3px;
-    width: 18px;
-    height: 18px;
-    background: rgba(0,0,0,0.65);
-    border: none;
-    border-radius: 50%;
-    color: #fff;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    transition: opacity var(--transition-fast);
+  .mask-tools-panel strong {
+    display: block;
+    font-size: 15px;
   }
 
-  .portrait-thumb:hover .portrait-thumb-remove {
-    opacity: 1;
-  }
-
-  .portrait-thumb-remove i {
-    width: 10px;
-    height: 10px;
-  }
-
-  .portrait-add-btn {
-    width: 72px;
-    aspect-ratio: 9 / 16;
-    border-radius: var(--radius-md);
-    border: 2px dashed var(--border-color);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
+  .mask-tools-panel p {
+    margin: 6px 0 0;
     color: var(--text-muted);
-    transition: border-color var(--transition-fast), color var(--transition-fast);
+    font-size: 13px;
+    line-height: 1.45;
   }
 
-  .portrait-add-btn:hover {
-    border-color: var(--accent-primary);
+  .selection-mode-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .selection-mode-group > span {
+    color: var(--text-secondary);
+    font-size: 12px;
+    font-weight: 900;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+
+  .selection-mode-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .selection-mode-btn {
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  .selection-mode-btn.active {
+    border-color: rgba(16, 185, 129, 0.45);
+    background: rgba(16, 185, 129, 0.16);
     color: var(--accent-primary);
   }
 
-  .portrait-add-btn i {
-    width: 20px;
-    height: 20px;
+  .mask-tool-buttons {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
   }
-  
-  /* Priority Sliders */
-  .priority-sliders {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-xl);
-  }
-  
-  .priority-item label {
-    display: block;
-    font-weight: 500;
-    margin-bottom: var(--spacing-sm);
-  }
-  
-  .priority-slider {
-    width: 100%;
-    height: 8px;
+
+  .mask-tool-btn,
+  .mask-clear-btn {
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
     background: var(--bg-secondary);
-    border-radius: var(--radius-full);
-    outline: none;
-    -webkit-appearance: none;
-  }
-  
-  .priority-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 20px;
-    height: 20px;
-    background: var(--accent-gradient);
-    border-radius: 50%;
+    color: var(--text-secondary);
+    font-weight: 800;
     cursor: pointer;
   }
-  
-  .priority-labels {
-    display: flex;
+
+  .mask-tool-btn.active {
+    border-color: rgba(16, 185, 129, 0.5);
+    background: rgba(16, 185, 129, 0.14);
+    color: var(--accent-primary);
+  }
+
+  .mask-tool-btn i,
+  .mask-clear-btn i {
+    width: 17px;
+    height: 17px;
+  }
+
+  .mask-size-label {
+    display: flex !important;
+    align-items: center;
     justify-content: space-between;
-    font-size: 0.8rem;
-    color: var(--text-muted);
-    margin-top: var(--spacing-xs);
+    gap: 10px;
   }
-  
-  /* DIY Option */
-  .diy-option {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-lg);
+
+  #mask-brush-size {
+    width: 100%;
+    accent-color: var(--accent-primary);
   }
-  
-  .diy-option input[type="checkbox"] {
-    display: none;
+
+  .mask-clear-btn {
+    color: #ef4444;
   }
-  
-  .diy-option label {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-lg);
-    padding: var(--spacing-lg);
-    background: var(--bg-secondary);
-    border: 2px solid var(--border-color);
-    border-radius: var(--radius-lg);
-    cursor: pointer;
-    transition: all var(--transition-base);
-    flex: 1;
-  }
-  
-  .diy-option input:checked + label {
-    border-color: var(--accent-primary);
-    background: rgba(0, 255, 136, 0.05);
-  }
-  
-  .diy-icon {
-    width: 48px;
-    height: 48px;
+
+  .generate-btn {
+    min-height: 54px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--bg-tertiary);
-    border-radius: var(--radius-md);
+    gap: 10px;
+    border: 0;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #10b981, #0ea5e9);
+    color: #041316;
+    font-weight: 900;
+    cursor: pointer;
+    box-shadow: 0 16px 34px rgba(16, 185, 129, 0.24);
+    transition: transform 0.2s, opacity 0.2s;
+  }
+
+  .generate-btn:hover {
+    transform: translateY(-1px);
+  }
+
+  .generate-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.65;
+    transform: none;
+  }
+
+  .generate-btn i {
+    width: 19px;
+    height: 19px;
+  }
+
+  .studio-status {
+    min-height: 22px;
+    font-size: 13px;
+    font-weight: 700;
     color: var(--text-muted);
-    transition: all var(--transition-base);
   }
-  
-  .diy-option input:checked + label .diy-icon {
-    background: var(--accent-gradient);
-    color: #000;
+
+  .studio-status.error {
+    color: #ef4444;
   }
-  
-  .diy-option strong {
-    display: block;
-    margin-bottom: var(--spacing-xs);
+
+  .studio-status.success {
+    color: var(--accent-primary);
   }
-  
-  .diy-option p {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-  }
-  
-  /* Form Actions */
-  .form-actions {
+
+  .image-lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
     display: flex;
-    justify-content: flex-end;
-    gap: var(--spacing-md);
-    padding-top: var(--spacing-lg);
+    align-items: center;
+    justify-content: center;
+    padding: 28px;
+    background: rgba(0, 0, 0, 0.86);
+    backdrop-filter: blur(10px);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s ease;
   }
-  
-  @media (max-width: 768px) {
-    .form-row,
-    .form-row-3 {
+
+  .image-lightbox[hidden] {
+    display: none !important;
+  }
+
+  .image-lightbox.open {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .lightbox-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    cursor: zoom-in;
+  }
+
+  .lightbox-content.zoomed {
+    cursor: grab;
+  }
+
+  .lightbox-content.dragging {
+    cursor: grabbing;
+  }
+
+  .lightbox-content img {
+    max-width: 96vw;
+    max-height: 92vh;
+    object-fit: contain;
+    border-radius: 8px;
+    box-shadow: 0 32px 100px rgba(0, 0, 0, 0.45);
+    transform: translate(var(--pan-x, 0px), var(--pan-y, 0px)) scale(var(--zoom, 1));
+    transition: transform 0.18s ease, opacity 0.18s ease;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  .image-lightbox.open .lightbox-content img {
+    animation: lightboxIn 0.18s ease both;
+  }
+
+  .lightbox-close {
+    position: fixed;
+    top: 22px;
+    right: 22px;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.7);
+    color: #fff;
+    cursor: pointer;
+    z-index: 1;
+    transition: background 0.2s, transform 0.2s;
+  }
+
+  .lightbox-close:hover {
+    background: rgba(239, 68, 68, 0.9);
+    transform: translateY(-1px);
+  }
+
+  .lightbox-close i {
+    width: 22px;
+    height: 22px;
+  }
+
+  .lightbox-hint {
+    position: fixed;
+    left: 50%;
+    bottom: 22px;
+    transform: translateX(-50%);
+    padding: 9px 13px;
+    border-radius: 8px;
+    background: rgba(15, 23, 42, 0.72);
+    color: rgba(255, 255, 255, 0.82);
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  @keyframes lightboxIn {
+    from {
+      opacity: 0;
+      transform: translate(var(--pan-x, 0px), var(--pan-y, 0px)) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: translate(var(--pan-x, 0px), var(--pan-y, 0px)) scale(var(--zoom, 1));
+    }
+  }
+
+  @media (max-width: 1180px) {
+    .studio-shell {
+      grid-template-columns: 220px minmax(320px, 1fr);
+    }
+
+    .config-panel {
+      position: static;
+      grid-column: 1 / -1;
+    }
+  }
+
+  @media (max-width: 820px) {
+    .ai-studio-page {
+      padding: 14px;
+    }
+
+    .studio-topbar {
+      flex-direction: column;
+    }
+
+    .studio-shell {
       grid-template-columns: 1fr;
+    }
+
+    .tool-rail {
+      position: static;
+    }
+
+    .preview-stage {
+      min-height: auto;
+      padding: 16px;
+    }
+
+    .upload-canvas {
+      width: min(100%, 360px);
+    }
+
+    .config-grid,
+    .segmented-control {
+      grid-template-columns: 1fr;
+    }
+
+    .before-after-result {
+      grid-template-columns: 1fr;
+    }
+
+    .image-lightbox {
+      padding: 16px;
+    }
+
+    .lightbox-hint {
+      display: none;
+    }
+  }
+  .latest-designs-panel {
+    margin-top: 24px;
+    padding: 22px;
+    border: 1px solid rgba(76, 211, 194, 0.18);
+    border-radius: 20px;
+    background: rgba(12, 20, 34, 0.86);
+    box-shadow: 0 18px 45px rgba(0, 0, 0, 0.22);
+  }
+
+  .latest-designs-panel__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .latest-designs-panel__header h2 {
+    margin: 4px 0 0;
+    color: #f8fafc;
+    font-size: 1.25rem;
+  }
+
+  #latest-designs-count {
+    color: #94a3b8;
+    font-weight: 700;
+    font-size: 0.9rem;
+  }
+
+  .latest-designs-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .latest-design-card {
+    position: relative;
+    overflow: hidden;
+    min-height: 128px;
+    border: 1px solid rgba(148, 163, 184, 0.16);
+    border-radius: 14px;
+    background: #0f172a;
+    cursor: pointer;
+    transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+  }
+
+  .latest-design-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(76, 211, 194, 0.58);
+    box-shadow: 0 18px 38px rgba(20, 184, 166, 0.14);
+  }
+
+  .latest-design-card img {
+    width: 100%;
+    height: 100%;
+    min-height: 128px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .latest-design-card span {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
+  }
+
+  .latest-designs-empty {
+    display: none;
+    padding: 20px;
+    border: 1px dashed rgba(76, 211, 194, 0.28);
+    border-radius: 14px;
+    color: #94a3b8;
+    text-align: center;
+    background: rgba(15, 23, 42, 0.72);
+  }
+
+  .latest-designs-empty.is-visible {
+    display: block;
+  }
+
+  @media (max-width: 760px) {
+    .latest-designs-grid {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 </style>
 
 <script>
   (() => {
-    const fileInput     = document.getElementById('images');
-    const dropzone      = document.getElementById('upload-dropzone');
-    const previewWrap   = document.getElementById('portrait-preview-wrap');
-    const mainImg       = document.getElementById('portrait-main-img');
-    const removeBtn     = document.getElementById('portrait-remove-btn');
-    const thumbsWrap    = document.getElementById('portrait-thumbs');
+    const imageInput = document.getElementById('design-image');
+    const materialTextureImage = document.getElementById('material-texture-image');
+    const styleReferenceImage = document.getElementById('style-reference-image');
+    const replaceImageBtn = document.getElementById('replace-image-btn');
+    const uploadCanvas = document.getElementById('upload-canvas');
+    const uploadPlaceholder = document.getElementById('upload-placeholder');
+    const sourcePreview = document.getElementById('source-preview');
+    const maskCanvas = document.getElementById('mask-canvas');
+    const maskCtx = maskCanvas.getContext('2d');
+    const imageZoomControls = document.getElementById('image-zoom-controls');
+    const imageZoomRange = document.getElementById('image-zoom-range');
+    const imagePanToggle = document.getElementById('image-pan-toggle');
+    const changeImageBtn = document.getElementById('change-image-btn');
+    const toolMenuToggle = document.getElementById('tool-menu-toggle');
+    const toolMenu = document.getElementById('tool-menu');
+    const selectedToolLabel = document.getElementById('selected-tool-label');
+    const configToolName = document.getElementById('config-tool-name');
+    const configEndpoint = document.getElementById('config-endpoint');
+    const generateBtn = document.getElementById('generate-btn');
+    const studioStatus = document.getElementById('studio-status');
+    const resultPanel = document.getElementById('result-panel');
+  const resultMedia = document.getElementById('result-media');
+  const latestDesignsGrid = document.getElementById('latest-designs-grid');
+  const latestDesignsEmpty = document.getElementById('latest-designs-empty');
+  const latestDesignsCount = document.getElementById('latest-designs-count');
+    const resultToolName = document.getElementById('result-tool-name');
+    const imageLightbox = document.getElementById('image-lightbox');
+    const lightboxContent = document.getElementById('lightbox-content');
+    const lightboxImage = document.getElementById('lightbox-image');
+    const lightboxClose = document.getElementById('lightbox-close');
+    const advancedOptions = document.getElementById('advanced-options');
+    const advancedToggle = document.getElementById('advanced-toggle');
+    const toolOptionsPanel = document.getElementById('tool-options-panel');
+    const toolInterface = document.getElementById('tool-interface');
+    const spaceTypeGroup = document.getElementById('space-type-group');
+    const designContextGrid = document.getElementById('design-context-grid');
+    const instructionsGroup = document.getElementById('instructions-group');
+    const instructionsLabel = instructionsGroup.querySelector('label');
+    const instructionsInput = document.getElementById('additional-instructions');
+    const maskToolsPanel = document.getElementById('mask-tools-panel');
+    const maskToolTitle = document.getElementById('mask-tool-title');
+    const maskToolHelp = document.getElementById('mask-tool-help');
+    const clickSelectionBtn = document.getElementById('click-selection-btn');
+    const brushSelectionBtn = document.getElementById('brush-selection-btn');
+    const maskBrushBtn = document.getElementById('mask-brush-btn');
+    const maskEraserBtn = document.getElementById('mask-eraser-btn');
+    const maskBrushSize = document.getElementById('mask-brush-size');
+    const maskBrushSizeValue = document.getElementById('mask-brush-size-value');
+    const maskClearBtn = document.getElementById('mask-clear-btn');
+    const noDesignRow = document.getElementById('option-no-design');
+    const noDesignSelect = document.getElementById('option-no-design-select');
+    const interventionRow = document.getElementById('option-ai-intervention');
+    const interventionSelect = document.getElementById('option-ai-intervention-select');
+    const strengthRow = document.getElementById('option-strength');
+    const strengthRange = document.getElementById('option-strength-range');
+    const strengthValue = document.getElementById('option-strength-value');
+    const weatherRow = document.getElementById('option-weather');
+    const weatherSelect = document.getElementById('option-weather-select');
+    const countryRow = document.getElementById('option-country');
+    const countrySelect = document.getElementById('option-country-select');
+    const paintColorRow = document.getElementById('option-paint-color');
+    const paintColorInput = document.getElementById('option-paint-color-input');
+    const materialRow = document.getElementById('option-material');
+    const materialSelect = document.getElementById('option-material-select');
+    const materialTypeRow = document.getElementById('option-material-type');
+    const materialTypeSelect = document.getElementById('option-material-type-select');
+    const surfaceColorRow = document.getElementById('option-surface-color');
+    const surfaceColorInput = document.getElementById('option-surface-color-input');
+    const objectRow = document.getElementById('option-object');
+    const objectInput = document.getElementById('option-object-input');
+    const videoMotionRow = document.getElementById('option-video-motion');
+    const videoMotionSelect = document.getElementById('option-video-motion-select');
+    const materialPresetRow = document.getElementById('option-material-preset');
+    const materialPresetSelect = document.getElementById('option-material-preset-select');
+    const materialInstructionRow = document.getElementById('option-material-instruction');
+    const materialInstructionInput = document.getElementById('option-material-instruction-input');
+    const textureGridRow = document.getElementById('option-texture-grid');
+    const textureGridSelect = document.getElementById('option-texture-grid-select');
+    const textureUploadRow = document.getElementById('option-texture-upload');
+    const textureUploadBtn = document.getElementById('texture-upload-btn');
+    const textureUploadLabel = document.getElementById('texture-upload-label');
+    const texturePreview = document.getElementById('texture-preview');
+    const styleReferenceRow = document.getElementById('option-style-reference');
+    const styleReferenceUploadBtn = document.getElementById('style-reference-upload-btn');
+    const styleReferenceUploadLabel = document.getElementById('style-reference-upload-label');
+    const styleReferencePreview = document.getElementById('style-reference-preview');
+    const materialSwapTabs = document.getElementById('material-swap-tabs');
+    const materialAutoTab = document.getElementById('material-auto-tab');
+    const materialManualTab = document.getElementById('material-manual-tab');
+    const materialTabCopy = document.getElementById('material-tab-copy');
+    const materialSelectionLabel = document.getElementById('material-selection-label');
+    const materialContinueBtn = document.getElementById('material-continue-btn');
 
-    // Internal file list (FileList is read-only, so we manage our own array)
-    let selectedFiles = [];
-    let activeIndex   = 0;
+  const TOOL_CONFIG = <%- JSON.stringify(aiToolsConfig || {}) %>;
+  const STUDIO_PROJECT = <%- JSON.stringify(studioProjectData || null) %>;
+  const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+  const ACCEPTED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
 
-    /* ── helpers ── */
-    function syncInputFiles() {
-      const dt = new DataTransfer();
-      selectedFiles.forEach(f => dt.items.add(f));
-      fileInput.files = dt.files;
+  let selectedFile = null;
+  let projectSourceImageUrl = STUDIO_PROJECT?.imageUrl || '';
+  let latestDesigns = STUDIO_PROJECT?.latestDesigns || [];
+    let isGenerating = false;
+    let selectedTextureFile = null;
+    let selectedStyleReferenceFile = null;
+    let selectedEndpoint = '/api/v2/perfect_redesign';
+    let selectedToolName = 'Redesign';
+    let selectedToolKey = 'redesign';
+    let selectedRedesignMode = 'perfect_redesign';
+    let selectedRequiresMask = false;
+    let designType = 'Interior';
+    let lightboxZoom = 1;
+    let panX = 0;
+    let panY = 0;
+    let dragStart = null;
+    let isMaskDrawing = false;
+    let maskMode = 'brush';
+    let selectionMode = 'click';
+    let hasMaskPaint = false;
+    let hasManualBrushPaint = false;
+    let materialSwapReady = false;
+    let previewZoom = 1;
+    let previewPanX = 0;
+    let previewPanY = 0;
+    let previewPanStart = null;
+    let previewPanMode = false;
+    let hoverSelection = null;
+    let clickSelections = [];
+    const brushCanvas = document.createElement('canvas');
+    const brushCtx = brushCanvas.getContext('2d');
+    [spaceTypeGroup, designContextGrid, instructionsGroup, advancedOptions].forEach((element) => {
+      element.classList.add('legacy-tool-controls');
+    });
+
+    const MATERIAL_SUBTYPES = {
+      Wood: ['Oak', 'Maple', 'Cherry', 'Walnut', 'Pine', 'Teak', 'Mahogany', 'Bamboo', 'Birch'],
+      Stone: ['Marble', 'Granite', 'Limestone', 'Slate', 'Travertine', 'Sandstone'],
+      Metal: ['Gold', 'Silver', 'Bronze', 'Copper', 'Brass', 'Steel', 'Chrome'],
+      Glass: ['Clear', 'Frosted', 'Tinted', 'Stained', 'Tempered', 'Mirrored'],
+      Fabrics: ['Cotton', 'Linen', 'Silk', 'Velvet', 'Wool', 'Leather', 'Suede'],
+      'Ceramics and Porcelain': ['Glazed', 'Matte', 'Porcelain', 'Terracotta', 'Mosaic'],
+      'Natural Fibers': ['Jute', 'Sisal', 'Hemp', 'Rattan', 'Wicker', 'Seagrass'],
+      'Composite Materials': ['MDF', 'Plywood', 'Laminate', 'Corian', 'Quartz']
+    };
+
+    function endpointToolKey(endpoint = selectedEndpoint) {
+      return (endpoint || '').split('/').filter(Boolean).pop();
     }
 
-    function readAsDataURL(file) {
-      return new Promise(resolve => {
-        const r = new FileReader();
-        r.onload = e => resolve(e.target.result);
-        r.readAsDataURL(file);
+    function currentToolKey() {
+      return selectedToolKey || endpointToolKey();
+    }
+
+    function getCurrentToolConfig() {
+      return TOOL_CONFIG[currentToolKey()] || {};
+    }
+
+    function getRedesignModeConfig(mode = selectedRedesignMode) {
+      return (TOOL_CONFIG.redesign?.modeTools || []).find((item) => item.value === mode);
+    }
+
+    function setRedesignMode(mode, render = true) {
+      const modeConfig = getRedesignModeConfig(mode) || getRedesignModeConfig('perfect_redesign');
+      if (!modeConfig) return;
+      selectedRedesignMode = modeConfig.value;
+      selectedEndpoint = modeConfig.endpoint;
+      configEndpoint.textContent = selectedEndpoint;
+      if (render) updateToolOptions();
+    }
+
+    function isMaterialSwapTool() {
+      return currentToolKey() === 'material_swap';
+    }
+
+    function applyPreviewTransform() {
+      uploadCanvas.style.setProperty('--preview-zoom', previewZoom);
+      uploadCanvas.style.setProperty('--preview-pan-x', `${previewPanX}px`);
+      uploadCanvas.style.setProperty('--preview-pan-y', `${previewPanY}px`);
+      uploadCanvas.classList.toggle('is-pannable', previewZoom > 1);
+      if (previewZoom <= 1 && previewPanMode) {
+        previewPanMode = false;
+        imagePanToggle.classList.remove('active');
+      }
+    }
+
+    function resetPreviewTransform() {
+      previewZoom = 1;
+      previewPanX = 0;
+      previewPanY = 0;
+      previewPanMode = false;
+      imageZoomRange.value = '1';
+      imagePanToggle.classList.remove('active');
+      applyPreviewTransform();
+    }
+
+    function setMaterialSwapTab(mode) {
+      const automatic = mode === 'automatic';
+      materialAutoTab.classList.toggle('active', automatic);
+      materialManualTab.classList.toggle('active', !automatic);
+      materialTabCopy.textContent = automatic
+        ? 'Click directly on the image to automatically select an object. Our AI will help you precisely mask it for modifications.'
+        : 'Use Draw mask and Erase mask to manually paint the surface or object you want to transform.';
+      setSelectionMode(automatic ? 'click' : 'brush');
+    }
+
+    function updateMaterialSelectionLabel() {
+      const hasSelection = clickSelections.length > 0 || hasManualBrushPaint;
+      materialSelectionLabel.hidden = !hasSelection;
+      if (hasSelection) {
+        materialSelectionLabel.querySelector('strong').textContent = clickSelections.length > 0 ? 'selected surface' : 'manual mask';
+      }
+    }
+
+    function hexToRgbString(hex) {
+      const value = hex.replace('#', '');
+      const r = parseInt(value.slice(0, 2), 16);
+      const g = parseInt(value.slice(2, 4), 16);
+      const b = parseInt(value.slice(4, 6), 16);
+      return `${r},${g},${b}`;
+    }
+
+    function updateMaterialTypeOptions() {
+      const selectedMaterial = materialSelect.value;
+      const subtypes = MATERIAL_SUBTYPES[selectedMaterial] || [];
+      materialTypeSelect.innerHTML = subtypes.map((item) => `<option value="${item}">${item}</option>`).join('');
+      materialTypeRow.hidden = subtypes.length === 0 || materialRow.hidden;
+    }
+
+    function getSelectOptions(select) {
+      return [...select.options].filter((option) => !option.hidden).map((option) => ({
+        value: option.value,
+        label: option.textContent.trim()
+      }));
+    }
+
+    function toolCard(label, value, activeValue, dataName, extraClass = '') {
+      const isActive = String(value) === String(activeValue);
+      return `
+        <button type="button" class="tool-choice-card ${extraClass} ${isActive ? 'active' : ''}" data-${dataName}="${value}">
+          <span>${label}</span>
+        </button>
+      `;
+    }
+
+    function renderSpaceTypePanel(label = 'Select what kind of space you are generating') {
+      return `
+        <div class="tool-panel-section">
+          <h3>${label}</h3>
+          <div class="tool-card-grid three">
+            ${['Interior', 'Exterior', 'Garden'].map((item) => toolCard(item, item, designType, 'set-design-type')).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSyncedSelect(label, select, dataName) {
+      return `
+        <div class="tool-panel-section">
+          <h3>${label}</h3>
+          <select class="control-input" data-sync-select="${dataName}">
+            ${getSelectOptions(select).map((option) => `<option value="${option.value}" ${option.value === select.value ? 'selected' : ''}>${option.label}</option>`).join('')}
+          </select>
+        </div>
+      `;
+    }
+
+    function renderSyncedRange(label, input, dataName) {
+      return `
+        <div class="tool-panel-section">
+          <h3>${label}</h3>
+          <input type="range" class="control-input" min="${input.min}" max="${input.max}" step="${input.step || 1}" value="${input.value}" data-sync-input="${dataName}">
+        </div>
+      `;
+    }
+
+    function renderSyncedTextarea(label, placeholder) {
+      return `
+        <div class="tool-panel-section">
+          <h3>${label}</h3>
+          <textarea class="control-input" rows="5" data-sync-textarea="additional-instructions" placeholder="${placeholder || ''}">${instructionsInput.value || ''}</textarea>
+        </div>
+      `;
+    }
+
+    function renderNoDesignPanel() {
+      return renderSyncedSelect('Select the number of designs you want to generate at once.', noDesignSelect, 'option-no-design-select');
+    }
+
+    function renderAiInterventionPanel() {
+      return renderSyncedSelect('AI Intervention', interventionSelect, 'option-ai-intervention-select');
+    }
+
+    function renderRoomStylePanel(fields) {
+      let html = '';
+      if (fields.includes('room_type')) html += renderSyncedSelect('1. Select Room Type', document.getElementById('room-type'), 'room-type');
+      if (fields.includes('design_style')) html += renderSyncedSelect('2. Select Design Style', document.getElementById('design-style'), 'design-style');
+      return html;
+    }
+
+    function renderPromptPanel(config, fallbackLabel = 'Enter your prompt below:') {
+      const label = config.promptLabel || fallbackLabel;
+      const placeholder = config.promptPlaceholder || 'Enter your custom prompt here. What do you want to change on this image?';
+      return renderSyncedTextarea(label, placeholder);
+    }
+
+    function renderSelectionPanel(config) {
+      return `
+        <div class="tool-panel-section">
+          <h3>Automatic Selection</h3>
+          <p>${config.maskHelp || 'Click directly on the image to automatically select an object. Our AI will help you precisely mask it for modifications.'}</p>
+          <div class="tool-action-row">
+            <button type="button" class="btn btn-secondary" id="tool-clear-selection">Clear selection</button>
+            <button type="button" class="btn btn-primary" id="tool-continue-selection">Continue</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderMagicRedesignPanel(config) {
+      return renderPromptPanel(config, 'Magic Prompt');
+    }
+
+    function renderRedesignPanel(config, fields) {
+      const modeTools = config.modeTools || [];
+      return `
+        ${fields.includes('design_type') ? renderSpaceTypePanel() : ''}
+        <div class="tool-form-card">
+          ${renderRoomStylePanel(fields)}
+          ${fields.includes('mode_type') && modeTools.length ? `
+            <div class="tool-panel-section">
+              <h3>3. Select Mode Type</h3>
+              <div class="tool-card-grid three">
+                ${modeTools.map((mode) => toolCard(mode.label, mode.value, selectedRedesignMode, 'redesign-mode')).join('')}
+              </div>
+            </div>
+          ` : ''}
+          ${config.keepStructural ? `
+            <label class="tool-switch">
+              <input type="checkbox" id="tool-keep-structural" ${document.getElementById('keep-structural-element')?.checked ? 'checked' : ''}>
+              <span>Keep structural elements</span>
+            </label>
+          ` : ''}
+        </div>
+        ${config.aiIntervention ? renderAiInterventionPanel() : ''}
+        ${config.noDesignMax ? renderNoDesignPanel() : ''}
+        ${fields.includes('prompt') || fields.includes('custom_instruction') ? renderPromptPanel(config) : ''}
+      `;
+    }
+
+    function renderWeatherPanel() {
+      const weatherOptions = ['Sunshine', 'Rainy', 'Cloudy', 'Clear Sky', 'Windy', 'Dawn', 'Dusk', 'Twilight', 'Sunny', 'Night'];
+      return `
+        <div class="tool-panel-section">
+          <h3>Change Sky Colors to:</h3>
+          <div class="tool-card-grid">
+            ${weatherOptions.map((item) => toolCard(item, item, weatherSelect.value, 'weather', 'weather-choice-card')).join('')}
+          </div>
+        </div>
+        ${renderNoDesignPanel()}
+      `;
+    }
+
+    function renderMaterialSwapPanel(config) {
+      const materials = [
+        ['Wood', 'wood'],
+        ['Marble', 'marble'],
+        ['Concrete', 'concrete'],
+        ['Fabric', 'fabric'],
+        ['Metal', 'metal'],
+        ['Stone', 'stone'],
+        ['Leather', 'leather'],
+        ['Tiles', 'tiles'],
+        ['Custom material', 'custom']
+      ];
+      const selectedMaterial = materialPresetSelect.value;
+      return `
+        ${renderSelectionPanel(config)}
+        <div class="tool-panel-section">
+          <h3>Choose new material</h3>
+          <div class="tool-card-grid three">
+            ${materials.map(([label, value]) => toolCard(label, value, selectedMaterial, 'material-preset')).join('')}
+          </div>
+        </div>
+        <div class="tool-panel-section">
+          <h3>Describe the material you want</h3>
+          <input class="control-input" data-sync-input="option-material-instruction-input" value="${materialInstructionInput.value || ''}" placeholder="Describe the new material or finish">
+        </div>
+      `;
+    }
+
+    function renderMaskPanel(config, fields) {
+      let html = renderSelectionPanel(config);
+      if (config.removeAllToggle) {
+        html += `
+          <label class="tool-switch">
+            <input type="checkbox" id="tool-remove-all-furniture">
+            <span>Remove all furniture</span>
+          </label>
+        `;
+      }
+      if (fields.includes('room_type') || fields.includes('design_style')) html += `<div class="tool-form-card">${renderRoomStylePanel(fields)}</div>`;
+      if (fields.includes('rgb_color')) {
+        html += `<div class="tool-panel-section"><h3>Wall color</h3><input type="color" class="control-input" data-sync-input="option-paint-color-input" value="${paintColorInput.value}"></div>`;
+      }
+      if (fields.includes('color')) {
+        html += `<div class="tool-panel-section"><h3>Surface color</h3><input type="color" class="control-input" data-sync-input="option-surface-color-input" value="${surfaceColorInput.value}"></div>`;
+      }
+      if (fields.includes('materials')) html += renderSyncedSelect('Material', materialSelect, 'option-material-select');
+      if (fields.includes('object')) {
+        html += `<div class="tool-panel-section"><h3>Object</h3><input class="control-input" data-sync-input="option-object-input" value="${objectInput.value || ''}" placeholder="Object to modify"></div>`;
+      }
+      if (config.strength) html += renderSyncedRange('Strength', strengthRange, 'option-strength-range');
+      if (config.noDesignMax) html += renderNoDesignPanel();
+      if (fields.includes('prompt')) html += renderPromptPanel(config);
+      return html;
+    }
+
+    function renderCountryPanel() {
+      return renderSyncedSelect('Select Country:', countrySelect, 'option-country-select');
+    }
+
+    function renderReferencePanel() {
+      return `
+        <div class="tool-panel-section">
+          <h3>Upload Design Inspiration</h3>
+          <button type="button" class="large-upload-zone compact" data-trigger-upload="style-reference">
+            Upload an image with a style you love (.jpeg, .png)
+          </button>
+        </div>
+        ${renderAiInterventionPanel()}
+      `;
+    }
+
+    function renderTexturePanel(config) {
+      return `
+        ${renderSyncedSelect('Select repeat of image', textureGridSelect, 'option-texture-grid-select')}
+        <div class="tool-panel-section">
+          <h3>Upload Texture Image</h3>
+          <button type="button" class="large-upload-zone compact" data-trigger-upload="texture">Upload your material (.jpeg, .png)</button>
+        </div>
+      `;
+    }
+
+    function renderVideoPanel() {
+      return renderSyncedSelect('Camera Motion', videoMotionSelect, 'option-video-motion-select');
+    }
+
+    function renderCritiquePanel() {
+      return renderSpaceTypePanel('Select what kind of space you’ve uploaded');
+    }
+
+    function renderTextPanel(config) {
+      return `
+        ${renderPromptPanel(config, 'Type your custom instructions below and our AI will take them into account when generating your designs:')}
+        <label class="tool-switch">
+          <input type="checkbox">
+          <span>Enable Queue</span>
+        </label>
+      `;
+    }
+
+    function renderAdvisorPanel(config) {
+      return `
+        <div class="tool-panel-section">
+          <h3>Design Advisor</h3>
+          <p>Ask your design question and receive tailored guidance for your project.</p>
+        </div>
+        ${renderPromptPanel(config, 'You can ask me anything! I am here to help.')}
+      `;
+    }
+
+    function renderObjectPositionPanel() {
+      const actions = ['Flip Horizontal', 'Flip Vertical', "Rotate 90° left", "Rotate 90° right", "Rotate 180°", 'Zoom In', 'Zoom Out'];
+      return `
+        <div class="tool-panel-section">
+          <h3>Position Object</h3>
+          <p>Drag and resize your object on the canvas to your desired position.</p>
+          <div class="tool-card-grid three">
+            ${actions.map((item) => `<button type="button" class="tool-choice-card"><span>${item}</span></button>`).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderRoomComposerPanel() {
+      return `
+        <div class="tool-panel-section">
+          <h3>Custom Elements (0)</h3>
+          <button type="button" class="large-upload-zone compact" data-trigger-upload="texture">Click Here to Upload Custom Image</button>
+        </div>
+        <div class="tool-panel-section">
+          <h3>Add elements</h3>
+          <div class="tool-card-grid three">
+            ${['Arm Chair', 'Bed', 'Chair', 'Sofa', 'Table', 'Plants'].map((item) => `<button type="button" class="tool-choice-card"><span>${item}</span></button>`).join('')}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderSingleActionPanel(config) {
+      return `
+        <div class="tool-panel-section">
+          <p>This tool runs directly on the uploaded image.</p>
+        </div>
+      `;
+    }
+
+    function selectToolByKey(toolKey) {
+      const button = [...document.querySelectorAll('.tool-option')].find((item) => {
+        return item.dataset.toolKey === toolKey || endpointToolKey(item.dataset.endpoint) === toolKey;
+      });
+      if (button) button.click();
+    }
+
+    function wireToolInterface() {
+      toolInterface.querySelectorAll('[data-set-design-type]').forEach((button) => {
+        button.addEventListener('click', () => {
+          designType = button.dataset.setDesignType;
+          document.querySelectorAll('[data-set-design-type]').forEach((item) => item.classList.toggle('active', item === button));
+        });
+      });
+      toolInterface.querySelectorAll('[data-tool-key]').forEach((button) => {
+        button.addEventListener('click', () => selectToolByKey(button.dataset.toolKey));
+      });
+      toolInterface.querySelectorAll('[data-redesign-mode]').forEach((button) => {
+        button.addEventListener('click', () => {
+          setRedesignMode(button.dataset.redesignMode);
+        });
+      });
+      toolInterface.querySelectorAll('[data-sync-select]').forEach((select) => {
+        select.addEventListener('change', () => {
+          const target = document.getElementById(select.dataset.syncSelect);
+          if (target) {
+            target.value = select.value;
+            target.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+        });
+      });
+      toolInterface.querySelectorAll('[data-sync-textarea]').forEach((textarea) => {
+        textarea.addEventListener('input', () => {
+          const target = document.getElementById(textarea.dataset.syncTextarea);
+          if (target) target.value = textarea.value;
+        });
+      });
+      toolInterface.querySelectorAll('[data-sync-input]').forEach((input) => {
+        input.addEventListener('input', () => {
+          const target = document.getElementById(input.dataset.syncInput);
+          if (target) target.value = input.value;
+        });
+      });
+      toolInterface.querySelectorAll('[data-weather]').forEach((button) => {
+        button.addEventListener('click', () => {
+          weatherSelect.value = button.dataset.weather;
+          document.querySelectorAll('[data-weather]').forEach((item) => item.classList.toggle('active', item === button));
+        });
+      });
+      toolInterface.querySelectorAll('[data-material-preset]').forEach((button) => {
+        button.addEventListener('click', () => {
+          materialPresetSelect.value = button.dataset.materialPreset;
+          document.querySelectorAll('[data-material-preset]').forEach((item) => item.classList.toggle('active', item === button));
+        });
+      });
+      toolInterface.querySelector('[data-trigger-upload="texture"]')?.addEventListener('click', () => materialTextureImage.click());
+      toolInterface.querySelector('[data-trigger-upload="style-reference"]')?.addEventListener('click', () => styleReferenceImage.click());
+      toolInterface.querySelector('#tool-clear-selection')?.addEventListener('click', resetMaskCanvas);
+      toolInterface.querySelector('#tool-continue-selection')?.addEventListener('click', () => {
+        if (!hasMaskPaint) {
+          setStatus('Select an object or draw a mask before continuing.', 'error');
+          return;
+        }
+        materialSwapReady = true;
+  updateToolOptions();
+  preloadStudioProject();
+        setStatus('Selection ready. Choose the next option, then generate.', 'success');
+      });
+      toolInterface.querySelector('#tool-keep-structural')?.addEventListener('change', (event) => {
+        const target = document.getElementById('keep-structural-element');
+        if (target) target.checked = event.target.checked;
       });
     }
 
-    function showDropzone() {
-      dropzone.style.display = '';
-      previewWrap.classList.remove('visible');
-      mainImg.src = '';
+    function renderToolInterface() {
+      const config = getCurrentToolConfig();
+      const fields = config.fields || [];
+      let html = '';
+
+      if (config.uiType === 'magic-redesign') html = renderMagicRedesignPanel(config);
+      else if (config.uiType === 'redesign') html = renderRedesignPanel(config, fields);
+      else if (config.uiType === 'mask') html = renderMaskPanel(config, fields);
+      else if (config.uiType === 'material-swap') html = renderMaterialSwapPanel(config);
+      else if (config.uiType === 'country') html = renderCountryPanel();
+      else if (config.uiType === 'weather') html = renderWeatherPanel();
+      else if (config.uiType === 'reference') html = renderReferencePanel();
+      else if (config.uiType === 'texture') html = renderTexturePanel(config);
+      else if (config.uiType === 'video') html = renderVideoPanel();
+      else if (config.uiType === 'critique') html = renderCritiquePanel();
+      else if (config.uiType === 'text') html = renderTextPanel(config);
+      else if (config.uiType === 'advisor') html = renderAdvisorPanel(config);
+      else if (config.uiType === 'object-position') html = renderObjectPositionPanel();
+      else if (config.uiType === 'room-composer') html = renderRoomComposerPanel();
+      else html = renderSingleActionPanel(config);
+
+      toolInterface.innerHTML = html;
+      wireToolInterface();
+      if (window.lucide) lucide.createIcons();
     }
 
-    async function renderPreview() {
-      if (selectedFiles.length === 0) { showDropzone(); return; }
+    function updateToolOptions() {
+      const config = getCurrentToolConfig();
+      const fields = config.fields || [];
+      const activeModeConfig = currentToolKey() === 'redesign' ? getRedesignModeConfig() : null;
+      const isMaterialSwap = !!config.materialSwap;
+      const showMaterialStepOptions = !isMaterialSwap || materialSwapReady;
 
-      dropzone.style.display = 'none';
-      previewWrap.classList.add('visible');
+      spaceTypeGroup.hidden = !(fields.includes('design_type') || fields.includes('image_type'));
+      designContextGrid.hidden = !(fields.includes('room_type') || fields.includes('design_style'));
+      instructionsGroup.hidden = !(fields.includes('prompt') || fields.includes('custom_instruction') || fields.includes('custom_message'));
+      spaceTypeGroup.querySelector('label').textContent = fields.includes('image_type')
+        ? 'Select image type'
+        : 'Select what kind of space you are generating';
+      instructionsLabel.textContent = config.promptLabel || 'Additional Instructions';
+      instructionsInput.placeholder = config.promptPlaceholder || 'Describe colors, mood, materials, furniture, or anything the AI should respect.';
 
-      // Main image
-      mainImg.src = await readAsDataURL(selectedFiles[activeIndex]);
+      noDesignRow.hidden = !config.noDesignMax || (isMaterialSwap && !showMaterialStepOptions);
+      interventionRow.hidden = !config.aiIntervention;
+      strengthRow.hidden = !config.strength;
+      weatherRow.hidden = !fields.includes('weather');
+      countryRow.hidden = !fields.includes('country');
+      paintColorRow.hidden = !fields.includes('rgb_color');
+      materialRow.hidden = !fields.includes('materials');
+      surfaceColorRow.hidden = !fields.includes('color');
+      objectRow.hidden = !fields.includes('object');
+      videoMotionRow.hidden = !config.videoMotion;
+      materialPresetRow.hidden = !(config.materialPreset && showMaterialStepOptions);
+      materialInstructionRow.hidden = !(config.materialInstruction && showMaterialStepOptions);
+      textureGridRow.hidden = !(config.textureGrid && showMaterialStepOptions);
+      textureUploadRow.hidden = !(config.textureUpload && showMaterialStepOptions);
+      styleReferenceRow.hidden = !config.styleReference;
+      const textureOptions = config.textureOptions || [];
+      [...textureGridSelect.options].forEach((option) => {
+        option.hidden = textureOptions.length > 0 && !textureOptions.includes(option.value);
+      });
+      if (textureOptions.length > 0 && !textureOptions.includes(textureGridSelect.value)) {
+        textureGridSelect.value = textureOptions[textureOptions.length - 1];
+      }
+      updateMaterialTypeOptions();
 
-      // Rebuild thumbnail strip (keep add button last)
-      thumbsWrap.innerHTML = '';
+      const maxDesign = activeModeConfig?.noDesignMax || config.noDesignMax || 1;
+      const minDesign = config.noDesignMin || 1;
+      [...noDesignSelect.options].forEach((option) => {
+        const optionValue = parseInt(option.value, 10);
+        option.hidden = optionValue > maxDesign || optionValue < minDesign;
+      });
+      if (parseInt(noDesignSelect.value, 10) > maxDesign) noDesignSelect.value = String(maxDesign);
+      if (parseInt(noDesignSelect.value, 10) < minDesign) noDesignSelect.value = String(minDesign);
 
-      for (let i = 0; i < selectedFiles.length; i++) {
-        const url   = await readAsDataURL(selectedFiles[i]);
-        const thumb = document.createElement('div');
-        thumb.className = 'portrait-thumb' + (i === activeIndex ? ' active' : '');
-        thumb.innerHTML = `
-          <img src="${url}" alt="Photo ${i + 1}">
-          <button type="button" class="portrait-thumb-remove" data-idx="${i}" title="Supprimer">
-            <i data-lucide="x"></i>
-          </button>
-        `;
-        thumb.addEventListener('click', (e) => {
-          if (e.target.closest('.portrait-thumb-remove')) return;
-          activeIndex = i;
-          renderPreview();
-        });
-        thumbsWrap.appendChild(thumb);
+      const optionRows = [
+        noDesignRow, interventionRow, strengthRow, weatherRow, countryRow,
+        paintColorRow, materialRow, materialTypeRow, surfaceColorRow, objectRow, videoMotionRow,
+        materialPresetRow, materialInstructionRow, textureGridRow, textureUploadRow, styleReferenceRow
+      ];
+      const hasVisibleOptions = optionRows.some((row) => !row.hidden);
+      advancedOptions.hidden = true;
+      if (!hasVisibleOptions) {
+        advancedToggle.setAttribute('aria-expanded', 'false');
+        toolOptionsPanel.classList.add('collapsed');
+      }
+      generateBtn.querySelector('span').textContent = config.submitLabel || (config.videoMotion ? 'Generate Video' : 'Generate Design');
+      renderToolInterface();
+      updateGenerateButtonState();
+    }
+
+    function setStatus(message, type) {
+      studioStatus.textContent = message || '';
+      studioStatus.className = 'studio-status' + (type ? ` ${type}` : '');
+    }
+
+    function applyLightboxTransform() {
+      lightboxImage.style.setProperty('--zoom', lightboxZoom);
+      lightboxImage.style.setProperty('--pan-x', `${panX}px`);
+      lightboxImage.style.setProperty('--pan-y', `${panY}px`);
+      lightboxContent.classList.toggle('zoomed', lightboxZoom > 1);
+    }
+
+    function resetLightboxZoom() {
+      lightboxZoom = 1;
+      panX = 0;
+      panY = 0;
+      applyLightboxTransform();
+    }
+
+    function openLightboxWithSrc(src) {
+      if (!src) return;
+      lightboxImage.src = src;
+      resetLightboxZoom();
+      imageLightbox.hidden = false;
+      document.body.style.overflow = 'hidden';
+      requestAnimationFrame(() => imageLightbox.classList.add('open'));
+    }
+
+    function openLightbox() {
+      if (!sourcePreview.src || sourcePreview.hidden) return;
+      openLightboxWithSrc(sourcePreview.src);
+    }
+
+    function closeLightbox() {
+      imageLightbox.classList.remove('open');
+      document.body.style.overflow = '';
+      setTimeout(() => {
+        imageLightbox.hidden = true;
+        lightboxImage.removeAttribute('src');
+        resetLightboxZoom();
+      }, 180);
+    }
+
+    function getCanvasPoint(event) {
+      const rect = maskCanvas.getBoundingClientRect();
+      return {
+        x: (event.clientX - rect.left) * (maskCanvas.width / rect.width),
+        y: (event.clientY - rect.top) * (maskCanvas.height / rect.height)
+      };
+    }
+
+    function makeObjectSelection(point) {
+      // TODO: Replace this local pixel-connected selection with API-backed object segmentation when available.
+      const pixelSelection = makePixelConnectedSelection(point);
+      if (pixelSelection) return pixelSelection;
+      return makePreviewSelection(point);
+    }
+
+    function makePreviewSelection(point) {
+      const radiusX = Math.max(maskCanvas.width * 0.11, 70);
+      const radiusY = Math.max(maskCanvas.height * 0.09, 70);
+      return {
+        type: 'ellipse',
+        x: point.x / maskCanvas.width,
+        y: point.y / maskCanvas.height,
+        rx: radiusX / maskCanvas.width,
+        ry: radiusY / maskCanvas.height
+      };
+    }
+
+    function makePixelConnectedSelection(point) {
+      if (!sourcePreview.complete || !sourcePreview.naturalWidth || !maskCanvas.width || !maskCanvas.height) return null;
+
+      try {
+        const width = maskCanvas.width;
+        const height = maskCanvas.height;
+        const sampleCanvas = document.createElement('canvas');
+        sampleCanvas.width = width;
+        sampleCanvas.height = height;
+        const sampleCtx = sampleCanvas.getContext('2d', { willReadFrequently: true });
+        drawImageCover(sampleCtx, sourcePreview, width, height);
+        const pixels = sampleCtx.getImageData(0, 0, width, height).data;
+        const startX = Math.max(0, Math.min(width - 1, Math.round(point.x)));
+        const startY = Math.max(0, Math.min(height - 1, Math.round(point.y)));
+        const startIndex = (startY * width + startX) * 4;
+        const seed = [pixels[startIndex], pixels[startIndex + 1], pixels[startIndex + 2]];
+        const tolerance = 42;
+        const visited = new Uint8Array(width * height);
+        const selected = new Uint8Array(width * height);
+        const stack = [startY * width + startX];
+        let selectedCount = 0;
+        const maxPixels = Math.floor(width * height * 0.32);
+
+        while (stack.length) {
+          const index = stack.pop();
+          if (visited[index]) continue;
+          visited[index] = 1;
+
+          const offset = index * 4;
+          const distance =
+            Math.abs(pixels[offset] - seed[0]) +
+            Math.abs(pixels[offset + 1] - seed[1]) +
+            Math.abs(pixels[offset + 2] - seed[2]);
+
+          if (distance > tolerance) continue;
+
+          selected[index] = 1;
+          selectedCount += 1;
+          if (selectedCount > maxPixels) return null;
+
+          const x = index % width;
+          const y = Math.floor(index / width);
+          if (x > 0) stack.push(index - 1);
+          if (x < width - 1) stack.push(index + 1);
+          if (y > 0) stack.push(index - width);
+          if (y < height - 1) stack.push(index + width);
+        }
+
+        if (selectedCount < 140) return null;
+
+        const selectionCanvas = document.createElement('canvas');
+        selectionCanvas.width = width;
+        selectionCanvas.height = height;
+        const selectionCtx = selectionCanvas.getContext('2d');
+        const output = selectionCtx.createImageData(width, height);
+        for (let i = 0; i < selected.length; i += 1) {
+          if (!selected[i]) continue;
+          const offset = i * 4;
+          output.data[offset] = 16;
+          output.data[offset + 1] = 185;
+          output.data[offset + 2] = 129;
+          output.data[offset + 3] = 150;
+        }
+        selectionCtx.putImageData(output, 0, 0);
+
+        return {
+          type: 'bitmap',
+          canvas: selectionCanvas,
+          ctx: selectionCtx,
+          width,
+          height
+        };
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function drawImageCover(ctx, image, width, height) {
+      const imageRatio = image.naturalWidth / image.naturalHeight;
+      const canvasRatio = width / height;
+      let sourceWidth = image.naturalWidth;
+      let sourceHeight = image.naturalHeight;
+      let sourceX = 0;
+      let sourceY = 0;
+
+      if (imageRatio > canvasRatio) {
+        sourceWidth = image.naturalHeight * canvasRatio;
+        sourceX = (image.naturalWidth - sourceWidth) / 2;
+      } else {
+        sourceHeight = image.naturalWidth / canvasRatio;
+        sourceY = (image.naturalHeight - sourceHeight) / 2;
       }
 
-      // Add-more button
-      const addBtn = document.createElement('label');
-      addBtn.setAttribute('for', 'images');
-      addBtn.className = 'portrait-add-btn';
-      addBtn.title = 'Ajouter une image';
-      addBtn.innerHTML = '<i data-lucide="plus"></i>';
-      thumbsWrap.appendChild(addBtn);
+      ctx.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, width, height);
+    }
 
-      // Bind remove buttons on thumbnails
-      thumbsWrap.querySelectorAll('.portrait-thumb-remove').forEach(btn => {
-        btn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          const idx = parseInt(btn.dataset.idx, 10);
-          removeFile(idx);
-        });
+    function selectionToCanvas(selection) {
+      return {
+        x: selection.x * maskCanvas.width,
+        y: selection.y * maskCanvas.height,
+        rx: selection.rx * maskCanvas.width,
+        ry: selection.ry * maskCanvas.height
+      };
+    }
+
+    function findSelectionAtPoint(point) {
+      return clickSelections.findIndex((selection) => {
+        if (selection.type === 'bitmap' && selection.ctx) {
+          const x = Math.max(0, Math.min(selection.width - 1, Math.round(point.x)));
+          const y = Math.max(0, Math.min(selection.height - 1, Math.round(point.y)));
+          return selection.ctx.getImageData(x, y, 1, 1).data[3] > 0;
+        }
+        const area = selectionToCanvas(selection);
+        const dx = (point.x - area.x) / area.rx;
+        const dy = (point.y - area.y) / area.ry;
+        return dx * dx + dy * dy <= 1;
+      });
+    }
+
+    function drawSelectionShape(ctx, selection, options = {}) {
+      if (selection.type === 'bitmap' && selection.canvas) {
+        ctx.drawImage(selection.canvas, 0, 0, maskCanvas.width, maskCanvas.height);
+        return;
+      }
+
+      const area = selectionToCanvas(selection);
+      ctx.save();
+      ctx.beginPath();
+      ctx.ellipse(area.x, area.y, area.rx, area.ry, 0, 0, Math.PI * 2);
+      ctx.fillStyle = options.preview ? 'rgba(16, 185, 129, 0.22)' : 'rgba(16, 185, 129, 0.55)';
+      ctx.strokeStyle = options.preview ? 'rgba(59, 130, 246, 0.8)' : 'rgba(16, 185, 129, 0.95)';
+      ctx.lineWidth = options.preview ? 2 : 3;
+      ctx.fill();
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function renderMaskOverlay() {
+      if (!maskCanvas.width || !maskCanvas.height) return;
+      maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+      clickSelections.forEach((selection) => drawSelectionShape(maskCtx, selection));
+      if (brushCanvas.width && brushCanvas.height) {
+        maskCtx.drawImage(brushCanvas, 0, 0);
+      }
+      if (hoverSelection && selectionMode === 'click') {
+        drawSelectionShape(maskCtx, hoverSelection, { preview: true });
+      }
+      hasMaskPaint = clickSelections.length > 0 || hasManualBrushPaint;
+      if (isMaterialSwapTool()) updateMaterialSelectionLabel();
+    }
+
+    function resetMaskCanvas() {
+      if (!maskCanvas.width || !maskCanvas.height) return;
+      maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
+      if (brushCanvas.width && brushCanvas.height) {
+        brushCtx.clearRect(0, 0, brushCanvas.width, brushCanvas.height);
+      }
+      clickSelections = [];
+      hoverSelection = null;
+      hasMaskPaint = false;
+      hasManualBrushPaint = false;
+      materialSwapReady = false;
+      if (isMaterialSwapTool()) updateMaterialSelectionLabel();
+    }
+
+    function sizeMaskCanvas() {
+      const rect = uploadCanvas.getBoundingClientRect();
+      const nextWidth = Math.max(1, Math.round(rect.width));
+      const nextHeight = Math.max(1, Math.round(rect.height));
+      if (maskCanvas.width === nextWidth && maskCanvas.height === nextHeight) return;
+      maskCanvas.width = nextWidth;
+      maskCanvas.height = nextHeight;
+      brushCanvas.width = nextWidth;
+      brushCanvas.height = nextHeight;
+      resetMaskCanvas();
+    }
+
+    function updateMaskControls() {
+      const config = getCurrentToolConfig();
+      const needsMask = !!config.mask;
+      selectedRequiresMask = needsMask;
+      maskToolsPanel.hidden = !needsMask;
+      materialSwapTabs.hidden = !config.materialSwap;
+      imageZoomControls.hidden = !config.materialSwap || sourcePreview.hidden;
+      maskCanvas.hidden = !needsMask || sourcePreview.hidden;
+      uploadCanvas.classList.toggle('mask-mode', needsMask && !sourcePreview.hidden);
+      maskToolTitle.textContent = `${selectedToolName} selection`;
+      maskToolHelp.textContent = config.maskHelp || 'Brush over the area this tool should affect.';
+      if (needsMask && !sourcePreview.hidden) sizeMaskCanvas();
+      maskCanvas.classList.toggle('click-mode', selectionMode === 'click');
+      if (config.materialSwap && !sourcePreview.hidden) updateMaterialSelectionLabel();
+    }
+
+    function setMaskMode(mode) {
+      maskMode = mode;
+      maskBrushBtn.classList.toggle('active', mode === 'brush');
+      maskEraserBtn.classList.toggle('active', mode === 'eraser');
+    }
+
+    function setSelectionMode(mode) {
+      selectionMode = mode;
+      clickSelectionBtn.classList.toggle('active', mode === 'click');
+      brushSelectionBtn.classList.toggle('active', mode === 'brush');
+      maskCanvas.classList.toggle('click-mode', mode === 'click');
+      hoverSelection = null;
+      renderMaskOverlay();
+    }
+
+    function toggleClickSelection(event) {
+      const point = getCanvasPoint(event);
+      const existingIndex = findSelectionAtPoint(point);
+      if (existingIndex >= 0) {
+        clickSelections.splice(existingIndex, 1);
+      } else {
+        clickSelections.push(makeObjectSelection(point));
+      }
+      hoverSelection = null;
+      if (isMaterialSwapTool()) materialSwapReady = false;
+      renderMaskOverlay();
+      if (isMaterialSwapTool()) updateToolOptions();
+    }
+
+    function eraseClickSelections(point, radius) {
+      clickSelections = clickSelections.filter((selection) => {
+        if (selection.type !== 'bitmap' || !selection.ctx) {
+          const area = selectionToCanvas(selection);
+          const dx = (point.x - area.x) / (area.rx + radius);
+          const dy = (point.y - area.y) / (area.ry + radius);
+          return dx * dx + dy * dy > 1;
+        }
+        selection.ctx.save();
+        selection.ctx.globalCompositeOperation = 'destination-out';
+        selection.ctx.beginPath();
+        selection.ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
+        selection.ctx.fill();
+        selection.ctx.restore();
+        return true;
+      });
+    }
+
+    function drawMaskStroke(event) {
+      const point = getCanvasPoint(event);
+      const radius = parseInt(maskBrushSize.value, 10) / 2;
+      brushCtx.save();
+      brushCtx.globalCompositeOperation = maskMode === 'eraser' ? 'destination-out' : 'source-over';
+      brushCtx.fillStyle = 'rgba(16, 185, 129, 0.58)';
+      brushCtx.beginPath();
+      brushCtx.arc(point.x, point.y, radius, 0, Math.PI * 2);
+      brushCtx.fill();
+      brushCtx.restore();
+      if (maskMode === 'eraser') eraseClickSelections(point, radius);
+      if (maskMode === 'brush') hasManualBrushPaint = true;
+      if (isMaterialSwapTool()) materialSwapReady = false;
+      renderMaskOverlay();
+      if (isMaterialSwapTool()) updateToolOptions();
+    }
+
+    function getMaskBase64() {
+      if (!selectedRequiresMask || !hasMaskPaint) return '';
+      const exportCanvas = document.createElement('canvas');
+      exportCanvas.width = maskCanvas.width;
+      exportCanvas.height = maskCanvas.height;
+      const exportCtx = exportCanvas.getContext('2d');
+      const sourceData = maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
+      const outputData = exportCtx.createImageData(maskCanvas.width, maskCanvas.height);
+      let hasSelectedPixels = false;
+
+      for (let i = 0; i < sourceData.data.length; i += 4) {
+        const alpha = sourceData.data[i + 3];
+        if (alpha > 0) hasSelectedPixels = true;
+        outputData.data[i] = alpha > 0 ? 255 : 0;
+        outputData.data[i + 1] = alpha > 0 ? 255 : 0;
+        outputData.data[i + 2] = alpha > 0 ? 255 : 0;
+        outputData.data[i + 3] = 255;
+      }
+
+      if (!hasSelectedPixels) return '';
+      exportCtx.putImageData(outputData, 0, 0);
+      return exportCanvas.toDataURL('image/png');
+    }
+
+  function hasSourceImage() {
+    return Boolean(selectedFile || projectSourceImageUrl || (!sourcePreview.hidden && sourcePreview.src));
+  }
+
+  function isSupportedImageFile(file) {
+    if (!file) return false;
+    if (ACCEPTED_IMAGE_TYPES.includes(file.type)) return true;
+    const extension = (file.name || '').split('.').pop()?.toLowerCase();
+    return ACCEPTED_IMAGE_EXTENSIONS.includes(extension);
+  }
+
+  function applyPreviewOrientation(imageElement) {
+    const isLandscape = imageElement.naturalWidth >= imageElement.naturalHeight;
+    uploadCanvas.classList.toggle('is-landscape', isLandscape);
+    uploadCanvas.classList.toggle('is-portrait', !isLandscape);
+  }
+
+  function updateGenerateButtonState() {
+    const currentConfig = getCurrentToolConfig();
+    const requiresImage = !currentConfig.imageOptional;
+    generateBtn.disabled = isGenerating || (requiresImage && !hasSourceImage());
+  }
+
+  function setPreviewFromUrl(url, options = {}) {
+    if (!url) return;
+    selectedFile = null;
+    projectSourceImageUrl = url;
+    sourcePreview.onload = () => {
+      applyPreviewOrientation(sourcePreview);
+      sizeMaskCanvas();
+      updateMaskControls();
+      updateGenerateButtonState();
+    };
+    sourcePreview.onerror = () => {
+      setStatus('Unable to load the project image preview.', 'error');
+      updateGenerateButtonState();
+    };
+    sourcePreview.src = url;
+    sourcePreview.hidden = false;
+    uploadPlaceholder.hidden = true;
+    changeImageBtn.hidden = false;
+    uploadCanvas.classList.add('has-image');
+    resetMaskCanvas();
+    resetPreviewTransform();
+    updateMaskControls();
+    if (!options.keepResult) {
+      resultPanel.hidden = true;
+      resultMedia.innerHTML = '';
+    }
+    updateGenerateButtonState();
+  }
+
+  function renderLatestDesigns() {
+    if (!latestDesignsGrid || !latestDesignsEmpty || !latestDesignsCount) return;
+    const visibleDesigns = latestDesigns.filter((design) => design.imageUrl || design.thumbnailUrl).slice(0, 6);
+    latestDesignsCount.textContent = `${visibleDesigns.length} ${visibleDesigns.length === 1 ? 'design' : 'designs'}`;
+    latestDesignsGrid.innerHTML = visibleDesigns.map((design, index) => `
+      <button type="button" class="latest-design-card" data-design-index="${index}">
+        <img src="${design.thumbnailUrl || design.imageUrl}" alt="${design.name || 'Generated design'}">
+        <span>${design.name || design.tool || 'Generated design'}</span>
+      </button>
+    `).join('');
+    latestDesignsEmpty.classList.toggle('is-visible', visibleDesigns.length === 0);
+  }
+
+  function addLatestDesignsFromResponse(data) {
+    const incoming = data.savedDesigns || data.designs || [];
+    if (!incoming.length) return;
+    const normalized = incoming
+      .map((design) => ({
+        id: design.id || `${Date.now()}-${Math.random()}`,
+        name: design.name || selectedToolName,
+        imageUrl: design.imageUrl || design.url || '',
+        thumbnailUrl: design.thumbnailUrl || design.imageUrl || design.url || '',
+        tool: design.tool || selectedToolName,
+        generatedAt: design.generatedAt || new Date().toISOString()
+      }))
+      .filter((design) => design.imageUrl || design.thumbnailUrl);
+    latestDesigns = [...normalized, ...latestDesigns].slice(0, 6);
+    renderLatestDesigns();
+  }
+
+  function preloadStudioProject() {
+    if (!STUDIO_PROJECT) {
+      renderLatestDesigns();
+      return;
+    }
+    if (STUDIO_PROJECT.imageUrl) {
+      setPreviewFromUrl(STUDIO_PROJECT.imageUrl, { keepResult: true });
+    }
+    const roomTypeSelect = document.getElementById('room-type');
+    const styleSelect = document.getElementById('design-style');
+    const instructionsInput = document.getElementById('additional-instructions');
+    if (roomTypeSelect && STUDIO_PROJECT.roomType) roomTypeSelect.value = STUDIO_PROJECT.roomType;
+    if (styleSelect && STUDIO_PROJECT.style) styleSelect.value = STUDIO_PROJECT.style;
+    if (instructionsInput && STUDIO_PROJECT.instructions) instructionsInput.value = STUDIO_PROJECT.instructions;
+    renderLatestDesigns();
+  }
+
+  latestDesignsGrid?.addEventListener('click', (event) => {
+    const card = event.target.closest('.latest-design-card');
+    if (!card) return;
+    const design = latestDesigns[Number(card.dataset.designIndex)];
+    const previewUrl = design?.imageUrl || design?.thumbnailUrl;
+    if (previewUrl) {
+      setPreviewFromUrl(previewUrl);
+      setStatus('Design loaded in the main preview.', 'success');
+    }
+  });
+
+  function setImage(file) {
+    if (!file) return;
+    if (!isSupportedImageFile(file)) {
+      setStatus('Please upload a JPG, PNG, or WebP image.', 'error');
+      imageInput.value = '';
+      updateGenerateButtonState();
+      return;
+    }
+    selectedFile = file;
+    projectSourceImageUrl = '';
+    const reader = new FileReader();
+      reader.onload = (event) => {
+        sourcePreview.onload = () => {
+          applyPreviewOrientation(sourcePreview);
+          sizeMaskCanvas();
+          updateMaskControls();
+          updateGenerateButtonState();
+        };
+        sourcePreview.onerror = () => {
+          setStatus('Unable to preview this image. Please try another JPG, PNG, or WebP file.', 'error');
+          updateGenerateButtonState();
+        };
+        sourcePreview.src = event.target.result;
+        sourcePreview.hidden = false;
+        uploadPlaceholder.hidden = true;
+        changeImageBtn.hidden = false;
+        uploadCanvas.classList.add('has-image');
+        resetMaskCanvas();
+        resetPreviewTransform();
+        updateMaskControls();
+        resultPanel.hidden = true;
+        resultMedia.innerHTML = '';
+        setStatus('Image ready.', 'success');
+        updateGenerateButtonState();
+      };
+      reader.onerror = () => {
+        setStatus('Unable to read this image. Please try another file.', 'error');
+        updateGenerateButtonState();
+      };
+      reader.readAsDataURL(file);
+    }
+
+    imageInput.addEventListener('change', () => {
+      setImage(imageInput.files && imageInput.files[0]);
+      imageInput.value = '';
+    });
+
+    materialTextureImage.addEventListener('change', () => {
+      selectedTextureFile = materialTextureImage.files && materialTextureImage.files[0];
+      if (!selectedTextureFile) return;
+      textureUploadLabel.textContent = selectedTextureFile.name;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        texturePreview.src = event.target.result;
+        texturePreview.hidden = false;
+      };
+      reader.readAsDataURL(selectedTextureFile);
+    });
+
+    styleReferenceImage.addEventListener('change', () => {
+      selectedStyleReferenceFile = styleReferenceImage.files && styleReferenceImage.files[0];
+      if (!selectedStyleReferenceFile) return;
+      styleReferenceUploadLabel.textContent = selectedStyleReferenceFile.name;
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        styleReferencePreview.src = event.target.result;
+        styleReferencePreview.hidden = false;
+      };
+      reader.readAsDataURL(selectedStyleReferenceFile);
+    });
+
+    replaceImageBtn.addEventListener('click', () => imageInput.click());
+    textureUploadBtn.addEventListener('click', () => materialTextureImage.click());
+    styleReferenceUploadBtn.addEventListener('click', () => styleReferenceImage.click());
+    sourcePreview.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      if (selectedRequiresMask) return;
+      openLightbox();
+    });
+
+    changeImageBtn.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      imageInput.click();
+    });
+
+    maskBrushBtn.addEventListener('click', () => setMaskMode('brush'));
+    maskEraserBtn.addEventListener('click', () => setMaskMode('eraser'));
+    clickSelectionBtn.addEventListener('click', () => setSelectionMode('click'));
+    brushSelectionBtn.addEventListener('click', () => setSelectionMode('brush'));
+    materialAutoTab.addEventListener('click', () => setMaterialSwapTab('automatic'));
+    materialManualTab.addEventListener('click', () => setMaterialSwapTab('manual'));
+    materialContinueBtn.addEventListener('click', () => {
+      if (!hasMaskPaint) {
+        setStatus('Select an object or draw a mask before continuing.', 'error');
+        return;
+      }
+      materialSwapReady = true;
+      updateToolOptions();
+      setStatus('Selection ready. Choose a material, then generate.', 'success');
+    });
+    imageZoomRange.addEventListener('input', () => {
+      previewZoom = parseFloat(imageZoomRange.value);
+      if (previewZoom <= 1) {
+        previewPanX = 0;
+        previewPanY = 0;
+      }
+      applyPreviewTransform();
+    });
+    imagePanToggle.addEventListener('click', () => {
+      previewPanMode = previewZoom > 1 && !previewPanMode;
+      imagePanToggle.classList.toggle('active', previewPanMode);
+      setStatus(previewPanMode ? 'Drag the image to reposition it.' : '');
+    });
+    maskBrushSize.addEventListener('input', () => {
+      maskBrushSizeValue.textContent = maskBrushSize.value;
+    });
+    strengthRange.addEventListener('input', () => {
+      strengthValue.textContent = strengthRange.value;
+    });
+    materialSelect.addEventListener('change', updateMaterialTypeOptions);
+    maskClearBtn.addEventListener('click', resetMaskCanvas);
+    advancedToggle.addEventListener('click', () => {
+      const expanded = advancedToggle.getAttribute('aria-expanded') === 'true';
+      advancedToggle.setAttribute('aria-expanded', String(!expanded));
+      toolOptionsPanel.classList.toggle('collapsed', expanded);
+    });
+
+    maskCanvas.addEventListener('pointerdown', (event) => {
+      if (!selectedRequiresMask) return;
+      event.preventDefault();
+      event.stopPropagation();
+      sizeMaskCanvas();
+      if (previewPanMode && previewZoom > 1) {
+        previewPanStart = {
+          pointerId: event.pointerId,
+          startX: event.clientX,
+          startY: event.clientY,
+          panX: previewPanX,
+          panY: previewPanY
+        };
+        maskCanvas.setPointerCapture(event.pointerId);
+        return;
+      }
+      if (selectionMode === 'click') {
+        toggleClickSelection(event);
+        return;
+      }
+      isMaskDrawing = true;
+      maskCanvas.setPointerCapture(event.pointerId);
+      drawMaskStroke(event);
+    });
+
+    maskCanvas.addEventListener('pointermove', (event) => {
+      if (previewPanStart) {
+        event.preventDefault();
+        event.stopPropagation();
+        previewPanX = previewPanStart.panX + event.clientX - previewPanStart.startX;
+        previewPanY = previewPanStart.panY + event.clientY - previewPanStart.startY;
+        applyPreviewTransform();
+        return;
+      }
+      if (selectedRequiresMask && selectionMode === 'click') {
+        event.preventDefault();
+        event.stopPropagation();
+        hoverSelection = makePreviewSelection(getCanvasPoint(event));
+        renderMaskOverlay();
+        return;
+      }
+      if (!isMaskDrawing) return;
+      event.preventDefault();
+      event.stopPropagation();
+      drawMaskStroke(event);
+    });
+
+    maskCanvas.addEventListener('pointerleave', () => {
+      if (selectionMode !== 'click') return;
+      hoverSelection = null;
+      renderMaskOverlay();
+    });
+
+    maskCanvas.addEventListener('pointerup', (event) => {
+      previewPanStart = null;
+      isMaskDrawing = false;
+      try {
+        maskCanvas.releasePointerCapture(event.pointerId);
+      } catch (error) {}
+    });
+
+    maskCanvas.addEventListener('pointercancel', () => {
+      previewPanStart = null;
+      isMaskDrawing = false;
+    });
+
+    lightboxClose.addEventListener('click', closeLightbox);
+
+    imageLightbox.addEventListener('click', (event) => {
+      if (event.target === imageLightbox || event.target === lightboxContent) {
+        closeLightbox();
+      }
+    });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && !imageLightbox.hidden) {
+        closeLightbox();
+      }
+    });
+
+    lightboxContent.addEventListener('dblclick', () => {
+      if (lightboxZoom > 1) {
+        resetLightboxZoom();
+      } else {
+        lightboxZoom = 2.25;
+        applyLightboxTransform();
+      }
+    });
+
+    lightboxContent.addEventListener('wheel', (event) => {
+      if (imageLightbox.hidden) return;
+      event.preventDefault();
+      const nextZoom = lightboxZoom + (event.deltaY < 0 ? 0.18 : -0.18);
+      lightboxZoom = Math.min(3.5, Math.max(1, nextZoom));
+      if (lightboxZoom === 1) {
+        panX = 0;
+        panY = 0;
+      }
+      applyLightboxTransform();
+    }, { passive: false });
+
+    lightboxContent.addEventListener('pointerdown', (event) => {
+      if (lightboxZoom <= 1) return;
+      dragStart = {
+        pointerId: event.pointerId,
+        startX: event.clientX,
+        startY: event.clientY,
+        panX,
+        panY
+      };
+      lightboxContent.setPointerCapture(event.pointerId);
+      lightboxContent.classList.add('dragging');
+    });
+
+    lightboxContent.addEventListener('pointermove', (event) => {
+      if (!dragStart) return;
+      panX = dragStart.panX + event.clientX - dragStart.startX;
+      panY = dragStart.panY + event.clientY - dragStart.startY;
+      applyLightboxTransform();
+    });
+
+    lightboxContent.addEventListener('pointerup', () => {
+      dragStart = null;
+      lightboxContent.classList.remove('dragging');
+    });
+
+    lightboxContent.addEventListener('pointercancel', () => {
+      dragStart = null;
+      lightboxContent.classList.remove('dragging');
+    });
+
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach((eventName) => {
+      uploadCanvas.addEventListener(eventName, (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+      });
+    });
+
+    ['dragenter', 'dragover'].forEach((eventName) => {
+      uploadCanvas.addEventListener(eventName, () => uploadCanvas.classList.add('dragover'));
+    });
+
+    ['dragleave', 'drop'].forEach((eventName) => {
+      uploadCanvas.addEventListener(eventName, () => uploadCanvas.classList.remove('dragover'));
+    });
+
+    uploadCanvas.addEventListener('drop', (event) => {
+      const file = event.dataTransfer.files && event.dataTransfer.files[0];
+      setImage(file);
+    });
+
+    toolMenuToggle.addEventListener('click', () => {
+      const collapsed = toolMenu.classList.toggle('collapsed');
+      toolMenuToggle.classList.toggle('collapsed', collapsed);
+      toolMenuToggle.setAttribute('aria-expanded', String(!collapsed));
+    });
+
+    document.querySelectorAll('.tool-option').forEach((button) => {
+      button.addEventListener('click', () => {
+        selectToolButton(button);
+        setStatus('');
+      });
+    });
+
+    function normalizeToolSlug(value) {
+      return (value || '').trim().toLowerCase().replace(/^\/api\/v2\//, '').replace(/-/g, '_');
+    }
+
+    function selectToolButton(button) {
+      document.querySelectorAll('.tool-option').forEach((item) => item.classList.remove('active'));
+      button.classList.add('active');
+      selectedEndpoint = button.dataset.endpoint;
+      selectedToolName = button.dataset.toolName;
+      selectedToolKey = button.dataset.toolKey || endpointToolKey(selectedEndpoint);
+      if (selectedToolKey === 'redesign') {
+        setRedesignMode(selectedRedesignMode || 'perfect_redesign', false);
+      }
+      selectedRequiresMask = button.dataset.requiresMask === 'true';
+      selectedToolLabel.textContent = selectedToolName;
+      configToolName.textContent = selectedToolName;
+      configEndpoint.textContent = selectedEndpoint;
+      resultToolName.textContent = selectedToolName;
+      materialSwapReady = false;
+      resetMaskCanvas();
+      resetPreviewTransform();
+      setSelectionMode('click');
+      if (currentToolKey() === 'material_swap') setMaterialSwapTab('automatic');
+      updateMaskControls();
+      updateToolOptions();
+    }
+
+    function selectToolFromUrl() {
+      const requestedTool = normalizeToolSlug(new URLSearchParams(window.location.search).get('tool'));
+      if (!requestedTool) return;
+      const redesignModes = ['perfect_redesign', 'beautiful_redesign', 'creative_redesign'];
+
+      if (requestedTool === 'redesign' || redesignModes.includes(requestedTool)) {
+        const redesignButton = [...document.querySelectorAll('.tool-option')].find((button) => button.dataset.toolKey === 'redesign');
+        if (redesignButton) {
+          if (redesignModes.includes(requestedTool)) selectedRedesignMode = requestedTool;
+          selectToolButton(redesignButton);
+          return;
+        }
+      }
+
+      const requestedButton = [...document.querySelectorAll('.tool-option')].find((button) => {
+        return normalizeToolSlug(button.dataset.endpoint) === requestedTool || normalizeToolSlug(button.dataset.toolKey) === requestedTool;
       });
 
+      if (requestedButton) {
+        selectToolButton(requestedButton);
+      } else {
+        setStatus('The requested AI tool was not found. Redesign is selected by default.', 'error');
+      }
+    }
+
+    window.addEventListener('resize', () => {
+      if (!sourcePreview.hidden) sizeMaskCanvas();
+    });
+
+    document.querySelectorAll('.segmented-control .segment').forEach((button) => {
+      button.addEventListener('click', () => {
+        document.querySelectorAll('.segmented-control .segment').forEach((item) => item.classList.remove('active'));
+        button.classList.add('active');
+        designType = button.dataset.value;
+      });
+    });
+
+    function renderResult(data) {
+      resultToolName.textContent = data.tool || selectedToolName;
+      resultMedia.innerHTML = '';
+
+      const firstDesign = data.designs && data.designs[0];
+      const imageUrl = firstDesign && firstDesign.imageUrl ? firstDesign.imageUrl : data.imageUrl;
+
+      if (data.videoUrl) {
+        resultMedia.innerHTML = `<video src="${data.videoUrl}" controls playsinline></video>`;
+      } else if (data.resultArray) {
+        const products = document.createElement('div');
+        products.className = 'product-results';
+        products.innerHTML = Object.entries(data.resultArray).map(([category, items]) => {
+          const safeItems = Array.isArray(items) ? items.slice(0, 4) : [];
+          return `
+            <section class="product-category">
+              <h4>${category}</h4>
+              <div class="product-grid">
+                ${safeItems.map((item) => `
+                  <a class="product-card" href="${item.link || '#'}" target="_blank" rel="noopener">
+                    ${item.thumbnail ? `<img src="${item.thumbnail}" alt="${item.title || category}">` : ''}
+                    <strong>${item.title || 'Product match'}</strong>
+                    <span>${item.source || ''}${item.price?.value ? ` · ${item.price.value}` : ''}</span>
+                  </a>
+                `).join('')}
+              </div>
+            </section>
+          `;
+        }).join('');
+        resultMedia.appendChild(products);
+      } else if (imageUrl) {
+        if (isMaterialSwapTool() && sourcePreview.src) {
+          const compare = document.createElement('div');
+          compare.className = 'before-after-result';
+          compare.innerHTML = `
+            <div class="before-after-frame">
+              <img src="${sourcePreview.src}" alt="Before Material Swap">
+              <span>Before</span>
+            </div>
+            <div class="before-after-frame">
+              <img src="${imageUrl}" alt="${data.tool || selectedToolName} result" class="generated-preview-image">
+              <span>After</span>
+            </div>
+          `;
+          compare.querySelector('.generated-preview-image').addEventListener('click', () => openLightboxWithSrc(imageUrl));
+          resultMedia.appendChild(compare);
+        } else {
+          const resultImage = document.createElement('img');
+          resultImage.src = imageUrl;
+          resultImage.alt = `${data.tool || selectedToolName} result`;
+          resultImage.className = 'generated-preview-image';
+          resultImage.addEventListener('click', () => openLightboxWithSrc(imageUrl));
+          resultMedia.appendChild(resultImage);
+        }
+      } else if (data.textResult) {
+        const text = document.createElement('div');
+        text.className = 'result-text';
+        text.textContent = data.textResult;
+        resultMedia.appendChild(text);
+      } else {
+        const text = document.createElement('div');
+        text.className = 'result-text';
+        text.textContent = 'Generation completed, but no preview was returned.';
+        resultMedia.appendChild(text);
+      }
+
+    resultPanel.hidden = false;
+    addLatestDesignsFromResponse(data);
+    }
+
+    async function handleGenerateDesign() {
+      const currentConfig = getCurrentToolConfig();
+    if (!hasSourceImage() && !currentConfig.imageOptional) {
+      setStatus('Image is required', 'error');
+      updateGenerateButtonState();
+      return;
+    }
+      if (!selectedEndpoint) {
+        setStatus('Select an AI tool before generating a design.', 'error');
+        return;
+      }
+      const isVideoTool = currentToolKey() === 'video_generation';
+      const isFloorEditor = currentToolKey() === 'floor_editor';
+      if (isVideoTool && !videoMotionSelect.value) {
+        setStatus('Veuillez choisir un mouvement caméra.', 'error');
+        return;
+      }
+      const isMaterialSwap = isMaterialSwapTool();
+      const isDesignTransfer = currentToolKey() === 'design_transfer';
+      if (isMaterialSwap && !hasMaskPaint) {
+        setStatus('Select an object or draw a mask before generating.', 'error');
+        return;
+      }
+      if (isMaterialSwap && !materialSwapReady) {
+        setStatus('Click Continue after selecting the object, then choose the material.', 'error');
+        return;
+      }
+      if (isDesignTransfer && !selectedStyleReferenceFile) {
+        setStatus('Upload a reference style image before transferring a design.', 'error');
+        return;
+      }
+      if (isFloorEditor && !selectedTextureFile) {
+        setStatus('Upload a texture image before editing the floor.', 'error');
+        return;
+      }
+
+      const formData = new FormData();
+    if (selectedFile) formData.append('image', selectedFile);
+    if (STUDIO_PROJECT?.id) formData.append('projectId', STUDIO_PROJECT.id);
+    if (!selectedFile && projectSourceImageUrl) formData.append('sourceImageUrl', projectSourceImageUrl);
+      formData.append('selectedToolEndpoint', selectedEndpoint);
+      formData.append('selectedToolName', selectedToolName);
+      const fields = currentConfig.fields || [];
+      if (fields.includes('design_type') || fields.includes('image_type')) formData.append('spaceType', designType);
+      if (fields.includes('room_type')) formData.append('roomType', document.getElementById('room-type').value);
+      if (fields.includes('design_style')) formData.append('designStyle', document.getElementById('design-style').value);
+      if (fields.includes('prompt') || fields.includes('custom_instruction') || fields.includes('custom_message')) {
+        formData.append('additionalInstructions', document.getElementById('additional-instructions').value);
+      }
+      if (fields.includes('keep_structural_element')) {
+        formData.append('keepStructural', document.getElementById('tool-keep-structural')?.checked ? 'true' : 'false');
+      }
+
+      if (!noDesignRow.hidden) formData.append('noDesign', noDesignSelect.value);
+      if (!interventionRow.hidden) formData.append('aiIntervention', interventionSelect.value);
+      if (!strengthRow.hidden) formData.append('strength', strengthRange.value);
+      if (!weatherRow.hidden) formData.append('weather', weatherSelect.value);
+      if (!countryRow.hidden) formData.append('countryCode', countrySelect.value);
+      if (!paintColorRow.hidden) formData.append('rgbColor', hexToRgbString(paintColorInput.value));
+      if (!materialRow.hidden && materialSelect.value) formData.append('materials', materialSelect.value);
+      if (!materialTypeRow.hidden && materialTypeSelect.value) formData.append('materialsType', materialTypeSelect.value);
+      if (!surfaceColorRow.hidden) formData.append('color', surfaceColorInput.value);
+      if (!objectRow.hidden && objectInput.value.trim()) formData.append('object', objectInput.value.trim());
+      if (isVideoTool) formData.append('tool_name', videoMotionSelect.value);
+      if (isDesignTransfer && selectedStyleReferenceFile) formData.append('styleImage', selectedStyleReferenceFile);
+      if (!textureGridRow.hidden) formData.append('noOfTexture', textureGridSelect.value);
+      if (!textureUploadRow.hidden && selectedTextureFile) formData.append('textureImage', selectedTextureFile);
+      if (isMaterialSwap) {
+        formData.append('materials', materialPresetSelect.value);
+        formData.append('materialInstruction', materialInstructionInput.value.trim() || materialPresetSelect.value);
+      }
+
+      if (selectedRequiresMask) {
+        const maskBase64 = getMaskBase64();
+        if (maskBase64) formData.append('maskBase64', maskBase64);
+      }
+
+      isGenerating = true;
+      updateGenerateButtonState();
+      generateBtn.querySelector('span').textContent = isVideoTool ? 'Generating video...' : currentToolKey() === 'furniture_finder' ? 'Finding products...' : 'Generating...';
+      setStatus(isVideoTool ? 'Processing video...' : currentToolKey() === 'furniture_finder' ? 'Finding matching products...' : `Generating with ${selectedToolName}...`);
+
+      try {
+        const response = await fetch('/api/generate-design', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || 'Design generation failed.');
+        }
+
+        renderResult(data);
+        setStatus(isVideoTool ? 'Video generated successfully.' : 'Design generated successfully.', 'success');
+      } catch (error) {
+        setStatus(error.message, 'error');
+      } finally {
+        isGenerating = false;
+        generateBtn.querySelector('span').textContent = getCurrentToolConfig().submitLabel || (isVideoTool ? 'Generate Video' : 'Generate Design');
+        updateGenerateButtonState();
+      }
+    }
+
+    generateBtn.addEventListener('click', handleGenerateDesign);
+    window.handleGenerateDesign = handleGenerateDesign;
+    updateToolOptions();
+    selectToolFromUrl();
+
+    if (typeof lucide !== 'undefined') {
       lucide.createIcons();
     }
-
-    function addFiles(newFiles) {
-      Array.from(newFiles).forEach(file => {
-        if (file.size > 10 * 1024 * 1024) {
-          alert(`${file.name} dépasse 10 Mo et ne sera pas ajouté.`);
-          return;
-        }
-        if (selectedFiles.length >= 5) {
-          alert('Maximum 5 images autorisées.');
-          return;
-        }
-        selectedFiles.push(file);
-      });
-      if (selectedFiles.length > 0) activeIndex = 0;
-      syncInputFiles();
-      renderPreview();
-    }
-
-    function removeFile(idx) {
-      selectedFiles.splice(idx, 1);
-      if (activeIndex >= selectedFiles.length) activeIndex = Math.max(0, selectedFiles.length - 1);
-      syncInputFiles();
-      renderPreview();
-    }
-
-    /* ── file input change ── */
-    fileInput.addEventListener('change', function () {
-      if (this.files.length === 0) return;
-      // Replace all when user picks via "Changer" overlay; append otherwise
-      if (selectedFiles.length === 0) {
-        addFiles(this.files);
-      } else {
-        // Merge: add new ones up to limit
-        addFiles(this.files);
-      }
-      // Reset input so same file can be re-selected
-      this.value = '';
-    });
-
-    /* ── remove main image button ── */
-    removeBtn.addEventListener('click', () => {
-      removeFile(activeIndex);
-    });
-
-    /* ── drag & drop on dropzone ── */
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt =>
-      dropzone.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); }, false)
-    );
-    dropzone.addEventListener('dragenter', () => dropzone.classList.add('dragover'));
-    dropzone.addEventListener('dragover',  () => dropzone.classList.add('dragover'));
-    dropzone.addEventListener('dragleave', () => dropzone.classList.remove('dragover'));
-    dropzone.addEventListener('drop', (e) => {
-      dropzone.classList.remove('dragover');
-      addFiles(e.dataTransfer.files);
-    });
   })();
 </script>
-

@@ -19,9 +19,13 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     trim: true
   },
+  googleId: {
+    type: String,
+    sparse: true
+  },
   password: {
     type: String,
-    required: true,
+    required: false,
     minlength: 6
   },
   role: {
@@ -117,9 +121,9 @@ const userSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Hash password before saving
+// Hash password before saving (skip if no password — Google OAuth users)
 userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) {
+  if (!this.password || !this.isModified('password')) {
     return next();
   }
   const salt = await bcrypt.genSalt(10);

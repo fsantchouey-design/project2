@@ -216,17 +216,12 @@ router.get('/notifications', ensureAuthenticated, (req, res) => {
 // AI Tools page
 router.get('/ai-tools', ensureAuthenticated, async (req, res) => {
   try {
-    const projects = await Project.find({ user: req.user.id })
-      .select('_id title roomType status')
-      .sort({ updatedAt: -1 });
-
     res.render('pages/ai-tools', {
       title: 'Outils IA — CraftyCrib',
-      metaDescription: 'Découvrez les 26 outils IA de CraftyCrib pour transformer vos espaces.',
+      metaDescription: 'Découvrez les outils IA de CraftyCrib pour transformer vos espaces.',
       layout: 'layouts/dashboard',
       activePage: 'ai-tools',
-      aiTools: getAiTools(),
-      projects
+      aiTools: getAiTools()
     });
   } catch (err) {
     console.error('AI tools page error:', err);
@@ -235,5 +230,9 @@ router.get('/ai-tools', ensureAuthenticated, async (req, res) => {
   }
 });
 
-module.exports = router;
+router.get('/new-project', ensureAuthenticated, (req, res) => {
+  const query = req.query.tool ? `?tool=${encodeURIComponent(req.query.tool)}` : '';
+  res.redirect(`/projects/new${query}`);
+});
 
+module.exports = router;
