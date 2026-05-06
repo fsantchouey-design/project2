@@ -211,7 +211,7 @@ const toolsConfig = {
     maskHelp: 'Click the object automatically or use the manual brush to draw the exact material area.'
   },
   room_composer: {
-    endpoint: '/api/v2/room_composer',
+    endpoint: '/api/v2/smart_room_composer',
     uiType: 'room-composer',
     fields: ['room_image', 'custom_elements'],
     imageLabel: 'Drag and drop room image'

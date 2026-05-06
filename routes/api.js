@@ -13,7 +13,7 @@ const {
   changeColorTextures, paintVisualizer, furnitureFinder, fullHD, skyColors,
   magicRedesign, videoGeneration, virtualStaging, textToDesign, furnitureCreator,
   designAdvisor, designTransfer, floorEditor, materialSwap, roomComposer,
-  designCritique, createMaskImage, smartHome,
+  smartRoomComposer, designCritique, createMaskImage, smartHome,
   getStyles, getRoomTypes, checkCredits
 } = require('../utils/homedesigns');
 const { uploadProjectImages, getImageUrl } = require('../config/cloudinary');
@@ -167,6 +167,10 @@ const aiToolHandlers = {
     name: 'Room Composer',
     requiresMask: true,
     run: (options) => roomComposer(options)
+  },
+  smart_room_composer: {
+    name: 'Room Composer',
+    run: (options) => smartRoomComposer(options)
   },
   design_critique: {
     name: 'Design Critique',
@@ -426,6 +430,11 @@ router.post('/generate-design', ensureAuthenticated, uploadProjectImages.fields(
     if (toolFields.includes('style_image')) options.styleImageUrl = styleImage ? toAbsoluteImageUrl(getImageUrl(styleImage)) : undefined;
     if (toolFields.includes('no_of_texture')) options.noOfTexture = req.body.noOfTexture || '3 X 3';
     if (toolFields.includes('object')) options.object = req.body.object || undefined;
+    if (toolFields.includes('custom_elements')) {
+      const els = req.body.customElements;
+      options.customElements = els ? (Array.isArray(els) ? els : [els]) : [];
+    }
+    if (toolFields.includes('mode')) options.mode = req.body.mode || 'faster';
 
     console.log(`[GenerateDesign] ${tool.name} -> ${upstreamEndpoint}`);
     const timeout = new Promise((_, reject) => {

@@ -257,8 +257,16 @@ const pollForResult = async (apiEndpoint, queueId, maxAttempts = 60) => {
         console.log(`[HomeDesigns] Poll [${i + 1}/${maxAttempts}] status: ${status || 'unknown'}, keys: ${Object.keys(statusData).join(',')}`);
 
         // Still processing — keep polling
-        if (status === 'in_queue' || status === 'starting' || status === 'processing') {
+        if (['in_queue', 'starting', 'processing', 'in_progress', 'pending'].includes(status)) {
           continue;
+        }
+
+        // Also check nested data.data.status (virtual_staging format)
+        if (!status) {
+          const nestedStatus = (statusData.data?.status || '').toLowerCase();
+          if (['in_queue', 'starting', 'processing', 'in_progress', 'pending'].includes(nestedStatus)) {
+            continue;
+          }
         }
 
         // Failed
@@ -1031,30 +1039,22 @@ const skyColors = async (options) => {
 };
 
 /**
- * Magic Redesign - Quick AI-powered room transformation
+ * Magic Redesign - Conversational AI redesign based on text instruction
+ * API: image + design_action + custom_instruction → async queue
  */
 const magicRedesign = async (options) => {
-  const {
-    imageUrl, roomType, style, prompt, designType = 'Interior',
-    houseAngle, gardenType, aiIntervention = 'Mid',
-    noDesign = 1, keepStructural = true
-  } = options;
+  const { imageUrl, prompt, designAction = 'Redesign' } = options;
 
   try {
     if (!API_TOKEN) throw new Error('HomeDesigns API token is not configured.');
-    console.log('[MagicRedesign] Starting:', { roomType, style, designType });
+    if (!prompt || !prompt.trim()) throw new Error('Magic Redesign requires a description of what to change.');
+    console.log('[MagicRedesign] Starting:', { designAction });
 
     const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
-    const { apiStyle, apiRoomType } = getApiParams(style, roomType, designType);
-
     const formData = new FormData();
     formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
-    formData.append('ai_intervention', prompt ? 'Extreme' : aiIntervention);
-    formData.append('keep_structural_element', keepStructural ? 'true' : 'false');
-    formData.append('no_design', String(noDesign));
-    formData.append('design_style', apiStyle);
-    addDesignTypeFields(formData, designType, apiRoomType, houseAngle, gardenType);
-    if (prompt) formData.append('prompt', prompt.trim());
+    formData.append('design_action', designAction);
+    formData.append('custom_instruction', prompt.trim());
 
     const result = await submitToApi(`${API_URL}/magic_redesign`, formData);
     return await parseApiResponse(result, 'magic_redesign', '[MagicRedesign]');
@@ -1117,11 +1117,12 @@ const videoGeneration = async (options) => {
 
 /**
  * Virtual Staging - Virtually stage empty rooms with furniture
+ * API: interior-only, requires ai_intervention, uses custom_instruction (not prompt)
+ * Returns async queue → poll status_check
  */
 const virtualStaging = async (options) => {
   const {
-    imageUrl, roomType, style, prompt, designType = 'Interior',
-    houseAngle, gardenType, noDesign = 1
+    imageUrl, roomType, style, prompt, aiIntervention = 'Mid', noDesign = 1
   } = options;
 
   try {
@@ -1129,14 +1130,15 @@ const virtualStaging = async (options) => {
     console.log('[VirtualStaging] Starting:', { roomType, style });
 
     const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
-    const { apiStyle, apiRoomType } = getApiParams(style, roomType, designType);
+    const { apiStyle, apiRoomType } = getApiParams(style, roomType, 'Interior');
 
     const formData = new FormData();
     formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
     formData.append('no_design', String(noDesign));
     formData.append('design_style', apiStyle);
-    addDesignTypeFields(formData, designType, apiRoomType, houseAngle, gardenType);
-    if (prompt) formData.append('prompt', prompt.trim());
+    formData.append('ai_intervention', aiIntervention);
+    addDesignTypeFields(formData, 'Interior', apiRoomType);
+    if (prompt) formData.append('custom_instruction', prompt.trim());
 
     const result = await submitToApi(`${API_URL}/virtual_staging`, formData);
     return await parseApiResponse(result, 'virtual_staging', '[VirtualStaging]');
@@ -1193,6 +1195,7 @@ const furnitureCreator = async (options) => {
 
 /**
  * Design Advisor - Get AI-powered design advice for a room
+ * API returns { success: true, data: "..." }
  */
 const designAdvisor = async (options) => {
   const { prompt } = options;
@@ -1214,12 +1217,17 @@ const designAdvisor = async (options) => {
     const data = JSON.parse(result.body);
     console.log('[DesignAdvisor] Response keys:', Object.keys(data).join(', '));
 
-    const textResult = data.advice || data.result || data.text || data.response || data.analysis || data.message;
+    // API documented format: { success: true, data: "..." }
+    if (data.success === true && typeof data.data === 'string' && data.data.length > 0) {
+      return { success: true, textResult: data.data, creditsUsed: 1 };
+    }
+
+    const textResult = data.data || data.advice || data.result || data.text || data.response || data.analysis || data.message;
     if (typeof textResult === 'string' && textResult.length > 0) {
       return { success: true, textResult, creditsUsed: 1 };
     }
     if (data.success && typeof data.success === 'object') {
-      const inner = data.success.advice || data.success.result || data.success.text;
+      const inner = data.success.advice || data.success.result || data.success.text || data.success.data;
       if (inner) return { success: true, textResult: inner, creditsUsed: 1 };
     }
 
@@ -1364,7 +1372,40 @@ const roomComposer = async (options) => {
 };
 
 /**
+ * Smart Room Composer - Arrange user-supplied furniture into an empty room
+ * API: room_image + furniture_images[] (1-4) + additional_instructions → async queue
+ * Response: { success: { original_image, generated_image: [] } }
+ */
+const smartRoomComposer = async (options) => {
+  const { imageUrl, customElements, prompt } = options;
+
+  try {
+    if (!API_TOKEN) throw new Error('HomeDesigns API token is not configured.');
+    console.log('[SmartRoomComposer] Starting');
+
+    const roomImageBuffer = await downloadImage(resolveImageUrl(imageUrl));
+    const formData = new FormData();
+    formData.append('room_image', roomImageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
+
+    const furnitureUrls = Array.isArray(customElements) ? customElements.filter(Boolean) : [];
+    for (const url of furnitureUrls.slice(0, 4)) {
+      const buf = await downloadImage(resolveImageUrl(url));
+      formData.append('furniture_images[]', buf, { filename: 'furniture.jpg', contentType: 'image/jpeg' });
+    }
+
+    if (prompt) formData.append('additional_instructions', prompt.trim());
+
+    const result = await submitToApi(`${API_URL}/smart_room_composer`, formData);
+    return await parseApiResponse(result, 'smart_room_composer', '[SmartRoomComposer]');
+  } catch (error) {
+    console.error('[SmartRoomComposer] Error:', error.message);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
  * Design Critique - Get a detailed AI critique of your room design
+ * API field: imageType (not image_type); returns { success: true, data: "..." }
  */
 const designCritique = async (options) => {
   const { imageUrl, designType = 'Interior' } = options;
@@ -1376,7 +1417,7 @@ const designCritique = async (options) => {
     const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
     const formData = new FormData();
     formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
-    formData.append('image_type', designType);
+    formData.append('imageType', designType);
 
     const result = await submitToApi(`${API_URL}/design_critique`, formData);
 
@@ -1387,12 +1428,17 @@ const designCritique = async (options) => {
     const data = JSON.parse(result.body);
     console.log('[DesignCritique] Response keys:', Object.keys(data).join(', '));
 
-    const textResult = data.critique || data.result || data.text || data.response || data.analysis || data.advice;
+    // API documented format: { success: true, data: "..." }
+    if (data.success === true && typeof data.data === 'string' && data.data.length > 0) {
+      return { success: true, textResult: data.data, creditsUsed: 1 };
+    }
+
+    const textResult = data.data || data.critique || data.result || data.text || data.response || data.analysis || data.advice;
     if (typeof textResult === 'string' && textResult.length > 0) {
       return { success: true, textResult, creditsUsed: 1 };
     }
     if (data.success && typeof data.success === 'object') {
-      const inner = data.success.critique || data.success.result || data.success.text;
+      const inner = data.success.critique || data.success.result || data.success.text || data.success.data;
       if (inner) return { success: true, textResult: inner, creditsUsed: 1 };
     }
 
@@ -1426,7 +1472,8 @@ const createMaskImage = async (options) => {
 };
 
 /**
- * Smart Home - Visualize smart home features and devices in your space
+ * Smart Home - Get smart home upgrade suggestions for a space
+ * API returns { success: true, data: "..." } (text result, not images)
  */
 const smartHome = async (options) => {
   const { imageUrl } = options;
@@ -1441,6 +1488,24 @@ const smartHome = async (options) => {
     formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
 
     const result = await submitToApi(`${API_URL}/smart_home`, formData);
+
+    if (result.statusCode !== 200) {
+      return await parseApiResponse(result, 'smart_home', '[SmartHome]');
+    }
+
+    const data = JSON.parse(result.body);
+    console.log('[SmartHome] Response keys:', Object.keys(data).join(', '));
+
+    // API documented format: { success: true, data: "..." }
+    if (data.success === true && typeof data.data === 'string' && data.data.length > 0) {
+      return { success: true, textResult: data.data, creditsUsed: 1 };
+    }
+
+    const textResult = data.data || data.result || data.text || data.advice;
+    if (typeof textResult === 'string' && textResult.length > 0) {
+      return { success: true, textResult, creditsUsed: 1 };
+    }
+
     return await parseApiResponse(result, 'smart_home', '[SmartHome]');
   } catch (error) {
     console.error('[SmartHome] Error:', error.message);
@@ -1789,6 +1854,7 @@ module.exports = {
   floorEditor,
   materialSwap,
   roomComposer,
+  smartRoomComposer,
   designCritique,
   createMaskImage,
   smartHome,
