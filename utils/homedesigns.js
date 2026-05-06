@@ -527,6 +527,24 @@ const ensureMinImageSize = async (imageUrl, minSize = 512) => {
   return await downloadImage(resolved);
 };
 
+const getBufferDimensions = (buf) => {
+  if (buf[0] === 0x89 && buf[1] === 0x50) {
+    return { width: buf.readUInt32BE(16), height: buf.readUInt32BE(20), format: 'png' };
+  }
+  if (buf[0] === 0xFF && buf[1] === 0xD8) {
+    let i = 2;
+    while (i + 4 < buf.length) {
+      if (buf[i] !== 0xFF) break;
+      const marker = buf[i + 1];
+      if (marker === 0xC0 || marker === 0xC1 || marker === 0xC2) {
+        return { height: buf.readUInt16BE(i + 5), width: buf.readUInt16BE(i + 7), format: 'jpeg' };
+      }
+      i += 2 + buf.readUInt16BE(i + 2);
+    }
+  }
+  return null;
+};
+
 /**
  * Get mapped style and room type for API
  * @param {string} style - Our internal style id
@@ -916,7 +934,16 @@ const furnitureRemoval = async (options) => {
 
     const imageBuffer = await ensureMinImageSize(imageUrl);
     const maskBuffer = Buffer.from(maskBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64');
-    console.log('[FurnitureRemoval] endpoint: furniture_removal | fields: image, masked_image | image bytes:', imageBuffer.length, '| mask bytes:', maskBuffer.length);
+
+    const imgDims = getBufferDimensions(imageBuffer);
+    const maskDims = getBufferDimensions(maskBuffer);
+    console.log('[FurnitureRemoval]', {
+      imageWidth: imgDims?.width, imageHeight: imgDims?.height,
+      maskWidth: maskDims?.width, maskHeight: maskDims?.height
+    });
+    if (!imgDims || !maskDims || imgDims.width !== maskDims.width || imgDims.height !== maskDims.height) {
+      throw new Error(`Dimension mismatch: image ${imgDims?.width}×${imgDims?.height} vs mask ${maskDims?.width}×${maskDims?.height}`);
+    }
 
     const formData = new FormData();
     formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
