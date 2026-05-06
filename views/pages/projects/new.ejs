@@ -342,7 +342,34 @@
 
           <div class="tool-option-row" id="option-surface-color" hidden>
             <label for="option-surface-color-input">Surface Color</label>
-            <input type="color" id="option-surface-color-input" class="studio-color" value="#d1d5db">
+            <select id="option-surface-color-input" class="studio-select">
+              <option value="">— select a color —</option>
+              <option value="White">White</option>
+              <option value="Off White">Off White</option>
+              <option value="Cream">Cream</option>
+              <option value="Ivory">Ivory</option>
+              <option value="Beige">Beige</option>
+              <option value="Light Gray">Light Gray</option>
+              <option value="Medium Gray">Medium Gray</option>
+              <option value="Grey">Grey</option>
+              <option value="Charcoal Black">Charcoal Black</option>
+              <option value="Black">Black</option>
+              <option value="Taupe">Taupe</option>
+              <option value="Light Brown">Light Brown</option>
+              <option value="Dark Brown">Dark Brown</option>
+              <option value="Red">Red</option>
+              <option value="Blue">Blue</option>
+              <option value="Navy Blue">Navy Blue</option>
+              <option value="Green">Green</option>
+              <option value="Forest Green">Forest Green</option>
+              <option value="Sage Green">Sage Green</option>
+              <option value="Yellow">Yellow</option>
+              <option value="Orange">Orange</option>
+              <option value="Terracotta">Terracotta</option>
+              <option value="Purple">Purple</option>
+              <option value="Pink">Pink</option>
+              <option value="Teal">Teal</option>
+            </select>
           </div>
 
           <div class="tool-option-row" id="option-object" hidden>
@@ -2232,7 +2259,7 @@
         html += `<div class="tool-panel-section"><h3>Wall color</h3><input type="color" class="control-input" data-sync-input="option-paint-color-input" value="${paintColorInput.value}"></div>`;
       }
       if (fields.includes('color')) {
-        html += `<div class="tool-panel-section"><h3>Surface color</h3><input type="color" class="control-input" data-sync-input="option-surface-color-input" value="${surfaceColorInput.value}"></div>`;
+        html += renderSyncedSelect('Surface color', surfaceColorInput, 'option-surface-color-input');
       }
       if (fields.includes('materials')) html += renderSyncedSelect('Material', materialSelect, 'option-material-select');
       if (fields.includes('object')) {
@@ -3448,6 +3475,14 @@
         setStatus('Upload a texture image before editing the floor.', 'error');
         return;
       }
+      if (currentToolKey() === 'change_color_textures' && !surfaceColorRow.hidden && !surfaceColorInput.value) {
+        const hasPrompt = document.getElementById('additional-instructions')?.value?.trim();
+        const hasMaterials = !materialRow.hidden && materialSelect.value;
+        if (!hasPrompt && !hasMaterials) {
+          setStatus('Please select a valid color.', 'error');
+          return;
+        }
+      }
 
       const formData = new FormData();
     if (selectedFile) formData.append('image', selectedFile);
@@ -3474,7 +3509,7 @@
       if (!paintColorRow.hidden) formData.append('rgbColor', hexToRgbString(paintColorInput.value));
       if (!materialRow.hidden && materialSelect.value) formData.append('materials', materialSelect.value);
       if (!materialTypeRow.hidden && materialTypeSelect.value) formData.append('materialsType', materialTypeSelect.value);
-      if (!surfaceColorRow.hidden) formData.append('color', surfaceColorInput.value);
+      if (!surfaceColorRow.hidden && surfaceColorInput.value) formData.append('color', surfaceColorInput.value);
       if (!objectRow.hidden && objectInput.value.trim()) formData.append('object', objectInput.value.trim());
       if (isVideoTool) formData.append('tool_name', videoMotionSelect.value);
       if (isDesignTransfer && selectedStyleReferenceFile) formData.append('styleImage', selectedStyleReferenceFile);
