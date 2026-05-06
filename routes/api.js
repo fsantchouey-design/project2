@@ -437,8 +437,13 @@ router.post('/generate-design', ensureAuthenticated, uploadProjectImages.fields(
     if (toolFields.includes('mode')) options.mode = req.body.mode || 'faster';
 
     console.log(`[GenerateDesign] ${tool.name} -> ${upstreamEndpoint}`);
+    const isVideoGen = toolKey === 'video_generation';
+    const timeoutMs = isVideoGen ? 480000 : 180000;
+    const timeoutMsg = isVideoGen
+      ? 'Video generation is still processing. Please wait a moment and try again.'
+      : 'HomeDesigns request timed out. Please try again.';
     const timeout = new Promise((_, reject) => {
-      setTimeout(() => reject(new Error('HomeDesigns request timed out. Please try again.')), 180000);
+      setTimeout(() => reject(new Error(timeoutMsg)), timeoutMs);
     });
     const result = await Promise.race([tool.run(options), timeout]);
 

@@ -315,7 +315,7 @@ const pollForResult = async (apiEndpoint, queueId, maxAttempts = 60) => {
   return null;
 };
 
-const pollForVideoResult = async (queueId, maxAttempts = 80) => {
+const pollForVideoResult = async (queueId, maxAttempts = 120) => {
   for (let i = 0; i < maxAttempts; i++) {
     await new Promise(resolve => setTimeout(resolve, 3000));
 
@@ -772,15 +772,31 @@ const sketchToRender = async (options) => {
     const imageBuffer = await ensureMinImageSize(imageUrl);
     const { apiStyle, apiRoomType } = getApiParams(style, roomType, designType);
 
-    const formData = new FormData();
-    formData.append('image', imageBuffer, { filename: 'sketch.jpg', contentType: 'image/jpeg' });
-    formData.append('ai_intervention', aiIntervention);
-    formData.append('no_design', String(noDesign));
-    formData.append('design_style', apiStyle);
-    addDesignTypeFields(formData, designType, apiRoomType, houseAngle, gardenType);
-    if (prompt) formData.append('prompt', prompt.trim());
+    // FormData must be rebuilt per attempt since it is consumed by piping
+    const buildForm = () => {
+      const fd = new FormData();
+      fd.append('image', imageBuffer, { filename: 'sketch.jpg', contentType: 'image/jpeg' });
+      fd.append('ai_intervention', aiIntervention);
+      fd.append('no_design', String(noDesign));
+      fd.append('design_style', apiStyle);
+      addDesignTypeFields(fd, designType, apiRoomType, houseAngle, gardenType);
+      if (prompt) fd.append('prompt', prompt.trim());
+      return fd;
+    };
 
-    const result = await submitToApi(`${API_URL}/sketch_to_render`, formData);
+    // Retry up to 3 times on Cloudflare 524 gateway timeout
+    let result;
+    for (let attempt = 1; attempt <= 3; attempt++) {
+      result = await submitToApi(`${API_URL}/sketch_to_render`, buildForm());
+      if (result.statusCode !== 524) break;
+      console.warn(`[SketchToRender] 524 gateway timeout on attempt ${attempt}/3${attempt < 3 ? ', retrying in 5s...' : ''}`);
+      if (attempt < 3) await new Promise(r => setTimeout(r, 5000));
+    }
+
+    if (result.statusCode === 524) {
+      return { success: false, error: 'Sketch to Render is taking longer than expected. Please try again in a moment.' };
+    }
+
     return await parseApiResponse(result, 'sketch_to_render', '[SketchToRender]');
   } catch (error) {
     console.error('[SketchToRender] Error:', error.message);
