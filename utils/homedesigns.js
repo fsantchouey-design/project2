@@ -916,6 +916,7 @@ const furnitureRemoval = async (options) => {
 
     const imageBuffer = await ensureMinImageSize(imageUrl);
     const maskBuffer = Buffer.from(maskBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+    console.log('[FurnitureRemoval] endpoint: furniture_removal | fields: image, masked_image | image bytes:', imageBuffer.length, '| mask bytes:', maskBuffer.length);
 
     const formData = new FormData();
     formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
@@ -944,6 +945,8 @@ const changeColorTextures = async (options) => {
 
     const imageBuffer = await ensureMinImageSize(imageUrl);
     const maskBuffer = Buffer.from(maskBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64');
+    const sentFields = ['image', 'masked_image', 'design_type', 'no_design', ...(prompt ? ['prompt'] : []), ...(color ? ['color'] : []), ...(materials ? ['materials'] : []), ...(materialsType ? ['materials_type'] : []), ...(object ? ['object'] : [])];
+    console.log('[ColorTextures] endpoint: change_color_textures | fields:', sentFields.join(', '), '| image bytes:', imageBuffer.length, '| mask bytes:', maskBuffer.length);
 
     const formData = new FormData();
     formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });

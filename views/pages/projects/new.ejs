@@ -2760,6 +2760,12 @@
       if (needsMask && !sourcePreview.hidden) sizeMaskCanvas();
       maskCanvas.classList.toggle('click-mode', selectionMode === 'click');
       if (config.materialSwap && !sourcePreview.hidden) updateMaterialSelectionLabel();
+
+      const brushOnlyTools = ['furniture_removal', 'change_color_textures'];
+      const brushOnly = brushOnlyTools.includes(currentToolKey());
+      const selModeGroup = document.querySelector('.selection-mode-group');
+      if (selModeGroup) selModeGroup.hidden = brushOnly;
+      if (brushOnly && needsMask) setSelectionMode('brush');
     }
 
     function setMaskMode(mode) {
@@ -2828,12 +2834,31 @@
 
     function getMaskBase64() {
       if (!selectedRequiresMask || !hasMaskPaint) return '';
+
+      // Scale mask to match the natural image dimensions, minimum 512×512,
+      // so the API never receives a mask smaller than the required threshold.
+      const natW = (sourcePreview && sourcePreview.naturalWidth) || maskCanvas.width;
+      const natH = (sourcePreview && sourcePreview.naturalHeight) || maskCanvas.height;
+      let outW = natW;
+      let outH = natH;
+      if (outW < 512 || outH < 512) {
+        const scale = Math.max(512 / outW, 512 / outH);
+        outW = Math.round(outW * scale);
+        outH = Math.round(outH * scale);
+      }
+
+      const scaledCanvas = document.createElement('canvas');
+      scaledCanvas.width = outW;
+      scaledCanvas.height = outH;
+      const scaledCtx = scaledCanvas.getContext('2d');
+      scaledCtx.drawImage(maskCanvas, 0, 0, outW, outH);
+
       const exportCanvas = document.createElement('canvas');
-      exportCanvas.width = maskCanvas.width;
-      exportCanvas.height = maskCanvas.height;
+      exportCanvas.width = outW;
+      exportCanvas.height = outH;
       const exportCtx = exportCanvas.getContext('2d');
-      const sourceData = maskCtx.getImageData(0, 0, maskCanvas.width, maskCanvas.height);
-      const outputData = exportCtx.createImageData(maskCanvas.width, maskCanvas.height);
+      const sourceData = scaledCtx.getImageData(0, 0, outW, outH);
+      const outputData = exportCtx.createImageData(outW, outH);
       let hasSelectedPixels = false;
 
       for (let i = 0; i < sourceData.data.length; i += 4) {
