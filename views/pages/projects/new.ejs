@@ -151,7 +151,7 @@
       <input type="file" id="material-texture-image" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" hidden>
       <input type="file" id="style-reference-image" accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp" hidden>
 
-      <label for="design-image" class="upload-canvas" id="upload-canvas">
+      <div class="upload-canvas" id="upload-canvas">
         <img id="source-preview" class="source-preview" alt="Uploaded room preview" hidden>
         <canvas id="mask-canvas" class="mask-canvas" hidden></canvas>
         <div class="upload-placeholder" id="upload-placeholder">
@@ -163,7 +163,7 @@
           <i data-lucide="refresh-cw"></i>
           Change
         </button>
-      </label>
+      </div>
       <div class="image-zoom-controls" id="image-zoom-controls" hidden>
         <i data-lucide="zoom-out"></i>
         <input type="range" id="image-zoom-range" min="1" max="2.6" step="0.05" value="1" aria-label="Image zoom">
@@ -3047,6 +3047,10 @@
       imageInput.click();
     });
 
+    uploadPlaceholder.addEventListener('click', () => {
+      imageInput.click();
+    });
+
     maskBrushBtn.addEventListener('click', () => setMaskMode('brush'));
     maskEraserBtn.addEventListener('click', () => setMaskMode('eraser'));
     clickSelectionBtn.addEventListener('click', () => setSelectionMode('click'));
@@ -3406,8 +3410,8 @@
       }
       const isMaterialSwap = isMaterialSwapTool();
       const isDesignTransfer = currentToolKey() === 'design_transfer';
-      if (isMaterialSwap && !hasMaskPaint) {
-        setStatus('Select an object or draw a mask before generating.', 'error');
+      if (selectedRequiresMask && !hasMaskPaint) {
+        setStatus('Please paint the area you want to modify before generating.', 'error');
         return;
       }
       if (isMaterialSwap && !materialSwapReady) {
