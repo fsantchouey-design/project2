@@ -509,6 +509,25 @@ const resolveImageUrl = (imageUrl) => {
 };
 
 /**
+ * Download image, auto-padding to at least 512×512 for Cloudinary-hosted images.
+ * Uses a conditional Cloudinary transform so large images are never downscaled.
+ * Non-Cloudinary URLs are downloaded as-is (real photos are always big enough).
+ */
+const ensureMinImageSize = async (imageUrl, minSize = 512) => {
+  const resolved = resolveImageUrl(imageUrl);
+  if (resolved.includes('res.cloudinary.com') && resolved.includes('/image/upload/')) {
+    const cond = `if_w_lt_${minSize}_or_h_lt_${minSize},c_pad,b_white,w_${minSize},h_${minSize},if_end`;
+    const transformed = resolved.replace('/image/upload/', `/image/upload/${cond}/`);
+    try {
+      return await downloadImage(transformed);
+    } catch (e) {
+      console.warn('[ensureMinImageSize] Cloudinary transform failed, using original:', e.message);
+    }
+  }
+  return await downloadImage(resolved);
+};
+
+/**
  * Get mapped style and room type for API
  * @param {string} style - Our internal style id
  * @param {string} roomType - Our internal room type id
@@ -649,7 +668,7 @@ const beautifulRedesign = async (options) => {
     if (!API_TOKEN) throw new Error('HomeDesigns API token is not configured.');
     console.log('[BeautifulRedesign] Starting:', { imageUrl: imageUrl.substring(0, 80), roomType, style });
 
-    const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
+    const imageBuffer = await ensureMinImageSize(imageUrl);
     const { apiStyle, apiRoomType } = getApiParams(style, roomType, designType);
 
     const formData = new FormData();
@@ -683,7 +702,7 @@ const perfectRedesign = async (options) => {
     if (!API_TOKEN) throw new Error('HomeDesigns API token is not configured.');
     console.log('[PerfectRedesign] Starting:', { roomType, style, designType });
 
-    const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
+    const imageBuffer = await ensureMinImageSize(imageUrl);
     const { apiStyle, apiRoomType } = getApiParams(style, roomType, designType);
 
     const formData = new FormData();
@@ -717,7 +736,7 @@ const creativeRedesign = async (options) => {
     if (!API_TOKEN) throw new Error('HomeDesigns API token is not configured.');
     console.log('[CreativeRedesign] Starting:', { roomType, style, designType });
 
-    const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
+    const imageBuffer = await ensureMinImageSize(imageUrl);
     const { apiStyle, apiRoomType } = getApiParams(style, roomType, designType);
 
     const formData = new FormData();
@@ -750,7 +769,7 @@ const sketchToRender = async (options) => {
     if (!API_TOKEN) throw new Error('HomeDesigns API token is not configured.');
     console.log('[SketchToRender] Starting:', { roomType, style, designType });
 
-    const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
+    const imageBuffer = await ensureMinImageSize(imageUrl);
     const { apiStyle, apiRoomType } = getApiParams(style, roomType, designType);
 
     const formData = new FormData();
@@ -782,7 +801,7 @@ const precision = async (options) => {
     if (!API_TOKEN) throw new Error('HomeDesigns API token is not configured.');
     console.log('[Precision] Starting:', { roomType, style, strength });
 
-    const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
+    const imageBuffer = await ensureMinImageSize(imageUrl);
     const maskBuffer = Buffer.from(maskBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64');
     const { apiStyle, apiRoomType } = getApiParams(style, roomType, designType);
 
@@ -816,7 +835,7 @@ const fillSpaces = async (options) => {
     if (!API_TOKEN) throw new Error('HomeDesigns API token is not configured.');
     console.log('[FillSpaces] Starting:', { roomType, style });
 
-    const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
+    const imageBuffer = await ensureMinImageSize(imageUrl);
     const maskBuffer = Buffer.from(maskBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64');
     const { apiStyle, apiRoomType } = getApiParams(style, roomType, designType);
 
@@ -850,7 +869,7 @@ const decorStaging = async (options) => {
     if (!API_TOKEN) throw new Error('HomeDesigns API token is not configured.');
     console.log('[DecorStaging] Starting:', { roomType, style });
 
-    const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
+    const imageBuffer = await ensureMinImageSize(imageUrl);
     const { apiStyle, apiRoomType } = getApiParams(style, roomType, designType);
 
     const formData = new FormData();
@@ -879,7 +898,7 @@ const furnitureRemoval = async (options) => {
     if (!API_TOKEN) throw new Error('HomeDesigns API token is not configured.');
     console.log('[FurnitureRemoval] Starting');
 
-    const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
+    const imageBuffer = await ensureMinImageSize(imageUrl);
     const maskBuffer = Buffer.from(maskBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64');
 
     const formData = new FormData();
@@ -907,7 +926,7 @@ const changeColorTextures = async (options) => {
     if (!API_TOKEN) throw new Error('HomeDesigns API token is not configured.');
     console.log('[ColorTextures] Starting:', { prompt, color, materials, object, mode });
 
-    const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
+    const imageBuffer = await ensureMinImageSize(imageUrl);
     const maskBuffer = Buffer.from(maskBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64');
 
     const formData = new FormData();
@@ -943,7 +962,7 @@ const paintVisualizer = async (options) => {
     if (!API_TOKEN) throw new Error('HomeDesigns API token is not configured.');
     console.log('[PaintVisualizer] Starting:', { rgbColor, hasColorImage: !!colorImageBase64 });
 
-    const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
+    const imageBuffer = await ensureMinImageSize(imageUrl);
     const maskBuffer = Buffer.from(maskBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64');
 
     const formData = new FormData();
@@ -976,7 +995,7 @@ const furnitureFinder = async (options) => {
     if (!API_TOKEN) throw new Error('HomeDesigns API token is not configured.');
     console.log('[FurnitureFinder] Starting');
 
-    const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
+    const imageBuffer = await ensureMinImageSize(imageUrl);
 
     const formData = new FormData();
     formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
@@ -1000,7 +1019,7 @@ const fullHD = async (options) => {
     if (!API_TOKEN) throw new Error('HomeDesigns API token is not configured.');
     console.log('[FullHD] Starting');
 
-    const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
+    const imageBuffer = await ensureMinImageSize(imageUrl);
 
     const formData = new FormData();
     formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
@@ -1023,7 +1042,7 @@ const skyColors = async (options) => {
     if (!API_TOKEN) throw new Error('HomeDesigns API token is not configured.');
     console.log('[SkyColors] Starting:', { weather });
 
-    const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
+    const imageBuffer = await ensureMinImageSize(imageUrl);
 
     const formData = new FormData();
     formData.append('image', imageBuffer, { filename: 'exterior.jpg', contentType: 'image/jpeg' });
@@ -1050,7 +1069,7 @@ const magicRedesign = async (options) => {
     if (!prompt || !prompt.trim()) throw new Error('Magic Redesign requires a description of what to change.');
     console.log('[MagicRedesign] Starting:', { designAction });
 
-    const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
+    const imageBuffer = await ensureMinImageSize(imageUrl);
     const formData = new FormData();
     formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
     formData.append('design_action', designAction);
@@ -1079,7 +1098,7 @@ const videoGeneration = async (options) => {
     }
     console.log('[VideoGeneration] Starting:', { videoMotion });
 
-    const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
+    const imageBuffer = await ensureMinImageSize(imageUrl);
     const formData = new FormData();
     formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
     formData.append('tool_name', videoMotion);
@@ -1129,7 +1148,7 @@ const virtualStaging = async (options) => {
     if (!API_TOKEN) throw new Error('HomeDesigns API token is not configured.');
     console.log('[VirtualStaging] Starting:', { roomType, style });
 
-    const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
+    const imageBuffer = await ensureMinImageSize(imageUrl);
     const { apiStyle, apiRoomType } = getApiParams(style, roomType, 'Interior');
 
     const formData = new FormData();
@@ -1251,8 +1270,8 @@ const designTransfer = async (options) => {
     if (!styleImageUrl) throw new Error('Design Transfer requires a reference style image.');
     console.log('[DesignTransfer] Starting');
 
-    const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
-    const styleImageBuffer = await downloadImage(resolveImageUrl(styleImageUrl));
+    const imageBuffer = await ensureMinImageSize(imageUrl);
+    const styleImageBuffer = await ensureMinImageSize(styleImageUrl);
 
     const formData = new FormData();
     formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
@@ -1281,8 +1300,8 @@ const floorEditor = async (options) => {
     if (!FLOOR_TEXTURE_GRID_OPTIONS.includes(noOfTexture)) throw new Error('Invalid texture grid for Floor Editor.');
     console.log('[FloorEditor] Starting:', { noOfTexture });
 
-    const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
-    const textureBuffer = await downloadImage(resolveImageUrl(textureImageUrl));
+    const imageBuffer = await ensureMinImageSize(imageUrl);
+    const textureBuffer = await ensureMinImageSize(textureImageUrl);
 
     const formData = new FormData();
     formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
@@ -1314,10 +1333,10 @@ const materialSwap = async (options) => {
     const materialChoice = materialInstruction || materialsType || materials || 'wood';
     console.log('[MaterialSwap] Starting:', { materialChoice, noOfTexture, designCount });
 
-    const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
+    const imageBuffer = await ensureMinImageSize(imageUrl);
     const maskBuffer = Buffer.from(maskBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64');
     const textureBuffer = textureImageUrl
-      ? await downloadImage(resolveImageUrl(textureImageUrl))
+      ? await ensureMinImageSize(textureImageUrl)
       : createTexturePng({
           material: materialChoice,
           color,
@@ -1352,7 +1371,7 @@ const roomComposer = async (options) => {
     if (!maskBase64) throw new Error('Room Composer requires a selected area or mask.');
     console.log('[RoomComposer] Starting:', { roomType, style });
 
-    const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
+    const imageBuffer = await ensureMinImageSize(imageUrl);
     const maskBuffer = Buffer.from(maskBase64.replace(/^data:image\/\w+;base64,/, ''), 'base64');
     const { apiStyle, apiRoomType } = getApiParams(style, roomType, 'Interior');
 
@@ -1383,13 +1402,16 @@ const smartRoomComposer = async (options) => {
     if (!API_TOKEN) throw new Error('HomeDesigns API token is not configured.');
     console.log('[SmartRoomComposer] Starting');
 
-    const roomImageBuffer = await downloadImage(resolveImageUrl(imageUrl));
+    const roomImageBuffer = await ensureMinImageSize(imageUrl);
     const formData = new FormData();
     formData.append('room_image', roomImageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
 
     const furnitureUrls = Array.isArray(customElements) ? customElements.filter(Boolean) : [];
+    if (furnitureUrls.length === 0) {
+      return { success: false, error: 'Room Composer requires at least 1 furniture image. Please upload furniture images in the panel.' };
+    }
     for (const url of furnitureUrls.slice(0, 4)) {
-      const buf = await downloadImage(resolveImageUrl(url));
+      const buf = await ensureMinImageSize(url);
       formData.append('furniture_images[]', buf, { filename: 'furniture.jpg', contentType: 'image/jpeg' });
     }
 
@@ -1414,7 +1436,7 @@ const designCritique = async (options) => {
     if (!API_TOKEN) throw new Error('HomeDesigns API token is not configured.');
     console.log('[DesignCritique] Starting');
 
-    const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
+    const imageBuffer = await ensureMinImageSize(imageUrl);
     const formData = new FormData();
     formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
     formData.append('imageType', designType);
@@ -1452,16 +1474,19 @@ const designCritique = async (options) => {
 /**
  * Create Mask Image - Automatically generate a segmentation mask from an image
  */
+const DEFAULT_MASK_LABELS = 'wall|floor|ceiling|sofa|chair|table|lamp|window|door|bed|cabinet|countertop|rug|plant|curtain|pillow';
+
 const createMaskImage = async (options) => {
-  const { imageUrl } = options;
+  const { imageUrl, labels = DEFAULT_MASK_LABELS } = options;
 
   try {
     if (!API_TOKEN) throw new Error('HomeDesigns API token is not configured.');
     console.log('[CreateMaskImage] Starting');
 
-    const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
+    const imageBuffer = await ensureMinImageSize(imageUrl);
     const formData = new FormData();
     formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
+    formData.append('labels', labels);
 
     const result = await submitToApi(`${API_URL}/create_maskimage`, formData);
     return await parseApiResponse(result, 'create_maskimage', '[CreateMaskImage]');
@@ -1482,7 +1507,7 @@ const smartHome = async (options) => {
     if (!API_TOKEN) throw new Error('HomeDesigns API token is not configured.');
     console.log('[SmartHome] Starting');
 
-    const imageBuffer = await downloadImage(resolveImageUrl(imageUrl));
+    const imageBuffer = await ensureMinImageSize(imageUrl);
 
     const formData = new FormData();
     formData.append('image', imageBuffer, { filename: 'room.jpg', contentType: 'image/jpeg' });
