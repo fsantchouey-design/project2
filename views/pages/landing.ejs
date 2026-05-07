@@ -877,7 +877,96 @@
 </section>
 
 <!-- Pricing Section -->
-<section id="pricing" class="pricing-section">
+<section id="pricing" class="pricing-section billing-annual">
+  <style>
+    .pricing-toggle-wrapper {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin-bottom: 3rem;
+    }
+    .pricing-toggle-label {
+      font-size: 0.9375rem;
+      font-weight: 500;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: color 0.2s;
+    }
+    .billing-annual .pricing-toggle-label--annual,
+    .billing-monthly .pricing-toggle-label--monthly {
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+    .two-months-badge {
+      display: inline-block;
+      padding: 0.2rem 0.55rem;
+      background: var(--accent-gradient);
+      border-radius: var(--radius-full);
+      font-size: 0.68rem;
+      font-weight: 700;
+      color: #fff;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+    }
+    .pricing-toggle {
+      position: relative;
+      width: 52px;
+      height: 28px;
+      background: var(--border-color);
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: background 0.3s;
+      flex-shrink: 0;
+    }
+    .billing-annual .pricing-toggle {
+      background: var(--accent-gradient);
+    }
+    .toggle-thumb {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 22px;
+      height: 22px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.3s;
+      pointer-events: none;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.25);
+    }
+    .billing-annual .toggle-thumb {
+      transform: translateX(24px);
+    }
+    .annual-meta {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.3rem;
+      margin-top: 0.25rem;
+      margin-bottom: 0.75rem;
+    }
+    .billing-monthly .annual-meta {
+      display: none;
+    }
+    .monthly-equiv-label {
+      font-size: 0.8125rem;
+      color: var(--text-secondary);
+    }
+    .savings-label {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      background: rgba(16, 185, 129, 0.12);
+      color: var(--accent-primary);
+      border-radius: var(--radius-full);
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+  </style>
+
   <div class="container">
     <div class="section-header">
       <span class="section-badge">
@@ -887,15 +976,37 @@
       <h2 class="section-title">Des tarifs simples et<br><span class="gradient-text">transparents</span></h2>
       <p class="section-subtitle">Commencez gratuitement. Évoluez selon vos besoins.</p>
     </div>
-    
+
+    <div class="pricing-toggle-wrapper">
+      <span class="pricing-toggle-label pricing-toggle-label--monthly">Mensuel</span>
+      <button class="pricing-toggle" id="billing-toggle" aria-label="Changer la période de facturation">
+        <span class="toggle-thumb"></span>
+      </button>
+      <span class="pricing-toggle-label pricing-toggle-label--annual">
+        Annuel
+        <span class="two-months-badge">2 mois offerts</span>
+      </span>
+    </div>
+
     <div class="pricing-grid">
       <!-- Régulier Plan -->
-      <div class="pricing-card">
+      <div class="pricing-card"
+           data-plan-key="regular"
+           data-price-monthly="<%= plans.regular.price %>"
+           data-price-annual="<%= plans.regular.priceAnnual %>"
+           data-monthly-equiv="<%= plans.regular.priceMonthlyEquivalent %>"
+           data-savings="<%= plans.regular.savings %>"
+           data-link-monthly="<%= plans.regular.ctaLink %>&billing=monthly"
+           data-link-annual="<%= plans.regular.ctaLink %>&billing=annual">
         <div class="pricing-header">
           <h3><%= plans.regular.name %></h3>
           <div class="price">
-            <span class="amount"><%= plans.regular.price %>$</span>
-            <span class="period"><%= plans.regular.period %></span>
+            <span class="amount js-price"></span>
+            <span class="period js-period"></span>
+          </div>
+          <div class="annual-meta">
+            <span class="monthly-equiv-label js-monthly-equiv"></span>
+            <span class="savings-label js-savings"></span>
           </div>
           <p><%= plans.regular.subtitle %></p>
         </div>
@@ -904,22 +1015,33 @@
             <li><i data-lucide="check"></i> <%= feature.text %></li>
           <% }) %>
         </ul>
-        <a href="<%= plans.regular.ctaLink %>" class="btn btn-outline btn-block"><%= plans.regular.cta %></a>
+        <a class="btn btn-outline btn-block js-pricing-cta" data-plan="regular">Choisir <%= plans.regular.name %></a>
       </div>
-      
+
       <!-- Avancé Plan -->
-      <div class="pricing-card pricing-featured">
+      <div class="pricing-card pricing-featured"
+           data-plan-key="advanced"
+           data-price-monthly="<%= plans.advanced.price %>"
+           data-price-annual="<%= plans.advanced.priceAnnual %>"
+           data-monthly-equiv="<%= plans.advanced.priceMonthlyEquivalent %>"
+           data-savings="<%= plans.advanced.savings %>"
+           data-link-monthly="<%= plans.advanced.ctaLink %>&billing=monthly"
+           data-link-annual="<%= plans.advanced.ctaLink %>&billing=annual">
         <% if (plans.advanced.badge) { %>
         <div class="pricing-badge">
           <i data-lucide="crown"></i>
-            <%= plans.advanced.badge %>
+          <%= plans.advanced.badge %>
         </div>
         <% } %>
         <div class="pricing-header">
           <h3><%= plans.advanced.name %></h3>
           <div class="price">
-            <span class="amount"><%= plans.advanced.price %>$</span>
-            <span class="period">CAD <%= plans.advanced.period %></span>
+            <span class="amount js-price"></span>
+            <span class="period js-period"></span>
+          </div>
+          <div class="annual-meta">
+            <span class="monthly-equiv-label js-monthly-equiv"></span>
+            <span class="savings-label js-savings"></span>
           </div>
           <p><%= plans.advanced.subtitle %></p>
         </div>
@@ -928,19 +1050,30 @@
             <li><i data-lucide="check"></i> <%= feature.text %></li>
           <% }) %>
         </ul>
-        <a href="<%= plans.advanced.ctaLink %>" class="btn btn-primary btn-block btn-glow">
-          <%= plans.advanced.cta %>
+        <a class="btn btn-primary btn-block btn-glow js-pricing-cta" data-plan="advanced">
+          Choisir <%= plans.advanced.name %>
           <span class="btn-shine"></span>
         </a>
       </div>
-      
+
       <!-- Premium Plan -->
-      <div class="pricing-card">
+      <div class="pricing-card"
+           data-plan-key="premium"
+           data-price-monthly="<%= plans.premium.price %>"
+           data-price-annual="<%= plans.premium.priceAnnual %>"
+           data-monthly-equiv="<%= plans.premium.priceMonthlyEquivalent %>"
+           data-savings="<%= plans.premium.savings %>"
+           data-link-monthly="<%= plans.premium.ctaLink %>&billing=monthly"
+           data-link-annual="<%= plans.premium.ctaLink %>&billing=annual">
         <div class="pricing-header">
           <h3><%= plans.premium.name %></h3>
           <div class="price">
-            <span class="amount"><%= plans.premium.price %>$</span>
-            <span class="period">CAD <%= plans.premium.period %></span>
+            <span class="amount js-price"></span>
+            <span class="period js-period"></span>
+          </div>
+          <div class="annual-meta">
+            <span class="monthly-equiv-label js-monthly-equiv"></span>
+            <span class="savings-label js-savings"></span>
           </div>
           <p><%= plans.premium.subtitle %></p>
         </div>
@@ -949,10 +1082,49 @@
             <li><i data-lucide="check"></i> <%= feature.text %></li>
           <% }) %>
         </ul>
-        <a href="<%= plans.premium.ctaLink %>" class="btn btn-outline btn-block"><%= plans.premium.cta %></a>
+        <a class="btn btn-outline btn-block js-pricing-cta" data-plan="premium">Choisir <%= plans.premium.name %></a>
       </div>
     </div>
   </div>
+
+  <script>
+    (function () {
+      const section = document.getElementById('pricing');
+      const toggle = document.getElementById('billing-toggle');
+      if (!section || !toggle) return;
+
+      let isAnnual = true;
+
+      function fmt(n) { return n.toFixed(2) + '$'; }
+
+      function render() {
+        section.classList.toggle('billing-annual', isAnnual);
+        section.classList.toggle('billing-monthly', !isAnnual);
+
+        section.querySelectorAll('.pricing-card[data-plan-key]').forEach(function (card) {
+          const monthly   = parseFloat(card.dataset.priceMonthly);
+          const annual    = parseFloat(card.dataset.priceAnnual);
+          const equiv     = parseFloat(card.dataset.monthlyEquiv);
+          const savings   = parseFloat(card.dataset.savings);
+
+          card.querySelector('.js-price').textContent  = isAnnual ? fmt(annual)  : fmt(monthly);
+          card.querySelector('.js-period').textContent = isAnnual ? 'CAD / an'   : 'CAD / mois';
+          card.querySelector('.js-monthly-equiv').textContent = fmt(equiv) + ' CAD / mois';
+          card.querySelector('.js-savings').textContent = 'Économisez ' + fmt(savings);
+
+          var cta  = card.querySelector('.js-pricing-cta');
+          if (cta) cta.href = isAnnual ? card.dataset.linkAnnual : card.dataset.linkMonthly;
+        });
+      }
+
+      toggle.addEventListener('click', function () {
+        isAnnual = !isAnnual;
+        render();
+      });
+
+      render();
+    })();
+  </script>
 </section>
 
 <!-- CTA Section -->
