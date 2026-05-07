@@ -1,22 +1,37 @@
 <%
   const originalImage = (project.originalImages && project.originalImages[0] && project.originalImages[0].url) || '';
-  const latestVariant = (project.designVariants && project.designVariants.length)
-    ? project.designVariants[project.designVariants.length - 1]
-    : null;
+  const allVariants = (project.designVariants || []).slice().reverse();
+  const latestVariant = allVariants.length ? allVariants[0] : null;
   const generatedImage = latestVariant ? (latestVariant.imageUrl || latestVariant.thumbnailUrl || '') : '';
-  const latestDesigns = (project.designVariants || []).slice(-6).reverse().map(function(variant) {
-    return {
+  const mainInitialImage = generatedImage || originalImage;
+
+  const allDesigns = [];
+  allVariants.forEach(function(variant) {
+    const img = variant.imageUrl || variant.thumbnailUrl || '';
+    if (!img) return;
+    allDesigns.push({
       id: variant._id ? String(variant._id) : '',
       name: variant.name || variant.tool || 'Generated design',
-      imageUrl: variant.imageUrl || variant.thumbnailUrl || '',
-      thumbnailUrl: variant.thumbnailUrl || variant.imageUrl || '',
+      imageUrl: img,
+      thumbnailUrl: variant.thumbnailUrl || img,
       tool: variant.tool || '',
       style: variant.aiParameters && variant.aiParameters.style ? variant.aiParameters.style : (project.style || ''),
-      generatedAt: variant.generatedAt || variant.createdAt || null
-    };
-  }).filter(function(design) {
-    return design.imageUrl || design.thumbnailUrl;
+      generatedAt: variant.generatedAt || variant.createdAt || null,
+      isOriginal: false
+    });
   });
+  if (originalImage) {
+    allDesigns.push({
+      id: 'original',
+      name: 'Image originale',
+      imageUrl: originalImage,
+      thumbnailUrl: originalImage,
+      tool: '',
+      style: '',
+      generatedAt: (project.originalImages[0] && project.originalImages[0].uploadedAt) || null,
+      isOriginal: true
+    });
+  }
 %>
 
 <div class="project-compare-page">
@@ -25,7 +40,7 @@
     <div>
       <p class="eyebrow">Project Preview</p>
       <h1><%= project.title || 'Project' %></h1>
-      <p>Compare the original image with the latest generated design.</p>
+      <p>Visualisez vos générations et sélectionnez la version souhaitée.</p>
       <div class="project-compare-meta">
         <% if (project.style) { %><span>Style: <%= project.style %></span><% } %>
         <% if (project.status) { %><span>Status: <%= project.status %></span><% } %>
@@ -35,40 +50,38 @@
     <a href="/projects/<%= project._id %>/studio" class="studio-link">Open AI Studio</a>
   </header>
 
-  <% if (originalImage && generatedImage) { %>
-    <section class="before-after" id="before-after">
-      <img class="before-after__image before-after__image--after" id="after-image" src="<%= generatedImage %>" alt="Latest generated design">
-      <div class="before-after__before" id="before-layer">
-        <img class="before-after__image" src="<%= originalImage %>" alt="Original project image">
-      </div>
-      <div class="before-after__handle" id="compare-handle" aria-hidden="true">
-        <span></span>
-      </div>
-      <input class="before-after__range" id="compare-range" type="range" min="0" max="100" value="50" aria-label="Before after comparison">
-      <div class="before-after__labels">
-        <span>Original</span>
-        <span id="after-label">Latest Design</span>
+  <% if (mainInitialImage) { %>
+    <section class="main-image-section">
+      <div class="main-image-wrapper">
+        <img id="main-display-image" src="<%= mainInitialImage %>" alt="Design principal">
+        <div class="main-image-badge" id="main-image-badge">
+          <% if (generatedImage) { %><%= latestVariant && latestVariant.tool ? latestVariant.tool : 'Dernière génération' %><% } else { %>Image originale<% } %>
+        </div>
       </div>
     </section>
 
-    <% if (latestDesigns.length) { %>
+    <% if (allDesigns.length) { %>
       <section class="compare-latest">
         <div class="compare-latest__header">
           <div>
-            <p class="eyebrow">Latest Designs</p>
-            <h2>Select a design to compare</h2>
+            <p class="eyebrow">Toutes les versions</p>
+            <h2>Cliquez sur une image pour l'afficher</h2>
           </div>
-          <span><%= latestDesigns.length %> designs</span>
+          <span><%= allDesigns.length %> version<%= allDesigns.length > 1 ? 's' : '' %></span>
         </div>
         <div class="compare-latest__grid" id="compare-latest-grid">
-          <% latestDesigns.forEach(function(design, index) { %>
+          <% allDesigns.forEach(function(design, index) { %>
             <button
               type="button"
               class="compare-design-card <%= index === 0 ? 'is-active' : '' %>"
               data-index="<%= index %>"
+              data-original="<%= design.isOriginal ? 'true' : 'false' %>"
             >
-              <img src="<%= design.thumbnailUrl || design.imageUrl %>" alt="<%= design.name %>">
-              <span><%= design.name %></span>
+              <img src="<%= design.thumbnailUrl || design.imageUrl %>" alt="<%= design.name %>" loading="lazy">
+              <% if (design.isOriginal) { %>
+                <div class="card-badge card-badge--original">Original</div>
+              <% } %>
+              <span class="card-label"><%= design.name %></span>
             </button>
           <% }); %>
         </div>
@@ -76,8 +89,8 @@
     <% } %>
   <% } else { %>
     <section class="project-compare-empty">
-      <h2>No comparison available yet</h2>
-      <p>Open the AI Studio, generate a design, then come back to compare the result.</p>
+      <h2>Aucun design disponible</h2>
+      <p>Ouvrez le Studio IA, générez un design, puis revenez sur cette page.</p>
       <a href="/projects/<%= project._id %>/studio" class="studio-link">Open AI Studio</a>
     </section>
   <% } %>
@@ -155,106 +168,47 @@
     font-weight: 800;
   }
 
-  .before-after {
+  /* Main image display */
+  .main-image-section {
+    max-width: 1180px;
+    margin: 0 auto 28px;
+  }
+
+  .main-image-wrapper {
     position: relative;
     overflow: hidden;
-    max-width: 1180px;
-    aspect-ratio: 16 / 10;
-    margin: 0 auto;
     border: 1px solid rgba(94, 234, 212, 0.22);
     border-radius: 24px;
     background: #020617;
     box-shadow: 0 32px 90px rgba(0, 0, 0, 0.34);
+    aspect-ratio: 16 / 9;
   }
 
-  .before-after__image {
+  #main-display-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
     display: block;
-    user-select: none;
-    pointer-events: none;
+    transition: opacity 0.22s ease;
   }
 
-  .before-after__before {
+  .main-image-badge {
     position: absolute;
-    inset: 0;
-    width: 50%;
-    overflow: hidden;
-  }
-
-  .before-after__handle {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 50%;
-    width: 3px;
-    background: #5eead4;
-    transform: translateX(-50%);
-    pointer-events: none;
-  }
-
-  .before-after__handle span {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 54px;
-    height: 54px;
-    border: 2px solid rgba(255, 255, 255, 0.88);
-    border-radius: 999px;
-    background: rgba(15, 23, 42, 0.84);
-    transform: translate(-50%, -50%);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
-  }
-
-  .before-after__handle span::before,
-  .before-after__handle span::after {
-    position: absolute;
-    top: 50%;
-    color: #e2e8f0;
-    font-size: 18px;
-    line-height: 1;
-    transform: translateY(-50%);
-  }
-
-  .before-after__handle span::before {
-    content: '<';
-    left: 12px;
-  }
-
-  .before-after__handle span::after {
-    content: '>';
-    right: 12px;
-  }
-
-  .before-after__range {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    opacity: 0;
-    cursor: ew-resize;
-  }
-
-  .before-after__labels {
-    position: absolute;
+    top: 18px;
     left: 18px;
-    right: 18px;
-    bottom: 18px;
-    display: flex;
-    justify-content: space-between;
-    gap: 16px;
-    pointer-events: none;
-  }
-
-  .before-after__labels span {
-    padding: 8px 12px;
+    padding: 8px 14px;
     border-radius: 999px;
-    background: rgba(2, 6, 23, 0.74);
-    color: #f8fafc;
+    background: rgba(2, 6, 23, 0.78);
+    color: #5eead4;
+    font-size: 0.82rem;
     font-weight: 800;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(94, 234, 212, 0.28);
   }
 
+  /* Latest designs grid */
   .project-compare-empty {
     max-width: 720px;
     margin: 80px auto 0;
@@ -267,7 +221,7 @@
 
   .compare-latest {
     max-width: 1180px;
-    margin: 26px auto 0;
+    margin: 0 auto;
     padding: 22px;
     border: 1px solid rgba(94, 234, 212, 0.18);
     border-radius: 22px;
@@ -294,7 +248,7 @@
 
   .compare-latest__grid {
     display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     gap: 12px;
   }
 
@@ -302,10 +256,11 @@
     position: relative;
     overflow: hidden;
     min-height: 110px;
-    border: 1px solid rgba(148, 163, 184, 0.16);
+    border: 2px solid rgba(148, 163, 184, 0.16);
     border-radius: 14px;
     background: #020617;
     cursor: pointer;
+    padding: 0;
     transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
   }
 
@@ -316,6 +271,16 @@
     box-shadow: 0 18px 36px rgba(20, 184, 166, 0.16);
   }
 
+  .compare-design-card[data-original="true"] {
+    border-color: rgba(251, 191, 36, 0.38);
+  }
+
+  .compare-design-card[data-original="true"]:hover,
+  .compare-design-card[data-original="true"].is-active {
+    border-color: rgba(251, 191, 36, 0.88);
+    box-shadow: 0 18px 36px rgba(251, 191, 36, 0.14);
+  }
+
   .compare-design-card img {
     width: 100%;
     height: 100%;
@@ -324,7 +289,24 @@
     display: block;
   }
 
-  .compare-design-card span {
+  .card-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .card-badge--original {
+    background: rgba(251, 191, 36, 0.92);
+    color: #1c1400;
+  }
+
+  .card-label {
     position: absolute;
     left: 8px;
     right: 8px;
@@ -334,6 +316,9 @@
     font-weight: 800;
     text-align: left;
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.78);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   @media (max-width: 760px) {
@@ -345,8 +330,8 @@
       grid-template-columns: 1fr;
     }
 
-    .before-after {
-      aspect-ratio: 4 / 5;
+    .main-image-wrapper {
+      aspect-ratio: 4 / 3;
     }
 
     .compare-latest__grid {
@@ -356,36 +341,29 @@
 </style>
 
 <script>
-  const range = document.getElementById('compare-range');
-  const beforeLayer = document.getElementById('before-layer');
-  const handle = document.getElementById('compare-handle');
-  const afterImage = document.getElementById('after-image');
-  const afterLabel = document.getElementById('after-label');
+  const mainImage = document.getElementById('main-display-image');
+  const mainBadge = document.getElementById('main-image-badge');
   const latestGrid = document.getElementById('compare-latest-grid');
-  const latestDesigns = <%- JSON.stringify(latestDesigns || []) %>;
-
-  function updateComparison(value) {
-    if (!beforeLayer || !handle) return;
-    beforeLayer.style.width = `${value}%`;
-    handle.style.left = `${value}%`;
-  }
-
-  range?.addEventListener('input', (event) => {
-    updateComparison(event.target.value);
-  });
+  const allDesigns = <%- JSON.stringify(allDesigns) %>;
 
   latestGrid?.addEventListener('click', (event) => {
     const card = event.target.closest('.compare-design-card');
-    if (!card || !afterImage) return;
-    const design = latestDesigns[Number(card.dataset.index)];
+    if (!card || !mainImage) return;
+    const design = allDesigns[Number(card.dataset.index)];
     if (!design) return;
 
-    afterImage.src = design.imageUrl || design.thumbnailUrl;
-    if (afterLabel) afterLabel.textContent = design.name || 'Selected Design';
+    mainImage.style.opacity = '0';
+    setTimeout(() => {
+      mainImage.src = design.imageUrl || design.thumbnailUrl;
+      mainImage.style.opacity = '1';
+    }, 120);
+
+    if (mainBadge) {
+      mainBadge.textContent = design.isOriginal ? 'Image originale' : (design.tool || design.name || 'Génération IA');
+    }
+
     latestGrid.querySelectorAll('.compare-design-card').forEach((item) => {
       item.classList.toggle('is-active', item === card);
     });
   });
-
-  updateComparison(range?.value || 50);
 </script>
