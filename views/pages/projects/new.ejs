@@ -190,18 +190,18 @@
         <div class="latest-designs-empty" id="latest-designs-empty">
           No generated designs yet. Your latest results will appear here.
         </div>
-      </section>
 
-      <div class="project-actions-bar" id="project-actions-bar" hidden>
-        <button type="button" class="project-action-btn project-action-btn--primary" id="btn-save-project">
-          <i data-lucide="bookmark"></i>
-          <span>Sauvegarder dans Mes projets</span>
-        </button>
-        <button type="button" class="project-action-btn project-action-btn--secondary" id="btn-share-project">
-          <i data-lucide="share-2"></i>
-          <span>Partager avec des professionnels</span>
-        </button>
-      </div>
+        <div class="project-actions-bar" id="project-actions-bar">
+          <button type="button" class="project-action-btn project-action-btn--primary" id="btn-save-project">
+            <i data-lucide="bookmark"></i>
+            <span>Sauvegarder dans Mes projets</span>
+          </button>
+          <button type="button" class="project-action-btn project-action-btn--secondary" id="btn-share-project">
+            <i data-lucide="share-2"></i>
+            <span>Partager avec des professionnels</span>
+          </button>
+        </div>
+      </section>
     </main>
 
     <aside class="config-panel">
@@ -1910,7 +1910,6 @@
     margin-top: 1.25rem;
     flex-wrap: wrap;
   }
-  .project-actions-bar[hidden] { display: none; }
 
   .project-action-btn {
     display: inline-flex;
@@ -3762,8 +3761,7 @@
     // ── Project action buttons ────────────────────────────────────────────
 
     function showProjectActionsBar() {
-      const bar = document.getElementById('project-actions-bar');
-      if (bar && STUDIO_PROJECT?.id) bar.hidden = false;
+      // kept for future use — bar is now always visible
     }
 
     function showToast(message, type) {
@@ -3787,6 +3785,7 @@
     }
 
     async function handleSaveProject() {
+      console.log('[CraftyCrib] handleSaveProject() called', { projectId: STUDIO_PROJECT?.id, designs: latestDesigns.length });
       if (!STUDIO_PROJECT?.id) {
         showToast('Aucun projet actif à sauvegarder.', 'error');
         return;
@@ -3815,6 +3814,7 @@
     }
 
     async function handleShareWithProfessionals() {
+      console.log('[CraftyCrib] handleShareWithProfessionals() called', { projectId: STUDIO_PROJECT?.id });
       if (!STUDIO_PROJECT?.id) {
         showToast('Aucun projet actif.', 'error');
         return;
