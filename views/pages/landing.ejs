@@ -121,6 +121,181 @@
   </div>
 </section>
 
+<!-- Finds Your Specialists -->
+<section class="specialists-section" id="specialists">
+  <div class="container specialists-container">
+    <%
+      const specialistTrades = [
+        {
+          key: 'fondations',
+          name: 'Fondation',
+          specialty: 'general',
+          service: 'Fondations',
+          image: 'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=520&h=520&q=80',
+          desc: 'Un spécialiste en fondations prépare la base structurelle d’un bâtiment. Il intervient pour l’excavation, le coffrage, le coulage du béton, le drainage et les réparations de fissures. On fait appel à lui avant une construction, une extension ou lorsqu’un bâtiment montre des signes d’affaissement. Son rôle est d’assurer la stabilité, la durabilité et la sécurité de tout le projet.',
+          details: 'Les fondations conditionnent la qualité de toute rénovation lourde. Ce professionnel analyse le sol, prépare les niveaux, installe les armatures et coordonne le bétonnage avec précision. Il peut aussi corriger des infiltrations, renforcer une semelle existante ou stabiliser un mur porteur. Son expertise évite les mouvements, les fissures et les problèmes d’humidité qui peuvent coûter très cher à long terme.'
+        },
+        {
+          key: 'maconnerie',
+          name: 'Maçonnerie',
+          specialty: 'general',
+          service: 'Maçonnerie',
+          image: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&w=520&h=520&q=80',
+          desc: 'Un maçon construit, répare et renforce les éléments en briques, blocs, pierres ou béton. Il intervient sur les murs porteurs, façades, cheminées, ouvertures, reprises structurelles et réparations. On le sollicite lors d’une rénovation, d’un agrandissement ou pour corriger des fissures. Il apporte solidité, précision et cohérence architecturale.',
+          details: 'La maçonnerie demande une bonne lecture du bâtiment et des matériaux. Le maçon prépare les supports, pose les blocs, rejoint les surfaces et assure l’alignement des ouvrages. Il peut travailler avec un ingénieur pour les interventions structurelles. Son travail garantit des murs stables, durables et propres, tout en respectant l’esthétique existante du logement.'
+        },
+        {
+          key: 'structure',
+          name: 'Structure',
+          specialty: 'general',
+          service: 'Structure',
+          image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=520&h=520&q=80',
+          desc: 'Un spécialiste structure intervient sur les éléments qui soutiennent le bâtiment : poutres, murs porteurs, planchers, ouvertures et renforts. Il est essentiel avant de retirer un mur, créer une grande baie ou transformer un espace. Il apporte une vision technique pour sécuriser les travaux et préserver l’intégrité du logement.',
+          details: 'Ce professionnel évalue les charges, repère les contraintes et met en place les renforts adaptés. Il travaille souvent avec un ingénieur ou un entrepreneur général pour coordonner les étapes critiques. Son intervention permet d’ouvrir les volumes, moderniser les plans et éviter les risques de fissures, déformations ou affaissements.'
+        },
+        {
+          key: 'toiture',
+          name: 'Toiture',
+          specialty: 'general',
+          service: 'Toiture',
+          image: 'https://images.unsplash.com/photo-1632759145351-1d592919f522?auto=format&fit=crop&w=520&h=520&q=80',
+          desc: 'Un couvreur protège le bâtiment contre l’eau, le vent et les variations climatiques. Il réalise inspections, réparations, remplacement de bardeaux, membranes, solins, gouttières et ventilation de toiture. On l’appelle en cas d’infiltration, d’usure visible ou avant une rénovation majeure. Il apporte étanchéité, sécurité et longévité.',
+          details: 'La toiture est une zone sensible qui influence le confort et la valeur d’une propriété. Le couvreur diagnostique les fuites, vérifie la ventilation et choisit les matériaux adaptés au climat. Une bonne intervention prévient moisissures, pertes d’énergie et dommages intérieurs. Son travail sécurise l’enveloppe du bâtiment pour plusieurs années.'
+        },
+        {
+          key: 'plomberie',
+          name: 'Plomberie',
+          specialty: 'plumbing',
+          service: 'Plomberie',
+          image: 'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?auto=format&fit=crop&w=520&h=520&q=80',
+          desc: 'Un plombier installe, répare et optimise les réseaux d’eau, d’évacuation et les appareils sanitaires. Il intervient pour conduites, robinets, chauffe-eau, toilettes, douches, cuisines et sous-sols. On fait appel à lui lors d’une fuite, d’une rénovation de salle de bain ou d’un déplacement d’équipement. Il apporte fiabilité, conformité et tranquillité.',
+          details: 'La plomberie doit être précise, accessible et conforme aux normes. Le plombier anticipe les débits, la pression, les pentes d’évacuation et les risques de fuite. Dans un projet de rénovation, il coordonne souvent son travail avec le carrelage, les armoires et l’électricité. Son expertise évite les dégâts d’eau et assure un usage confortable au quotidien.'
+        },
+        {
+          key: 'electricite',
+          name: 'Électricité',
+          specialty: 'electrical',
+          service: 'Électricité',
+          image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=520&h=520&q=80',
+          desc: 'Un électricien sécurise et modernise les installations électriques du logement. Il travaille sur le tableau, les prises, interrupteurs, circuits, éclairages, appareils dédiés et systèmes intelligents. On le sollicite pour une mise aux normes, une cuisine, un sous-sol ou un nouvel éclairage. Il apporte sécurité, performance et confort d’usage.',
+          details: 'L’électricité touche à la sécurité de toute la maison. L’électricien dimensionne les circuits, protège les lignes et place les points électriques selon les usages réels. Il peut intégrer gradateurs, éclairage architectural, domotique ou bornes spécialisées. Son travail rend l’espace plus fonctionnel et réduit les risques de surcharge ou de panne.'
+        },
+        {
+          key: 'peinture',
+          name: 'Peinture',
+          specialty: 'painting',
+          service: 'Peinture',
+          image: 'https://images.unsplash.com/photo-1562259949-e8e7689d7828?auto=format&fit=crop&w=520&h=520&q=80',
+          desc: 'Un peintre prépare et transforme les surfaces visibles : murs, plafonds, boiseries, portes, moulures et façades. Il réalise réparations légères, ponçage, apprêt, peinture et finitions décoratives. On fait appel à lui pour rafraîchir un intérieur ou finaliser une rénovation. Il apporte propreté, couleur, ambiance et finition professionnelle.',
+          details: 'Une peinture réussie dépend surtout de la préparation. Le peintre corrige les défauts, protège les surfaces, choisit les bons produits et applique les couches de façon uniforme. Il peut conseiller les couleurs, les finis et les contrastes selon la lumière. Son intervention donne immédiatement une impression de qualité et de cohérence au projet.'
+        },
+        {
+          key: 'menuiserie',
+          name: 'Menuiserie',
+          specialty: 'general',
+          service: 'Menuiserie',
+          image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=520&h=520&q=80',
+          desc: 'Un menuisier intervient sur la fabrication, la pose et l’ajustement d’éléments en bois ou matériaux dérivés : portes, rangements, moulures, escaliers, meubles intégrés, habillages muraux ou finitions intérieures. Il peut aussi concevoir des solutions sur mesure pour optimiser l’espace et améliorer l’esthétique d’un logement.',
+          details: 'La menuiserie donne souvent le caractère final d’un intérieur. Le menuisier prend les mesures, ajuste les coupes, travaille les détails et adapte les éléments aux contraintes du lieu. Il peut créer des rangements invisibles, corriger des alignements ou intégrer des pièces uniques. Son apport combine fonctionnalité, précision et finition haut de gamme.'
+        },
+        {
+          key: 'isolation',
+          name: 'Isolation',
+          specialty: 'general',
+          service: 'Isolation thermique',
+          image: 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?auto=format&fit=crop&w=520&h=520&q=80',
+          desc: 'Un spécialiste en isolation améliore le confort thermique et acoustique d’un logement. Il pose isolants dans murs, combles, planchers, sous-sols ou cloisons, et traite les ponts thermiques. On l’appelle lors d’une rénovation énergétique, d’un problème de froid ou de bruit. Il apporte économies, confort et meilleure performance du bâtiment.',
+          details: 'Une bonne isolation réduit les pertes de chaleur, stabilise la température et améliore la qualité de vie. Le spécialiste choisit les matériaux selon l’espace, l’humidité, la ventilation et le budget. Il peut aussi recommander des corrections d’étanchéité à l’air. Son travail rend les rénovations plus durables et souvent plus rentables.'
+        },
+        {
+          key: 'fenetres-portes',
+          name: 'Fenêtres & portes',
+          specialty: 'general',
+          service: 'Installation fenêtres',
+          image: 'https://images.unsplash.com/photo-1600566752355-35792bedcfea?auto=format&fit=crop&w=520&h=520&q=80',
+          desc: 'Un installateur de fenêtres et portes remplace, ajuste et étanchéifie les ouvertures du bâtiment. Il intervient pour améliorer l’isolation, la sécurité, la luminosité ou l’apparence extérieure. On le sollicite en cas de courant d’air, condensation, vitrage usé ou rénovation de façade. Il apporte confort, efficacité énergétique et finition propre.',
+          details: 'Les ouvertures doivent être posées avec précision pour éviter infiltrations et pertes d’énergie. L’installateur prépare le cadre, ajuste les niveaux, isole le pourtour et réalise les finitions. Il peut conseiller le type de vitrage, les matériaux et les performances adaptées. Son travail améliore autant le confort intérieur que l’apparence du logement.'
+        },
+        {
+          key: 'revetement-sol',
+          name: 'Revêtement de sol',
+          specialty: 'flooring',
+          service: 'Revêtements de sol',
+          image: 'https://images.unsplash.com/photo-1581858726788-75bc0f6a952d?auto=format&fit=crop&w=520&h=520&q=80',
+          desc: 'Un poseur de revêtement de sol prépare les supports et installe bois, vinyle, céramique, stratifié, parquet ou matériaux spécialisés. Il intervient lors d’une rénovation intérieure, d’un dégât ou d’un changement de style. Il apporte planéité, résistance, confort et cohérence visuelle à toute la pièce.',
+          details: 'Le sol subit l’usage quotidien et doit être posé avec méthode. Le professionnel vérifie l’humidité, corrige les irrégularités, choisit les sous-couches et respecte les joints nécessaires. Il peut créer des transitions propres entre pièces et adapter le matériau à l’usage. Son travail influence fortement la sensation de qualité d’un intérieur.'
+        },
+        {
+          key: 'renovation-interieure',
+          name: 'Rénovation intérieure',
+          specialty: 'general',
+          service: 'Rénovation intérieure',
+          image: 'https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=520&h=520&q=80',
+          desc: 'Un entrepreneur en rénovation intérieure coordonne les corps de métier et pilote la transformation globale d’un espace. Il intervient sur cuisines, salles de bain, sous-sols, agrandissements, finitions et réaménagements. On l’appelle quand le projet implique plusieurs étapes ou métiers. Il apporte organisation, planning, contrôle qualité et vision d’ensemble.',
+          details: 'La rénovation intérieure demande une coordination fine entre design, budget, matériaux et exécution. L’entrepreneur planifie les interventions, gère les imprévus et synchronise les spécialistes. Il peut aider à prioriser les travaux et maintenir le chantier cohérent. Son rôle est de transformer une idée en résultat concret, fluide et bien fini.'
+        }
+      ];
+    %>
+    <div class="specialists-content">
+      <span class="section-badge">
+        <i data-lucide="users"></i>
+        Spécialistes
+      </span>
+      <h2 class="section-title">Trouvez vos<br><span class="gradient-text">spécialistes</span></h2>
+      <p class="section-subtitle">Sélectionnez un métier pour découvrir le bon expert et lancer votre recherche d’entrepreneur.</p>
+
+      <div class="specialists-pills" id="specialists-pills">
+        <% specialistTrades.forEach((trade, index) => { %>
+          <button
+            type="button"
+            class="specialist-pill <%= index === 0 ? 'active' : '' %>"
+            data-name="<%= trade.name %>"
+            data-desc="<%= trade.desc %>"
+            data-details="<%= trade.details %>"
+            data-image="<%= trade.image %>"
+            data-url="/contractors?specialty=<%= encodeURIComponent(trade.specialty) %>&service=<%= encodeURIComponent(trade.service) %>&q=<%= encodeURIComponent(trade.name) %>">
+            <span class="specialist-pill-image">
+              <img src="<%= trade.image %>" alt="<%= trade.name %>" loading="lazy" onerror="this.src='/assets/afterhouse.jpeg'">
+            </span>
+            <span><%= trade.name %></span>
+          </button>
+        <% }) %>
+      </div>
+    </div>
+
+    <div class="specialists-detail" id="specialists-detail">
+      <div class="specialists-detail-media">
+        <img id="specialists-detail-image" src="<%= specialistTrades[0].image %>" alt="<%= specialistTrades[0].name %>" onerror="this.src='/assets/afterhouse.jpeg'">
+        <span>Réseau d'experts vérifiés</span>
+      </div>
+      <div class="specialists-detail-body">
+        <span class="specialists-detail-kicker">Métier sélectionné</span>
+        <h3 id="specialists-detail-title"><%= specialistTrades[0].name %></h3>
+        <p id="specialists-detail-desc"><%= specialistTrades[0].desc %></p>
+        <button type="button" id="specialists-detail-cta" class="specialists-cta">
+          En savoir plus sur le métier
+          <i data-lucide="info"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="specialists-modal" id="specialists-modal" hidden>
+  <div class="specialists-modal-backdrop" data-close-specialists-modal></div>
+  <div class="specialists-modal-card" role="dialog" aria-modal="true" aria-labelledby="specialists-modal-title">
+    <button type="button" class="specialists-modal-close" data-close-specialists-modal aria-label="Fermer">
+      <i data-lucide="x"></i>
+    </button>
+    <img id="specialists-modal-image" src="<%= specialistTrades[0].image %>" alt="<%= specialistTrades[0].name %>" onerror="this.src='/assets/afterhouse.jpeg'">
+    <div class="specialists-modal-body">
+      <span class="specialists-detail-kicker">Guide métier</span>
+      <h3 id="specialists-modal-title"><%= specialistTrades[0].name %></h3>
+      <p id="specialists-modal-desc"><%= specialistTrades[0].details %></p>
+    </div>
+  </div>
+</div>
+
 <!-- Trusted By / Marquee -->
 <section class="trusted-section">
   <div class="trusted-container">
@@ -635,181 +810,6 @@
     </div>
   </div>
 </section>
-
-<!-- Finds Your Specialists -->
-<section class="specialists-section" id="specialists">
-  <div class="container specialists-container">
-    <%
-      const specialistTrades = [
-        {
-          key: 'fondations',
-          name: 'Fondation',
-          specialty: 'general',
-          service: 'Fondations',
-          image: 'https://images.unsplash.com/photo-1504917595217-d4dc5ebe6122?auto=format&fit=crop&w=520&h=520&q=80',
-          desc: 'Un spécialiste en fondations prépare la base structurelle d’un bâtiment. Il intervient pour l’excavation, le coffrage, le coulage du béton, le drainage et les réparations de fissures. On fait appel à lui avant une construction, une extension ou lorsqu’un bâtiment montre des signes d’affaissement. Son rôle est d’assurer la stabilité, la durabilité et la sécurité de tout le projet.',
-          details: 'Les fondations conditionnent la qualité de toute rénovation lourde. Ce professionnel analyse le sol, prépare les niveaux, installe les armatures et coordonne le bétonnage avec précision. Il peut aussi corriger des infiltrations, renforcer une semelle existante ou stabiliser un mur porteur. Son expertise évite les mouvements, les fissures et les problèmes d’humidité qui peuvent coûter très cher à long terme.'
-        },
-        {
-          key: 'maconnerie',
-          name: 'Maçonnerie',
-          specialty: 'general',
-          service: 'Maçonnerie',
-          image: 'https://images.unsplash.com/photo-1621905252507-b35492cc74b4?auto=format&fit=crop&w=520&h=520&q=80',
-          desc: 'Un maçon construit, répare et renforce les éléments en briques, blocs, pierres ou béton. Il intervient sur les murs porteurs, façades, cheminées, ouvertures, reprises structurelles et réparations. On le sollicite lors d’une rénovation, d’un agrandissement ou pour corriger des fissures. Il apporte solidité, précision et cohérence architecturale.',
-          details: 'La maçonnerie demande une bonne lecture du bâtiment et des matériaux. Le maçon prépare les supports, pose les blocs, rejoint les surfaces et assure l’alignement des ouvrages. Il peut travailler avec un ingénieur pour les interventions structurelles. Son travail garantit des murs stables, durables et propres, tout en respectant l’esthétique existante du logement.'
-        },
-        {
-          key: 'structure',
-          name: 'Structure',
-          specialty: 'general',
-          service: 'Structure',
-          image: 'https://images.unsplash.com/photo-1504307651254-35680f356dfd?auto=format&fit=crop&w=520&h=520&q=80',
-          desc: 'Un spécialiste structure intervient sur les éléments qui soutiennent le bâtiment : poutres, murs porteurs, planchers, ouvertures et renforts. Il est essentiel avant de retirer un mur, créer une grande baie ou transformer un espace. Il apporte une vision technique pour sécuriser les travaux et préserver l’intégrité du logement.',
-          details: 'Ce professionnel évalue les charges, repère les contraintes et met en place les renforts adaptés. Il travaille souvent avec un ingénieur ou un entrepreneur général pour coordonner les étapes critiques. Son intervention permet d’ouvrir les volumes, moderniser les plans et éviter les risques de fissures, déformations ou affaissements.'
-        },
-        {
-          key: 'toiture',
-          name: 'Toiture',
-          specialty: 'general',
-          service: 'Toiture',
-          image: 'https://images.unsplash.com/photo-1632759145351-1d592919f522?auto=format&fit=crop&w=520&h=520&q=80',
-          desc: 'Un couvreur protège le bâtiment contre l’eau, le vent et les variations climatiques. Il réalise inspections, réparations, remplacement de bardeaux, membranes, solins, gouttières et ventilation de toiture. On l’appelle en cas d’infiltration, d’usure visible ou avant une rénovation majeure. Il apporte étanchéité, sécurité et longévité.',
-          details: 'La toiture est une zone sensible qui influence le confort et la valeur d’une propriété. Le couvreur diagnostique les fuites, vérifie la ventilation et choisit les matériaux adaptés au climat. Une bonne intervention prévient moisissures, pertes d’énergie et dommages intérieurs. Son travail sécurise l’enveloppe du bâtiment pour plusieurs années.'
-        },
-        {
-          key: 'plomberie',
-          name: 'Plomberie',
-          specialty: 'plumbing',
-          service: 'Plomberie',
-          image: 'https://images.unsplash.com/photo-1607472586893-edb57bdc0e39?auto=format&fit=crop&w=520&h=520&q=80',
-          desc: 'Un plombier installe, répare et optimise les réseaux d’eau, d’évacuation et les appareils sanitaires. Il intervient pour conduites, robinets, chauffe-eau, toilettes, douches, cuisines et sous-sols. On fait appel à lui lors d’une fuite, d’une rénovation de salle de bain ou d’un déplacement d’équipement. Il apporte fiabilité, conformité et tranquillité.',
-          details: 'La plomberie doit être précise, accessible et conforme aux normes. Le plombier anticipe les débits, la pression, les pentes d’évacuation et les risques de fuite. Dans un projet de rénovation, il coordonne souvent son travail avec le carrelage, les armoires et l’électricité. Son expertise évite les dégâts d’eau et assure un usage confortable au quotidien.'
-        },
-        {
-          key: 'electricite',
-          name: 'Électricité',
-          specialty: 'electrical',
-          service: 'Électricité',
-          image: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=520&h=520&q=80',
-          desc: 'Un électricien sécurise et modernise les installations électriques du logement. Il travaille sur le tableau, les prises, interrupteurs, circuits, éclairages, appareils dédiés et systèmes intelligents. On le sollicite pour une mise aux normes, une cuisine, un sous-sol ou un nouvel éclairage. Il apporte sécurité, performance et confort d’usage.',
-          details: 'L’électricité touche à la sécurité de toute la maison. L’électricien dimensionne les circuits, protège les lignes et place les points électriques selon les usages réels. Il peut intégrer gradateurs, éclairage architectural, domotique ou bornes spécialisées. Son travail rend l’espace plus fonctionnel et réduit les risques de surcharge ou de panne.'
-        },
-        {
-          key: 'peinture',
-          name: 'Peinture',
-          specialty: 'painting',
-          service: 'Peinture',
-          image: 'https://images.unsplash.com/photo-1562259949-e8e7689d7828?auto=format&fit=crop&w=520&h=520&q=80',
-          desc: 'Un peintre prépare et transforme les surfaces visibles : murs, plafonds, boiseries, portes, moulures et façades. Il réalise réparations légères, ponçage, apprêt, peinture et finitions décoratives. On fait appel à lui pour rafraîchir un intérieur ou finaliser une rénovation. Il apporte propreté, couleur, ambiance et finition professionnelle.',
-          details: 'Une peinture réussie dépend surtout de la préparation. Le peintre corrige les défauts, protège les surfaces, choisit les bons produits et applique les couches de façon uniforme. Il peut conseiller les couleurs, les finis et les contrastes selon la lumière. Son intervention donne immédiatement une impression de qualité et de cohérence au projet.'
-        },
-        {
-          key: 'menuiserie',
-          name: 'Menuiserie',
-          specialty: 'general',
-          service: 'Menuiserie',
-          image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=520&h=520&q=80',
-          desc: 'Un menuisier intervient sur la fabrication, la pose et l’ajustement d’éléments en bois ou matériaux dérivés : portes, rangements, moulures, escaliers, meubles intégrés, habillages muraux ou finitions intérieures. Il peut aussi concevoir des solutions sur mesure pour optimiser l’espace et améliorer l’esthétique d’un logement.',
-          details: 'La menuiserie donne souvent le caractère final d’un intérieur. Le menuisier prend les mesures, ajuste les coupes, travaille les détails et adapte les éléments aux contraintes du lieu. Il peut créer des rangements invisibles, corriger des alignements ou intégrer des pièces uniques. Son apport combine fonctionnalité, précision et finition haut de gamme.'
-        },
-        {
-          key: 'isolation',
-          name: 'Isolation',
-          specialty: 'general',
-          service: 'Isolation thermique',
-          image: 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?auto=format&fit=crop&w=520&h=520&q=80',
-          desc: 'Un spécialiste en isolation améliore le confort thermique et acoustique d’un logement. Il pose isolants dans murs, combles, planchers, sous-sols ou cloisons, et traite les ponts thermiques. On l’appelle lors d’une rénovation énergétique, d’un problème de froid ou de bruit. Il apporte économies, confort et meilleure performance du bâtiment.',
-          details: 'Une bonne isolation réduit les pertes de chaleur, stabilise la température et améliore la qualité de vie. Le spécialiste choisit les matériaux selon l’espace, l’humidité, la ventilation et le budget. Il peut aussi recommander des corrections d’étanchéité à l’air. Son travail rend les rénovations plus durables et souvent plus rentables.'
-        },
-        {
-          key: 'fenetres-portes',
-          name: 'Fenêtres & portes',
-          specialty: 'general',
-          service: 'Installation fenêtres',
-          image: 'https://images.unsplash.com/photo-1600566752355-35792bedcfea?auto=format&fit=crop&w=520&h=520&q=80',
-          desc: 'Un installateur de fenêtres et portes remplace, ajuste et étanchéifie les ouvertures du bâtiment. Il intervient pour améliorer l’isolation, la sécurité, la luminosité ou l’apparence extérieure. On le sollicite en cas de courant d’air, condensation, vitrage usé ou rénovation de façade. Il apporte confort, efficacité énergétique et finition propre.',
-          details: 'Les ouvertures doivent être posées avec précision pour éviter infiltrations et pertes d’énergie. L’installateur prépare le cadre, ajuste les niveaux, isole le pourtour et réalise les finitions. Il peut conseiller le type de vitrage, les matériaux et les performances adaptées. Son travail améliore autant le confort intérieur que l’apparence du logement.'
-        },
-        {
-          key: 'revetement-sol',
-          name: 'Revêtement de sol',
-          specialty: 'flooring',
-          service: 'Revêtements de sol',
-          image: 'https://images.unsplash.com/photo-1581858726788-75bc0f6a952d?auto=format&fit=crop&w=520&h=520&q=80',
-          desc: 'Un poseur de revêtement de sol prépare les supports et installe bois, vinyle, céramique, stratifié, parquet ou matériaux spécialisés. Il intervient lors d’une rénovation intérieure, d’un dégât ou d’un changement de style. Il apporte planéité, résistance, confort et cohérence visuelle à toute la pièce.',
-          details: 'Le sol subit l’usage quotidien et doit être posé avec méthode. Le professionnel vérifie l’humidité, corrige les irrégularités, choisit les sous-couches et respecte les joints nécessaires. Il peut créer des transitions propres entre pièces et adapter le matériau à l’usage. Son travail influence fortement la sensation de qualité d’un intérieur.'
-        },
-        {
-          key: 'renovation-interieure',
-          name: 'Rénovation intérieure',
-          specialty: 'general',
-          service: 'Rénovation intérieure',
-          image: 'https://images.unsplash.com/photo-1600585154526-990dced4db0d?auto=format&fit=crop&w=520&h=520&q=80',
-          desc: 'Un entrepreneur en rénovation intérieure coordonne les corps de métier et pilote la transformation globale d’un espace. Il intervient sur cuisines, salles de bain, sous-sols, agrandissements, finitions et réaménagements. On l’appelle quand le projet implique plusieurs étapes ou métiers. Il apporte organisation, planning, contrôle qualité et vision d’ensemble.',
-          details: 'La rénovation intérieure demande une coordination fine entre design, budget, matériaux et exécution. L’entrepreneur planifie les interventions, gère les imprévus et synchronise les spécialistes. Il peut aider à prioriser les travaux et maintenir le chantier cohérent. Son rôle est de transformer une idée en résultat concret, fluide et bien fini.'
-        }
-      ];
-    %>
-    <div class="specialists-content">
-      <span class="section-badge">
-        <i data-lucide="users"></i>
-        Spécialistes
-      </span>
-      <h2 class="section-title">Trouvez vos<br><span class="gradient-text">spécialistes</span></h2>
-      <p class="section-subtitle">Sélectionnez un métier pour découvrir le bon expert et lancer votre recherche d’entrepreneur.</p>
-
-      <div class="specialists-pills" id="specialists-pills">
-        <% specialistTrades.forEach((trade, index) => { %>
-          <button
-            type="button"
-            class="specialist-pill <%= index === 0 ? 'active' : '' %>"
-            data-name="<%= trade.name %>"
-            data-desc="<%= trade.desc %>"
-            data-details="<%= trade.details %>"
-            data-image="<%= trade.image %>"
-            data-url="/contractors?specialty=<%= encodeURIComponent(trade.specialty) %>&service=<%= encodeURIComponent(trade.service) %>&q=<%= encodeURIComponent(trade.name) %>">
-            <span class="specialist-pill-image">
-              <img src="<%= trade.image %>" alt="<%= trade.name %>" loading="lazy" onerror="this.src='/assets/afterhouse.jpeg'">
-            </span>
-            <span><%= trade.name %></span>
-          </button>
-        <% }) %>
-      </div>
-    </div>
-
-    <div class="specialists-detail" id="specialists-detail">
-      <div class="specialists-detail-media">
-        <img id="specialists-detail-image" src="<%= specialistTrades[0].image %>" alt="<%= specialistTrades[0].name %>" onerror="this.src='/assets/afterhouse.jpeg'">
-        <span>Réseau d'experts vérifiés</span>
-      </div>
-      <div class="specialists-detail-body">
-        <span class="specialists-detail-kicker">Métier sélectionné</span>
-        <h3 id="specialists-detail-title"><%= specialistTrades[0].name %></h3>
-        <p id="specialists-detail-desc"><%= specialistTrades[0].desc %></p>
-        <button type="button" id="specialists-detail-cta" class="specialists-cta">
-          En savoir plus sur le métier
-          <i data-lucide="info"></i>
-        </button>
-      </div>
-    </div>
-  </div>
-</section>
-
-<div class="specialists-modal" id="specialists-modal" hidden>
-  <div class="specialists-modal-backdrop" data-close-specialists-modal></div>
-  <div class="specialists-modal-card" role="dialog" aria-modal="true" aria-labelledby="specialists-modal-title">
-    <button type="button" class="specialists-modal-close" data-close-specialists-modal aria-label="Fermer">
-      <i data-lucide="x"></i>
-    </button>
-    <img id="specialists-modal-image" src="<%= specialistTrades[0].image %>" alt="<%= specialistTrades[0].name %>" onerror="this.src='/assets/afterhouse.jpeg'">
-    <div class="specialists-modal-body">
-      <span class="specialists-detail-kicker">Guide métier</span>
-      <h3 id="specialists-modal-title"><%= specialistTrades[0].name %></h3>
-      <p id="specialists-modal-desc"><%= specialistTrades[0].details %></p>
-    </div>
-  </div>
-</div>
 
 <!-- Room Types -->
 <section class="rooms-section">
