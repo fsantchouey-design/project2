@@ -2075,6 +2075,7 @@
   const ACCEPTED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
 
   let selectedFile = null;
+  let currentProjectId = STUDIO_PROJECT?.id || null;
   let projectSourceImageUrl = STUDIO_PROJECT?.imageUrl || '';
   let latestDesigns = STUDIO_PROJECT?.latestDesigns || [];
     let isGenerating = false;
@@ -3559,6 +3560,12 @@
     });
 
     function renderResult(data) {
+      if (data.projectId) {
+        currentProjectId = data.projectId;
+      }
+      if (data.sourceImageUrl && !projectSourceImageUrl) {
+        projectSourceImageUrl = data.sourceImageUrl;
+      }
       resultToolName.textContent = data.tool || selectedToolName;
       resultMedia.innerHTML = '';
 
@@ -3679,7 +3686,7 @@
         decorImageFile = await applyDecorTransformToFile(selectedFile);
       }
     if (decorImageFile) formData.append('image', decorImageFile);
-    if (STUDIO_PROJECT?.id) formData.append('projectId', STUDIO_PROJECT.id);
+    if (currentProjectId) formData.append('projectId', currentProjectId);
     if (!selectedFile && projectSourceImageUrl) formData.append('sourceImageUrl', projectSourceImageUrl);
       formData.append('selectedToolEndpoint', selectedEndpoint);
       formData.append('selectedToolName', selectedToolName);
@@ -3785,9 +3792,9 @@
     }
 
     async function handleSaveProject() {
-      console.log('[CraftyCrib] handleSaveProject() called', { projectId: STUDIO_PROJECT?.id, designs: latestDesigns.length });
-      if (!STUDIO_PROJECT?.id) {
-        showToast('Aucun projet actif à sauvegarder.', 'error');
+      console.log('[CraftyCrib] handleSaveProject() called', { currentProjectId, designs: latestDesigns.length });
+      if (!currentProjectId) {
+        showToast('Générez un design d\'abord avant de sauvegarder.', 'error');
         return;
       }
       const btn = document.getElementById('btn-save-project');
@@ -3797,7 +3804,7 @@
         const featuredImage = latestDesigns[0]?.imageUrl || latestDesigns[0]?.thumbnailUrl || '';
         const body = { status: 'completed' };
         if (featuredImage) body.featuredImage = featuredImage;
-        const res = await fetch(`/api/projects/${STUDIO_PROJECT.id}/status`, {
+        const res = await fetch(`/api/projects/${currentProjectId}/status`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(body)
@@ -3814,16 +3821,16 @@
     }
 
     async function handleShareWithProfessionals() {
-      console.log('[CraftyCrib] handleShareWithProfessionals() called', { projectId: STUDIO_PROJECT?.id });
-      if (!STUDIO_PROJECT?.id) {
-        showToast('Aucun projet actif.', 'error');
+      console.log('[CraftyCrib] handleShareWithProfessionals() called', { currentProjectId });
+      if (!currentProjectId) {
+        showToast('Générez un design d\'abord avant de partager.', 'error');
         return;
       }
       const btn = document.getElementById('btn-share-project');
       btn.disabled = true;
       btn.querySelector('span').textContent = 'Partage en cours…';
       try {
-        const res = await fetch(`/api/projects/${STUDIO_PROJECT.id}/status`, {
+        const res = await fetch(`/api/projects/${currentProjectId}/status`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ visibility: 'contractors' })

@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const fs = require('fs');
+const crypto = require('crypto');
 const https = require('https');
 const http = require('http');
 const zlib = require('zlib');
@@ -380,6 +381,25 @@ router.post('/generate-design', ensureAuthenticated, uploadProjectImages.fields(
       }
     }
 
+    // Auto-create a draft project when the studio is used without an existing project
+    if (!project) {
+      const VALID_ROOM_TYPES = ['living-room', 'bedroom', 'kitchen', 'bathroom', 'dining-room', 'office', 'outdoor', 'kids-room', 'basement', 'garage', 'other'];
+      const safeRoomType = VALID_ROOM_TYPES.includes(req.body.roomType) ? req.body.roomType : 'other';
+      const now = new Date();
+      const dateStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      project = new Project({
+        user: req.user.id,
+        title: `${req.body.selectedToolName || tool.name || 'Design'} – ${dateStr}`,
+        description: req.body.additionalInstructions || 'Projet généré depuis le studio IA.',
+        roomType: safeRoomType,
+        style: req.body.designStyle || undefined,
+        status: 'draft',
+        shareToken: crypto.randomBytes(16).toString('hex')
+      });
+      await project.save();
+      console.log('[GenerateDesign] Auto-created project', project._id);
+    }
+
     if (!uploadedImage && !projectSourceImageUrl && !aiToolsConfig[toolKey]?.imageOptional) {
       return res.status(400).json({
         success: false,
@@ -503,6 +523,7 @@ router.post('/generate-design', ensureAuthenticated, uploadProjectImages.fields(
       await project.save();
       responsePayload.projectId = String(project._id);
       responsePayload.savedDesigns = savedDesigns;
+      responsePayload.sourceImageUrl = uploadedImageUrl || projectSourceImageUrl || '';
     }
 
     res.json(responsePayload);
