@@ -839,7 +839,7 @@
     object-position: center;
     border-radius: inherit;
     cursor: zoom-in;
-    transform: translate(var(--preview-pan-x, 0px), var(--preview-pan-y, 0px)) scale(var(--preview-zoom, 1));
+    transform: translate(var(--preview-pan-x, 0px), var(--preview-pan-y, 0px)) scale(var(--preview-zoom, 1)) rotate(var(--decor-rotation, 0deg)) scale(var(--decor-scale-x, 1), var(--decor-scale-y, 1));
     transform-origin: center;
     transition: transform 0.12s ease;
   }
@@ -2016,6 +2016,7 @@
     let maskMode = 'brush';
     let selectionMode = 'click';
     let hasMaskPaint = false;
+    let decorTransform = { scaleX: 1, scaleY: 1, rotation: 0, scale: 1 };
     let hasManualBrushPaint = false;
     let materialSwapReady = false;
     let previewZoom = 1;
@@ -2090,6 +2091,48 @@
       imageZoomRange.value = '1';
       imagePanToggle.classList.remove('active');
       applyPreviewTransform();
+    }
+
+    function applyDecorTransformPreview() {
+      uploadCanvas.style.setProperty('--decor-rotation', `${decorTransform.rotation}deg`);
+      uploadCanvas.style.setProperty('--decor-scale-x', `${decorTransform.scaleX * decorTransform.scale}`);
+      uploadCanvas.style.setProperty('--decor-scale-y', `${decorTransform.scaleY * decorTransform.scale}`);
+    }
+
+    function resetDecorTransform() {
+      decorTransform = { scaleX: 1, scaleY: 1, rotation: 0, scale: 1 };
+      applyDecorTransformPreview();
+    }
+
+    function hasDecorTransform() {
+      const { scaleX, scaleY, rotation, scale } = decorTransform;
+      return scaleX !== 1 || scaleY !== 1 || rotation !== 0 || scale !== 1;
+    }
+
+    function applyDecorTransformToFile(file) {
+      return new Promise((resolve) => {
+        const img = new Image();
+        img.onload = () => {
+          const { scaleX, scaleY, rotation, scale } = decorTransform;
+          const rad = (rotation * Math.PI) / 180;
+          const cos = Math.abs(Math.cos(rad));
+          const sin = Math.abs(Math.sin(rad));
+          const cw = Math.max(512, Math.round((img.naturalWidth * cos + img.naturalHeight * sin) * scale));
+          const ch = Math.max(512, Math.round((img.naturalWidth * sin + img.naturalHeight * cos) * scale));
+          const canvas = document.createElement('canvas');
+          canvas.width = cw;
+          canvas.height = ch;
+          const ctx = canvas.getContext('2d');
+          ctx.translate(cw / 2, ch / 2);
+          ctx.rotate(rad);
+          ctx.scale(scaleX * scale, scaleY * scale);
+          ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
+          URL.revokeObjectURL(img.src);
+          canvas.toBlob(blob => resolve(blob ? new File([blob], 'object.png', { type: 'image/png' }) : file), 'image/png');
+        };
+        img.onerror = () => resolve(file);
+        img.src = URL.createObjectURL(file);
+      });
     }
 
     function setMaterialSwapTab(mode) {
@@ -2369,13 +2412,21 @@
     }
 
     function renderObjectPositionPanel() {
-      const actions = ['Flip Horizontal', 'Flip Vertical', "Rotate 90° left", "Rotate 90° right", "Rotate 180°", 'Zoom In', 'Zoom Out'];
+      const actions = [
+        { label: 'Flip Horizontal', action: 'flip-h' },
+        { label: 'Flip Vertical',   action: 'flip-v' },
+        { label: 'Rotate 90° left',  action: 'rot-ccw' },
+        { label: 'Rotate 90° right', action: 'rot-cw' },
+        { label: 'Rotate 180°',      action: 'rot-180' },
+        { label: 'Zoom In',          action: 'zoom-in' },
+        { label: 'Zoom Out',         action: 'zoom-out' },
+      ];
       return `
         <div class="tool-panel-section">
-          <h3>Position Object</h3>
-          <p>Drag and resize your object on the canvas to your desired position.</p>
+          <h3>Transform Object</h3>
+          <p>Apply transforms before generating. The transformed image will be sent to the AI.</p>
           <div class="tool-card-grid three">
-            ${actions.map((item) => `<button type="button" class="tool-choice-card"><span>${item}</span></button>`).join('')}
+            ${actions.map(({ label, action }) => `<button type="button" class="tool-choice-card" data-decor-action="${action}"><span>${label}</span></button>`).join('')}
           </div>
         </div>
       `;
@@ -2445,6 +2496,19 @@
         input.addEventListener('input', () => {
           const target = document.getElementById(input.dataset.syncInput);
           if (target) target.value = input.value;
+        });
+      });
+      toolInterface.querySelectorAll('[data-decor-action]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          const action = btn.dataset.decorAction;
+          if (action === 'flip-h')   decorTransform.scaleX *= -1;
+          else if (action === 'flip-v')   decorTransform.scaleY *= -1;
+          else if (action === 'rot-cw')   decorTransform.rotation = (decorTransform.rotation + 90) % 360;
+          else if (action === 'rot-ccw')  decorTransform.rotation = (decorTransform.rotation - 90 + 360) % 360;
+          else if (action === 'rot-180')  decorTransform.rotation = (decorTransform.rotation + 180) % 360;
+          else if (action === 'zoom-in')  decorTransform.scale = Math.min(decorTransform.scale * 1.25, 4);
+          else if (action === 'zoom-out') decorTransform.scale = Math.max(decorTransform.scale / 1.25, 0.25);
+          applyDecorTransformPreview();
         });
       });
       toolInterface.querySelectorAll('[data-weather]').forEach((button) => {
@@ -3082,6 +3146,7 @@
         uploadCanvas.classList.add('has-image');
         resetMaskCanvas();
         resetPreviewTransform();
+        resetDecorTransform();
         updateMaskControls();
         resultPanel.hidden = true;
         resultMedia.innerHTML = '';
@@ -3371,6 +3436,7 @@
       materialSwapReady = false;
       resetMaskCanvas();
       resetPreviewTransform();
+      resetDecorTransform();
       setSelectionMode('click');
       if (currentToolKey() === 'material_swap') setMaterialSwapTab('automatic');
       updateMaskControls();
@@ -3529,7 +3595,11 @@
       }
 
       const formData = new FormData();
-    if (selectedFile) formData.append('image', selectedFile);
+      let decorImageFile = selectedFile;
+      if (currentToolKey() === 'decor_staging' && selectedFile && hasDecorTransform()) {
+        decorImageFile = await applyDecorTransformToFile(selectedFile);
+      }
+    if (decorImageFile) formData.append('image', decorImageFile);
     if (STUDIO_PROJECT?.id) formData.append('projectId', STUDIO_PROJECT.id);
     if (!selectedFile && projectSourceImageUrl) formData.append('sourceImageUrl', projectSourceImageUrl);
       formData.append('selectedToolEndpoint', selectedEndpoint);
