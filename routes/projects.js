@@ -116,8 +116,8 @@ router.get('/:id/studio', ensureAuthenticated, async (req, res) => {
       title: `${project.title || 'Project'} - AI Studio - CraftyCrib`,
       layout: 'layouts/dashboard',
       activePage: 'projects',
-      styles: PROJECT_STYLES,
-      roomTypes: ROOM_TYPES,
+      styles: getStyles(),
+      roomTypes: getRoomTypes(),
       aiToolsConfig,
       studioProject: project
     });

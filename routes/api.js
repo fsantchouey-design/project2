@@ -725,6 +725,50 @@ router.patch('/projects/:id/status', ensureAuthenticated, async (req, res) => {
   }
 });
 
+// Move project to trash (soft delete)
+router.patch('/projects/:id/trash', ensureAuthenticated, async (req, res) => {
+  try {
+    const project = await Project.findOneAndUpdate(
+      { _id: req.params.id, user: req.user.id },
+      { deletedAt: new Date() },
+      { new: true }
+    );
+    if (!project) return res.status(404).json({ error: 'Project not found' });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('API trash error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Restore project from trash
+router.patch('/projects/:id/restore', ensureAuthenticated, async (req, res) => {
+  try {
+    const project = await Project.findOneAndUpdate(
+      { _id: req.params.id, user: req.user.id },
+      { deletedAt: null },
+      { new: true }
+    );
+    if (!project) return res.status(404).json({ error: 'Project not found' });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('API restore error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Permanently delete a project
+router.delete('/projects/:id/permanent', ensureAuthenticated, async (req, res) => {
+  try {
+    const result = await Project.findOneAndDelete({ _id: req.params.id, user: req.user.id });
+    if (!result) return res.status(404).json({ error: 'Project not found' });
+    res.json({ success: true });
+  } catch (err) {
+    console.error('API permanent delete error:', err);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 // Search Contractors
 router.get('/contractors/search', async (req, res) => {
   try {

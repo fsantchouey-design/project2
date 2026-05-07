@@ -145,6 +145,10 @@ const projectSchema = new mongoose.Schema({
     errorMessage: String
   }],
   notes: String,
+  deletedAt: {
+    type: Date,
+    default: null
+  },
   createdAt: {
     type: Date,
     default: Date.now
