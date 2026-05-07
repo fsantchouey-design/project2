@@ -226,7 +226,8 @@ const toolsConfig = {
   create_maskimage: {
     endpoint: '/api/v2/create_maskimage',
     uiType: 'single-action',
-    fields: []
+    fields: ['labels'],
+    submitLabel: 'Generate Mask'
   },
   smart_home: {
     endpoint: '/api/v2/smart_home',

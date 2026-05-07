@@ -434,6 +434,10 @@ const parseApiResponse = async (result, apiEndpoint, logPrefix = '[HomeDesigns]'
     outputImages = data.success.generated_image;
     inputImage = data.success.original_image;
   }
+  // Format: { success: { masked_image: "url" } } — create_maskimage endpoint
+  if (!outputImages && data.success && typeof data.success === 'object' && data.success.masked_image) {
+    outputImages = [data.success.masked_image];
+  }
   // Format: { generated_images: [...] }
   if (!outputImages && Array.isArray(data.generated_images) && data.generated_images.length > 0) {
     outputImages = data.generated_images;
@@ -1520,7 +1524,7 @@ const designCritique = async (options) => {
 /**
  * Create Mask Image - Automatically generate a segmentation mask from an image
  */
-const DEFAULT_MASK_LABELS = 'wall|floor|ceiling|sofa|chair|table|lamp|window|door|bed|cabinet|countertop|rug|plant|curtain|pillow';
+const DEFAULT_MASK_LABELS = 'wall|floor|ceiling|sofa|chair|table|lamp|windowpane|door|bed|cabinet|countertop|rug|plant|curtain|pillow';
 
 const createMaskImage = async (options) => {
   const { imageUrl, labels = DEFAULT_MASK_LABELS } = options;

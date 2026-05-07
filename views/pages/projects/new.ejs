@@ -377,6 +377,47 @@
             <input type="text" id="option-object-input" class="studio-input" placeholder="wall, sofa, cabinet, countertop">
           </div>
 
+          <div class="tool-option-row" id="option-labels" hidden>
+            <label for="option-labels-select">Objects to detect <span style="font-weight:400;font-size:0.85em">(hold Ctrl/⌘ to select multiple)</span></label>
+            <select id="option-labels-select" class="studio-select" multiple size="7">
+              <option value="wall" selected>wall</option>
+              <option value="floor" selected>floor</option>
+              <option value="ceiling" selected>ceiling</option>
+              <option value="sofa" selected>sofa</option>
+              <option value="chair" selected>chair</option>
+              <option value="table" selected>table</option>
+              <option value="lamp" selected>lamp</option>
+              <option value="windowpane">windowpane</option>
+              <option value="door">door</option>
+              <option value="bed">bed</option>
+              <option value="cabinet">cabinet</option>
+              <option value="countertop">countertop</option>
+              <option value="rug">rug</option>
+              <option value="plant">plant</option>
+              <option value="curtain">curtain</option>
+              <option value="pillow">pillow</option>
+              <option value="armchair">armchair</option>
+              <option value="desk">desk</option>
+              <option value="shelf">shelf</option>
+              <option value="mirror">mirror</option>
+              <option value="painting">painting</option>
+              <option value="fireplace">fireplace</option>
+              <option value="stove">stove</option>
+              <option value="refrigerator">refrigerator</option>
+              <option value="sink">sink</option>
+              <option value="bathtub">bathtub</option>
+              <option value="toilet">toilet</option>
+              <option value="wardrobe">wardrobe</option>
+              <option value="coffee table">coffee table</option>
+              <option value="bookcase">bookcase</option>
+              <option value="chest of drawers">chest of drawers</option>
+              <option value="chandelier">chandelier</option>
+              <option value="ottoman">ottoman</option>
+              <option value="stool">stool</option>
+              <option value="cushion">cushion</option>
+            </select>
+          </div>
+
           <div class="tool-option-row" id="option-material-preset" hidden>
             <label for="option-material-preset-select">Material</label>
             <select id="option-material-preset-select" class="studio-select">
@@ -1925,6 +1966,8 @@
     const surfaceColorInput = document.getElementById('option-surface-color-input');
     const objectRow = document.getElementById('option-object');
     const objectInput = document.getElementById('option-object-input');
+    const labelsRow = document.getElementById('option-labels');
+    const labelsSelect = document.getElementById('option-labels-select');
     const videoMotionRow = document.getElementById('option-video-motion');
     const videoMotionSelect = document.getElementById('option-video-motion-select');
     const materialPresetRow = document.getElementById('option-material-preset');
@@ -2486,6 +2529,7 @@
       materialRow.hidden = !fields.includes('materials');
       surfaceColorRow.hidden = !fields.includes('color');
       objectRow.hidden = !fields.includes('object');
+      labelsRow.hidden = !fields.includes('labels');
       videoMotionRow.hidden = !config.videoMotion;
       materialPresetRow.hidden = !(config.materialPreset && showMaterialStepOptions);
       materialInstructionRow.hidden = !(config.materialInstruction && showMaterialStepOptions);
@@ -2512,7 +2556,7 @@
 
       const optionRows = [
         noDesignRow, interventionRow, strengthRow, weatherRow, countryRow,
-        paintColorRow, materialRow, materialTypeRow, surfaceColorRow, objectRow, videoMotionRow,
+        paintColorRow, materialRow, materialTypeRow, surfaceColorRow, objectRow, labelsRow, videoMotionRow,
         materialPresetRow, materialInstructionRow, textureGridRow, textureUploadRow, styleReferenceRow
       ];
       const hasVisibleOptions = optionRows.some((row) => !row.hidden);
@@ -3511,6 +3555,10 @@
       if (!materialTypeRow.hidden && materialTypeSelect.value) formData.append('materialsType', materialTypeSelect.value);
       if (!surfaceColorRow.hidden && surfaceColorInput.value) formData.append('color', surfaceColorInput.value);
       if (!objectRow.hidden && objectInput.value.trim()) formData.append('object', objectInput.value.trim());
+      if (!labelsRow.hidden) {
+        const selectedLabels = [...labelsSelect.selectedOptions].map(o => o.value);
+        formData.append('labels', selectedLabels.length > 0 ? selectedLabels.join('|') : 'wall|floor|ceiling|sofa|chair|table|lamp');
+      }
       if (isVideoTool) formData.append('tool_name', videoMotionSelect.value);
       if (isDesignTransfer && selectedStyleReferenceFile) formData.append('styleImage', selectedStyleReferenceFile);
       if (!textureGridRow.hidden) formData.append('noOfTexture', textureGridSelect.value);

@@ -178,7 +178,7 @@ const aiToolHandlers = {
   },
   create_maskimage: {
     name: 'Create Mask Image',
-    run: ({ imageUrl }) => createMaskImage({ imageUrl })
+    run: ({ imageUrl, labels }) => createMaskImage({ imageUrl, labels })
   },
   smart_home: {
     name: 'Smart Home',
@@ -430,6 +430,7 @@ router.post('/generate-design', ensureAuthenticated, uploadProjectImages.fields(
     if (toolFields.includes('style_image')) options.styleImageUrl = styleImage ? toAbsoluteImageUrl(getImageUrl(styleImage)) : undefined;
     if (toolFields.includes('no_of_texture')) options.noOfTexture = req.body.noOfTexture || '3 X 3';
     if (toolFields.includes('object')) options.object = req.body.object || undefined;
+    if (toolFields.includes('labels')) options.labels = req.body.labels || undefined;
     if (toolFields.includes('custom_elements')) {
       const els = req.body.customElements;
       options.customElements = els ? (Array.isArray(els) ? els : [els]) : [];
