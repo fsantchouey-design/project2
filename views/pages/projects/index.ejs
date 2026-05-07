@@ -602,6 +602,12 @@
     color: var(--error);
   }
 
+  /* Force display:none when [hidden] is on a flex/grid container */
+  .project-active-actions[hidden],
+  .project-trash-actions[hidden] {
+    display: none !important;
+  }
+
   .project-filter--trash i {
     width: 14px;
     height: 14px;
