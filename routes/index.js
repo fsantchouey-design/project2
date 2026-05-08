@@ -127,8 +127,16 @@ router.get('/terms', (req, res) => {
   });
 });
 
-// Settings redirect
+// Settings / Billing / Profile redirects
 router.get('/settings', (req, res) => {
+  res.redirect('/dashboard/settings');
+});
+
+router.get('/billing', (req, res) => {
+  res.redirect('/dashboard/settings');
+});
+
+router.get('/profile', (req, res) => {
   res.redirect('/dashboard/settings');
 });
 

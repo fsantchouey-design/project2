@@ -95,23 +95,97 @@
       <div class="nav-actions">
         <%- include('../partials/language-selector') %>
         <% if (user) { %>
-          <a href="/dashboard/settings" class="nav-settings-btn" aria-label="Paramètres">
-            <i data-lucide="settings"></i>
-            <span>Paramètres</span>
-          </a>
-          <div class="user-menu">
-            <button class="user-btn">
-              <div class="user-avatar">
-                <%= user.firstName.charAt(0) %><%= user.lastName.charAt(0) %>
-              </div>
-              <span><%= user.firstName %></span>
-              <i data-lucide="chevron-down"></i>
+
+          <!-- Premium avatar dropdown -->
+          <div class="ua-wrap" id="ua-wrap">
+            <button class="ua-trigger" id="ua-trigger" aria-haspopup="true" aria-expanded="false" aria-label="Menu utilisateur">
+              <% if (user.avatar && user.avatar !== '/images/default-avatar.png') { %>
+                <img src="<%= user.avatar %>" alt="<%= user.firstName %>" class="ua-photo">
+              <% } else { %>
+                <span class="ua-initials"><%= user.firstName.charAt(0).toUpperCase() %><%= user.lastName.charAt(0).toUpperCase() %></span>
+              <% } %>
+              <span class="ua-dot"></span>
             </button>
-            <div class="user-dropdown">
-              <a href="/dashboard/settings"><i data-lucide="settings"></i> Settings</a>
-              <a href="/auth/logout"><i data-lucide="log-out"></i> Logout</a>
+
+            <div class="ua-dropdown" id="ua-dropdown" role="menu" aria-hidden="true">
+
+              <!-- User identity block -->
+              <div class="ua-identity">
+                <div class="ua-id-avatar">
+                  <% if (user.avatar && user.avatar !== '/images/default-avatar.png') { %>
+                    <img src="<%= user.avatar %>" alt="<%= user.firstName %>">
+                  <% } else { %>
+                    <span><%= user.firstName.charAt(0).toUpperCase() %><%= user.lastName.charAt(0).toUpperCase() %></span>
+                  <% } %>
+                </div>
+                <div class="ua-id-info">
+                  <strong class="ua-id-name"><%= user.firstName %> <%= user.lastName %></strong>
+                  <span class="ua-id-email"><%= user.email %></span>
+                  <div class="ua-id-meta">
+                    <span class="ua-plan-badge ua-plan-<%= user.subscription ? user.subscription.plan : 'free' %>">
+                      <% const plan = user.subscription ? user.subscription.plan : 'free'; %>
+                      <% if (plan === 'advanced') { %>Avancé
+                      <% } else if (plan === 'partner') { %>Partner
+                      <% } else if (plan === 'credits') { %>Crédits
+                      <% } else { %>Gratuit<% } %>
+                    </span>
+                    <span class="ua-credits-count">
+                      <i data-lucide="zap"></i>
+                      <%= user.subscription ? user.subscription.credits : 0 %> crédits
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="ua-sep"></div>
+
+              <!-- Primary actions -->
+              <div class="ua-group">
+                <a href="/profile" class="ua-item" role="menuitem">
+                  <i data-lucide="user-circle"></i>
+                  <span>Voir le profil</span>
+                </a>
+                <a href="/settings" class="ua-item" role="menuitem">
+                  <i data-lucide="settings"></i>
+                  <span>Paramètres du compte</span>
+                </a>
+                <a href="/billing" class="ua-item" role="menuitem">
+                  <i data-lucide="credit-card"></i>
+                  <span>Abonnement & Facturation</span>
+                </a>
+                <a href="/pricing" class="ua-item ua-item--glow" role="menuitem">
+                  <i data-lucide="zap"></i>
+                  <span>Acheter des crédits</span>
+                </a>
+              </div>
+
+              <div class="ua-sep"></div>
+
+              <!-- Secondary actions -->
+              <div class="ua-group">
+                <a href="/dashboard/notifications" class="ua-item" role="menuitem">
+                  <i data-lucide="bell"></i>
+                  <span>Notifications</span>
+                </a>
+                <button type="button" class="ua-item ua-item--btn" id="ua-theme-btn" role="menuitem">
+                  <i data-lucide="moon" id="ua-theme-icon"></i>
+                  <span id="ua-theme-label">Thème sombre</span>
+                </button>
+              </div>
+
+              <div class="ua-sep"></div>
+
+              <!-- Logout -->
+              <div class="ua-group">
+                <a href="/auth/logout" class="ua-item ua-item--danger" role="menuitem">
+                  <i data-lucide="log-out"></i>
+                  <span>Se déconnecter</span>
+                </a>
+              </div>
+
             </div>
           </div>
+
         <% } else { %>
           <a href="/auth/login" class="btn btn-ghost">Login</a>
           <a href="/auth/register" class="btn btn-primary">Get Started</a>
@@ -198,6 +272,64 @@
   <script src="/js/main.js"></script>
   <script>
     lucide.createIcons();
+
+    // ── Avatar dropdown ───────────────────────────────
+    (function () {
+      var trigger  = document.getElementById('ua-trigger');
+      var dropdown = document.getElementById('ua-dropdown');
+      var wrap     = document.getElementById('ua-wrap');
+      if (!trigger || !dropdown) return;
+
+      function open() {
+        dropdown.classList.add('is-open');
+        trigger.setAttribute('aria-expanded', 'true');
+        dropdown.setAttribute('aria-hidden', 'false');
+      }
+
+      function close() {
+        dropdown.classList.remove('is-open');
+        trigger.setAttribute('aria-expanded', 'false');
+        dropdown.setAttribute('aria-hidden', 'true');
+      }
+
+      trigger.addEventListener('click', function (e) {
+        e.stopPropagation();
+        dropdown.classList.contains('is-open') ? close() : open();
+      });
+
+      document.addEventListener('click', function (e) {
+        if (wrap && !wrap.contains(e.target)) close();
+      });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') close();
+      });
+
+      // Theme toggle inside dropdown
+      var themeBtn   = document.getElementById('ua-theme-btn');
+      var themeIcon  = document.getElementById('ua-theme-icon');
+      var themeLabel = document.getElementById('ua-theme-label');
+
+      function syncThemeLabel() {
+        if (!themeIcon || !themeLabel) return;
+        var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+        themeIcon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+        themeLabel.textContent = isDark ? 'Thème clair' : 'Thème sombre';
+        lucide.createIcons();
+      }
+
+      syncThemeLabel();
+
+      if (themeBtn) {
+        themeBtn.addEventListener('click', function () {
+          var cur = document.documentElement.getAttribute('data-theme');
+          var next = cur === 'dark' ? 'light' : 'dark';
+          document.documentElement.setAttribute('data-theme', next);
+          localStorage.setItem('theme', next);
+          syncThemeLabel();
+        });
+      }
+    })();
   </script>
 </body>
 </html>
