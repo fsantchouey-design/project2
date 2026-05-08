@@ -2749,9 +2749,14 @@
         advancedToggle.setAttribute('aria-expanded', 'false');
         toolOptionsPanel.classList.add('collapsed');
       }
-      generateBtn.querySelector('span').textContent = config.submitLabel || (config.videoMotion ? 'Generate Video' : 'Generate Design');
+      generateBtn.querySelector('span').textContent = getGenerateBtnLabel(config);
       renderToolInterface();
       updateGenerateButtonState();
+    }
+
+    function getGenerateBtnLabel(cfg) {
+      const base = cfg.submitLabel || (cfg.videoMotion ? 'Generate Video' : 'Generate Design');
+      return cfg.credits ? `${base} • ${cfg.credits} Credits` : base;
     }
 
     function setStatus(message, type) {
@@ -3799,7 +3804,7 @@
         setStatus(error.message, 'error');
       } finally {
         isGenerating = false;
-        generateBtn.querySelector('span').textContent = getCurrentToolConfig().submitLabel || (isVideoTool ? 'Generate Video' : 'Generate Design');
+        generateBtn.querySelector('span').textContent = getGenerateBtnLabel(getCurrentToolConfig());
         updateGenerateButtonState();
       }
     }

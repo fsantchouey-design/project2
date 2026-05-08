@@ -6,6 +6,7 @@ const toolsConfig = {
     noDesignMax: 4,
     aiIntervention: true,
     keepStructural: true,
+    credits: 10,
     modeTools: [
       {
         label: 'Perfect Redesign',
@@ -33,7 +34,8 @@ const toolsConfig = {
     fields: ['design_type', 'room_type', 'design_style', 'ai_intervention', 'no_design', 'custom_instruction', 'keep_structural_element'],
     noDesignMax: 2,
     aiIntervention: true,
-    keepStructural: true
+    keepStructural: true,
+    credits: 10
   },
   beautiful_redesign: {
     endpoint: '/api/v2/beautiful_redesign',
@@ -41,7 +43,8 @@ const toolsConfig = {
     fields: ['design_type', 'room_type', 'design_style', 'ai_intervention', 'no_design', 'prompt', 'keep_structural_element'],
     noDesignMax: 4,
     aiIntervention: true,
-    keepStructural: true
+    keepStructural: true,
+    credits: 12
   },
   creative_redesign: {
     endpoint: '/api/v2/creative_redesign',
@@ -49,7 +52,8 @@ const toolsConfig = {
     fields: ['design_type', 'room_type', 'design_style', 'ai_intervention', 'no_design', 'prompt', 'keep_structural_element'],
     noDesignMax: 4,
     aiIntervention: true,
-    keepStructural: true
+    keepStructural: true,
+    credits: 12
   },
   magic_redesign: {
     endpoint: '/api/v2/magic_redesign',
@@ -57,20 +61,23 @@ const toolsConfig = {
     fields: ['custom_instruction'],
     promptOnly: true,
     promptLabel: 'Magic Prompt',
-    promptPlaceholder: 'Tell the AI exactly what to change: layout, furniture, colors, materials, mood, or specific objects.'
+    promptPlaceholder: 'Tell the AI exactly what to change: layout, furniture, colors, materials, mood, or specific objects.',
+    credits: 15
   },
   sketch_to_render: {
     endpoint: '/api/v2/sketch_to_render',
     uiType: 'redesign',
     fields: ['design_type', 'room_type', 'design_style', 'ai_intervention', 'no_design', 'prompt'],
     noDesignMax: 4,
-    aiIntervention: true
+    aiIntervention: true,
+    credits: 15
   },
   virtual_staging: {
     endpoint: '/api/v2/virtual_staging',
     uiType: 'redesign',
     fields: ['room_type', 'design_style', 'no_design', 'prompt'],
-    noDesignMax: 4
+    noDesignMax: 4,
+    credits: 28
   },
   precision: {
     endpoint: '/api/v2/precision',
@@ -79,7 +86,8 @@ const toolsConfig = {
     noDesignMax: 4,
     mask: true,
     strength: true,
-    maskHelp: 'Select the exact area you want redesigned.'
+    maskHelp: 'Select the exact area you want redesigned.',
+    credits: 15
   },
   fill_spaces: {
     endpoint: '/api/v2/fill_spaces',
@@ -90,12 +98,14 @@ const toolsConfig = {
     strength: true,
     promptLabel: 'What should be added?',
     promptPlaceholder: 'Describe what the AI should add inside the selected empty area.',
-    maskHelp: 'Select empty areas where furniture or decor should be added.'
+    maskHelp: 'Select empty areas where furniture or decor should be added.',
+    credits: 15
   },
   decor_staging: {
     endpoint: '/api/v2/decor_staging',
     uiType: 'object-position',
-    fields: ['object_position']
+    fields: ['object_position'],
+    credits: 12
   },
   furniture_removal: {
     endpoint: '/api/v2/furniture_removal',
@@ -103,7 +113,8 @@ const toolsConfig = {
     fields: ['mask'],
     mask: true,
     removeAllToggle: true,
-    maskHelp: 'Select the furniture you want to remove.'
+    maskHelp: 'Select the furniture you want to remove.',
+    credits: 10
   },
   change_color_textures: {
     endpoint: '/api/v2/change_color_textures',
@@ -117,7 +128,8 @@ const toolsConfig = {
     object: true,
     promptLabel: 'Custom color or texture instruction',
     promptPlaceholder: 'Optional: describe a custom color, material, or finish if it is not available below.',
-    maskHelp: 'Select the surface whose color or texture should change.'
+    maskHelp: 'Select the surface whose color or texture should change.',
+    credits: 12
   },
   furniture_finder: {
     endpoint: '/api/v2/furniture_finder',
@@ -125,12 +137,14 @@ const toolsConfig = {
     fields: ['country'],
     country: true,
     countryOnly: true,
-    submitLabel: 'Get Products'
+    submitLabel: 'Get Products',
+    credits: 5
   },
   full_hd: {
     endpoint: '/api/v2/full_hd',
     uiType: 'single-action',
-    fields: []
+    fields: [],
+    credits: 8
   },
   text_to_design: {
     endpoint: '/api/v2/text_to_design',
@@ -140,7 +154,8 @@ const toolsConfig = {
     imageOptional: true,
     promptOnly: true,
     promptLabel: 'Describe the design you want',
-    promptPlaceholder: 'Write the full design concept you want the AI to create.'
+    promptPlaceholder: 'Write the full design concept you want the AI to create.',
+    credits: 15
   },
   furniture_creator: {
     endpoint: '/api/v2/furniture_creator',
@@ -150,7 +165,8 @@ const toolsConfig = {
     imageOptional: true,
     promptOnly: true,
     promptLabel: 'Describe the furniture you want',
-    promptPlaceholder: 'Describe the furniture or object you want to create.'
+    promptPlaceholder: 'Describe the furniture or object you want to create.',
+    credits: 15
   },
   design_advisor: {
     endpoint: '/api/v2/design_advisor',
@@ -159,7 +175,8 @@ const toolsConfig = {
     promptOnly: true,
     imageOptional: true,
     promptLabel: 'Ask the design advisor',
-    promptPlaceholder: 'Ask a design question or describe the advice you need.'
+    promptPlaceholder: 'Ask a design question or describe the advice you need.',
+    credits: 20
   },
   sky_colors: {
     endpoint: '/api/v2/sky_colors',
@@ -167,7 +184,8 @@ const toolsConfig = {
     fields: ['weather', 'no_design'],
     noDesignMax: 4,
     weather: true,
-    weatherOnly: true
+    weatherOnly: true,
+    credits: 10
   },
   design_transfer: {
     endpoint: '/api/v2/design_transfer',
@@ -176,7 +194,8 @@ const toolsConfig = {
     aiIntervention: true,
     styleReference: true,
     transferOnly: true,
-    submitLabel: 'Transfer Design'
+    submitLabel: 'Transfer Design',
+    credits: 18
   },
   floor_editor: {
     endpoint: '/api/v2/floor_editor',
@@ -184,7 +203,8 @@ const toolsConfig = {
     fields: ['texture_image', 'no_of_texture'],
     textureUpload: true,
     textureGrid: true,
-    textureOptions: ['1 X 1', '2 X 2', '3 X 3', '4 X 4']
+    textureOptions: ['1 X 1', '2 X 2', '3 X 3', '4 X 4'],
+    credits: 12
   },
   paint_visualizer: {
     endpoint: '/api/v2/paint_visualizer',
@@ -193,7 +213,8 @@ const toolsConfig = {
     noDesignMax: 4,
     mask: true,
     paintColor: true,
-    maskHelp: 'Select the wall or surface you want to repaint.'
+    maskHelp: 'Select the wall or surface you want to repaint.',
+    credits: 12
   },
   material_swap: {
     endpoint: '/api/v2/material_swap',
@@ -208,39 +229,45 @@ const toolsConfig = {
     textureOptions: ['1 X 1', '2 X 2', '3 X 3', '4 X 4', '5 X 5'],
     textureUpload: true,
     materialSwap: true,
-    maskHelp: 'Click the object automatically or use the manual brush to draw the exact material area.'
+    maskHelp: 'Click the object automatically or use the manual brush to draw the exact material area.',
+    credits: 15
   },
   room_composer: {
     endpoint: '/api/v2/smart_room_composer',
     uiType: 'room-composer',
     fields: ['room_image', 'custom_elements'],
-    imageLabel: 'Drag and drop room image'
+    imageLabel: 'Drag and drop room image',
+    credits: 20
   },
   design_critique: {
     endpoint: '/api/v2/design_critique',
     uiType: 'critique',
     fields: ['image_type'],
     imageTypeOnly: true,
-    submitLabel: 'Get Design Critique'
+    submitLabel: 'Get Design Critique',
+    credits: 15
   },
   create_maskimage: {
     endpoint: '/api/v2/create_maskimage',
     uiType: 'single-action',
     fields: ['labels'],
-    submitLabel: 'Generate Mask'
+    submitLabel: 'Generate Mask',
+    credits: 5
   },
   smart_home: {
     endpoint: '/api/v2/smart_home',
     uiType: 'single-action',
     fields: [],
-    submitLabel: 'Get Feedback'
+    submitLabel: 'Get Feedback',
+    credits: 15
   },
   video_generation: {
     endpoint: '/api/v2/video_generation',
     uiType: 'video',
     fields: ['tool_name'],
     videoMotion: true,
-    submitLabel: 'Generate Video'
+    submitLabel: 'Generate Video',
+    credits: 30
   }
 };
 
