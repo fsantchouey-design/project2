@@ -127,6 +127,11 @@ router.get('/terms', (req, res) => {
   });
 });
 
+// Settings redirect
+router.get('/settings', (req, res) => {
+  res.redirect('/dashboard/settings');
+});
+
 // Legal pages (French)
 router.get('/politique-confidentialite', (req, res) => {
   res.render('pages/politique-confidentialite', {

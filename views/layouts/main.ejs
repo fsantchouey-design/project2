@@ -95,6 +95,10 @@
       <div class="nav-actions">
         <%- include('../partials/language-selector') %>
         <% if (user) { %>
+          <a href="/dashboard/settings" class="nav-settings-btn" aria-label="Paramètres">
+            <i data-lucide="settings"></i>
+            <span>Paramètres</span>
+          </a>
           <div class="user-menu">
             <button class="user-btn">
               <div class="user-avatar">
