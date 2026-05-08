@@ -1,0 +1,207 @@
+<style>
+  .legal-page {
+    min-height: 100vh;
+    background: #080f1a;
+    color: #f1f5f9;
+    padding: 0 0 80px;
+  }
+
+  .legal-hero {
+    position: relative;
+    overflow: hidden;
+    padding: 110px 24px 60px;
+    text-align: center;
+    border-bottom: 1px solid rgba(94, 234, 212, 0.1);
+  }
+
+  .legal-hero__bg { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+
+  .legal-orb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.22; }
+  .legal-orb-1 { width: 440px; height: 440px; background: radial-gradient(circle, #14b8a6, transparent); top: -140px; left: -100px; }
+  .legal-orb-2 { width: 360px; height: 360px; background: radial-gradient(circle, #2563eb, transparent); top: -80px; right: -80px; }
+
+  .legal-hero__inner { position: relative; z-index: 1; max-width: 720px; margin-inline: auto; }
+
+  .legal-kicker {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 6px 18px; margin-bottom: 22px;
+    border: 1px solid rgba(94, 234, 212, 0.24); border-radius: 999px;
+    background: rgba(20, 184, 166, 0.08); color: #5eead4;
+    font-size: 0.75rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+
+  .legal-kicker i { width: 13px; height: 13px; }
+
+  .legal-hero__title { margin: 0 0 14px; font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; letter-spacing: -0.02em; }
+  .legal-hero__meta { font-size: 0.88rem; color: #64748b; }
+
+  .legal-body { max-width: 860px; margin-inline: auto; padding: 60px 24px 0; }
+
+  .legal-section {
+    margin-bottom: 48px; padding: 36px 40px;
+    border: 1px solid rgba(148, 163, 184, 0.1); border-radius: 20px;
+    background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(10px);
+  }
+
+  .legal-section h2 {
+    margin: 0 0 18px; font-size: 1.2rem; font-weight: 800; color: #5eead4;
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .sec-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: 8px;
+    background: rgba(20, 184, 166, 0.14); border: 1px solid rgba(20, 184, 166, 0.24);
+    font-size: 0.78rem; font-weight: 900; color: #5eead4; flex-shrink: 0;
+  }
+
+  .legal-section p { margin: 0 0 14px; font-size: 0.93rem; color: #94a3b8; line-height: 1.75; }
+  .legal-section p:last-child { margin-bottom: 0; }
+
+  .legal-section ul { margin: 0 0 14px; padding-left: 0; list-style: none; }
+  .legal-section ul li {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 6px 0; font-size: 0.92rem; color: #94a3b8; line-height: 1.6;
+  }
+  .legal-section ul li::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%;
+    background: #14b8a6; margin-top: 8px; flex-shrink: 0;
+  }
+
+  .legal-section strong { color: #e2e8f0; }
+
+  .legal-warning {
+    margin-top: 14px;
+    padding: 14px 18px;
+    border-left: 3px solid #f59e0b;
+    background: rgba(245, 158, 11, 0.07);
+    border-radius: 0 10px 10px 0;
+    font-size: 0.88rem;
+    color: #94a3b8;
+    line-height: 1.6;
+  }
+
+  .legal-contact-box {
+    margin-top: 48px; padding: 28px 36px;
+    border: 1px solid rgba(94, 234, 212, 0.18); border-radius: 16px;
+    background: rgba(20, 184, 166, 0.06); text-align: center;
+  }
+
+  .legal-contact-box p { margin: 0; font-size: 0.92rem; color: #94a3b8; }
+  .legal-contact-box a { color: #5eead4; text-decoration: none; font-weight: 600; }
+  .legal-contact-box a:hover { text-decoration: underline; }
+
+  @media (max-width: 640px) {
+    .legal-section { padding: 24px 20px; }
+    .legal-body { padding-top: 36px; }
+  }
+</style>
+
+<div class="legal-page">
+
+  <div class="legal-hero">
+    <div class="legal-hero__bg">
+      <div class="legal-orb legal-orb-1"></div>
+      <div class="legal-orb legal-orb-2"></div>
+    </div>
+    <div class="legal-hero__inner">
+      <span class="legal-kicker"><i data-lucide="file-text"></i> Légal</span>
+      <h1 class="legal-hero__title">Conditions d'utilisation</h1>
+      <p class="legal-hero__meta">Dernière mise à jour : 7 mai 2026</p>
+    </div>
+  </div>
+
+  <div class="legal-body">
+
+    <div class="legal-section">
+      <h2><span class="sec-num">1</span> Accès au service</h2>
+      <p>CraftyCrib est une plateforme SaaS d'intelligence artificielle dédiée au design intérieur, accessible via le site <strong>craftycrib.com</strong>. En accédant au service, vous acceptez sans réserve les présentes conditions d'utilisation.</p>
+      <p>L'accès au service est réservé aux personnes âgées d'au moins 16 ans. CraftyCrib se réserve le droit de modifier, suspendre ou interrompre tout ou partie du service à tout moment, avec ou sans préavis.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2><span class="sec-num">2</span> Comptes clients et professionnels</h2>
+      <p>Deux types de comptes sont disponibles sur CraftyCrib :</p>
+      <ul>
+        <li><strong>Compte client</strong> — Pour les particuliers souhaitant concevoir et visualiser des projets de décoration intérieure grâce à l'IA.</li>
+        <li><strong>Compte professionnel</strong> — Pour les entrepreneurs, architectes et décorateurs souhaitant accéder aux projets publiés par les clients et proposer leurs services.</li>
+      </ul>
+      <p>Vous êtes responsable de la confidentialité de vos identifiants de connexion. Toute activité réalisée depuis votre compte est sous votre responsabilité.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2><span class="sec-num">3</span> Crédits IA</h2>
+      <p>L'utilisation des outils d'intelligence artificielle consomme des <strong>crédits IA</strong>. Chaque outil peut consommer un nombre variable de crédits selon sa complexité et le nombre de générations demandées.</p>
+      <ul>
+        <li>Les crédits inclus dans votre abonnement mensuel sont réinitialisés à chaque date de renouvellement et ne sont pas reportables.</li>
+        <li>Les crédits achetés séparément (packs) ne sont pas soumis à expiration, sauf mention contraire.</li>
+        <li>CraftyCrib ne rembourse pas les crédits utilisés, même en cas de résultat insatisfaisant.</li>
+      </ul>
+    </div>
+
+    <div class="legal-section">
+      <h2><span class="sec-num">4</span> Abonnements et paiements</h2>
+      <p>Les abonnements sont facturés mensuellement ou annuellement selon le plan choisi. Le renouvellement est automatique sauf résiliation avant la date d'échéance.</p>
+      <ul>
+        <li>Les paiements sont traités par <strong>Stripe</strong>. CraftyCrib ne stocke aucune donnée bancaire.</li>
+        <li>Tout abonnement commencé est dû dans son intégralité pour la période en cours.</li>
+        <li>La résiliation prend effet à la fin de la période de facturation en cours.</li>
+        <li>En cas d'échec de paiement, l'accès au service peut être suspendu jusqu'à régularisation.</li>
+      </ul>
+    </div>
+
+    <div class="legal-section">
+      <h2><span class="sec-num">5</span> Limites d'usage</h2>
+      <p>CraftyCrib est destiné à un usage personnel ou professionnel légitime en lien avec le design intérieur. Il est interdit d'utiliser le service de manière à :</p>
+      <ul>
+        <li>Surcharger ou perturber les infrastructures de la plateforme.</li>
+        <li>Automatiser des requêtes de manière abusive (scraping, bots).</li>
+        <li>Partager son accès avec des tiers non autorisés.</li>
+        <li>Contourner les limites de crédits ou les mécanismes de sécurité.</li>
+      </ul>
+    </div>
+
+    <div class="legal-section">
+      <h2><span class="sec-num">6</span> Contenus interdits</h2>
+      <p>Il est strictement interdit d'uploader ou de générer via les outils IA des contenus :</p>
+      <ul>
+        <li>Illégaux, offensants, discriminatoires ou portant atteinte à la dignité humaine.</li>
+        <li>Portant atteinte aux droits d'auteur ou à la propriété intellectuelle de tiers.</li>
+        <li>À caractère sexuel explicite ou impliquant des mineurs.</li>
+        <li>Faisant l'apologie de la violence, du terrorisme ou d'actes criminels.</li>
+      </ul>
+      <div class="legal-warning">Tout contenu en violation de ces règles entraînera la suppression immédiate du contenu et pourra entraîner la suspension ou la résiliation du compte, sans remboursement.</div>
+    </div>
+
+    <div class="legal-section">
+      <h2><span class="sec-num">7</span> Propriété des images et des projets</h2>
+      <p>Vous conservez la pleine propriété des images que vous uploadez sur CraftyCrib. En les téléchargeant, vous accordez à CraftyCrib une licence limitée, non exclusive, permettant de les traiter dans le seul but de vous fournir les services demandés.</p>
+      <p>Les images générées par l'IA à partir de vos projets vous appartiennent. CraftyCrib ne les revendique pas et ne les utilise pas à des fins commerciales sans votre consentement explicite.</p>
+      <p>Si vous publiez un projet dans la galerie publique, vous autorisez CraftyCrib à l'afficher sur la plateforme. Vous pouvez retirer cette autorisation à tout moment en dépubliant le projet.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2><span class="sec-num">8</span> Suspension et résiliation de compte</h2>
+      <p>CraftyCrib se réserve le droit de suspendre ou de résilier tout compte en cas de :</p>
+      <ul>
+        <li>Violation des présentes conditions d'utilisation.</li>
+        <li>Utilisation frauduleuse ou abusive du service.</li>
+        <li>Non-paiement persistant.</li>
+        <li>Plainte fondée d'un tiers concernant un contenu publié.</li>
+      </ul>
+      <p>En cas de résiliation pour violation, aucun remboursement ne sera effectué pour les crédits ou abonnements non utilisés.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2><span class="sec-num">9</span> Responsabilité</h2>
+      <p>CraftyCrib fournit ses services "en l'état" et ne garantit pas que le service sera ininterrompu ou exempt d'erreurs. Nous ne sommes pas responsables des pertes de données, des interruptions de service ou des résultats de génération IA qui ne correspondraient pas aux attentes.</p>
+      <p>La responsabilité de CraftyCrib est limitée au montant payé par l'utilisateur au cours des 12 derniers mois précédant le fait générateur du litige.</p>
+      <p>Les présentes conditions sont régies par le droit canadien. Tout litige sera soumis aux tribunaux compétents de la province de Québec.</p>
+    </div>
+
+    <div class="legal-contact-box">
+      <p>Pour toute question relative aux présentes conditions, contactez-nous à <a href="mailto:legal@craftycrib.com">legal@craftycrib.com</a></p>
+    </div>
+
+  </div>
+</div>

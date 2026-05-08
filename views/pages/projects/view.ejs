@@ -1,1322 +1,220 @@
-<div class="page-container">
-  <div class="page-header">
-    <a href="/projects" class="back-link">
-      <i data-lucide="arrow-left"></i>
-      Retour aux projets
-    </a>
-    <div class="page-header-flex">
-      <div>
-        <h1><%= project.title %></h1>
-        <span class="project-status-badge status-<%= project.status %>"><%= project.status %></span>
-      </div>
-      <div class="page-actions">
-        <a href="/projects/<%= project._id %>/edit" class="btn btn-secondary">
-          <i data-lucide="edit"></i> Modifier
-        </a>
-      </div>
+<%
+  const originalImage = (project.originalImages && project.originalImages[0] && project.originalImages[0].url) || '';
+  const latestVariant = (project.designVariants && project.designVariants.length)
+    ? project.designVariants[project.designVariants.length - 1]
+    : null;
+  const generatedImage = latestVariant ? (latestVariant.imageUrl || latestVariant.thumbnailUrl || '') : '';
+%>
+
+<div class="project-compare-page">
+  <header class="project-compare-header">
+    <a href="/projects/<%= project._id %>/studio" class="back-link">Back to Studio</a>
+    <div>
+      <p class="eyebrow">Project Preview</p>
+      <h1><%= project.title || 'Project' %></h1>
+      <p>Compare the original image with the latest generated design.</p>
     </div>
-  </div>
+    <a href="/projects/<%= project._id %>/studio" class="studio-link">Open AI Studio</a>
+  </header>
 
-  <div class="project-layout">
-    <div class="project-main">
-
-      <!-- AI Tools Grid -->
-      <% if (project.originalImages && project.originalImages.length > 0 && typeof aiTools !== 'undefined' && aiTools) { %>
-      <div class="section-card ai-tools-section">
-        <div class="section-header">
-          <h2><i data-lucide="cpu" style="width:20px;height:20px;display:inline;vertical-align:middle;margin-right:6px;"></i>Outils IA</h2>
-          <span class="tool-hint">Cliquez sur un outil pour transformer votre espace</span>
-        </div>
-        <div class="ai-tools-grid">
-          <% aiTools.forEach(tool => { %>
-            <button class="ai-tool-card" data-tool="<%= tool.id %>"
-                    data-requires-mask="<%= tool.requiresMask %>"
-                    data-requires-style="<%= tool.requiresStyle %>"
-                    data-max-designs="<%= tool.maxDesigns %>"
-                    data-category="<%= tool.category %>"
-                    onclick="openToolEditor('<%= tool.id %>')">
-              <div class="tool-icon"><i data-lucide="<%= tool.icon %>"></i></div>
-              <div class="tool-info">
-                <span class="tool-name"><%= tool.name %></span>
-                <span class="tool-desc"><%= tool.description %></span>
-              </div>
-            </button>
-          <% }) %>
-        </div>
+  <% if (originalImage && generatedImage) { %>
+    <section class="before-after" id="before-after">
+      <img class="before-after__image before-after__image--after" src="<%= generatedImage %>" alt="Latest generated design">
+      <div class="before-after__before" id="before-layer">
+        <img class="before-after__image" src="<%= originalImage %>" alt="Original project image">
       </div>
-      <% } %>
-
-      <!-- Design Gallery + Historique (onglets) -->
-      <div class="section-card">
-        <div class="design-tab-nav">
-          <button class="design-tab-btn active" id="tab-btn-designs" onclick="switchDesignTab('designs')">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-            Designs <span class="tab-count" id="tab-designs-count"><%= project.designVariants ? project.designVariants.length : 0 %></span>
-          </button>
-          <button class="design-tab-btn" id="tab-btn-history" onclick="switchDesignTab('history')">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            Historique
-          </button>
-        </div>
-
-        <!-- Onglet Designs -->
-        <div id="tab-panel-designs">
-          <% if (project.designVariants && project.designVariants.length > 0) { %>
-            <div class="design-gallery">
-              <% project.designVariants.forEach((variant, index) => { %>
-                <div class="design-variant">
-                  <div class="variant-image" onclick="openDesignLightbox(<%= index %>)">
-                    <img src="<%= variant.imageUrl || '/images/placeholder.png' %>" alt="<%= variant.name || 'Design ' + (index+1) %>" loading="lazy">
-                    <div class="variant-overlay">
-                      <button class="btn btn-sm btn-primary" onclick="event.stopPropagation();openDesignLightbox(<%= index %>)"><i data-lucide="maximize-2"></i></button>
-                      <a href="<%= variant.imageUrl %>" download class="btn btn-sm btn-secondary" target="_blank" onclick="event.stopPropagation()"><i data-lucide="download"></i></a>
-                    </div>
-                  </div>
-                  <div class="variant-info">
-                    <h4><%= variant.name || 'Design ' + (index + 1) %></h4>
-                    <% if (variant.style) { %><span class="tag"><%= variant.style %></span><% } %>
-                  </div>
-                </div>
-              <% }) %>
-            </div>
-          <% } else { %>
-            <div class="empty-designs">
-              <i data-lucide="image"></i>
-              <p>Aucun design genere</p>
-              <span>Utilisez les outils IA ci-dessus pour generer des designs</span>
-            </div>
-          <% } %>
-        </div>
-
-        <!-- Onglet Historique -->
-        <div id="tab-panel-history" style="display:none;">
-          <%
-            const TOOL_NAMES_MAP = {
-              'beautiful-redesign':'Beautiful Redesign','perfect-redesign':'Perfect Redesign',
-              'creative-redesign':'Creative Design','sketch-to-render':'Sketch to Render',
-              'precision':'Precision','fill-spaces':'Fill Spaces','decor-staging':'Decor Staging',
-              'furniture-removal':'Furniture Removal','color-textures':'Couleurs & Textures',
-              'paint-visualizer':'Peinture','furniture-finder':'Recherche Meubles','full-hd':'Full HD',
-              'sky-colors':'Ciel','magic-redesign':'Magic Redesign','video-generation':'Vidéo',
-              'virtual-staging':'Staging Virtuel','text-to-design':'Texte vers Design',
-              'furniture-creator':'Créateur Meubles','design-advisor':'Conseiller Design',
-              'design-transfer':'Transfert Design','floor-editor':'Éditeur Sol',
-              'material-swap':'Échange Matériaux','room-composer':'Compositeur Pièce',
-              'design-critique':'Critique Design','create-mask-image':'Masque Image',
-              'smart-home':'Smart Home','change-colors':'Changement Couleurs'
-            };
-            const sortedVars = project.designVariants
-              ? [...project.designVariants].sort((a,b) => new Date(b.generatedAt||0) - new Date(a.generatedAt||0))
-              : [];
-          %>
-          <% if (sortedVars.length > 0) { %>
-            <div class="history-list">
-              <% sortedVars.forEach(function(variant, histIdx) { %>
-                <%
-                  const p = variant.aiParameters || {};
-                  const toolKey = p.type || '';
-                  const toolNameDisplay = p.toolName || TOOL_NAMES_MAP[toolKey] || variant.name || 'Design IA';
-                  const gDate = variant.generatedAt ? new Date(variant.generatedAt) : null;
-                  const varDate = gDate
-                    ? gDate.toLocaleDateString('fr-CA') + ' ' + gDate.toLocaleTimeString('fr-CA', {hour:'2-digit',minute:'2-digit'})
-                    : '—';
-                  const varId = variant._id ? variant._id.toString() : '';
-                  const imgUrl = variant.thumbnailUrl || variant.imageUrl || '';
-                %>
-                <div class="history-entry" id="history-entry-<%= varId %>">
-                  <div class="history-thumb" onclick="openHistoryLightbox(<%= histIdx %>)">
-                    <img src="<%= imgUrl || '/images/placeholder.png' %>" alt="<%= toolNameDisplay %>" loading="lazy">
-                  </div>
-                  <div class="history-body">
-                    <div class="history-header">
-                      <span class="history-tool"><%= toolNameDisplay %></span>
-                      <span class="history-date"><%= varDate %></span>
-                    </div>
-                    <div class="history-params">
-                      <% if (p.style || variant.style) { %><span class="history-param"><%= p.style || variant.style %></span><% } %>
-                      <% if (p.roomType) { %><span class="history-param"><%= p.roomType %></span><% } %>
-                      <% if (p.designType && p.designType !== 'Interior') { %><span class="history-param"><%= p.designType %></span><% } %>
-                      <% if (p.color) { %><span class="history-param"><%= p.color %></span><% } %>
-                      <% if (p.materials) { %><span class="history-param"><%= p.materials %></span><% } %>
-                      <% if (p.weather) { %><span class="history-param"><%= p.weather %></span><% } %>
-                      <% if (p.aiIntervention && p.aiIntervention !== 'Mid') { %><span class="history-param"><%= p.aiIntervention %></span><% } %>
-                    </div>
-                    <% if (p.prompt) { %>
-                      <div class="history-prompt">"<%= p.prompt.length > 80 ? p.prompt.substring(0, 80) + '...' : p.prompt %>"</div>
-                    <% } %>
-                  </div>
-                  <div class="history-actions">
-                    <button class="history-action-btn" onclick="openHistoryLightbox(<%= histIdx %>)" title="Plein écran">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg>
-                    </button>
-                    <a href="<%= imgUrl %>" download class="history-action-btn" target="_blank" title="Télécharger">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                    </a>
-                    <button class="history-action-btn delete-btn" onclick="deleteVariant('<%= varId %>')" title="Supprimer">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
-                    </button>
-                  </div>
-                </div>
-              <% }) %>
-            </div>
-          <% } else { %>
-            <div class="empty-history">
-              <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:10px;opacity:0.35"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              <p>Aucun design dans l'historique</p>
-              <span>Générez des designs avec les outils IA</span>
-            </div>
-          <% } %>
-        </div>
+      <div class="before-after__handle" id="compare-handle" aria-hidden="true">
+        <span></span>
       </div>
-
-      <!-- Original Images / Upload -->
-      <div class="section-card">
-        <div class="section-header">
-          <h2>Photos originales</h2>
-          <button class="btn btn-sm btn-secondary" onclick="toggleUpload()"><i data-lucide="plus"></i> Ajouter</button>
-        </div>
-        <div class="upload-section" id="upload-section" style="display:none;">
-          <form id="upload-form" enctype="multipart/form-data">
-            <div class="upload-area" id="upload-area">
-              <input type="file" name="images" id="images" multiple accept="image/*" class="file-input">
-              <label for="images" class="upload-label">
-                <i data-lucide="upload-cloud"></i>
-                <span>Glissez vos images ici ou cliquez</span>
-                <span class="upload-hint">Max 5 images, 10MB chacune</span>
-              </label>
-            </div>
-            <div id="upload-preview" class="upload-preview"></div>
-            <div class="upload-actions">
-              <button type="button" class="btn btn-ghost" onclick="toggleUpload()">Annuler</button>
-              <button type="submit" class="btn btn-primary" id="upload-btn"><i data-lucide="upload"></i> Telecharger</button>
-            </div>
-          </form>
-        </div>
-        <% if (project.originalImages && project.originalImages.length > 0) { %>
-          <div class="original-gallery">
-            <% project.originalImages.forEach((img, idx) => { %>
-              <div class="original-image" onclick="openOriginalLightbox(<%= idx %>)">
-                <img src="<%= img.url %>" alt="Photo originale <%= idx + 1 %>" loading="lazy">
-                <button class="delete-img-btn" onclick="event.stopPropagation();deleteImage('<%= img._id %>')"><i data-lucide="trash-2"></i></button>
-              </div>
-            <% }) %>
-          </div>
-        <% } else { %>
-          <div class="empty-images" onclick="toggleUpload()">
-            <i data-lucide="image-plus"></i>
-            <p>Aucune photo</p>
-            <span>Ajoutez des photos pour generer des designs IA</span>
-          </div>
-        <% } %>
+      <input class="before-after__range" id="compare-range" type="range" min="0" max="100" value="50" aria-label="Before after comparison">
+      <div class="before-after__labels">
+        <span>Original</span>
+        <span>Latest Design</span>
       </div>
-
-      <% if (project.description) { %>
-      <div class="section-card">
-        <h2>Description</h2>
-        <p class="description-text"><%= project.description %></p>
-      </div>
-      <% } %>
-    </div>
-
-    <!-- Sidebar -->
-    <div class="project-sidebar">
-      <div class="sidebar-card">
-        <h3>Details</h3>
-        <div class="detail-list">
-          <div class="detail-item"><span class="detail-label">Piece</span><span class="detail-value"><%= project.roomType %></span></div>
-          <% if (project.style) { %><div class="detail-item"><span class="detail-label">Style</span><span class="detail-value"><%= project.style %></span></div><% } %>
-          <% if (project.budget && (project.budget.min || project.budget.max)) { %><div class="detail-item"><span class="detail-label">Budget</span><span class="detail-value"><%= project.budget.min ? project.budget.min.toLocaleString()+'$' : '' %><%= project.budget.min && project.budget.max ? ' - ' : '' %><%= project.budget.max ? project.budget.max.toLocaleString()+'$' : '' %></span></div><% } %>
-          <div class="detail-item"><span class="detail-label">Cree le</span><span class="detail-value"><%= new Date(project.createdAt).toLocaleDateString('fr-CA') %></span></div>
-          <div class="detail-item"><span class="detail-label">Designs</span><span class="detail-value"><%= project.designVariants ? project.designVariants.length : 0 %></span></div>
-        </div>
-      </div>
-      <div class="sidebar-card">
-        <h3>Partager</h3>
-        <div class="share-link">
-          <input type="text" value="<%= process.env.APP_URL || 'https://craftycrib.com' %>/projects/share/<%= project.shareToken %>" readonly class="form-input" id="share-url">
-          <button class="btn btn-secondary" onclick="copyShareLink()"><i data-lucide="copy"></i></button>
-        </div>
-      </div>
-      <div class="sidebar-card">
-        <h3>Visibilite</h3>
-        <select class="form-select" onchange="updateVisibility(this.value)">
-          <option value="private" <%= project.visibility === 'private' ? 'selected' : '' %>>Prive</option>
-          <option value="contractors" <%= project.visibility === 'contractors' ? 'selected' : '' %>>Entrepreneurs</option>
-          <option value="public" <%= project.visibility === 'public' ? 'selected' : '' %>>Public</option>
-        </select>
-      </div>
-      <% if (!project.isDIY && project.contractorRequests && project.contractorRequests.length > 0) { %>
-      <div class="sidebar-card">
-        <h3>Entrepreneurs</h3>
-        <div class="contractor-list">
-          <% project.contractorRequests.forEach(req => { %>
-            <div class="contractor-request">
-              <strong><%= req.contractor.companyName %></strong>
-              <span class="request-status status-<%= req.status %>"><%= req.status %></span>
-            </div>
-          <% }) %>
-        </div>
-      </div>
-      <% } %>
-    </div>
-  </div>
-</div>
-
-<!-- ============================================================ -->
-<!-- FULL-SCREEN TOOL EDITOR (opens for ALL tools)                -->
-<!-- ============================================================ -->
-<% if (project.originalImages && project.originalImages.length > 0) { %>
-<div class="tool-editor" id="tool-editor">
-  <!-- Header -->
-  <div class="tool-editor-header">
-    <div class="editor-title">
-      <i data-lucide="sparkles" id="editor-icon"></i>
-      <span id="editor-title">Tool Editor</span>
-    </div>
-    <!-- Toolbar (brush/eraser - only for mask tools) -->
-    <div class="editor-toolbar" id="editor-toolbar">
-      <div class="tool-group">
-        <button class="tool-btn active" id="tool-brush" onclick="setMaskTool('brush')" title="Pinceau (B)"><i data-lucide="paintbrush"></i></button>
-        <button class="tool-btn" id="tool-eraser" onclick="setMaskTool('eraser')" title="Gomme (E)"><i data-lucide="eraser"></i></button>
-      </div>
-      <div class="tool-separator"></div>
-      <div class="tool-group brush-size-group">
-        <i data-lucide="circle" class="size-icon"></i>
-        <input type="range" id="brush-size" min="5" max="100" value="30" class="brush-slider">
-        <span class="brush-size-val" id="brush-size-display">30</span>
-      </div>
-      <div class="tool-separator"></div>
-      <div class="tool-group">
-        <button class="tool-btn" onclick="undoMaskStroke()" title="Annuler (Ctrl+Z)"><i data-lucide="undo-2"></i></button>
-        <button class="tool-btn" onclick="clearMaskCanvas()" title="Tout effacer"><i data-lucide="trash-2"></i></button>
-      </div>
-    </div>
-    <button class="close-editor-btn" onclick="closeToolEditor()" title="Fermer (Esc)"><i data-lucide="x"></i></button>
-  </div>
-
-  <!-- Body: Canvas + Side Panel -->
-  <div class="tool-editor-body">
-    <!-- Left: Canvas / Image -->
-    <div class="canvas-area">
-      <div class="canvas-wrapper" id="canvas-wrapper">
-        <canvas id="mask-canvas"></canvas>
-        <div class="canvas-cursor" id="canvas-cursor"></div>
-      </div>
-      <div class="canvas-hint" id="canvas-hint">
-        <i data-lucide="info"></i>
-        <span>Peignez les zones a modifier, puis configurez les options a droite</span>
-      </div>
-    </div>
-
-    <!-- Right: Options Panel -->
-    <div class="editor-panel">
-      <div class="panel-scroll">
-
-        <!-- Source Image Selector -->
-        <div class="panel-section" id="ep-source">
-          <label class="panel-label">Image source</label>
-          <div class="source-images">
-            <% project.originalImages.forEach((img, idx) => { %>
-              <div class="source-img <%= idx === 0 ? 'selected' : '' %>" data-index="<%= idx %>" onclick="selectSourceImage(<%= idx %>)">
-                <img src="<%= img.url %>" alt="<%= idx+1 %>">
-                <div class="source-check"><i data-lucide="check"></i></div>
-              </div>
-            <% }) %>
-          </div>
-        </div>
-
-        <!-- Design Type -->
-        <div class="panel-section" id="ep-design-type">
-          <label class="panel-label">Type</label>
-          <div class="config-pills">
-            <button class="pill active" data-value="Interior" onclick="setDesignType('Interior')">Interieur</button>
-            <button class="pill" data-value="Exterior" onclick="setDesignType('Exterior')">Exterieur</button>
-            <button class="pill" data-value="Garden" onclick="setDesignType('Garden')">Jardin</button>
-          </div>
-        </div>
-
-        <!-- Style -->
-        <div class="panel-section" id="ep-style">
-          <label class="panel-label">Style</label>
-          <select id="ai-style" class="form-select">
-            <% (typeof styles !== 'undefined' ? styles : []).forEach(s => { %>
-              <option value="<%= s.id %>" <%= project.style === s.id ? 'selected' : '' %>><%= s.name %></option>
-            <% }) %>
-          </select>
-        </div>
-
-        <!-- Room Type -->
-        <div class="panel-section" id="ep-room-type">
-          <label class="panel-label">Piece</label>
-          <select id="ai-room-type" class="form-select">
-            <% (typeof roomTypes !== 'undefined' ? roomTypes : []).forEach(r => { %>
-              <option value="<%= r.id %>" <%= project.roomType === r.id ? 'selected' : '' %>><%= r.name %></option>
-            <% }) %>
-          </select>
-        </div>
-
-        <!-- House Angle -->
-        <div class="panel-section" id="ep-house-angle" style="display:none;">
-          <label class="panel-label">Angle</label>
-          <select id="ai-house-angle" class="form-select">
-            <option value="Front of House">Avant</option>
-            <option value="Side of House">Cote</option>
-            <option value="Back of House">Arriere</option>
-          </select>
-        </div>
-
-        <!-- Garden Type -->
-        <div class="panel-section" id="ep-garden-type" style="display:none;">
-          <label class="panel-label">Jardin</label>
-          <select id="ai-garden-type" class="form-select">
-            <option value="Backyard">Arriere-cour</option>
-            <option value="Front Yard">Cour avant</option>
-            <option value="Courtyard">Cour interieure</option>
-            <option value="Patio">Patio</option>
-            <option value="Terrace">Terrasse</option>
-          </select>
-        </div>
-
-        <!-- AI Intervention -->
-        <div class="panel-section" id="ep-intervention">
-          <label class="panel-label">Transformation</label>
-          <select id="ai-intervention" class="form-select">
-            <option value="Very Low">Tres leger</option>
-            <option value="Low">Leger</option>
-            <option value="Mid" selected>Moyen</option>
-            <option value="Extreme">Extreme</option>
-          </select>
-        </div>
-
-        <!-- Number of designs -->
-        <div class="panel-section" id="ep-no-design">
-          <label class="panel-label">Variations</label>
-          <select id="ai-no-design" class="form-select">
-            <option value="1" selected>1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-          </select>
-        </div>
-
-        <!-- Strength (precision / fill-spaces) -->
-        <div class="panel-section" id="ep-strength" style="display:none;">
-          <label class="panel-label">Intensite: <span id="strength-val">5</span></label>
-          <input type="range" id="ai-strength" min="1" max="10" value="5" class="brush-slider" style="width:100%;">
-        </div>
-
-        <!-- Weather (sky-colors) -->
-        <div class="panel-section" id="ep-weather" style="display:none;">
-          <label class="panel-label">Meteo</label>
-          <select id="ai-weather" class="form-select">
-            <% (typeof weatherOptions !== 'undefined' ? weatherOptions : ['Sunshine','Clear Sky','Rainy','Cloudy','Windy','Dawn','Dusk','Twilight','Sunny','Night']).forEach(w => { %>
-              <option value="<%= w %>"><%= w %></option>
-            <% }) %>
-          </select>
-        </div>
-
-        <!-- Color & Textures: Target Object -->
-        <div class="panel-section" id="ep-ct-object" style="display:none;">
-          <label class="panel-label">Objet cible</label>
-          <select id="ai-ct-object" class="form-select">
-            <option value="wall">Mur</option>
-            <option value="floor">Sol</option>
-            <option value="ceiling">Plafond</option>
-            <option value="furniture">Meuble</option>
-            <option value="door">Porte</option>
-            <option value="window">Fenetre</option>
-          </select>
-        </div>
-
-        <!-- Color & Textures: Color -->
-        <div class="panel-section" id="ep-ct-color" style="display:none;">
-          <label class="panel-label">Couleur</label>
-          <select id="ai-ct-color" class="form-select">
-            <option value="">Aucune (prompt ou materiau)</option>
-            <optgroup label="Neutres">
-              <option value="White">Blanc</option><option value="Off White">Blanc casse</option>
-              <option value="Cream">Creme</option><option value="Beige">Beige</option>
-              <option value="Light Gray">Gris clair</option><option value="Medium Gray">Gris moyen</option>
-              <option value="Charcoal">Charbon</option><option value="Black">Noir</option>
-            </optgroup>
-            <optgroup label="Bleus">
-              <option value="Navy Blue">Bleu marine</option><option value="Sky Blue">Bleu ciel</option>
-              <option value="Teal">Sarcelle</option><option value="Turquoise">Turquoise</option>
-            </optgroup>
-            <optgroup label="Verts">
-              <option value="Forest Green">Vert foret</option><option value="Sage Green">Vert sauge</option>
-              <option value="Olive Green">Vert olive</option><option value="Mint Green">Vert menthe</option>
-            </optgroup>
-            <optgroup label="Chauds">
-              <option value="Mustard Yellow">Jaune moutarde</option><option value="Burnt Orange">Orange brule</option>
-              <option value="Terracotta">Terracotta</option><option value="Coral">Corail</option>
-              <option value="Burgundy">Bordeaux</option>
-            </optgroup>
-            <optgroup label="Roses & Violets">
-              <option value="Blush Pink">Rose poudre</option><option value="Lavender">Lavande</option><option value="Plum">Prune</option>
-            </optgroup>
-            <optgroup label="Metalliques">
-              <option value="Gold">Or</option><option value="Silver">Argent</option><option value="Bronze">Bronze</option><option value="Copper">Cuivre</option>
-            </optgroup>
-          </select>
-        </div>
-
-        <!-- Color & Textures: Material -->
-        <div class="panel-section" id="ep-ct-material" style="display:none;">
-          <label class="panel-label">Materiau <span class="optional-tag">optionnel</span></label>
-          <select id="ai-ct-material" class="form-select" onchange="updateMaterialTypes()">
-            <option value="">Aucun</option>
-            <option value="Wood">Bois</option><option value="Stone">Pierre</option>
-            <option value="Metal">Metal</option><option value="Glass">Verre</option>
-            <option value="Fabrics">Tissus</option>
-            <option value="Ceramics and Porcelain">Ceramique</option>
-            <option value="Natural Fibers">Fibres naturelles</option>
-            <option value="Composite Materials">Composites</option>
-          </select>
-        </div>
-
-        <!-- Color & Textures: Material Type -->
-        <div class="panel-section" id="ep-ct-material-type" style="display:none;">
-          <label class="panel-label">Type de materiau</label>
-          <select id="ai-ct-material-type" class="form-select"></select>
-        </div>
-
-        <!-- Paint Visualizer: Color Picker -->
-        <div class="panel-section" id="ep-paint-color" style="display:none;">
-          <label class="panel-label">Couleur de peinture</label>
-          <input type="color" id="ai-paint-color" value="#4A90D9" style="width:100%;height:40px;border:1px solid var(--border-color);border-radius:var(--radius-sm);cursor:pointer;padding:2px;">
-          <span class="input-hint">Choisissez la couleur de peinture</span>
-        </div>
-
-        <!-- Prompt -->
-        <div class="panel-section" id="ep-prompt">
-          <label class="panel-label">Instructions <span class="optional-tag">optionnel</span></label>
-          <input type="text" id="ai-prompt" class="form-input" placeholder="Ex: Ambiance chaleureuse, bois naturel">
-          <span class="input-hint">Utilisez quand l'option n'est pas dans les menus</span>
-        </div>
-
-      </div>
-
-      <!-- Submit -->
-      <div class="panel-actions">
-        <button class="btn btn-primary btn-full" id="ai-submit-btn" onclick="submitAiTool()">
-          <i data-lucide="sparkles"></i>
-          Appliquer
-        </button>
-      </div>
-    </div>
-  </div>
-</div>
-<% } %>
-
-<!-- Furniture Finder Results Modal -->
-<div class="furniture-modal" id="furniture-modal" style="display:none;">
-  <div class="furniture-modal-content">
-    <div class="furniture-modal-header">
-      <h2><i data-lucide="shopping-bag"></i> Meubles trouves</h2>
-      <button class="close-editor-btn" onclick="closeFurnitureModal()"><i data-lucide="x"></i></button>
-    </div>
-    <div class="furniture-results" id="furniture-results"></div>
-  </div>
-</div>
-
-<!-- Lightbox Modal -->
-<div class="lightbox-overlay" id="lightbox-overlay" onclick="closeLightbox()">
-  <div class="lightbox-inner" onclick="event.stopPropagation()">
-    <img src="" alt="" id="lightbox-img" class="lightbox-img">
-    <div class="lightbox-controls">
-      <button class="lightbox-btn lightbox-prev" id="lightbox-prev" onclick="lightboxNav(-1)">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
-      </button>
-      <button class="lightbox-btn lightbox-next" id="lightbox-next" onclick="lightboxNav(1)">
-        <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-      </button>
-    </div>
-  </div>
-  <div class="lightbox-bar">
-    <span class="lightbox-counter" id="lightbox-counter"></span>
-    <a href="#" download id="lightbox-download" class="lightbox-bar-btn" target="_blank" onclick="event.stopPropagation()">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Télécharger
-    </a>
-    <button class="lightbox-bar-btn" onclick="closeLightbox()">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      Fermer
-    </button>
-  </div>
+    </section>
+  <% } else { %>
+    <section class="project-compare-empty">
+      <h2>No comparison available yet</h2>
+      <p>Open the AI Studio, generate a design, then come back to compare the result.</p>
+      <a href="/projects/<%= project._id %>/studio" class="studio-link">Open AI Studio</a>
+    </section>
+  <% } %>
 </div>
 
 <style>
-  .page-container { max-width: 1400px; margin: 0 auto; padding: var(--spacing-xl); }
-  .page-header { margin-bottom: var(--spacing-2xl); }
-  .back-link { display: inline-flex; align-items: center; gap: var(--spacing-xs); color: var(--text-muted); font-size: 0.9rem; margin-bottom: var(--spacing-md); }
-  .back-link:hover { color: var(--text-primary); }
-  .page-header-flex { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--spacing-lg); flex-wrap: wrap; }
-  .page-header-flex h1 { font-size: 2rem; margin-bottom: var(--spacing-sm); }
-  .project-status-badge { display: inline-block; padding: 0.25rem 1rem; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-full); font-size: 0.85rem; font-weight: 600; text-transform: capitalize; }
-  .status-completed { color: var(--success); border-color: rgba(0,255,136,0.3); }
-  .status-generating { color: var(--warning); border-color: rgba(255,165,2,0.3); }
-  .status-draft { color: var(--text-muted); }
-  .page-actions { display: flex; gap: var(--spacing-md); }
-  .project-layout { display: grid; grid-template-columns: 1fr 350px; gap: var(--spacing-xl); }
-  .section-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: var(--spacing-xl); margin-bottom: var(--spacing-xl); }
-  .section-card h2 { font-size: 1.25rem; margin-bottom: var(--spacing-lg); }
-  .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-lg); }
-  .section-header h2 { margin: 0; }
+  .project-compare-page {
+    min-height: calc(100vh - 80px);
+    padding: 32px;
+    color: #f8fafc;
+    background:
+      radial-gradient(circle at top left, rgba(20, 184, 166, 0.18), transparent 34%),
+      #07111f;
+  }
 
-  /* AI Tools Grid */
-  .ai-tools-section { border: 1px solid rgba(16,185,129,0.2); background: linear-gradient(135deg, var(--bg-card), rgba(16,185,129,0.03)); }
-  .tool-hint { font-size: 0.8rem; color: var(--text-muted); }
-  .ai-tools-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
-  .ai-tool-card { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); cursor: pointer; transition: all 0.2s; text-align: left; color: var(--text-primary); }
-  .ai-tool-card:hover { border-color: var(--accent-primary); background: rgba(16,185,129,0.06); transform: translateY(-1px); }
-  .tool-icon { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; background: rgba(16,185,129,0.1); border-radius: var(--radius-sm); flex-shrink: 0; }
-  .tool-icon i { width: 18px; height: 18px; color: var(--accent-primary); }
-  .tool-info { min-width: 0; }
-  .tool-name { display: block; font-size: 0.85rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .tool-desc { display: block; font-size: 0.7rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .project-compare-header {
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 24px;
+    align-items: center;
+    margin-bottom: 28px;
+  }
 
-  /* Design Tab Navigation */
-  .design-tab-nav { display: flex; gap: 2px; border-bottom: 1px solid var(--border-color); margin-bottom: var(--spacing-lg); }
-  .design-tab-btn { display: flex; align-items: center; gap: 7px; padding: 8px 18px; background: none; border: none; border-bottom: 2px solid transparent; margin-bottom: -1px; cursor: pointer; color: var(--text-muted); font-size: 0.88rem; font-weight: 500; transition: all 0.15s; }
-  .design-tab-btn:hover { color: var(--text-primary); }
-  .design-tab-btn.active { color: var(--accent-primary); border-bottom-color: var(--accent-primary); }
-  .design-tab-btn svg { width: 15px; height: 15px; flex-shrink: 0; }
-  .tab-count { display: inline-flex; align-items: center; justify-content: center; background: var(--bg-secondary); border-radius: 999px; font-size: 0.72rem; min-width: 20px; height: 18px; padding: 0 5px; font-weight: 600; }
-  .design-tab-btn.active .tab-count { background: rgba(16,185,129,0.15); color: var(--accent-primary); }
+  .project-compare-header h1 {
+    margin: 4px 0 8px;
+    font-size: clamp(2rem, 3vw, 3.2rem);
+  }
 
-  /* History List */
-  .history-list { display: flex; flex-direction: column; gap: 8px; }
-  .history-entry { display: flex; gap: 12px; align-items: flex-start; padding: 12px; background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: var(--radius-md); transition: border-color 0.15s; }
-  .history-entry:hover { border-color: rgba(16,185,129,0.4); }
-  .history-thumb { flex-shrink: 0; width: 76px; height: 57px; border-radius: var(--radius-sm); overflow: hidden; cursor: pointer; border: 1px solid var(--border-color); }
-  .history-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s; }
-  .history-thumb:hover img { transform: scale(1.06); }
-  .history-body { flex: 1; min-width: 0; }
-  .history-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }
-  .history-tool { font-size: 0.88rem; font-weight: 600; color: var(--text-primary); }
-  .history-date { font-size: 0.73rem; color: var(--text-muted); white-space: nowrap; }
-  .history-params { display: flex; flex-wrap: wrap; gap: 4px; }
-  .history-param { display: inline-block; padding: 2px 7px; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-full); font-size: 0.7rem; color: var(--text-secondary); text-transform: capitalize; }
-  .history-prompt { font-size: 0.75rem; color: var(--text-muted); margin-top: 5px; font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .history-actions { display: flex; flex-direction: column; gap: 4px; flex-shrink: 0; }
-  .history-action-btn { display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; background: none; border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: var(--text-muted); cursor: pointer; transition: all 0.15s; text-decoration: none; }
-  .history-action-btn:hover { background: var(--bg-card); color: var(--text-primary); border-color: var(--accent-primary); }
-  .history-action-btn.delete-btn:hover { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.5); color: #ef4444; }
-  .history-action-btn svg { width: 13px; height: 13px; }
-  .empty-history { text-align: center; padding: var(--spacing-3xl); color: var(--text-muted); }
-  .empty-history p { font-size: 0.95rem; margin-bottom: 4px; }
-  .empty-history span { font-size: 0.82rem; opacity: 0.7; }
+  .project-compare-header p {
+    margin: 0;
+    color: #94a3b8;
+  }
 
-  /* Design Gallery */
-  .design-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: var(--spacing-lg); }
-  .design-variant { background: var(--bg-secondary); border: 2px solid var(--border-color); border-radius: var(--radius-lg); overflow: hidden; transition: all 0.2s; }
-  .design-variant:hover { border-color: var(--accent-primary); }
-  .variant-image { position: relative; aspect-ratio: 4/3; overflow: hidden; cursor: pointer; }
-  .variant-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
-  .variant-image:hover img { transform: scale(1.03); }
-  .variant-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; gap: 8px; opacity: 0; transition: opacity 0.2s; }
-  .variant-image:hover .variant-overlay { opacity: 1; }
-  @media (hover: none) { .variant-overlay { opacity: 1; background: rgba(0,0,0,0.3); } }
-  .variant-info { padding: var(--spacing-md); }
-  .variant-info h4 { font-size: 0.95rem; margin-bottom: var(--spacing-sm); }
-  .empty-designs { text-align: center; padding: var(--spacing-3xl); color: var(--text-muted); }
-  .empty-designs i { width: 48px; height: 48px; margin-bottom: var(--spacing-md); }
+  .eyebrow {
+    color: #5eead4;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
 
-  /* Original Images */
-  .original-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: var(--spacing-md); }
-  .original-image { position: relative; aspect-ratio: 4/3; border-radius: var(--radius-md); overflow: hidden; border: 2px solid var(--border-color); cursor: pointer; transition: border-color 0.2s; }
-  .original-image:hover { border-color: var(--accent-primary); }
-  .original-image img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s; }
-  .original-image:hover img { transform: scale(1.04); }
-  .delete-img-btn { position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; background: rgba(255,50,50,0.9); border: none; border-radius: 50%; color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s; }
-  .original-image:hover .delete-img-btn { opacity: 1; }
-  .delete-img-btn i { width: 16px; height: 16px; }
-  @media (hover: none) { .delete-img-btn { opacity: 1; } }
-  .empty-images { text-align: center; padding: var(--spacing-3xl); background: var(--bg-secondary); border: 2px dashed var(--border-color); border-radius: var(--radius-lg); cursor: pointer; }
-  .empty-images:hover { border-color: var(--accent-primary); }
-  .empty-images i { width: 48px; height: 48px; color: var(--text-muted); margin-bottom: var(--spacing-md); }
+  .back-link,
+  .studio-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0 18px;
+    border: 1px solid rgba(94, 234, 212, 0.28);
+    border-radius: 12px;
+    color: #f8fafc;
+    text-decoration: none;
+    background: rgba(15, 23, 42, 0.72);
+  }
 
-  /* Upload */
-  .upload-section { margin-bottom: var(--spacing-xl); padding: var(--spacing-lg); background: var(--bg-secondary); border-radius: var(--radius-lg); }
-  .upload-area { position: relative; border: 2px dashed var(--border-color); border-radius: var(--radius-md); }
-  .upload-area:hover, .upload-area.dragover { border-color: var(--accent-primary); }
-  .file-input { position: absolute; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
-  .upload-label { display: flex; flex-direction: column; align-items: center; gap: var(--spacing-sm); padding: var(--spacing-xl); text-align: center; cursor: pointer; }
-  .upload-label i { width: 36px; height: 36px; color: var(--text-muted); }
-  .upload-hint { font-size: 0.8rem; color: var(--text-muted); }
-  .upload-preview { display: flex; flex-wrap: wrap; gap: var(--spacing-sm); margin-top: var(--spacing-md); }
-  .upload-preview .preview-item { width: 80px; height: 80px; border-radius: var(--radius-sm); overflow: hidden; }
-  .upload-preview .preview-item img { width: 100%; height: 100%; object-fit: cover; }
-  .upload-actions { display: flex; justify-content: flex-end; gap: var(--spacing-md); margin-top: var(--spacing-lg); }
-  .description-text { color: var(--text-secondary); line-height: 1.7; white-space: pre-wrap; }
+  .studio-link {
+    background: linear-gradient(135deg, #14b8a6, #2563eb);
+    border-color: transparent;
+    font-weight: 800;
+  }
 
-  /* Sidebar */
-  .sidebar-card { background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-lg); padding: var(--spacing-lg); margin-bottom: var(--spacing-lg); }
-  .sidebar-card h3 { font-size: 1rem; margin-bottom: var(--spacing-md); }
-  .detail-list { display: flex; flex-direction: column; gap: var(--spacing-md); }
-  .detail-item { display: flex; justify-content: space-between; font-size: 0.9rem; }
-  .detail-label { color: var(--text-muted); }
-  .detail-value { font-weight: 500; text-transform: capitalize; }
-  .share-link { display: flex; gap: var(--spacing-sm); }
-  .share-link input { flex: 1; font-size: 0.8rem; }
-  .contractor-list { display: flex; flex-direction: column; gap: var(--spacing-md); }
-  .contractor-request { display: flex; justify-content: space-between; align-items: center; padding: var(--spacing-sm); background: var(--bg-secondary); border-radius: var(--radius-sm); font-size: 0.9rem; }
+  .before-after {
+    position: relative;
+    overflow: hidden;
+    max-width: 1180px;
+    aspect-ratio: 16 / 10;
+    margin: 0 auto;
+    border: 1px solid rgba(94, 234, 212, 0.22);
+    border-radius: 24px;
+    background: #020617;
+    box-shadow: 0 32px 90px rgba(0, 0, 0, 0.34);
+  }
 
-  /* ============================================================ */
-  /* FULL-SCREEN TOOL EDITOR                                      */
-  /* ============================================================ */
-  .tool-editor { position: fixed; inset: 0; background: var(--bg-primary); display: none; flex-direction: column; z-index: 9998; }
-  .tool-editor.active { display: flex; }
+  .before-after__image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    user-select: none;
+    pointer-events: none;
+  }
 
-  .tool-editor-header { display: flex; align-items: center; gap: var(--spacing-lg); padding: 10px 16px; background: var(--bg-card); border-bottom: 1px solid var(--border-color); flex-shrink: 0; min-height: 52px; }
-  .editor-title { display: flex; align-items: center; gap: var(--spacing-sm); color: var(--text-primary); font-weight: 600; font-size: 0.95rem; white-space: nowrap; }
-  .editor-title i { width: 18px; height: 18px; color: var(--accent-primary); }
-  .editor-toolbar { display: flex; align-items: center; gap: 8px; flex: 1; justify-content: center; }
-  .editor-toolbar.hidden { display: none; }
-  .tool-group { display: flex; align-items: center; gap: 4px; }
-  .tool-separator { width: 1px; height: 24px; background: var(--border-color); margin: 0 4px; }
-  .tool-btn { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: transparent; border: 1px solid transparent; border-radius: var(--radius-sm); color: var(--text-muted); cursor: pointer; transition: all 0.15s; }
-  .tool-btn:hover { background: var(--bg-tertiary); color: var(--text-primary); }
-  .tool-btn.active { background: rgba(16,185,129,0.12); border-color: rgba(16,185,129,0.3); color: var(--accent-primary); }
-  .tool-btn i { width: 18px; height: 18px; }
-  .brush-size-group { gap: 8px; }
-  .brush-size-group .size-icon { width: 14px; height: 14px; color: var(--text-muted); }
-  .brush-slider { width: 100px; height: 4px; -webkit-appearance: none; appearance: none; background: var(--border-color); border-radius: 2px; outline: none; }
-  .brush-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; background: var(--accent-primary); border-radius: 50%; cursor: pointer; }
-  .brush-size-val { font-size: 0.75rem; color: var(--text-muted); min-width: 24px; text-align: center; }
-  .close-editor-btn { display: flex; align-items: center; justify-content: center; width: 36px; height: 36px; background: transparent; border: 1px solid var(--border-color); border-radius: var(--radius-sm); color: var(--text-muted); cursor: pointer; transition: all 0.15s; flex-shrink: 0; }
-  .close-editor-btn:hover { background: var(--error); border-color: var(--error); color: #fff; }
-  .close-editor-btn i { width: 18px; height: 18px; }
+  .before-after__before {
+    position: absolute;
+    inset: 0;
+    width: 50%;
+    overflow: hidden;
+  }
 
-  .tool-editor-body { flex: 1; display: flex; overflow: hidden; }
-  .canvas-area { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 16px; min-width: 0; background: var(--bg-primary); }
-  .canvas-wrapper { position: relative; display: inline-block; border-radius: var(--radius-md); overflow: hidden; box-shadow: 0 0 0 1px var(--border-color), var(--shadow-xl); }
-  .canvas-wrapper canvas { display: block; }
-  .canvas-wrapper.mask-mode canvas { cursor: none; }
-  .canvas-cursor { position: absolute; border: 2px solid rgba(16,185,129,0.8); border-radius: 50%; pointer-events: none; display: none; transform: translate(-50%, -50%); z-index: 10; box-shadow: 0 0 0 1px rgba(0,0,0,0.3); }
-  .canvas-cursor.eraser-cursor { border-color: rgba(239,68,68,0.8); }
-  .canvas-hint { display: flex; align-items: center; gap: var(--spacing-sm); margin-top: 12px; font-size: 0.8rem; color: var(--text-muted); }
-  .canvas-hint i { width: 14px; height: 14px; }
+  .before-after__handle {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 3px;
+    background: #5eead4;
+    transform: translateX(-50%);
+    pointer-events: none;
+  }
 
-  .editor-panel { width: 300px; flex-shrink: 0; display: flex; flex-direction: column; background: var(--bg-card); border-left: 1px solid var(--border-color); }
-  .panel-scroll { flex: 1; overflow-y: auto; padding: 20px 16px; display: flex; flex-direction: column; gap: 16px; }
-  .panel-section { display: flex; flex-direction: column; gap: 6px; }
-  .panel-label { font-size: 0.8rem; font-weight: 600; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; display: flex; align-items: center; gap: 6px; }
-  .optional-tag { font-size: 0.65rem; font-weight: 400; text-transform: none; letter-spacing: 0; opacity: 0.7; }
-  .input-hint { font-size: 0.72rem; color: var(--text-muted); margin-top: 2px; opacity: 0.7; }
-  .editor-panel .form-select, .editor-panel .form-input { background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary); font-size: 0.85rem; padding: 8px 10px; border-radius: var(--radius-sm); }
-  .editor-panel .form-select:focus, .editor-panel .form-input:focus { border-color: var(--accent-primary); outline: none; box-shadow: 0 0 0 2px rgba(16,185,129,0.15); }
-  .panel-actions { padding: 16px; border-top: 1px solid var(--border-color); flex-shrink: 0; }
-  .btn-full { width: 100%; justify-content: center; }
+  .before-after__handle span {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 54px;
+    height: 54px;
+    border: 2px solid rgba(255, 255, 255, 0.88);
+    border-radius: 999px;
+    background: rgba(15, 23, 42, 0.84);
+    transform: translate(-50%, -50%);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+  }
 
-  .config-pills { display: flex; gap: 6px; }
-  .pill { padding: 6px 14px; border: 1px solid var(--border-color); border-radius: var(--radius-full); background: var(--bg-secondary); color: var(--text-secondary); cursor: pointer; font-size: 0.8rem; transition: all 0.15s; }
-  .pill:hover { border-color: var(--accent-primary); }
-  .pill.active { background: var(--accent-primary); color: #000; border-color: var(--accent-primary); font-weight: 600; }
+  .before-after__range {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: ew-resize;
+  }
 
-  .source-images { display: flex; gap: 6px; flex-wrap: wrap; }
-  .source-img { position: relative; width: 56px; height: 56px; border-radius: var(--radius-sm); overflow: hidden; border: 2px solid var(--border-color); cursor: pointer; }
-  .source-img:hover { border-color: var(--accent-primary); }
-  .source-img.selected { border-color: var(--accent-primary); box-shadow: 0 0 0 2px rgba(16,185,129,0.3); }
-  .source-img img { width: 100%; height: 100%; object-fit: cover; }
-  .source-check { position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; background: var(--accent-primary); border-radius: 50%; display: none; align-items: center; justify-content: center; }
-  .source-check i { width: 10px; height: 10px; color: #000; }
-  .source-img.selected .source-check { display: flex; }
+  .before-after__labels {
+    position: absolute;
+    left: 18px;
+    right: 18px;
+    bottom: 18px;
+    display: flex;
+    justify-content: space-between;
+    gap: 16px;
+    pointer-events: none;
+  }
 
-  /* Furniture Modal */
-  .furniture-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 9999; padding: 20px; }
-  .furniture-modal-content { background: var(--bg-card); border-radius: var(--radius-lg); max-width: 900px; width: 100%; max-height: 80vh; overflow-y: auto; }
-  .furniture-modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; background: var(--bg-card); z-index: 1; }
-  .furniture-modal-header h2 { display: flex; align-items: center; gap: 8px; font-size: 1.1rem; margin: 0; }
-  .furniture-results { padding: 20px; }
-  .furniture-category { margin-bottom: 24px; }
-  .furniture-category h3 { font-size: 1rem; margin-bottom: 12px; text-transform: capitalize; border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
-  .furniture-items { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
-  .furniture-item { border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow: hidden; }
-  .furniture-item:hover { border-color: var(--accent-primary); }
-  .furniture-item img { width: 100%; height: 140px; object-fit: contain; background: #fff; padding: 8px; }
-  .furniture-item-info { padding: 10px; }
-  .furniture-item-info .fi-title { font-size: 0.8rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 4px; }
-  .furniture-item-info .fi-price { font-weight: 700; color: var(--accent-primary); }
-  .furniture-item-info a { color: var(--accent-primary); text-decoration: none; font-size: 0.75rem; }
+  .before-after__labels span {
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(2, 6, 23, 0.74);
+    color: #f8fafc;
+    font-weight: 800;
+  }
 
-  /* Lightbox */
-  .lightbox-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.96); display: none; flex-direction: column; z-index: 9999; }
-  .lightbox-overlay.active { display: flex; }
-  .lightbox-inner { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; padding: 16px 60px; min-height: 0; overflow: hidden; }
-  .lightbox-img { max-width: 100%; max-height: calc(100vh - 80px); object-fit: contain; border-radius: var(--radius-md); user-select: none; }
-  .lightbox-controls { position: absolute; inset: 0; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; pointer-events: none; }
-  .lightbox-btn { width: 44px; height: 44px; background: rgba(255,255,255,0.12); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.2); border-radius: 50%; color: #fff; cursor: pointer; display: flex; align-items: center; justify-content: center; pointer-events: all; transition: background 0.2s; flex-shrink: 0; }
-  .lightbox-btn:hover { background: rgba(255,255,255,0.25); }
-  .lightbox-bar { display: flex; align-items: center; gap: 12px; padding: 10px 16px; background: rgba(0,0,0,0.5); border-top: 1px solid rgba(255,255,255,0.08); flex-shrink: 0; }
-  .lightbox-counter { color: rgba(255,255,255,0.6); font-size: 0.82rem; flex: 1; text-align: center; }
-  .lightbox-bar-btn { display: inline-flex; align-items: center; gap: 6px; color: rgba(255,255,255,0.85); background: rgba(255,255,255,0.1); border: none; border-radius: 6px; padding: 6px 14px; cursor: pointer; font-size: 0.8rem; text-decoration: none; transition: background 0.15s; white-space: nowrap; }
-  .lightbox-bar-btn:hover { background: rgba(255,255,255,0.22); color: #fff; }
+  .project-compare-empty {
+    max-width: 720px;
+    margin: 80px auto 0;
+    padding: 36px;
+    border: 1px dashed rgba(94, 234, 212, 0.32);
+    border-radius: 24px;
+    text-align: center;
+    background: rgba(15, 23, 42, 0.78);
+  }
 
-  @media (max-width: 1024px) { .project-layout { grid-template-columns: 1fr; } }
-  @media (max-width: 768px) {
-    .tool-editor-body { flex-direction: column; }
-    .editor-panel { width: 100%; max-height: 40vh; border-left: none; border-top: 1px solid var(--border-color); }
-    .canvas-area { min-height: 300px; }
-    .editor-toolbar { display: none; }
-    .ai-tools-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+  @media (max-width: 760px) {
+    .project-compare-page {
+      padding: 20px;
+    }
+
+    .project-compare-header {
+      grid-template-columns: 1fr;
+    }
+
+    .before-after {
+      aspect-ratio: 4 / 5;
+    }
   }
 </style>
 
 <script>
-const projectId = '<%= project._id %>';
-const projectImages = [<% project.originalImages.forEach((img, i) => { %>'<%= img.url %>',<% }) %>];
-const designVariantsUrls = <%- JSON.stringify((project.designVariants||[]).map(v=>v.imageUrl||'')) %>;
-const originalImagesUrls = <%- JSON.stringify((project.originalImages||[]).map(img=>img.url||'')) %>;
-const historyUrls = <%- JSON.stringify([...(project.designVariants||[])].sort((a,b)=>new Date(b.generatedAt||0)-new Date(a.generatedAt||0)).map(v=>v.imageUrl||v.thumbnailUrl||'')) %>;
-let selectedTool = null;
-let selectedImageIndex = 0;
-let currentDesignType = 'Interior';
-let isMaskTool = false;
+  const range = document.getElementById('compare-range');
+  const beforeLayer = document.getElementById('before-layer');
+  const handle = document.getElementById('compare-handle');
 
-// Tool name/icon lookup
-const TOOL_META = {
-  'beautiful-redesign': { name: 'Beautiful Redesign', icon: 'sparkles' },
-  'perfect-redesign': { name: 'Perfect Redesign', icon: 'gem' },
-  'creative-redesign': { name: 'Creative Design', icon: 'wand-2' },
-  'sketch-to-render': { name: 'Sketch to Render', icon: 'pencil-ruler' },
-  'precision': { name: 'Precision', icon: 'target' },
-  'fill-spaces': { name: 'Fill Spaces', icon: 'layout-grid' },
-  'decor-staging': { name: 'Decor Staging', icon: 'lamp' },
-  'furniture-removal': { name: 'Furniture Removal', icon: 'eraser' },
-  'color-textures': { name: 'Color & Textures', icon: 'palette' },
-  'paint-visualizer': { name: 'Paint Visualizer', icon: 'paintbrush' },
-  'furniture-finder': { name: 'Furniture Finder', icon: 'shopping-bag' },
-  'full-hd': { name: 'Full HD', icon: 'monitor' },
-  'sky-colors': { name: 'Sky Colors', icon: 'cloud-sun' },
-  'magic-redesign': { name: 'Magic Redesign', icon: 'zap' },
-  'video-generation': { name: 'Video Generation', icon: 'video' },
-  'virtual-staging': { name: 'Virtual Staging', icon: 'sofa' },
-  'text-to-design': { name: 'Text to Design', icon: 'type' },
-  'furniture-creator': { name: 'Furniture Creator', icon: 'armchair' },
-  'design-advisor': { name: 'Design Advisor', icon: 'lightbulb' },
-  'design-transfer': { name: 'Design Transfer', icon: 'arrow-right-left' },
-  'floor-editor': { name: 'Floor Editor', icon: 'grid-3x3' },
-  'material-swap': { name: 'Material Swap', icon: 'refresh-cw' },
-  'room-composer': { name: 'Room Composer', icon: 'layout-dashboard' },
-  'design-critique': { name: 'Design Critique', icon: 'message-square' },
-  'create-mask-image': { name: 'Create Mask Image', icon: 'scissors' },
-  'smart-home': { name: 'Smart Home', icon: 'home' }
-};
+  function updateComparison(value) {
+    if (!beforeLayer || !handle) return;
+    beforeLayer.style.width = `${value}%`;
+    handle.style.left = `${value}%`;
+  }
 
-// ============================================================
-// MASK CANVAS
-// ============================================================
-<% if (project.originalImages && project.originalImages.length > 0) { %>
-let maskCanvas, displayCtx, overlayCanvas, overlayCtx;
-let painting = false, bgImage = null, currentMaskTool = 'brush', lastPoint = null;
-let strokeHistory = [], canvasReady = false;
-const MAX_UNDO = 25;
-
-function initCanvas() {
-  maskCanvas = document.getElementById('mask-canvas');
-  displayCtx = maskCanvas.getContext('2d');
-  maskCanvas.addEventListener('mousedown', startPaint);
-  maskCanvas.addEventListener('mousemove', onCanvasMove);
-  maskCanvas.addEventListener('mouseup', stopPaint);
-  maskCanvas.addEventListener('mouseleave', () => { stopPaint(); document.getElementById('canvas-cursor').style.display = 'none'; });
-  maskCanvas.addEventListener('mouseenter', () => { if (isMaskTool) document.getElementById('canvas-cursor').style.display = 'block'; });
-  maskCanvas.addEventListener('touchstart', (e) => { e.preventDefault(); startPaint(touchPos(e)); }, { passive: false });
-  maskCanvas.addEventListener('touchmove', (e) => { e.preventDefault(); onCanvasMove(touchPos(e)); }, { passive: false });
-  maskCanvas.addEventListener('touchend', stopPaint);
-
-  document.getElementById('brush-size').addEventListener('input', function() {
-    document.getElementById('brush-size-display').textContent = this.value;
+  range?.addEventListener('input', (event) => {
+    updateComparison(event.target.value);
   });
-  document.getElementById('ai-strength')?.addEventListener('input', function() {
-    document.getElementById('strength-val').textContent = this.value;
-  });
-  canvasReady = true;
-}
 
-function loadImage(idx) {
-  const img = new Image();
-  img.crossOrigin = 'anonymous';
-  img.onload = () => { bgImage = img; resizeCanvas(); };
-  img.src = projectImages[idx] || projectImages[0];
-}
-
-function resizeCanvas() {
-  if (!bgImage) return;
-  const area = document.querySelector('.canvas-area');
-  const maxW = area.clientWidth - 32, maxH = area.clientHeight - 60;
-  const scale = Math.min(maxW / bgImage.width, maxH / bgImage.height, 1);
-  const w = Math.round(bgImage.width * scale), h = Math.round(bgImage.height * scale);
-  maskCanvas.width = w; maskCanvas.height = h;
-  overlayCanvas = document.createElement('canvas');
-  overlayCanvas.width = w; overlayCanvas.height = h;
-  overlayCtx = overlayCanvas.getContext('2d');
-  strokeHistory = [];
-  compositeDisplay();
-}
-
-function touchPos(e) { const r = maskCanvas.getBoundingClientRect(), t = e.touches[0]; return { offsetX: t.clientX - r.left, offsetY: t.clientY - r.top }; }
-
-function compositeDisplay() {
-  displayCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
-  displayCtx.drawImage(bgImage, 0, 0, maskCanvas.width, maskCanvas.height);
-  if (isMaskTool) { displayCtx.globalAlpha = 0.4; displayCtx.drawImage(overlayCanvas, 0, 0); displayCtx.globalAlpha = 1.0; }
-}
-
-function startPaint(e) {
-  if (!isMaskTool) return;
-  painting = true;
-  strokeHistory.push(overlayCtx.getImageData(0, 0, overlayCanvas.width, overlayCanvas.height));
-  if (strokeHistory.length > MAX_UNDO) strokeHistory.shift();
-  lastPoint = { x: e.offsetX, y: e.offsetY };
-  paintAt(e.offsetX, e.offsetY);
-}
-
-function onCanvasMove(e) {
-  if (isMaskTool) {
-    const cursor = document.getElementById('canvas-cursor');
-    const bs = parseInt(document.getElementById('brush-size').value);
-    cursor.style.width = bs + 'px'; cursor.style.height = bs + 'px';
-    cursor.style.left = e.offsetX + 'px'; cursor.style.top = e.offsetY + 'px';
-    cursor.style.display = 'block';
-  }
-  if (painting) paintAt(e.offsetX, e.offsetY);
-}
-
-function paintAt(x, y) {
-  const bs = parseInt(document.getElementById('brush-size').value);
-  if (currentMaskTool === 'brush') {
-    overlayCtx.globalCompositeOperation = 'source-over';
-    overlayCtx.strokeStyle = overlayCtx.fillStyle = '#00ff88';
-  } else {
-    overlayCtx.globalCompositeOperation = 'destination-out';
-    overlayCtx.strokeStyle = overlayCtx.fillStyle = 'rgba(0,0,0,1)';
-  }
-  if (lastPoint) { overlayCtx.beginPath(); overlayCtx.lineWidth = bs; overlayCtx.lineCap = overlayCtx.lineJoin = 'round'; overlayCtx.moveTo(lastPoint.x, lastPoint.y); overlayCtx.lineTo(x, y); overlayCtx.stroke(); }
-  else { overlayCtx.beginPath(); overlayCtx.arc(x, y, bs/2, 0, Math.PI*2); overlayCtx.fill(); }
-  overlayCtx.globalCompositeOperation = 'source-over';
-  lastPoint = { x, y };
-  compositeDisplay();
-}
-
-function stopPaint() { painting = false; lastPoint = null; }
-function setMaskTool(t) { currentMaskTool = t; document.getElementById('tool-brush').classList.toggle('active', t==='brush'); document.getElementById('tool-eraser').classList.toggle('active', t==='eraser'); document.getElementById('canvas-cursor').classList.toggle('eraser-cursor', t==='eraser'); }
-function undoMaskStroke() { if (strokeHistory.length > 0) { overlayCtx.putImageData(strokeHistory.pop(), 0, 0); compositeDisplay(); } }
-function clearMaskCanvas() { strokeHistory = []; if (overlayCtx) overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height); if (bgImage) compositeDisplay(); }
-function hasMaskContent() { if (!overlayCtx) return false; const d = overlayCtx.getImageData(0, 0, overlayCanvas.width, overlayCanvas.height).data; for (let i = 3; i < d.length; i += 4) { if (d[i] > 0) return true; } return false; }
-
-function generateMaskBase64() {
-  const ow = bgImage.naturalWidth || bgImage.width, oh = bgImage.naturalHeight || bgImage.height;
-  let outW = ow, outH = oh;
-  if (outW < 512 || outH < 512) { const u = Math.max(512/outW, 512/outH); outW = Math.round(outW*u); outH = Math.round(outH*u); }
-  const sc = document.createElement('canvas'); sc.width = outW; sc.height = outH;
-  sc.getContext('2d').drawImage(overlayCanvas, 0, 0, overlayCanvas.width, overlayCanvas.height, 0, 0, outW, outH);
-  const tmp = document.createElement('canvas'); tmp.width = outW; tmp.height = outH;
-  const ctx = tmp.getContext('2d'); ctx.fillStyle = '#000'; ctx.fillRect(0, 0, outW, outH);
-  const od = sc.getContext('2d').getImageData(0, 0, outW, outH), md = ctx.getImageData(0, 0, outW, outH);
-  for (let i = 0; i < od.data.length; i += 4) { if (od.data[i+3] > 0) { md.data[i] = md.data[i+1] = md.data[i+2] = md.data[i+3] = 255; } }
-  ctx.putImageData(md, 0, 0);
-  return tmp.toDataURL('image/png');
-}
-<% } %>
-
-// ============================================================
-// TOOL EDITOR - OPEN / CLOSE
-// ============================================================
-function openToolEditor(toolId) {
-  selectedTool = toolId;
-  const card = document.querySelector(`.ai-tool-card[data-tool="${toolId}"]`);
-  isMaskTool = card.dataset.requiresMask === 'true';
-  const requiresStyle = card.dataset.requiresStyle === 'true';
-  const maxDesigns = parseInt(card.dataset.maxDesigns);
-  const meta = TOOL_META[toolId] || {};
-
-  // Set editor title
-  document.getElementById('editor-title').textContent = meta.name || toolId;
-
-  // Show/hide toolbar (only for mask tools)
-  document.getElementById('editor-toolbar').classList.toggle('hidden', !isMaskTool);
-  document.getElementById('canvas-wrapper').classList.toggle('mask-mode', isMaskTool);
-  document.getElementById('canvas-hint').querySelector('span').textContent =
-    isMaskTool ? 'Peignez les zones a modifier, puis configurez les options a droite'
-               : 'Configurez les options a droite, puis cliquez Appliquer';
-
-  // Show/hide panel sections
-  const show = (id, v) => { const el = document.getElementById(id); if (el) el.style.display = v ? '' : 'none'; };
-  show('ep-source', projectImages.length > 1);
-  const isMaterial = toolId === 'color-textures' || toolId === 'floor-editor' || toolId === 'material-swap';
-  show('ep-design-type', requiresStyle || isMaterial);
-  show('ep-style', requiresStyle);
-  show('ep-room-type', requiresStyle && currentDesignType === 'Interior');
-  show('ep-house-angle', requiresStyle && currentDesignType === 'Exterior');
-  show('ep-garden-type', requiresStyle && currentDesignType === 'Garden');
-  show('ep-intervention', requiresStyle && toolId !== 'precision' && toolId !== 'fill-spaces');
-  show('ep-no-design', maxDesigns > 1);
-  show('ep-strength', toolId === 'precision' || toolId === 'fill-spaces');
-  show('ep-weather', toolId === 'sky-colors');
-  show('ep-prompt', toolId !== 'furniture-finder' && toolId !== 'full-hd' && toolId !== 'furniture-removal' && toolId !== 'paint-visualizer' && toolId !== 'create-mask-image');
-  show('ep-paint-color', toolId === 'paint-visualizer');
-
-  // Color & Texture / Floor Editor / Material Swap panels
-  show('ep-ct-object', toolId === 'color-textures');
-  show('ep-ct-color', isMaterial);
-  show('ep-ct-material', isMaterial);
-  show('ep-ct-material-type', false);
-
-  // Max designs dropdown
-  if (maxDesigns > 0) {
-    const sel = document.getElementById('ai-no-design');
-    sel.innerHTML = '';
-    for (let i = 1; i <= maxDesigns; i++) sel.innerHTML += `<option value="${i}">${i}</option>`;
-  }
-
-  // Open modal
-  document.getElementById('tool-editor').classList.add('active');
-  lucide.createIcons();
-
-  // Init canvas
-  if (!canvasReady) initCanvas();
-  clearMaskCanvas();
-  loadImage(selectedImageIndex);
-}
-
-function closeToolEditor() {
-  document.getElementById('tool-editor').classList.remove('active');
-  selectedTool = null;
-}
-
-function selectSourceImage(idx) {
-  selectedImageIndex = idx;
-  document.querySelectorAll('.source-img').forEach((el, i) => el.classList.toggle('selected', i === idx));
-  clearMaskCanvas();
-  loadImage(idx);
-}
-
-function setDesignType(type) {
-  currentDesignType = type;
-  document.querySelectorAll('.config-pills .pill').forEach(p => p.classList.toggle('active', p.dataset.value === type));
-  const show = (id, v) => { const el = document.getElementById(id); if (el) el.style.display = v ? '' : 'none'; };
-  show('ep-room-type', type === 'Interior');
-  show('ep-house-angle', type === 'Exterior');
-  show('ep-garden-type', type === 'Garden');
-}
-
-// ============================================================
-// MATERIAL SUBTYPES
-// ============================================================
-const MATERIAL_SUBTYPES = {
-  'Wood': ['Oak','Maple','Cherry','Walnut','Pine','Teak','Mahogany','Bamboo','Birch'],
-  'Stone': ['Marble','Granite','Limestone','Slate','Travertine','Sandstone'],
-  'Metal': ['Gold','Silver','Bronze','Copper','Brass','Steel','Chrome'],
-  'Glass': ['Clear','Frosted','Tinted','Stained','Tempered','Mirrored'],
-  'Fabrics': ['Cotton','Linen','Silk','Velvet','Wool','Leather','Suede'],
-  'Ceramics and Porcelain': ['Glazed','Matte','Porcelain','Terracotta','Mosaic'],
-  'Natural Fibers': ['Jute','Sisal','Hemp','Rattan','Wicker','Seagrass'],
-  'Composite Materials': ['MDF','Plywood','Laminate','Corian','Quartz']
-};
-function updateMaterialTypes() {
-  const mat = document.getElementById('ai-ct-material').value;
-  const row = document.getElementById('ep-ct-material-type'), sel = document.getElementById('ai-ct-material-type');
-  if (mat && MATERIAL_SUBTYPES[mat]) { sel.innerHTML = MATERIAL_SUBTYPES[mat].map(t => `<option value="${t}">${t}</option>`).join(''); row.style.display = ''; }
-  else { row.style.display = 'none'; }
-}
-
-// ============================================================
-// SUBMIT
-// ============================================================
-async function submitAiTool() {
-  if (!selectedTool) return;
-
-  // Mask validation
-  if (isMaskTool && !hasMaskContent()) {
-    showNotification('Veuillez peindre les zones a modifier', 'error');
-    return;
-  }
-
-  // Color & Textures validation
-  if (selectedTool === 'color-textures') {
-    const c = document.getElementById('ai-ct-color').value;
-    const m = document.getElementById('ai-ct-material').value;
-    const p = document.getElementById('ai-prompt').value;
-    if (!c && !m && !p) { showNotification('Choisissez une couleur, materiau ou instruction', 'error'); return; }
-  }
-
-  const btn = document.getElementById('ai-submit-btn');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Traitement en cours...';
-  function resetBtn() { btn.disabled = false; btn.innerHTML = '<i data-lucide="sparkles"></i> Appliquer'; lucide.createIcons(); }
-
-  try {
-    const body = { imageIndex: selectedImageIndex };
-    const card = document.querySelector(`.ai-tool-card[data-tool="${selectedTool}"]`);
-    const requiresStyle = card.dataset.requiresStyle === 'true';
-
-    const isMat = selectedTool === 'color-textures' || selectedTool === 'floor-editor' || selectedTool === 'material-swap';
-    if (requiresStyle || isMat) {
-      body.designType = currentDesignType;
-      if (currentDesignType === 'Exterior') body.houseAngle = document.getElementById('ai-house-angle').value;
-      if (currentDesignType === 'Garden') body.gardenType = document.getElementById('ai-garden-type').value;
-    }
-    if (requiresStyle) body.aiIntervention = document.getElementById('ai-intervention')?.value || 'Mid';
-
-    const v = (id) => { const el = document.getElementById(id); return el && el.offsetParent !== null ? el.value : null; };
-    if (v('ai-style')) body.style = v('ai-style');
-    if (v('ai-room-type')) body.roomType = v('ai-room-type');
-    if (v('ai-no-design')) body.noDesign = parseInt(v('ai-no-design'));
-    if (v('ai-prompt')) body.prompt = v('ai-prompt');
-    if (v('ai-strength')) body.strength = parseInt(v('ai-strength'));
-    if (v('ai-weather')) body.weather = v('ai-weather');
-
-    if (isMaskTool) body.maskBase64 = generateMaskBase64();
-
-    if (isMat) {
-      if (v('ai-ct-color')) body.color = v('ai-ct-color');
-      if (v('ai-ct-material')) body.materials = v('ai-ct-material');
-      if (v('ai-ct-material-type')) body.materialsType = v('ai-ct-material-type');
-      if (selectedTool === 'color-textures' && v('ai-ct-object')) body.object = v('ai-ct-object');
-    }
-
-    if (selectedTool === 'paint-visualizer') {
-      const hex = document.getElementById('ai-paint-color').value;
-      const r = parseInt(hex.slice(1,3), 16);
-      const g = parseInt(hex.slice(3,5), 16);
-      const b = parseInt(hex.slice(5,7), 16);
-      body.rgbColor = `${r},${g},${b}`;
-    }
-
-    const res = await fetch(`/projects/${projectId}/ai/${selectedTool}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify(body)
-    });
-
-    if (res.redirected) { window.location.href = '/auth/login'; return; }
-    const ct = res.headers.get('content-type');
-    if (!ct || !ct.includes('application/json')) { if (res.status === 401) { showNotification('Session expiree', 'error'); setTimeout(() => window.location.href = '/auth/login', 1500); return; } throw new Error('Reponse inattendue'); }
-
-    const data = await res.json();
-    if (data.success) {
-      if (selectedTool === 'furniture-finder' && data.resultArray) { showFurnitureResults(data.resultArray); resetBtn(); return; }
-      if (data.textResult) { showTextResult(data.textResult, data.tool); resetBtn(); return; }
-      if (data.videoUrl) { showNotification(`${data.tool || 'Video'} - Succes!`); closeToolEditor(); setTimeout(() => window.location.reload(), 1000); return; }
-      showNotification(`${data.tool || 'Design'} - Succes!`);
-      closeToolEditor();
-      setTimeout(() => window.location.reload(), 1000);
-    } else { showNotification(data.error || 'Echec', 'error'); resetBtn(); }
-  } catch (err) { console.error(err); showNotification(err.message || 'Erreur', 'error'); resetBtn(); }
-}
-
-// ============================================================
-// TEXT RESULT (Design Advisor / Design Critique)
-// ============================================================
-function showTextResult(text, title) {
-  closeToolEditor();
-  let overlay = document.getElementById('text-result-overlay');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'text-result-overlay';
-    overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.7);display:flex;align-items:center;justify-content:center;padding:1rem';
-    overlay.innerHTML = `
-      <div style="background:var(--bg-secondary,#1a1a2e);border-radius:1rem;padding:2rem;max-width:640px;width:100%;max-height:80vh;overflow-y:auto;position:relative">
-        <button onclick="document.getElementById('text-result-overlay').remove()" style="position:absolute;top:1rem;right:1rem;background:none;border:none;color:var(--text-primary,#fff);font-size:1.5rem;cursor:pointer">&times;</button>
-        <h3 id="text-result-title" style="margin:0 0 1rem;color:var(--text-primary,#fff)"></h3>
-        <div id="text-result-body" style="color:var(--text-secondary,#ccc);line-height:1.7;white-space:pre-wrap"></div>
-      </div>`;
-    document.body.appendChild(overlay);
-  }
-  document.getElementById('text-result-title').textContent = title || 'Resultat';
-  document.getElementById('text-result-body').textContent = text;
-  overlay.style.display = 'flex';
-}
-
-// ============================================================
-// FURNITURE FINDER
-// ============================================================
-function showFurnitureResults(resultArray) {
-  const c = document.getElementById('furniture-results'); c.innerHTML = '';
-  for (const [cat, items] of Object.entries(resultArray)) {
-    if (!items || !items.length) continue;
-    let h = `<div class="furniture-category"><h3>${cat}</h3><div class="furniture-items">`;
-    items.forEach(i => { h += `<div class="furniture-item"><img src="${i.thumbnail}" alt="${i.title}" loading="lazy"><div class="furniture-item-info"><div class="fi-title">${i.title}</div>${i.price ? `<div class="fi-price">${i.price.value||''}</div>` : ''}<div style="font-size:0.7rem;color:var(--text-muted)">${i.source||''}</div>${i.link ? `<a href="${i.link}" target="_blank">Voir</a>` : ''}</div></div>`; });
-    h += '</div></div>'; c.innerHTML += h;
-  }
-  if (!c.innerHTML) c.innerHTML = '<p style="color:var(--text-muted)">Aucun meuble trouve.</p>';
-  document.getElementById('furniture-modal').style.display = 'flex';
-  lucide.createIcons();
-}
-function closeFurnitureModal() { document.getElementById('furniture-modal').style.display = 'none'; }
-
-// ============================================================
-// UPLOAD / DELETE / UTILS
-// ============================================================
-const uploadSection = document.getElementById('upload-section');
-const uploadForm = document.getElementById('upload-form');
-const uploadArea = document.getElementById('upload-area');
-const fileInput = document.getElementById('images');
-const previewContainer = document.getElementById('upload-preview');
-
-function toggleUpload() { uploadSection.style.display = uploadSection.style.display === 'none' ? 'block' : 'none'; if (uploadSection.style.display === 'block') lucide.createIcons(); }
-
-if (uploadArea) {
-  ['dragenter','dragover','dragleave','drop'].forEach(e => uploadArea.addEventListener(e, ev => { ev.preventDefault(); ev.stopPropagation(); }, false));
-  ['dragenter','dragover'].forEach(e => uploadArea.addEventListener(e, () => uploadArea.classList.add('dragover'), false));
-  ['dragleave','drop'].forEach(e => uploadArea.addEventListener(e, () => uploadArea.classList.remove('dragover'), false));
-  uploadArea.addEventListener('drop', (e) => { fileInput.files = e.dataTransfer.files; fileInput.dispatchEvent(new Event('change')); });
-}
-if (fileInput) {
-  fileInput.addEventListener('change', function() {
-    previewContainer.innerHTML = '';
-    Array.from(this.files).forEach(f => { const r = new FileReader(); r.onload = (e) => { const d = document.createElement('div'); d.className = 'preview-item'; d.innerHTML = `<img src="${e.target.result}">`; previewContainer.appendChild(d); }; r.readAsDataURL(f); });
-  });
-}
-if (uploadForm) {
-  uploadForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const fd = new FormData(); Array.from(fileInput.files).forEach(f => fd.append('images', f));
-    const btn = document.getElementById('upload-btn'); btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Televersement...';
-    try { const r = await fetch(`/projects/${projectId}/upload`, { method: 'POST', body: fd }); const d = await r.json(); if (d.success) { showNotification(d.message); setTimeout(() => window.location.reload(), 500); } else { showNotification(d.error||'Echec','error'); btn.disabled = false; btn.innerHTML = '<i data-lucide="upload"></i> Telecharger'; lucide.createIcons(); } }
-    catch { showNotification('Erreur','error'); btn.disabled = false; btn.innerHTML = '<i data-lucide="upload"></i> Telecharger'; lucide.createIcons(); }
-  });
-}
-
-async function deleteImage(id) {
-  if (!confirm('Supprimer cette image?')) return;
-  try { const r = await fetch(`/projects/${projectId}/images/${id}`, { method: 'DELETE' }); const d = await r.json(); if (d.success) { showNotification('Image supprimee'); window.location.reload(); } else showNotification(d.error||'Echec','error'); }
-  catch { showNotification('Erreur','error'); }
-}
-
-function showNotification(msg, type = 'success') {
-  if (typeof CraftyCrib !== 'undefined' && CraftyCrib.showToast) { CraftyCrib.showToast(msg, type); return; }
-  const t = document.createElement('div');
-  t.style.cssText = 'position:fixed;top:20px;right:20px;z-index:99999;padding:14px 24px;border-radius:8px;color:#fff;font-size:0.95rem;max-width:400px;box-shadow:0 4px 20px rgba(0,0,0,0.3);transition:opacity 0.3s;';
-  t.style.background = type === 'error' ? '#e74c3c' : '#00ff88';
-  if (type !== 'error') t.style.color = '#000';
-  t.textContent = msg; document.body.appendChild(t);
-  setTimeout(() => { t.style.opacity = '0'; setTimeout(() => t.remove(), 300); }, 5000);
-}
-
-function copyShareLink() { document.getElementById('share-url').select(); document.execCommand('copy'); showNotification('Lien copie!'); }
-async function updateVisibility(v) { try { await fetch(`/api/projects/${projectId}/status`, { method:'PATCH', headers:{'Content-Type':'application/json'}, body: JSON.stringify({visibility:v}) }); showNotification('Visibilite mise a jour'); } catch { showNotification('Echec','error'); } }
-
-// ============================================================
-// LIGHTBOX
-// ============================================================
-let lbImages = [], lbIndex = 0, lbTouchStartX = 0;
-
-function openDesignLightbox(idx)   { openLightbox(designVariantsUrls, idx); }
-function openOriginalLightbox(idx) { openLightbox(originalImagesUrls, idx); }
-function openHistoryLightbox(idx)  { openLightbox(historyUrls, idx); }
-
-function openLightbox(images, idx) {
-  lbImages = images.filter(Boolean);
-  lbIndex  = Math.max(0, Math.min(idx, lbImages.length - 1));
-  renderLightbox();
-  document.getElementById('lightbox-overlay').classList.add('active');
-  document.body.style.overflow = 'hidden';
-}
-
-function renderLightbox() {
-  const img  = document.getElementById('lightbox-img');
-  const dl   = document.getElementById('lightbox-download');
-  const ctr  = document.getElementById('lightbox-counter');
-  const prev = document.getElementById('lightbox-prev');
-  const next = document.getElementById('lightbox-next');
-  const url  = lbImages[lbIndex] || '';
-  img.src  = url;
-  dl.href  = url;
-  ctr.textContent = lbImages.length > 1 ? (lbIndex + 1) + ' / ' + lbImages.length : '';
-  const showNav = lbImages.length > 1;
-  if (prev) prev.style.visibility = showNav ? 'visible' : 'hidden';
-  if (next) next.style.visibility = showNav ? 'visible' : 'hidden';
-}
-
-function lightboxNav(dir) {
-  lbIndex = (lbIndex + dir + lbImages.length) % lbImages.length;
-  renderLightbox();
-}
-
-function closeLightbox() {
-  document.getElementById('lightbox-overlay').classList.remove('active');
-  document.body.style.overflow = '';
-}
-
-// Touch swipe support
-const lbOverlay = document.getElementById('lightbox-overlay');
-if (lbOverlay) {
-  lbOverlay.addEventListener('touchstart', (e) => { lbTouchStartX = e.touches[0].clientX; }, { passive: true });
-  lbOverlay.addEventListener('touchend', (e) => {
-    const dx = e.changedTouches[0].clientX - lbTouchStartX;
-    if (Math.abs(dx) > 50) lightboxNav(dx < 0 ? 1 : -1);
-  }, { passive: true });
-}
-
-// ============================================================
-// DESIGN TABS
-// ============================================================
-function switchDesignTab(tab) {
-  document.getElementById('tab-panel-designs').style.display = tab === 'designs' ? '' : 'none';
-  document.getElementById('tab-panel-history').style.display = tab === 'history' ? '' : 'none';
-  document.getElementById('tab-btn-designs').classList.toggle('active', tab === 'designs');
-  document.getElementById('tab-btn-history').classList.toggle('active', tab === 'history');
-}
-
-// ============================================================
-// DELETE VARIANT
-// ============================================================
-async function deleteVariant(variantId) {
-  if (!confirm('Supprimer ce design de l\'historique ?')) return;
-  try {
-    const r = await fetch(`/projects/${projectId}/variants/${variantId}`, { method: 'DELETE' });
-    const d = await r.json();
-    if (d.success) {
-      const el = document.getElementById('history-entry-' + variantId);
-      if (el) {
-        el.style.transition = 'opacity 0.25s, transform 0.25s';
-        el.style.opacity = '0';
-        el.style.transform = 'translateX(16px)';
-        setTimeout(() => {
-          el.remove();
-          const remaining = document.querySelectorAll('.history-entry').length;
-          const counter = document.getElementById('tab-designs-count');
-          if (counter) counter.textContent = remaining;
-        }, 260);
-      }
-      showNotification('Design supprimé');
-    } else {
-      showNotification(d.error || 'Erreur', 'error');
-    }
-  } catch (err) {
-    showNotification('Erreur réseau', 'error');
-  }
-}
-
-// Auto-open tool if redirected from AI tools page
-(function() {
-  const params = new URLSearchParams(window.location.search);
-  const autoTool = params.get('tool');
-  if (autoTool) {
-    setTimeout(() => {
-      const toolEditor = document.getElementById('tool-editor');
-      if (toolEditor && typeof openToolEditor === 'function') {
-        openToolEditor(autoTool);
-      }
-    }, 400);
-    // Clean URL without reload
-    const url = new URL(window.location.href);
-    url.searchParams.delete('tool');
-    window.history.replaceState({}, '', url.toString());
-  }
-})();
-
-document.addEventListener('keydown', (e) => {
-  if (e.key === 'Escape') { closeLightbox(); closeToolEditor(); closeFurnitureModal(); }
-  if (e.key === 'ArrowLeft'  && document.getElementById('lightbox-overlay').classList.contains('active')) lightboxNav(-1);
-  if (e.key === 'ArrowRight' && document.getElementById('lightbox-overlay').classList.contains('active')) lightboxNav(1);
-  const editor = document.getElementById('tool-editor');
-  if (editor && editor.classList.contains('active') && isMaskTool) {
-    if (e.ctrlKey && e.key === 'z') { e.preventDefault(); undoMaskStroke(); }
-    if (e.key === 'b' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT') setMaskTool('brush');
-    if (e.key === 'e' && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'SELECT') setMaskTool('eraser');
-  }
-});
+  updateComparison(range?.value || 50);
 </script>

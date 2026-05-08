@@ -1,0 +1,273 @@
+<style>
+  .legal-page {
+    min-height: 100vh;
+    background: #080f1a;
+    color: #f1f5f9;
+    padding: 0 0 80px;
+  }
+
+  .legal-hero {
+    position: relative;
+    overflow: hidden;
+    padding: 110px 24px 60px;
+    text-align: center;
+    border-bottom: 1px solid rgba(94, 234, 212, 0.1);
+  }
+
+  .legal-hero__bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .legal-orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(90px);
+    opacity: 0.22;
+  }
+
+  .legal-orb-1 { width: 440px; height: 440px; background: radial-gradient(circle, #14b8a6, transparent); top: -140px; left: -100px; }
+  .legal-orb-2 { width: 360px; height: 360px; background: radial-gradient(circle, #2563eb, transparent); top: -80px; right: -80px; }
+
+  .legal-hero__inner {
+    position: relative;
+    z-index: 1;
+    max-width: 720px;
+    margin-inline: auto;
+  }
+
+  .legal-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 18px;
+    margin-bottom: 22px;
+    border: 1px solid rgba(94, 234, 212, 0.24);
+    border-radius: 999px;
+    background: rgba(20, 184, 166, 0.08);
+    color: #5eead4;
+    font-size: 0.75rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .legal-kicker i { width: 13px; height: 13px; }
+
+  .legal-hero__title {
+    margin: 0 0 14px;
+    font-size: clamp(2rem, 4vw, 3rem);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+  }
+
+  .legal-hero__meta {
+    font-size: 0.88rem;
+    color: #64748b;
+  }
+
+  .legal-body {
+    max-width: 860px;
+    margin-inline: auto;
+    padding: 60px 24px 0;
+  }
+
+  .legal-section {
+    margin-bottom: 48px;
+    padding: 36px 40px;
+    border: 1px solid rgba(148, 163, 184, 0.1);
+    border-radius: 20px;
+    background: rgba(15, 23, 42, 0.6);
+    backdrop-filter: blur(10px);
+  }
+
+  .legal-section h2 {
+    margin: 0 0 18px;
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #5eead4;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .legal-section h2 .sec-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: rgba(20, 184, 166, 0.14);
+    border: 1px solid rgba(20, 184, 166, 0.24);
+    font-size: 0.78rem;
+    font-weight: 900;
+    color: #5eead4;
+    flex-shrink: 0;
+  }
+
+  .legal-section p {
+    margin: 0 0 14px;
+    font-size: 0.93rem;
+    color: #94a3b8;
+    line-height: 1.75;
+  }
+
+  .legal-section p:last-child { margin-bottom: 0; }
+
+  .legal-section ul {
+    margin: 0 0 14px;
+    padding-left: 0;
+    list-style: none;
+  }
+
+  .legal-section ul li {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 6px 0;
+    font-size: 0.92rem;
+    color: #94a3b8;
+    line-height: 1.6;
+  }
+
+  .legal-section ul li::before {
+    content: '';
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #14b8a6;
+    margin-top: 8px;
+    flex-shrink: 0;
+  }
+
+  .legal-section strong { color: #e2e8f0; }
+
+  .legal-contact-box {
+    margin-top: 48px;
+    padding: 28px 36px;
+    border: 1px solid rgba(94, 234, 212, 0.18);
+    border-radius: 16px;
+    background: rgba(20, 184, 166, 0.06);
+    text-align: center;
+  }
+
+  .legal-contact-box p {
+    margin: 0;
+    font-size: 0.92rem;
+    color: #94a3b8;
+  }
+
+  .legal-contact-box a {
+    color: #5eead4;
+    text-decoration: none;
+    font-weight: 600;
+  }
+
+  .legal-contact-box a:hover { text-decoration: underline; }
+
+  @media (max-width: 640px) {
+    .legal-section { padding: 24px 20px; }
+    .legal-body { padding-top: 36px; }
+  }
+</style>
+
+<div class="legal-page">
+
+  <div class="legal-hero">
+    <div class="legal-hero__bg">
+      <div class="legal-orb legal-orb-1"></div>
+      <div class="legal-orb legal-orb-2"></div>
+    </div>
+    <div class="legal-hero__inner">
+      <span class="legal-kicker"><i data-lucide="shield"></i> Légal</span>
+      <h1 class="legal-hero__title">Politique de confidentialité</h1>
+      <p class="legal-hero__meta">Dernière mise à jour : 7 mai 2026</p>
+    </div>
+  </div>
+
+  <div class="legal-body">
+
+    <div class="legal-section">
+      <h2><span class="sec-num">1</span> Introduction</h2>
+      <p>CraftyCrib (ci-après "nous", "notre" ou "la plateforme") s'engage à protéger la vie privée de ses utilisateurs. Cette politique explique quelles données personnelles nous collectons, pourquoi nous les collectons, comment nous les utilisons et quels droits vous disposez.</p>
+      <p>En utilisant CraftyCrib, vous acceptez les pratiques décrites dans ce document. Si vous n'acceptez pas cette politique, veuillez ne pas utiliser notre service.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2><span class="sec-num">2</span> Données collectées</h2>
+      <p>Nous collectons les catégories de données suivantes selon votre utilisation du service :</p>
+      <ul>
+        <li><strong>Données d'identification</strong> : nom, prénom, adresse e-mail, mot de passe (hashé).</li>
+        <li><strong>Données de profil</strong> : type de compte (client ou professionnel), préférences de design, historique des projets.</li>
+        <li><strong>Données techniques</strong> : adresse IP, navigateur, appareil, pages visitées, durée de session.</li>
+        <li><strong>Données de paiement</strong> : informations de carte gérées par notre prestataire Stripe (nous ne stockons aucune donnée bancaire brute).</li>
+        <li><strong>Contenus générés</strong> : images uploadées, projets créés, générations IA, notes et instructions.</li>
+      </ul>
+    </div>
+
+    <div class="legal-section">
+      <h2><span class="sec-num">3</span> Création de compte</h2>
+      <p>Lors de la création d'un compte, nous collectons votre adresse e-mail et un mot de passe. Ces informations sont nécessaires pour vous authentifier et sécuriser l'accès à votre espace personnel.</p>
+      <p>Vous pouvez également vous connecter via Google OAuth. Dans ce cas, nous récupérons uniquement votre nom, prénom et adresse e-mail fournis par Google, sans accéder à d'autres données de votre compte Google.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2><span class="sec-num">4</span> Paiements et abonnements</h2>
+      <p>Les paiements sont traités par <strong>Stripe</strong>, un prestataire de paiement certifié PCI-DSS. CraftyCrib ne stocke jamais vos coordonnées bancaires sur ses serveurs.</p>
+      <p>Nous conservons uniquement les informations liées à votre abonnement : plan souscrit, date de renouvellement, historique de facturation et statut de paiement.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2><span class="sec-num">5</span> Projets et images uploadées</h2>
+      <p>Les images que vous téléchargez sur CraftyCrib sont stockées de manière sécurisée sur <strong>Cloudinary</strong>, notre service d'hébergement d'images. Ces images sont utilisées exclusivement pour :</p>
+      <ul>
+        <li>Générer des designs intérieurs via les outils IA disponibles sur la plateforme.</li>
+        <li>Afficher vos projets dans votre espace personnel.</li>
+        <li>Partager votre projet avec des professionnels si vous en faites la demande explicite.</li>
+      </ul>
+      <p>Vos images ne sont jamais utilisées à des fins publicitaires ni partagées avec des tiers sans votre consentement.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2><span class="sec-num">6</span> Usage de l'intelligence artificielle</h2>
+      <p>CraftyCrib utilise des API d'intelligence artificielle tierces pour générer des visualisations de design intérieur. Vos images peuvent être transmises à ces services dans le seul but de produire le résultat demandé.</p>
+      <p>Ces services tiers sont soumis à leurs propres politiques de confidentialité. Nous sélectionnons exclusivement des partenaires offrant des garanties suffisantes de protection des données et ne conservant pas vos images à des fins d'entraînement sans consentement.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2><span class="sec-num">7</span> Conservation des données</h2>
+      <p>Vos données sont conservées aussi longtemps que votre compte est actif. En cas de suppression de compte :</p>
+      <ul>
+        <li>Vos données personnelles sont supprimées dans un délai de <strong>30 jours</strong>.</li>
+        <li>Les images et projets associés sont définitivement supprimés de nos serveurs.</li>
+        <li>Les données de facturation peuvent être conservées jusqu'à <strong>10 ans</strong> pour répondre aux obligations légales et fiscales.</li>
+      </ul>
+    </div>
+
+    <div class="legal-section">
+      <h2><span class="sec-num">8</span> Droits des utilisateurs</h2>
+      <p>Conformément au Règlement Général sur la Protection des Données (RGPD) et aux lois applicables, vous disposez des droits suivants :</p>
+      <ul>
+        <li><strong>Droit d'accès</strong> : obtenir une copie de vos données personnelles.</li>
+        <li><strong>Droit de rectification</strong> : corriger des données inexactes.</li>
+        <li><strong>Droit à l'effacement</strong> : demander la suppression de vos données.</li>
+        <li><strong>Droit à la portabilité</strong> : recevoir vos données dans un format structuré.</li>
+        <li><strong>Droit d'opposition</strong> : vous opposer à certains traitements de vos données.</li>
+      </ul>
+      <p>Pour exercer ces droits, contactez-nous à l'adresse indiquée ci-dessous.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2><span class="sec-num">9</span> Sécurité</h2>
+      <p>Nous mettons en œuvre des mesures techniques et organisationnelles appropriées pour protéger vos données contre tout accès non autorisé, perte ou divulgation : chiffrement des données en transit (HTTPS/TLS), hachage des mots de passe, contrôles d'accès stricts et audits réguliers.</p>
+    </div>
+
+    <div class="legal-contact-box">
+      <p>Pour toute question relative à cette politique ou pour exercer vos droits, contactez-nous à <a href="mailto:privacy@craftycrib.com">privacy@craftycrib.com</a></p>
+    </div>
+
+  </div>
+</div>

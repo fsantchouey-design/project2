@@ -1,0 +1,212 @@
+<style>
+  .legal-page {
+    min-height: 100vh;
+    background: #080f1a;
+    color: #f1f5f9;
+    padding: 0 0 80px;
+  }
+
+  .legal-hero {
+    position: relative;
+    overflow: hidden;
+    padding: 110px 24px 60px;
+    text-align: center;
+    border-bottom: 1px solid rgba(94, 234, 212, 0.1);
+  }
+
+  .legal-hero__bg { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+
+  .legal-orb { position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.22; }
+  .legal-orb-1 { width: 440px; height: 440px; background: radial-gradient(circle, #14b8a6, transparent); top: -140px; left: -100px; }
+  .legal-orb-2 { width: 360px; height: 360px; background: radial-gradient(circle, #2563eb, transparent); top: -80px; right: -80px; }
+
+  .legal-hero__inner { position: relative; z-index: 1; max-width: 720px; margin-inline: auto; }
+
+  .legal-kicker {
+    display: inline-flex; align-items: center; gap: 7px;
+    padding: 6px 18px; margin-bottom: 22px;
+    border: 1px solid rgba(94, 234, 212, 0.24); border-radius: 999px;
+    background: rgba(20, 184, 166, 0.08); color: #5eead4;
+    font-size: 0.75rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
+  }
+
+  .legal-kicker i { width: 13px; height: 13px; }
+
+  .legal-hero__title { margin: 0 0 14px; font-size: clamp(2rem, 4vw, 3rem); font-weight: 900; letter-spacing: -0.02em; }
+  .legal-hero__meta { font-size: 0.88rem; color: #64748b; }
+
+  .legal-body { max-width: 860px; margin-inline: auto; padding: 60px 24px 0; }
+
+  .legal-section {
+    margin-bottom: 48px; padding: 36px 40px;
+    border: 1px solid rgba(148, 163, 184, 0.1); border-radius: 20px;
+    background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(10px);
+  }
+
+  .legal-section h2 {
+    margin: 0 0 18px; font-size: 1.2rem; font-weight: 800; color: #5eead4;
+    display: flex; align-items: center; gap: 10px;
+  }
+
+  .sec-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 28px; height: 28px; border-radius: 8px;
+    background: rgba(20, 184, 166, 0.14); border: 1px solid rgba(20, 184, 166, 0.24);
+    font-size: 0.78rem; font-weight: 900; color: #5eead4; flex-shrink: 0;
+  }
+
+  .legal-section p { margin: 0 0 14px; font-size: 0.93rem; color: #94a3b8; line-height: 1.75; }
+  .legal-section p:last-child { margin-bottom: 0; }
+
+  .legal-section ul { margin: 0 0 14px; padding-left: 0; list-style: none; }
+  .legal-section ul li {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 6px 0; font-size: 0.92rem; color: #94a3b8; line-height: 1.6;
+  }
+  .legal-section ul li::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%;
+    background: #14b8a6; margin-top: 8px; flex-shrink: 0;
+  }
+
+  .legal-section strong { color: #e2e8f0; }
+
+  .cookie-type-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    margin-top: 18px;
+  }
+
+  .cookie-type-card {
+    padding: 18px 20px;
+    border: 1px solid rgba(148, 163, 184, 0.12);
+    border-radius: 14px;
+    background: rgba(8, 15, 26, 0.5);
+  }
+
+  .cookie-type-card h3 {
+    margin: 0 0 8px;
+    font-size: 0.9rem;
+    font-weight: 800;
+    color: #e2e8f0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .cookie-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+  .cookie-dot--required { background: #14b8a6; }
+  .cookie-dot--analytics { background: #38bdf8; }
+  .cookie-dot--prefs { background: #818cf8; }
+  .cookie-dot--payment { background: #f59e0b; }
+
+  .cookie-type-card p { margin: 0; font-size: 0.84rem; color: #64748b; line-height: 1.55; }
+
+  .legal-contact-box {
+    margin-top: 48px; padding: 28px 36px;
+    border: 1px solid rgba(94, 234, 212, 0.18); border-radius: 16px;
+    background: rgba(20, 184, 166, 0.06); text-align: center;
+  }
+
+  .legal-contact-box p { margin: 0; font-size: 0.92rem; color: #94a3b8; }
+  .legal-contact-box a { color: #5eead4; text-decoration: none; font-weight: 600; }
+  .legal-contact-box a:hover { text-decoration: underline; }
+
+  @media (max-width: 640px) {
+    .legal-section { padding: 24px 20px; }
+    .legal-body { padding-top: 36px; }
+    .cookie-type-grid { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div class="legal-page">
+
+  <div class="legal-hero">
+    <div class="legal-hero__bg">
+      <div class="legal-orb legal-orb-1"></div>
+      <div class="legal-orb legal-orb-2"></div>
+    </div>
+    <div class="legal-hero__inner">
+      <span class="legal-kicker"><i data-lucide="cookie"></i> Légal</span>
+      <h1 class="legal-hero__title">Politique de cookies</h1>
+      <p class="legal-hero__meta">Dernière mise à jour : 7 mai 2026</p>
+    </div>
+  </div>
+
+  <div class="legal-body">
+
+    <div class="legal-section">
+      <h2><span class="sec-num">1</span> Qu'est-ce qu'un cookie ?</h2>
+      <p>Un cookie est un petit fichier texte déposé sur votre appareil (ordinateur, téléphone, tablette) lorsque vous visitez un site web. Il permet au site de mémoriser certaines informations sur votre navigation, comme votre session de connexion ou vos préférences.</p>
+      <p>Les cookies ne contiennent pas de virus et ne peuvent pas accéder à vos fichiers personnels.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2><span class="sec-num">2</span> Les cookies que nous utilisons</h2>
+      <div class="cookie-type-grid">
+        <div class="cookie-type-card">
+          <h3><span class="cookie-dot cookie-dot--required"></span> Nécessaires</h3>
+          <p>Indispensables au fonctionnement du site : session de connexion, sécurité CSRF, mémorisation de votre panier. Ils ne peuvent pas être désactivés.</p>
+        </div>
+        <div class="cookie-type-card">
+          <h3><span class="cookie-dot cookie-dot--analytics"></span> Analytiques</h3>
+          <p>Nous aident à comprendre comment vous utilisez le site : pages visitées, temps passé, erreurs rencontrées. Ces données sont anonymisées.</p>
+        </div>
+        <div class="cookie-type-card">
+          <h3><span class="cookie-dot cookie-dot--prefs"></span> Préférences</h3>
+          <p>Mémorisent vos choix d'affichage : langue, thème, paramètres d'interface. Améliorent votre expérience à chaque visite.</p>
+        </div>
+        <div class="cookie-type-card">
+          <h3><span class="cookie-dot cookie-dot--payment"></span> Paiement & Sécurité</h3>
+          <p>Déposés par Stripe pour sécuriser vos transactions et prévenir la fraude. Soumis à la politique de confidentialité de Stripe.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="legal-section">
+      <h2><span class="sec-num">3</span> Cookies nécessaires</h2>
+      <p>Ces cookies sont strictement nécessaires au fonctionnement de CraftyCrib. Sans eux, vous ne pourriez pas vous connecter, accéder à vos projets ou effectuer un paiement en toute sécurité. Ils sont toujours actifs et ne nécessitent pas votre consentement.</p>
+      <ul>
+        <li><strong>session</strong> — Maintient votre connexion active pendant votre visite.</li>
+        <li><strong>_csrf</strong> — Protège contre les attaques cross-site request forgery.</li>
+        <li><strong>cookieconsent</strong> — Mémorise vos choix de consentement aux cookies.</li>
+      </ul>
+    </div>
+
+    <div class="legal-section">
+      <h2><span class="sec-num">4</span> Cookies analytiques</h2>
+      <p>Ces cookies nous permettent de mesurer l'audience du site et d'améliorer nos services. Toutes les données collectées sont agrégées et anonymisées. Ils sont déposés uniquement si vous y consentez.</p>
+      <p>Nous pouvons utiliser des outils comme Google Analytics ou des solutions alternatives respectueuses de la vie privée. Les données collectées n'identifient jamais personnellement un utilisateur.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2><span class="sec-num">5</span> Cookies de préférences</h2>
+      <p>Ces cookies mémorisent vos paramètres personnels afin d'améliorer votre expérience lors de vos prochaines visites : langue préférée, affichage du tableau de bord, derniers outils IA utilisés.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2><span class="sec-num">6</span> Cookies de paiement et de sécurité</h2>
+      <p>Lorsque vous effectuez un paiement sur CraftyCrib, <strong>Stripe</strong> dépose ses propres cookies pour sécuriser la transaction et détecter les tentatives de fraude. Ces cookies sont soumis à la <a href="https://stripe.com/fr/privacy" target="_blank" rel="noopener noreferrer" style="color:#5eead4">politique de confidentialité de Stripe</a>.</p>
+    </div>
+
+    <div class="legal-section">
+      <h2><span class="sec-num">7</span> Gestion du consentement</h2>
+      <p>Lors de votre première visite sur CraftyCrib, une bannière vous permet de choisir les catégories de cookies que vous acceptez. Vous pouvez modifier votre choix à tout moment en cliquant sur le lien "Gérer les cookies" en bas de page.</p>
+      <p>Pour refuser les cookies depuis votre navigateur, voici les liens vers les paramètres des principaux navigateurs :</p>
+      <ul>
+        <li>Google Chrome — Paramètres → Confidentialité et sécurité → Cookies</li>
+        <li>Firefox — Options → Vie privée et sécurité</li>
+        <li>Safari — Préférences → Confidentialité</li>
+        <li>Microsoft Edge — Paramètres → Cookies et autorisations de site</li>
+      </ul>
+      <p>Notez que la désactivation de certains cookies peut affecter le fonctionnement du site.</p>
+    </div>
+
+    <div class="legal-contact-box">
+      <p>Des questions sur notre utilisation des cookies ? Contactez-nous à <a href="mailto:privacy@craftycrib.com">privacy@craftycrib.com</a></p>
+    </div>
+
+  </div>
+</div>

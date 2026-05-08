@@ -127,6 +127,31 @@ router.get('/terms', (req, res) => {
   });
 });
 
+// Legal pages (French)
+router.get('/politique-confidentialite', (req, res) => {
+  res.render('pages/politique-confidentialite', {
+    title: 'Politique de confidentialité — CraftyCrib',
+    metaDescription: 'Découvrez comment CraftyCrib collecte, utilise et protège vos données personnelles.',
+    layout: 'layouts/landing'
+  });
+});
+
+router.get('/politique-cookies', (req, res) => {
+  res.render('pages/politique-cookies', {
+    title: 'Politique de cookies — CraftyCrib',
+    metaDescription: 'En savoir plus sur les cookies utilisés par CraftyCrib et comment les gérer.',
+    layout: 'layouts/landing'
+  });
+});
+
+router.get('/conditions-utilisation', (req, res) => {
+  res.render('pages/conditions-utilisation', {
+    title: "Conditions d'utilisation — CraftyCrib",
+    metaDescription: "Lisez les conditions générales d'utilisation de CraftyCrib, plateforme IA de design intérieur.",
+    layout: 'layouts/landing'
+  });
+});
+
 // Inspiration pages — show InspirationImage records for each category
 const INSPIRATION_CATEGORY_LABELS = {
   cuisine: 'Cuisine',
