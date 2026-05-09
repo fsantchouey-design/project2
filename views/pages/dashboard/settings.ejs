@@ -36,7 +36,7 @@
         <form action="/dashboard/settings/avatar" method="POST" enctype="multipart/form-data" id="avatar-upload-form">
           <div class="profile-card">
             <div class="profile-avatar-wrap">
-              <% if (user.avatar && user.avatar !== ‘/images/default-avatar.png’) { %>
+              <% if (user.avatar && user.avatar !== '/images/default-avatar.png') { %>
                 <img id="avatar-preview" src="<%= user.avatar %>" alt="Photo de profil">
               <% } else { %>
                 <div id="avatar-initials-circle" class="avatar-initials-circle">
@@ -1017,22 +1017,21 @@
 
         // Plans grid
         if (plansGrid) {
-          const plans = [
+          var plans = [
             { type: 'free', label: 'Gratuit', desc: '3 crédits offerts pour démarrer.', color: '#64748b' },
             { type: 'credits', label: 'Crédits', desc: 'Achetez des crédits à la carte.', color: '#3b82f6' },
             { type: 'partner', label: 'Partner', desc: 'Gratuit avec un contrat artisan.', color: '#10b981' },
             { type: 'advanced', label: 'Advanced', desc: 'Générations illimitées + priorité.', color: '#8b5cf6' },
           ];
-          plansGrid.innerHTML = plans.map(p => `
-            <div class="billing-plan-card ${subType === p.type ? 'active' : ''}">
-              <span class="billing-plan-dot" style="background:${p.color}"></span>
-              <div>
-                <strong>${p.label}</strong>
-                <p>${p.desc}</p>
-              </div>
-              ${subType === p.type ? '<span class="billing-plan-current">Actuel</span>' : ''}
-            </div>
-          `).join('');
+          plansGrid.innerHTML = plans.map(function(p) {
+            var isActive = subType === p.type;
+            var currentBadge = isActive ? '<span class="billing-plan-current">Actuel</span>' : '';
+            return '<div class="billing-plan-card ' + (isActive ? 'active' : '') + '">' +
+              '<span class="billing-plan-dot" style="background:' + p.color + '"></span>' +
+              '<div><strong>' + p.label + '</strong><p>' + p.desc + '</p></div>' +
+              currentBadge +
+              '</div>';
+          }).join('');
         }
 
         if (typeof lucide !== 'undefined') lucide.createIcons();
