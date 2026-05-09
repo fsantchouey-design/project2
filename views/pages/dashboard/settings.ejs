@@ -32,22 +32,32 @@
           <span class="settings-status-pill">Connecté</span>
         </div>
 
-        <form action="/dashboard/settings" method="POST" class="settings-form">
+        <!-- Avatar upload (standalone form, cannot be nested) -->
+        <form action="/dashboard/settings/avatar" method="POST" enctype="multipart/form-data" id="avatar-upload-form">
           <div class="profile-card">
             <div class="profile-avatar-wrap">
-              <img id="avatar-preview" src="<%= user.avatar || '/images/default-avatar.png' %>" alt="Photo de profil">
+              <% if (user.avatar && user.avatar !== ‘/images/default-avatar.png’) { %>
+                <img id="avatar-preview" src="<%= user.avatar %>" alt="Photo de profil">
+              <% } else { %>
+                <div id="avatar-initials-circle" class="avatar-initials-circle">
+                  <%= user.firstName.charAt(0) %><%= user.lastName.charAt(0) %>
+                </div>
+                <img id="avatar-preview" src="" alt="Photo de profil" style="display:none; width:76px; height:76px; border-radius:50%; object-fit:cover; border:3px solid rgba(16,185,129,0.4);">
+              <% } %>
             </div>
             <div>
               <h3>Photo de profil</h3>
-              <p>Prévisualisation locale disponible. TODO backend : brancher l’upload permanent.</p>
-              <label class="settings-secondary-btn" for="avatar-local">
+              <p>Format JPG, PNG ou WebP. Taille max : 5 Mo.</p>
+              <label class="settings-secondary-btn" for="avatar-file-input" style="cursor:pointer;">
                 <i data-lucide="image-up"></i>
                 Modifier
               </label>
-              <input type="file" id="avatar-local" accept="image/*" hidden>
+              <input type="file" id="avatar-file-input" name="avatar" accept="image/jpeg,image/png,image/webp" hidden>
             </div>
           </div>
+        </form>
 
+        <form action="/dashboard/settings" method="POST" class="settings-form">
           <div class="form-row">
             <div class="form-group">
               <label class="form-label">Prénom</label>
@@ -216,27 +226,46 @@
         <div class="settings-section-header">
           <div>
             <span class="settings-kicker">Abonnement</span>
-            <h2>Facturation</h2>
+            <h2>Facturation &amp; Crédits IA</h2>
+          </div>
+          <span class="settings-status-pill" id="billing-sub-pill">
+            <span id="billing-sub-pill-text">Chargement…</span>
+          </span>
+        </div>
+
+        <!-- Credits card -->
+        <div class="billing-credits-card" id="billing-credits-card">
+          <div class="billing-credits-left">
+            <div class="billing-credits-icon">
+              <i data-lucide="zap"></i>
+            </div>
+            <div>
+              <h4>Crédits IA disponibles</h4>
+              <p id="billing-credits-desc">Chargement en cours…</p>
+            </div>
+          </div>
+          <div class="billing-credits-count" id="billing-credits-count">
+            <span class="credits-spinner">
+              <i data-lucide="loader-circle"></i>
+            </span>
           </div>
         </div>
 
-        <div class="billing-grid">
-          <div class="current-plan">
-            <div class="plan-info">
-              <span class="plan-badge <%= user.isPremium ? 'premium' : 'free' %>"><%= user.isPremium ? 'Premium' : 'Free' %></span>
-              <h4><%= user.isPremium ? 'Plan Premium' : 'Plan gratuit' %></h4>
-              <p><%= user.isPremium ? 'Générations IA et fonctionnalités premium.' : 'Crédits gratuits pour démarrer avec CraftyCrib.' %></p>
-            </div>
-            <a href="/pricing" class="settings-primary-btn">
-              <i data-lucide="zap"></i>
-              Obtenir plus de crédits
-            </a>
-          </div>
-          <div class="billing-details">
-            <h4>Crédits IA restants</h4>
-            <strong><%= user.subscription?.credits ?? 3 %></strong>
-            <p class="text-muted">Historique des paiements et crédits : TODO backend facturation.</p>
-          </div>
+        <!-- Subscription plans -->
+        <div class="billing-plans-grid" id="billing-plans-grid">
+          <!-- Filled dynamically -->
+        </div>
+
+        <!-- Actions -->
+        <div class="billing-actions">
+          <a href="/pricing" class="settings-primary-btn" id="billing-get-credits-btn">
+            <i data-lucide="zap"></i>
+            Obtenir plus de crédits
+          </a>
+          <a href="#" class="settings-secondary-btn" id="billing-stripe-btn" style="display:none;">
+            <i data-lucide="credit-card"></i>
+            Gérer via Stripe
+          </a>
         </div>
       </section>
 
@@ -692,6 +721,157 @@
     color: #00140e;
   }
 
+  .avatar-initials-circle {
+    width: 76px;
+    height: 76px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #10b981, #06b6d4);
+    color: #ffffff;
+    font-size: 22px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 3px solid rgba(16,185,129,0.4);
+    flex-shrink: 0;
+  }
+
+  /* Billing credits card */
+  .billing-credits-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 18px;
+    border: 1px solid rgba(16,185,129,0.25);
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(6,182,212,0.06));
+    margin-bottom: 16px;
+  }
+
+  .billing-credits-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .billing-credits-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    background: rgba(16,185,129,0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .billing-credits-icon i {
+    width: 22px;
+    height: 22px;
+    color: var(--accent-primary);
+  }
+
+  .billing-credits-card h4 {
+    margin: 0 0 4px;
+    color: var(--text-primary);
+    font-size: 1rem;
+  }
+
+  .billing-credits-card p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+  }
+
+  .billing-credits-count {
+    font-size: 2.5rem;
+    font-weight: 900;
+    color: var(--accent-primary);
+    line-height: 1;
+    flex-shrink: 0;
+  }
+
+  .billing-credits-number {
+    color: var(--accent-primary);
+  }
+
+  .billing-credits-error {
+    font-size: 0.85rem;
+    color: var(--error);
+  }
+
+  .credits-spinner i {
+    width: 28px;
+    height: 28px;
+    color: var(--accent-primary);
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Plans grid */
+  .billing-plans-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .billing-plan-card {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    background: var(--bg-secondary);
+    position: relative;
+    transition: border-color 0.18s, background 0.18s;
+  }
+
+  .billing-plan-card.active {
+    border-color: rgba(16,185,129,0.45);
+    background: rgba(16,185,129,0.07);
+  }
+
+  .billing-plan-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .billing-plan-card strong {
+    display: block;
+    font-size: 0.9rem;
+    color: var(--text-primary);
+  }
+
+  .billing-plan-card p {
+    margin: 2px 0 0;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    line-height: 1.35;
+  }
+
+  .billing-plan-current {
+    position: absolute;
+    top: 8px;
+    right: 10px;
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--accent-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .billing-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
   .billing-details strong {
     display: block;
     margin: 4px 0 8px;
@@ -737,16 +917,22 @@
 
     .form-row,
     .preference-grid,
-    .billing-grid {
+    .billing-grid,
+    .billing-plans-grid {
       grid-template-columns: 1fr;
     }
 
     .profile-card,
     .settings-row-card,
     .current-plan,
-    .notification-item {
+    .notification-item,
+    .billing-credits-card {
       align-items: flex-start;
       flex-direction: column;
+    }
+
+    .billing-credits-count {
+      font-size: 2rem;
     }
   }
 </style>
@@ -755,8 +941,10 @@
   (() => {
     const localPrefsKey = 'craftycrib.settings.preferences';
     const notificationKey = 'craftycrib.settings.notifications';
-    const avatarInput = document.getElementById('avatar-local');
+    const avatarFileInput = document.getElementById('avatar-file-input');
     const avatarPreview = document.getElementById('avatar-preview');
+    const avatarInitials = document.getElementById('avatar-initials-circle');
+    const avatarUploadForm = document.getElementById('avatar-upload-form');
     const notificationHint = document.getElementById('notification-save-hint');
 
     function readJson(key, fallback) {
@@ -771,15 +959,89 @@
       localStorage.setItem(key, JSON.stringify(value));
     }
 
-    avatarInput?.addEventListener('change', () => {
-      const file = avatarInput.files && avatarInput.files[0];
+    // Avatar: preview then submit
+    avatarFileInput?.addEventListener('change', () => {
+      const file = avatarFileInput.files && avatarFileInput.files[0];
       if (!file) return;
       const reader = new FileReader();
       reader.onload = event => {
-        avatarPreview.src = event.target.result;
+        if (avatarPreview) {
+          avatarPreview.src = event.target.result;
+          avatarPreview.style.display = 'block';
+        }
+        if (avatarInitials) avatarInitials.style.display = 'none';
       };
       reader.readAsDataURL(file);
+      // Auto-submit after preview
+      setTimeout(() => avatarUploadForm?.submit(), 400);
     });
+
+    // ===== Load real billing/credits data =====
+    (async function loadBillingData() {
+      const creditCountEl = document.getElementById('billing-credits-count');
+      const creditDescEl = document.getElementById('billing-credits-desc');
+      const subPillText = document.getElementById('billing-sub-pill-text');
+      const plansGrid = document.getElementById('billing-plans-grid');
+      const stripeBtn = document.getElementById('billing-stripe-btn');
+
+      try {
+        const resp = await fetch('/api/user/profile', { credentials: 'same-origin' });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const data = await resp.json();
+
+        const credits = data.credits ?? 0;
+        const sub = data.subscription || {};
+        const subType = sub.type || 'free';
+        const subLabels = { free: 'Gratuit', partner: 'Partner', advanced: 'Advanced', credits: 'Crédits' };
+        const subLabel = subLabels[subType] || 'Gratuit';
+
+        // Credits count
+        if (creditCountEl) {
+          creditCountEl.innerHTML = '<span class="billing-credits-number">' + credits + '</span>';
+        }
+        if (creditDescEl) {
+          const used = data.creditsUsed ?? 0;
+          creditDescEl.textContent = used > 0
+            ? used + ' crédit(s) utilisé(s) · ' + credits + ' restant(s)'
+            : credits + ' crédit(s) disponible(s) sur votre compte';
+        }
+
+        // Sub pill
+        if (subPillText) subPillText.textContent = subLabel;
+
+        // Stripe button
+        if (stripeBtn && sub.stripeCustomerId) {
+          stripeBtn.style.display = 'inline-flex';
+          stripeBtn.href = '/dashboard/settings/stripe-portal';
+        }
+
+        // Plans grid
+        if (plansGrid) {
+          const plans = [
+            { type: 'free', label: 'Gratuit', desc: '3 crédits offerts pour démarrer.', color: '#64748b' },
+            { type: 'credits', label: 'Crédits', desc: 'Achetez des crédits à la carte.', color: '#3b82f6' },
+            { type: 'partner', label: 'Partner', desc: 'Gratuit avec un contrat artisan.', color: '#10b981' },
+            { type: 'advanced', label: 'Advanced', desc: 'Générations illimitées + priorité.', color: '#8b5cf6' },
+          ];
+          plansGrid.innerHTML = plans.map(p => `
+            <div class="billing-plan-card ${subType === p.type ? 'active' : ''}">
+              <span class="billing-plan-dot" style="background:${p.color}"></span>
+              <div>
+                <strong>${p.label}</strong>
+                <p>${p.desc}</p>
+              </div>
+              ${subType === p.type ? '<span class="billing-plan-current">Actuel</span>' : ''}
+            </div>
+          `).join('');
+        }
+
+        if (typeof lucide !== 'undefined') lucide.createIcons();
+      } catch (err) {
+        if (creditCountEl) creditCountEl.innerHTML = '<span class="billing-credits-error">Erreur de chargement</span>';
+        if (creditDescEl) creditDescEl.textContent = 'Impossible de récupérer vos crédits. Réessayez.';
+        if (subPillText) subPillText.textContent = '—';
+      }
+    })();
 
     document.querySelectorAll('.segmented-control').forEach(group => {
       const setting = group.dataset.setting;

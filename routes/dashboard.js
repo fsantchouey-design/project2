@@ -5,6 +5,7 @@ const Project = require('../models/Project');
 const Contractor = require('../models/Contractor');
 const { Message, Conversation } = require('../models/Message');
 const { getAiTools } = require('../utils/homedesigns');
+const { uploadAvatar } = require('../config/cloudinary');
 
 // Force dashboard layout for ALL routes in this router
 router.use((req, res, next) => {
@@ -96,18 +97,36 @@ router.get('/settings', ensureAuthenticated, (req, res) => {
 router.post('/settings', ensureAuthenticated, async (req, res) => {
   try {
     const { firstName, lastName, phone } = req.body;
-    
+
     await req.user.updateOne({
       firstName,
       lastName,
       phone
     });
 
-    req.flash('success_msg', 'Profile updated successfully');
+    req.flash('success_msg', 'Profil mis à jour avec succès');
     res.redirect('/dashboard/settings');
   } catch (err) {
     console.error('Update profile error:', err);
-    req.flash('error_msg', 'An error occurred');
+    req.flash('error_msg', 'Une erreur est survenue');
+    res.redirect('/dashboard/settings');
+  }
+});
+
+// Upload Avatar
+router.post('/settings/avatar', ensureAuthenticated, uploadAvatar.single('avatar'), async (req, res) => {
+  try {
+    if (!req.file) {
+      req.flash('error_msg', 'Aucun fichier sélectionné');
+      return res.redirect('/dashboard/settings');
+    }
+    const avatarUrl = req.file.path || `/uploads/projects/${req.file.filename}`;
+    await req.user.updateOne({ avatar: avatarUrl });
+    req.flash('success_msg', 'Photo de profil mise à jour');
+    res.redirect('/dashboard/settings');
+  } catch (err) {
+    console.error('Avatar upload error:', err);
+    req.flash('error_msg', "Erreur lors de l'upload de la photo");
     res.redirect('/dashboard/settings');
   }
 });

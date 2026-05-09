@@ -43,6 +43,40 @@ router.get('/health', (req, res) => {
   });
 });
 
+// User Profile (real credits + subscription)
+const User = require('../models/User');
+router.get('/user/profile', ensureAuthenticated, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select('-password');
+    if (!user) return res.status(404).json({ error: 'Utilisateur introuvable' });
+
+    const sub = user.subscription || {};
+    const subType = sub.type || 'free';
+    const subLabels = { free: 'Gratuit', partner: 'Partner', advanced: 'Advanced', credits: 'Crédits' };
+
+    res.json({
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      avatar: user.avatar || null,
+      credits: sub.credits ?? 3,
+      creditsUsed: sub.creditsUsed ?? 0,
+      subscription: {
+        type: subType,
+        label: subLabels[subType] || 'Gratuit',
+        plan: sub.plan || null,
+        status: sub.status || 'active',
+        endDate: sub.endDate || null,
+        stripeCustomerId: sub.stripeCustomerId || null,
+        stripeSubscriptionId: sub.stripeSubscriptionId || null
+      }
+    });
+  } catch (err) {
+    console.error('User profile API error:', err);
+    res.status(500).json({ error: 'Erreur serveur' });
+  }
+});
+
 // Get Design Styles
 router.get('/styles', (req, res) => {
   res.json(getStyles());
@@ -820,6 +854,26 @@ router.get('/stats', ensureAuthenticated, async (req, res) => {
   } catch (err) {
     console.error('API Stats error:', err);
     res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Live credits + subscription for the logged-in user
+router.get('/me/credits', ensureAuthenticated, async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const fresh = await User.findById(req.user.id).select('subscription isPremium');
+    if (!fresh) return res.status(404).json({ error: 'User not found' });
+    const t = fresh.subscription?.type ?? 'free';
+    const label = { advanced: 'Avancé', partner: 'Partner', credits: 'Crédits' }[t] || 'Gratuit';
+    res.json({
+      credits: fresh.subscription?.credits ?? 0,
+      plan: t,
+      planLabel: label,
+      status: fresh.subscription?.status ?? 'active'
+    });
+  } catch (err) {
+    console.error('Credits API error:', err);
+    res.status(500).json({ error: 'Impossible de récupérer les crédits' });
   }
 });
 

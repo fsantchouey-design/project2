@@ -210,6 +210,84 @@
 
   <!-- Main Content -->
   <main class="main-content" id="main-content">
+
+    <!-- ======= DESKTOP TOPBAR ======= -->
+    <div class="dashboard-topbar">
+      <div class="topbar-spacer"></div>
+      <div class="topbar-right">
+        <!-- Profile button -->
+        <div class="topbar-profile-wrap" id="topbar-profile-wrap">
+          <button class="topbar-profile-btn" id="topbar-profile-btn" aria-label="Ouvrir le menu profil" aria-expanded="false">
+            <% if (user.avatar && user.avatar !== '/images/default-avatar.png') { %>
+              <img src="<%= user.avatar %>" alt="<%= user.firstName %>" class="topbar-avatar-img">
+            <% } else { %>
+              <span class="topbar-avatar-initials"><%= user.firstName.charAt(0) %><%= user.lastName.charAt(0) %></span>
+            <% } %>
+            <span class="topbar-profile-name"><%= user.firstName %></span>
+            <i data-lucide="chevron-down" class="topbar-chevron"></i>
+          </button>
+
+          <!-- Profile Dropdown -->
+          <div class="topbar-dropdown" id="topbar-dropdown" aria-hidden="true">
+            <!-- Header -->
+            <div class="topbar-dd-header">
+              <div class="topbar-dd-avatar">
+                <% if (user.avatar && user.avatar !== '/images/default-avatar.png') { %>
+                  <img src="<%= user.avatar %>" alt="<%= user.firstName %>">
+                <% } else { %>
+                  <span><%= user.firstName.charAt(0) %><%= user.lastName.charAt(0) %></span>
+                <% } %>
+              </div>
+              <div class="topbar-dd-userinfo">
+                <strong><%= user.firstName %> <%= user.lastName %></strong>
+                <small><%= user.email %></small>
+              </div>
+            </div>
+
+            <!-- Credits row -->
+            <div class="topbar-dd-row credits-row">
+              <span class="dd-row-label">
+                <i data-lucide="zap"></i>
+                Crédits IA
+              </span>
+              <span class="dd-credits-value" id="topbar-credits-val">
+                <span class="dd-credits-loading">…</span>
+              </span>
+            </div>
+
+            <!-- Subscription row -->
+            <div class="topbar-dd-row sub-row">
+              <span class="dd-row-label">
+                <i data-lucide="crown"></i>
+                Abonnement
+              </span>
+              <span class="dd-sub-badge" id="topbar-sub-badge">…</span>
+            </div>
+
+            <div class="topbar-dd-divider"></div>
+
+            <!-- Actions -->
+            <a href="/pricing" class="topbar-dd-action" id="topbar-manage-sub-link">
+              <i data-lucide="credit-card"></i>
+              Gérer mon abonnement
+            </a>
+            <a href="/dashboard/settings" class="topbar-dd-action">
+              <i data-lucide="settings"></i>
+              Paramètres du compte
+            </a>
+
+            <div class="topbar-dd-divider"></div>
+
+            <a href="/auth/logout" class="topbar-dd-action topbar-dd-logout">
+              <i data-lucide="log-out"></i>
+              Déconnexion
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- ======= END DESKTOP TOPBAR ======= -->
+
     <!-- Flash Messages -->
     <% if (typeof success_msg !== 'undefined' && success_msg && success_msg.length > 0) { %>
       <div class="toast toast-success">
@@ -267,6 +345,80 @@
   <script src="/js/main.js"></script>
   <script>
     lucide.createIcons();
+
+    // ===== Topbar Profile Dropdown =====
+    (function() {
+      const btn = document.getElementById('topbar-profile-btn');
+      const dropdown = document.getElementById('topbar-dropdown');
+      const wrap = document.getElementById('topbar-profile-wrap');
+      if (!btn || !dropdown) return;
+
+      function openDropdown() {
+        dropdown.classList.add('open');
+        btn.setAttribute('aria-expanded', 'true');
+        dropdown.setAttribute('aria-hidden', 'false');
+        loadProfileData();
+      }
+
+      function closeDropdown() {
+        dropdown.classList.remove('open');
+        btn.setAttribute('aria-expanded', 'false');
+        dropdown.setAttribute('aria-hidden', 'true');
+      }
+
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        dropdown.classList.contains('open') ? closeDropdown() : openDropdown();
+      });
+
+      document.addEventListener('click', (e) => {
+        if (!wrap.contains(e.target)) closeDropdown();
+      });
+
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeDropdown();
+      });
+
+      let profileLoaded = false;
+      async function loadProfileData() {
+        if (profileLoaded) return;
+        const creditsEl = document.getElementById('topbar-credits-val');
+        const subBadge = document.getElementById('topbar-sub-badge');
+        const manageLink = document.getElementById('topbar-manage-sub-link');
+        try {
+          const resp = await fetch('/api/user/profile', { credentials: 'same-origin' });
+          if (!resp.ok) throw new Error('HTTP ' + resp.status);
+          const data = await resp.json();
+
+          if (creditsEl) {
+            creditsEl.innerHTML = '';
+            const span = document.createElement('span');
+            span.className = 'dd-credits-count';
+            span.textContent = data.credits ?? 0;
+            creditsEl.appendChild(span);
+          }
+
+          if (subBadge) {
+            const type = data.subscription?.type || 'free';
+            const labels = { free: 'Gratuit', partner: 'Partner', advanced: 'Advanced', credits: 'Crédits' };
+            subBadge.textContent = labels[type] || 'Gratuit';
+            subBadge.className = 'dd-sub-badge dd-sub-' + type;
+          }
+
+          if (manageLink && data.subscription?.stripeCustomerId) {
+            manageLink.href = '/dashboard/settings#billing';
+            manageLink.textContent = '';
+            manageLink.innerHTML = '<i data-lucide="credit-card"></i> Gérer mon abonnement';
+          }
+
+          profileLoaded = true;
+          lucide.createIcons();
+        } catch (err) {
+          if (creditsEl) creditsEl.innerHTML = '<span class="dd-credits-error">—</span>';
+          if (subBadge) { subBadge.textContent = '—'; }
+        }
+      }
+    })();
     
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebar-overlay');
