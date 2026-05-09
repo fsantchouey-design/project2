@@ -925,14 +925,14 @@ body.dark-mode #sidebar .logout-link:hover,
   height: 100vh;
   background: #ffffff;
   border-right: 1px solid #e2e8f0;
-  display: flex !important;
+  display: flex;
   flex-direction: column;
   z-index: 200;
   transition: transform 0.3s ease;
-  /* Explicitly visible on desktop — never hidden unless media query overrides */
-  transform: translateX(0) !important;
-  visibility: visible !important;
-  opacity: 1 !important;
+  /* Hidden off-screen by default; desktop media query slides it in */
+  transform: translateX(-100%);
+  visibility: visible;
+  opacity: 1;
 }
 
 .sidebar-header {
@@ -2088,9 +2088,10 @@ body.dark-mode #sidebar .logout-link:hover,
 /* Sidebar always visible on desktop (>768px) */
 @media (min-width: 769px) {
   .sidebar {
-    transform: translateX(0) !important;
-    display: flex !important;
-    visibility: visible !important;
+    transform: translateX(0);
+    display: flex;
+    visibility: visible;
+    opacity: 1;
   }
   .main-content {
     margin-left: var(--sidebar-width);
@@ -2099,12 +2100,18 @@ body.dark-mode #sidebar .logout-link:hover,
 
 /* Hide sidebar on mobile only (≤768px) */
 @media (max-width: 768px) {
+  html, body {
+    overflow-x: hidden;
+    max-width: 100%;
+  }
+
   .sidebar {
-    transform: translateX(-100%) !important;
+    transform: translateX(-100%);
+    width: min(280px, 85vw);
   }
 
   .sidebar.open {
-    transform: translateX(0) !important;
+    transform: translateX(0);
   }
 
   .sidebar-close {
@@ -2121,6 +2128,8 @@ body.dark-mode #sidebar .logout-link:hover,
     margin-left: 0;
     padding-top: var(--mobile-header-height);
     padding-bottom: calc(var(--mobile-nav-height) + 24px);
+    max-width: 100%;
+    overflow-x: hidden;
   }
 
   /* Show mobile nav */
@@ -2131,6 +2140,7 @@ body.dark-mode #sidebar .logout-link:hover,
   /* Adjust page wrapper */
   .page-wrapper {
     padding: 16px;
+    max-width: 100%;
   }
 
   .dashboard-hero {
