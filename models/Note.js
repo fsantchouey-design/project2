@@ -7,7 +7,8 @@ const NoteSchema = new mongoose.Schema({
   content: { type: String, default: '' },
   tags:    [{ type: String }],
   pinned:  { type: Boolean, default: false },
-  color:   { type: String, default: 'default' }
+  color:   { type: String, default: 'default' },
+  source:  { type: String, enum: ['client', 'pro'], default: 'client' }
 }, { timestamps: true });
 
 NoteSchema.index({ user: 1, updatedAt: -1 });

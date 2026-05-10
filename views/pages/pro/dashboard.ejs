@@ -644,93 +644,606 @@
 </div>
 
 <!-- ===================== MESSAGES ===================== -->
-<div class="pro-section" id="sec-messages">
+<!-- ===================== NOTES ===================== -->
+<div class="pro-section" id="sec-notes">
   <div class="pro-page-header">
     <div>
-      <div class="pro-page-title">Messages</div>
-      <div class="pro-page-sub">3 conversations non lues</div>
+      <div class="pro-page-title">Notes</div>
+      <div class="pro-page-sub">Espace de réflexion et de suivi business</div>
     </div>
-    <button class="pro-btn pro-btn-primary"><i data-lucide="edit"></i> Nouveau message</button>
+    <button class="pro-btn pro-btn-primary" id="pn-new-btn">
+      <i data-lucide="plus"></i> Nouvelle note
+    </button>
   </div>
 
-  <div class="pro-messages-wrap">
-    <div class="pro-convo-list">
-      <div class="pro-convo-header">Conversations</div>
-      <div class="pro-convo-search">
-        <input type="text" placeholder="Rechercher…">
+  <style>
+  .pn-body {
+    display: grid;
+    grid-template-columns: 272px 1fr;
+    gap: 0;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid var(--pro-border);
+    background: var(--pro-card);
+    height: 560px;
+  }
+  .pn-list-panel {
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--pro-border);
+    overflow: hidden;
+  }
+  .pn-list-top {
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    border-bottom: 1px solid var(--pro-border);
+  }
+  .pn-search-wrap {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid var(--pro-border);
+    border-radius: 8px;
+    padding: 0 10px;
+    transition: border-color 0.2s;
+  }
+  .pn-search-wrap:focus-within { border-color: var(--pro-green); }
+  .pn-search-icon { width:13px; height:13px; color: rgba(255,255,255,0.25); flex-shrink:0; }
+  .pn-search-input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: #e2e8f0;
+    font-size: 0.78rem;
+    padding: 8px 0;
+    font-family: inherit;
+  }
+  .pn-search-input::placeholder { color: rgba(255,255,255,0.18); }
+  .pn-tag-filters { display: flex; flex-wrap: wrap; gap: 4px; }
+  .pn-tag-filter {
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.67rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--pro-border);
+    background: transparent;
+    color: rgba(255,255,255,0.35);
+    transition: all 0.15s;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+    font-family: inherit;
+  }
+  .pn-tag-filter:hover { color: rgba(255,255,255,0.7); }
+  .pn-tag-filter.active {
+    background: var(--pro-green);
+    border-color: var(--pro-green);
+    color: #000;
+  }
+  .pn-list-scroll {
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.06) transparent;
+  }
+  .pn-list-scroll::-webkit-scrollbar { width: 3px; }
+  .pn-list-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.07); border-radius:3px; }
+  .pn-empty-list {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; gap: 8px; padding: 40px 16px;
+    text-align: center; color: rgba(255,255,255,0.18); font-size: 0.76rem;
+  }
+  .pn-empty-list svg { width:28px; height:28px; }
+  .pn-note-card {
+    padding: 12px 13px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    cursor: pointer;
+    transition: background 0.15s;
+    position: relative;
+  }
+  .pn-note-card:hover { background: rgba(255,255,255,0.025); }
+  .pn-note-card.selected {
+    background: rgba(16,185,129,0.07);
+    border-left: 3px solid var(--pro-green);
+  }
+  .pn-note-card.is-pinned::after {
+    content: '';
+    position: absolute;
+    top: 9px; right: 11px;
+    width: 5px; height: 5px;
+    background: var(--pro-amber);
+    border-radius: 50%;
+  }
+  .pn-card-title {
+    font-size: 0.81rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    margin-bottom: 3px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding-right: 14px;
+  }
+  .pn-card-preview {
+    font-size: 0.71rem;
+    color: rgba(255,255,255,0.3);
+    line-height: 1.4;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    margin-bottom: 7px;
+  }
+  .pn-card-meta { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+  .pn-card-date { font-size: 0.66rem; color: rgba(255,255,255,0.2); }
+  .pn-card-tags { display: flex; gap: 3px; flex-wrap: wrap; justify-content: flex-end; }
+  .pn-tag-pill {
+    font-size: 0.61rem; font-weight: 700;
+    padding: 2px 6px; border-radius: 20px;
+    letter-spacing: 0.03em; text-transform: uppercase;
+  }
+  .ptag-Lead        { background: rgba(6,182,212,0.18);   color: #22d3ee; }
+  .ptag-Projet      { background: rgba(16,185,129,0.18);  color: #34d399; }
+  .ptag-Client      { background: rgba(139,92,246,0.18);  color: #a78bfa; }
+  .ptag-Devis       { background: rgba(245,158,11,0.18);  color: #fbbf24; }
+  .ptag-Rendez-vous { background: rgba(59,130,246,0.18);  color: #60a5fa; }
+  .ptag-Inspiration { background: rgba(236,72,153,0.18);  color: #f472b6; }
+  .ptag-IA          { background: rgba(168,85,247,0.18);  color: #c084fc; }
+  /* Editor */
+  .pn-editor-panel { display: flex; flex-direction: column; overflow: hidden; }
+  .pn-editor-empty {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 12px; color: rgba(255,255,255,0.18);
+    text-align: center; padding: 40px;
+  }
+  .pn-editor-empty svg { width:42px; height:42px; }
+  .pn-editor-empty h3 { font-size:0.92rem; font-weight:600; color:rgba(255,255,255,0.25); margin:0; }
+  .pn-editor-empty p  { font-size:0.76rem; margin:0; line-height:1.5; }
+  .pn-editor-wrap {
+    display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden;
+  }
+  .pn-editor-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; padding: 10px 16px;
+    border-bottom: 1px solid var(--pro-border);
+    flex-wrap: wrap; flex-shrink: 0;
+  }
+  .pn-save-status {
+    font-size: 0.68rem; color: rgba(255,255,255,0.25);
+    display: flex; align-items: center; gap: 4px;
+    min-width: 80px; transition: color 0.2s;
+  }
+  .pn-save-status.saved  { color: var(--pro-green); }
+  .pn-save-status.saving { color: var(--pro-amber); }
+  .pn-save-status.error  { color: var(--pro-red); }
+  .pn-editor-actions { display: flex; align-items: center; gap: 6px; }
+  .pn-action-btn {
+    display: flex; align-items: center; gap: 5px;
+    padding: 5px 10px; border-radius: 7px;
+    border: 1px solid var(--pro-border);
+    background: transparent; color: rgba(255,255,255,0.35);
+    font-size: 0.73rem; cursor: pointer; transition: all 0.15s;
+    font-family: inherit;
+  }
+  .pn-action-btn svg { width:13px; height:13px; flex-shrink:0; }
+  .pn-action-btn:hover { background: rgba(255,255,255,0.05); color: #e2e8f0; }
+  .pn-action-btn.pinned {
+    background: rgba(245,158,11,0.12);
+    border-color: rgba(245,158,11,0.3);
+    color: var(--pro-amber);
+  }
+  .pn-action-btn.del:hover {
+    background: rgba(239,68,68,0.1);
+    border-color: rgba(239,68,68,0.3);
+    color: var(--pro-red);
+  }
+  .pn-tags-row {
+    display: flex; align-items: center; gap: 6px;
+    padding: 8px 16px; border-bottom: 1px solid var(--pro-border);
+    flex-wrap: wrap; flex-shrink: 0;
+  }
+  .pn-tags-label { font-size: 0.67rem; color: rgba(255,255,255,0.25); font-weight: 500; white-space: nowrap; }
+  .pn-tag-toggle {
+    padding: 2px 8px; border-radius: 20px; font-size: 0.65rem;
+    font-weight: 700; cursor: pointer; border: 1px solid var(--pro-border);
+    background: transparent; color: rgba(255,255,255,0.35);
+    transition: all 0.15s; letter-spacing: 0.03em; text-transform: uppercase;
+    font-family: inherit;
+  }
+  .pn-tag-toggle.active { border-color: transparent; color: #000 !important; }
+  .pn-tag-toggle.active.ptag-Lead        { background: var(--pro-cyan); }
+  .pn-tag-toggle.active.ptag-Projet      { background: var(--pro-green); }
+  .pn-tag-toggle.active.ptag-Client      { background: var(--pro-purple); }
+  .pn-tag-toggle.active.ptag-Devis       { background: var(--pro-amber); }
+  .pn-tag-toggle.active.ptag-Rendez-vous { background: var(--pro-blue); }
+  .pn-tag-toggle.active.ptag-Inspiration { background: #ec4899; }
+  .pn-tag-toggle.active.ptag-IA          { background: #a855f7; }
+  .pn-title-input {
+    width: 100%; background: none; border: none; outline: none;
+    color: #f1f5f9; font-size: 1.15rem; font-weight: 700;
+    padding: 16px 20px 6px; letter-spacing: -0.2px;
+    font-family: inherit; box-sizing: border-box; flex-shrink: 0;
+  }
+  .pn-title-input::placeholder { color: rgba(255,255,255,0.1); }
+  .pn-content-textarea {
+    flex: 1; background: none; border: none; outline: none; resize: none;
+    color: rgba(255,255,255,0.65); font-size: 0.875rem; line-height: 1.8;
+    padding: 4px 20px 20px; font-family: inherit;
+    box-sizing: border-box; overflow-y: auto;
+  }
+  .pn-content-textarea::placeholder { color: rgba(255,255,255,0.08); }
+  .pn-mob-back {
+    display: none; align-items: center; gap: 6px;
+    padding: 11px 16px; background: none;
+    border: none; border-bottom: 1px solid var(--pro-border);
+    color: rgba(255,255,255,0.35); font-size: 0.8rem;
+    cursor: pointer; width: 100%; text-align: left; font-family: inherit;
+    flex-shrink: 0;
+  }
+  .pn-mob-back svg { width:14px; height:14px; }
+  @media (max-width: 900px) {
+    .pn-body { grid-template-columns: 1fr; height: auto; min-height: 400px; }
+    .pn-list-panel { height: 380px; }
+    .pn-editor-panel.mob-open {
+      position: fixed; inset: 0; z-index: 300;
+      background: var(--pro-bg); display: flex;
+      flex-direction: column; overflow: hidden;
+    }
+    .pn-mob-back { display: flex; }
+    .pn-editor-panel:not(.mob-open) { display: none; }
+  }
+  </style>
+
+  <div class="pn-body">
+
+    <!-- Left: note list -->
+    <div class="pn-list-panel">
+      <div class="pn-list-top">
+        <div class="pn-search-wrap">
+          <svg class="pn-search-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" class="pn-search-input" id="pn-search" placeholder="Rechercher…">
+        </div>
+        <div class="pn-tag-filters">
+          <button class="pn-tag-filter active" data-tag="">Toutes</button>
+          <button class="pn-tag-filter" data-tag="Lead">Lead</button>
+          <button class="pn-tag-filter" data-tag="Projet">Projet</button>
+          <button class="pn-tag-filter" data-tag="Client">Client</button>
+          <button class="pn-tag-filter" data-tag="Devis">Devis</button>
+          <button class="pn-tag-filter" data-tag="Rendez-vous">RDV</button>
+          <button class="pn-tag-filter" data-tag="Inspiration">Inspi</button>
+          <button class="pn-tag-filter" data-tag="IA">IA</button>
+        </div>
       </div>
-      <div class="pro-convo-items">
-        <div class="pro-convo-item active">
-          <div class="pro-convo-ava" style="background:linear-gradient(135deg,#10b981,#059669)">S</div>
-          <div class="pro-convo-info">
-            <div class="pro-convo-name">Sarah M.</div>
-            <div class="pro-convo-preview">Pouvez-vous m'envoyer le devis final ?</div>
+      <div class="pn-list-scroll" id="pn-list-scroll">
+        <% if (typeof proNotes === 'undefined' || proNotes.length === 0) { %>
+          <div class="pn-empty-list">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            <span>Aucune note pour l'instant</span>
           </div>
-          <div class="pro-convo-time">23min</div>
-          <div class="pro-convo-unread">1</div>
-        </div>
-        <div class="pro-convo-item">
-          <div class="pro-convo-ava" style="background:linear-gradient(135deg,#06b6d4,#0ea5e9)">T</div>
-          <div class="pro-convo-info">
-            <div class="pro-convo-name">Thomas R.</div>
-            <div class="pro-convo-preview">Parfait ! J'attends votre retour.</div>
-          </div>
-          <div class="pro-convo-time">1h</div>
-          <div class="pro-convo-unread">2</div>
-        </div>
-        <div class="pro-convo-item">
-          <div class="pro-convo-ava" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed)">M</div>
-          <div class="pro-convo-info">
-            <div class="pro-convo-name">Marc D.</div>
-            <div class="pro-convo-preview">Merci pour les rendus IA !</div>
-          </div>
-          <div class="pro-convo-time">3h</div>
-        </div>
-        <div class="pro-convo-item">
-          <div class="pro-convo-ava" style="background:linear-gradient(135deg,#f59e0b,#d97706)">J</div>
-          <div class="pro-convo-info">
-            <div class="pro-convo-name">Julie P.</div>
-            <div class="pro-convo-preview">Super, à demain 14h !</div>
-          </div>
-          <div class="pro-convo-time">Hier</div>
-        </div>
+        <% } %>
+        <% if (typeof proNotes !== 'undefined') { %>
+          <% proNotes.forEach(function(note) { %>
+            <div class="pn-note-card <%= note.pinned ? 'is-pinned' : '' %>"
+                 data-id="<%= note._id %>"
+                 data-title="<%= (note.title || '').replace(/\"/g, '&quot;') %>"
+                 data-content="<%= (note.content || '').replace(/\"/g, '&quot;') %>"
+                 data-tags="<%= (note.tags || []).join(',') %>"
+                 data-pinned="<%= note.pinned ? 'true' : 'false' %>">
+              <div class="pn-card-title"><%= note.title || 'Note sans titre' %></div>
+              <div class="pn-card-preview"><%= note.content || '' %></div>
+              <div class="pn-card-meta">
+                <span class="pn-card-date"><%= new Date(note.updatedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) %></span>
+                <div class="pn-card-tags">
+                  <% (note.tags || []).slice(0, 2).forEach(function(tag) { %>
+                    <span class="pn-tag-pill ptag-<%= tag.replace(/[^a-zA-Z]/g, '-') %>"><%= tag %></span>
+                  <% }); %>
+                </div>
+              </div>
+            </div>
+          <% }); %>
+        <% } %>
       </div>
     </div>
 
-    <div class="pro-chat-area">
-      <div class="pro-chat-header">
-        <div class="pro-convo-ava" style="width:34px;height:34px;background:linear-gradient(135deg,#10b981,#059669);font-size:12px;font-weight:700;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;">S</div>
-        <div>
-          <div style="font-size:13.5px;font-weight:700;color:var(--pro-text);">Sarah M.</div>
-          <div style="font-size:11px;color:var(--pro-green);display:flex;align-items:center;gap:4px;"><span style="width:6px;height:6px;background:var(--pro-green);border-radius:50%;display:inline-block;"></span> En ligne</div>
-        </div>
-        <div style="margin-left:auto;display:flex;gap:6px;">
-          <button class="pro-btn pro-btn-ghost pro-btn-sm"><i data-lucide="phone"></i></button>
-          <button class="pro-btn pro-btn-ghost pro-btn-sm"><i data-lucide="more-horizontal"></i></button>
-        </div>
+    <!-- Right: editor -->
+    <div class="pn-editor-panel" id="pn-editor-panel">
+      <button class="pn-mob-back" id="pn-mob-back">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        Retour aux notes
+      </button>
+
+      <div class="pn-editor-empty" id="pn-editor-empty">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        <h3>Sélectionnez une note</h3>
+        <p>Choisissez une note dans la liste<br>ou créez-en une nouvelle.</p>
       </div>
-      <div class="pro-chat-messages">
-        <div class="pro-chat-msg">
-          <div class="pro-chat-msg-ava" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:11px;font-weight:700;">S</div>
-          <div class="pro-chat-bubble">Bonjour ! J'ai regardé les rendus IA que vous m'avez envoyés. Je préfère l'option 2 avec le canapé gris.</div>
+
+      <div class="pn-editor-wrap" id="pn-editor-wrap" style="display:none">
+        <div class="pn-editor-toolbar">
+          <span class="pn-save-status" id="pn-save-status"></span>
+          <div class="pn-editor-actions">
+            <button class="pn-action-btn" id="pn-pin-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>
+              Épingler
+            </button>
+            <button class="pn-action-btn del" id="pn-del-btn">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+              Supprimer
+            </button>
+          </div>
         </div>
-        <div class="pro-chat-msg mine">
-          <div class="pro-chat-msg-ava" style="background:linear-gradient(135deg,var(--pro-green),#059669);color:#fff;font-size:11px;font-weight:700;">P</div>
-          <div class="pro-chat-bubble">Parfait choix ! Le gris anthracite s'accorde très bien avec le parquet chêne. Je vais préparer le devis final.</div>
+
+        <div class="pn-tags-row">
+          <span class="pn-tags-label">Tags :</span>
+          <button class="pn-tag-toggle ptag-Lead"        data-tag="Lead">Lead</button>
+          <button class="pn-tag-toggle ptag-Projet"      data-tag="Projet">Projet</button>
+          <button class="pn-tag-toggle ptag-Client"      data-tag="Client">Client</button>
+          <button class="pn-tag-toggle ptag-Devis"       data-tag="Devis">Devis</button>
+          <button class="pn-tag-toggle ptag-Rendez-vous" data-tag="Rendez-vous">Rendez-vous</button>
+          <button class="pn-tag-toggle ptag-Inspiration" data-tag="Inspiration">Inspiration</button>
+          <button class="pn-tag-toggle ptag-IA"          data-tag="IA">IA</button>
         </div>
-        <div class="pro-chat-msg">
-          <div class="pro-chat-msg-ava" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:11px;font-weight:700;">S</div>
-          <div class="pro-chat-bubble">Pouvez-vous m'envoyer le devis final ? J'aimerais également voir un rendu avec les rideaux beiges dont on avait parlé.</div>
-        </div>
-      </div>
-      <div class="pro-chat-input-area">
-        <button class="pro-btn pro-btn-ghost pro-btn-sm"><i data-lucide="paperclip"></i></button>
-        <button class="pro-btn pro-btn-ghost pro-btn-sm"><i data-lucide="image"></i></button>
-        <input type="text" class="pro-chat-input" placeholder="Écrire un message…">
-        <button class="pro-chat-send"><i data-lucide="send"></i></button>
+
+        <input type="text" class="pn-title-input" id="pn-title" placeholder="Titre de la note…">
+        <textarea class="pn-content-textarea" id="pn-content" placeholder="Réflexions, informations client, détails du devis, idées design…"></textarea>
       </div>
     </div>
+
   </div>
+
+  <script>
+  (function() {
+    var pnCurrentId = null;
+    var pnSaveTimer = null;
+
+    var editorPanel = document.getElementById('pn-editor-panel');
+    var editorEmpty = document.getElementById('pn-editor-empty');
+    var editorWrap  = document.getElementById('pn-editor-wrap');
+    var titleInput  = document.getElementById('pn-title');
+    var contentTA   = document.getElementById('pn-content');
+    var pinBtn      = document.getElementById('pn-pin-btn');
+    var delBtn      = document.getElementById('pn-del-btn');
+    var listScroll  = document.getElementById('pn-list-scroll');
+    var searchInput = document.getElementById('pn-search');
+    var mobBack     = document.getElementById('pn-mob-back');
+    var saveStatus  = document.getElementById('pn-save-status');
+    var newBtn      = document.getElementById('pn-new-btn');
+
+    function setStatus(type, text) {
+      saveStatus.textContent = text;
+      saveStatus.className = 'pn-save-status';
+      if (type) saveStatus.classList.add(type);
+    }
+
+    function openEditor() {
+      editorEmpty.style.display = 'none';
+      editorWrap.style.display  = 'flex';
+      if (window.innerWidth <= 900) {
+        editorPanel.classList.add('mob-open');
+      }
+    }
+
+    if (mobBack) {
+      mobBack.addEventListener('click', function() {
+        editorPanel.classList.remove('mob-open');
+      });
+    }
+
+    function getActiveTags() {
+      var active = [];
+      document.querySelectorAll('.pn-tag-toggle.active').forEach(function(btn) {
+        active.push(btn.getAttribute('data-tag'));
+      });
+      return active;
+    }
+
+    function isPinned() {
+      return pinBtn && pinBtn.classList.contains('pinned');
+    }
+
+    function setPinState(pinned) {
+      if (pinned) {
+        pinBtn.classList.add('pinned');
+        pinBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;flex-shrink:0;"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg> Epinglee';
+      } else {
+        pinBtn.classList.remove('pinned');
+        pinBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:13px;height:13px;flex-shrink:0;"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg> Epingler';
+      }
+    }
+
+    function loadNote(card) {
+      pnCurrentId = card.getAttribute('data-id');
+      titleInput.value = card.getAttribute('data-title').replace(/&quot;/g, '"');
+      contentTA.value  = card.getAttribute('data-content').replace(/&quot;/g, '"');
+      var tags = (card.getAttribute('data-tags') || '').split(',').filter(function(t) { return t; });
+      document.querySelectorAll('.pn-tag-toggle').forEach(function(btn) {
+        if (tags.indexOf(btn.getAttribute('data-tag')) !== -1) {
+          btn.classList.add('active');
+        } else {
+          btn.classList.remove('active');
+        }
+      });
+      setPinState(card.getAttribute('data-pinned') === 'true');
+      document.querySelectorAll('.pn-note-card').forEach(function(c) { c.classList.remove('selected'); });
+      card.classList.add('selected');
+      setStatus('', '');
+      openEditor();
+    }
+
+    document.querySelectorAll('.pn-note-card').forEach(function(card) {
+      card.addEventListener('click', function() { loadNote(this); });
+    });
+
+    function scheduleAutoSave() {
+      clearTimeout(pnSaveTimer);
+      setStatus('saving', 'Enregistrement...');
+      pnSaveTimer = setTimeout(saveCurrentNote, 1500);
+    }
+
+    function saveCurrentNote() {
+      if (!pnCurrentId) return;
+      var body = {
+        title:   titleInput.value,
+        content: contentTA.value,
+        tags:    getActiveTags(),
+        pinned:  isPinned()
+      };
+      var xhr = new XMLHttpRequest();
+      xhr.open('PUT', '/pro/notes/' + pnCurrentId);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          setStatus('saved', 'Sauvegarde');
+          updateCardInList(pnCurrentId, body);
+        } else {
+          setStatus('error', 'Erreur');
+        }
+      };
+      xhr.onerror = function() { setStatus('error', 'Erreur reseau'); };
+      xhr.send(JSON.stringify(body));
+    }
+
+    function updateCardInList(id, data) {
+      var card = document.querySelector('.pn-note-card[data-id="' + id + '"]');
+      if (!card) return;
+      card.setAttribute('data-title',   data.title   || '');
+      card.setAttribute('data-content', data.content || '');
+      card.setAttribute('data-tags',    (data.tags   || []).join(','));
+      card.setAttribute('data-pinned',  data.pinned  ? 'true' : 'false');
+      var tEl = card.querySelector('.pn-card-title');
+      if (tEl) tEl.textContent = data.title || 'Note sans titre';
+      var pEl = card.querySelector('.pn-card-preview');
+      if (pEl) pEl.textContent = data.content || '';
+      var tagsEl = card.querySelector('.pn-card-tags');
+      if (tagsEl) {
+        tagsEl.innerHTML = '';
+        (data.tags || []).slice(0, 2).forEach(function(tag) {
+          var s = document.createElement('span');
+          s.className = 'pn-tag-pill ptag-' + tag.replace(/[^a-zA-Z]/g, '-');
+          s.textContent = tag;
+          tagsEl.appendChild(s);
+        });
+      }
+      if (data.pinned) { card.classList.add('is-pinned'); } else { card.classList.remove('is-pinned'); }
+    }
+
+    if (titleInput)  titleInput.addEventListener('input',  scheduleAutoSave);
+    if (contentTA)   contentTA.addEventListener('input',   scheduleAutoSave);
+
+    document.querySelectorAll('.pn-tag-toggle').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        this.classList.toggle('active');
+        scheduleAutoSave();
+      });
+    });
+
+    if (pinBtn) {
+      pinBtn.addEventListener('click', function() {
+        if (!pnCurrentId) return;
+        setPinState(!isPinned());
+        scheduleAutoSave();
+      });
+    }
+
+    if (delBtn) {
+      delBtn.addEventListener('click', function() {
+        if (!pnCurrentId) return;
+        if (!confirm('Supprimer cette note ?')) return;
+        var idToDelete = pnCurrentId;
+        var xhr = new XMLHttpRequest();
+        xhr.open('DELETE', '/pro/notes/' + idToDelete);
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.onload = function() {
+          if (xhr.status === 200) {
+            var card = document.querySelector('.pn-note-card[data-id="' + idToDelete + '"]');
+            if (card) card.remove();
+            pnCurrentId = null;
+            editorEmpty.style.display = 'flex';
+            editorWrap.style.display  = 'none';
+            editorPanel.classList.remove('mob-open');
+            if (!document.querySelector('.pn-note-card')) {
+              listScroll.innerHTML = '<div class="pn-empty-list"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:28px;height:28px;"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><span>Aucune note</span></div>';
+            }
+          }
+        };
+        xhr.send();
+      });
+    }
+
+    if (newBtn) {
+      newBtn.addEventListener('click', function() {
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/pro/notes');
+        xhr.setRequestHeader('Content-Type', 'application/json');
+        xhr.onload = function() {
+          if (xhr.status === 200) {
+            var res = JSON.parse(xhr.responseText);
+            var note = res.note;
+            var card = document.createElement('div');
+            card.className = 'pn-note-card selected';
+            card.setAttribute('data-id',      note._id);
+            card.setAttribute('data-title',   '');
+            card.setAttribute('data-content', '');
+            card.setAttribute('data-tags',    '');
+            card.setAttribute('data-pinned',  'false');
+            card.innerHTML =
+              '<div class="pn-card-title">Note sans titre</div>' +
+              '<div class="pn-card-preview"></div>' +
+              '<div class="pn-card-meta">' +
+                '<span class="pn-card-date">Maintenant</span>' +
+                '<div class="pn-card-tags"></div>' +
+              '</div>';
+            card.addEventListener('click', function() { loadNote(this); });
+            var emptyEl = listScroll.querySelector('.pn-empty-list');
+            if (emptyEl) emptyEl.remove();
+            listScroll.insertBefore(card, listScroll.firstChild);
+            document.querySelectorAll('.pn-note-card').forEach(function(c) { c.classList.remove('selected'); });
+            pnCurrentId = note._id;
+            titleInput.value = '';
+            contentTA.value  = '';
+            document.querySelectorAll('.pn-tag-toggle').forEach(function(b) { b.classList.remove('active'); });
+            setPinState(false);
+            setStatus('', '');
+            openEditor();
+            titleInput.focus();
+          }
+        };
+        xhr.send(JSON.stringify({ title: '', content: '' }));
+      });
+    }
+
+    if (searchInput) {
+      searchInput.addEventListener('input', filterNotes);
+    }
+
+    document.querySelectorAll('.pn-tag-filter').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.pn-tag-filter').forEach(function(b) { b.classList.remove('active'); });
+        this.classList.add('active');
+        filterNotes();
+      });
+    });
+
+    function filterNotes() {
+      var query = searchInput ? searchInput.value.toLowerCase().trim() : '';
+      var activeTagBtn = document.querySelector('.pn-tag-filter.active');
+      var activeTag = activeTagBtn ? (activeTagBtn.getAttribute('data-tag') || '') : '';
+      document.querySelectorAll('.pn-note-card').forEach(function(card) {
+        var title   = (card.getAttribute('data-title')   || '').toLowerCase();
+        var content = (card.getAttribute('data-content') || '').toLowerCase();
+        var tags    = (card.getAttribute('data-tags')    || '').toLowerCase();
+        var matchSearch = !query || title.indexOf(query) !== -1 || content.indexOf(query) !== -1;
+        var matchTag    = !activeTag || tags.indexOf(activeTag.toLowerCase()) !== -1;
+        card.style.display = (matchSearch && matchTag) ? '' : 'none';
+      });
+    }
+  })();
+  </script>
 </div>
 
 <!-- ===================== CALENDAR ===================== -->
