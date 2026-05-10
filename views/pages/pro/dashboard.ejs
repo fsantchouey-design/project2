@@ -2020,47 +2020,100 @@
     <button class="pro-btn pro-btn-secondary"><i data-lucide="download"></i> Factures</button>
   </div>
 
+  <style>
+  .pro-billing-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+  }
+  @media (max-width: 1100px) {
+    .pro-billing-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  }
+  @media (max-width: 600px) {
+    .pro-billing-grid { grid-template-columns: 1fr !important; }
+  }
+  .pro-plan-badge {
+    display: inline-block;
+    font-size: 0.6rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: rgba(16,185,129,0.2);
+    color: var(--pro-green);
+    margin-bottom: 6px;
+  }
+  </style>
+
   <div class="pro-billing-grid">
+
+    <!-- Plan 1 : À la demande -->
     <div class="pro-plan-card">
-      <div class="pro-plan-name">Starter</div>
-      <div class="pro-plan-price">€0 <span>/mois</span></div>
-      <div class="pro-plan-desc">Pour débuter sur CraftyCrib</div>
+      <div class="pro-plan-name">À la demande</div>
+      <div class="pro-plan-price">39 $ <span>/ lead</span></div>
+      <div class="pro-plan-desc">Idéal pour tester CraftyCrib sans abonnement.</div>
       <div class="pro-plan-features">
-        <div class="pro-plan-feature"><i data-lucide="check"></i> 5 leads / mois</div>
-        <div class="pro-plan-feature"><i data-lucide="check"></i> 3 crédits IA</div>
-        <div class="pro-plan-feature"><i data-lucide="x" style="color:var(--pro-red)"></i> Analytics</div>
-        <div class="pro-plan-feature"><i data-lucide="x" style="color:var(--pro-red)"></i> Portfolio pro</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> Accès aux projets disponibles</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> Paiement uniquement pour débloquer un lead</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> Coordonnées complètes après paiement</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> Leads qualifiés</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> 0 % de commission</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> Aucun engagement mensuel</div>
       </div>
-      <button class="pro-btn pro-btn-secondary pro-w-full">Plan actuel</button>
+      <button class="pro-btn pro-btn-secondary pro-w-full">Acheter un lead</button>
     </div>
 
+    <!-- Plan 2 : Pro (plan actuel) -->
     <div class="pro-plan-card featured">
+      <div class="pro-plan-badge">ACTUEL</div>
       <div class="pro-plan-name">Pro</div>
-      <div class="pro-plan-price">€49 <span>/mois</span></div>
-      <div class="pro-plan-desc">Pour les professionnels actifs</div>
+      <div class="pro-plan-price">169 $ <span>/ mois</span></div>
+      <div class="pro-plan-desc">Pour les professionnels actifs.</div>
       <div class="pro-plan-features">
-        <div class="pro-plan-feature"><i data-lucide="check"></i> Leads illimités</div>
-        <div class="pro-plan-feature"><i data-lucide="check"></i> 50 crédits IA / mois</div>
-        <div class="pro-plan-feature"><i data-lucide="check"></i> Analytics avancés</div>
-        <div class="pro-plan-feature"><i data-lucide="check"></i> Portfolio pro + SEO</div>
-        <div class="pro-plan-feature"><i data-lucide="check"></i> Kanban pipeline</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> Accès automatique à tous les projets</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> Leads qualifiés illimités</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> 0 % de commission</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> Accès instantané aux coordonnées clients</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> Historique complet des leads</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> 1 projet peut rentabiliser l'abonnement ×10</div>
       </div>
       <button class="pro-btn pro-btn-primary pro-w-full">Plan actuel</button>
     </div>
 
+    <!-- Plan 3 : Premium -->
     <div class="pro-plan-card">
-      <div class="pro-plan-name">Studio</div>
-      <div class="pro-plan-price">€149 <span>/mois</span></div>
-      <div class="pro-plan-desc">Pour les agences et studios</div>
+      <div class="pro-plan-name">Premium</div>
+      <div class="pro-plan-price">249 $ <span>/ mois</span></div>
+      <div class="pro-plan-desc">Pour les entreprises sérieuses qui veulent plus de visibilité.</div>
       <div class="pro-plan-features">
-        <div class="pro-plan-feature"><i data-lucide="check"></i> Tout Pro inclus</div>
-        <div class="pro-plan-feature"><i data-lucide="check"></i> 200 crédits IA / mois</div>
-        <div class="pro-plan-feature"><i data-lucide="check"></i> Gestion équipe (10)</div>
-        <div class="pro-plan-feature"><i data-lucide="check"></i> API access</div>
-        <div class="pro-plan-feature"><i data-lucide="check"></i> Support prioritaire</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> Accès automatique à tous les projets</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> Badge "Contracteur recommandé"</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> Publicité de la compagnie sur la plateforme</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> Leads qualifiés + premium</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> Mise en avant dans les recommandations</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> 0 % de commission</div>
       </div>
-      <button class="pro-btn pro-btn-secondary pro-w-full">Upgrader</button>
+      <button class="pro-btn pro-btn-secondary pro-w-full">Passer au Premium</button>
     </div>
+
+    <!-- Plan 4 : Élite -->
+    <div class="pro-plan-card">
+      <div class="pro-plan-name">Élite</div>
+      <div class="pro-plan-price">449 $ <span>/ mois</span></div>
+      <div class="pro-plan-desc">Pour les entreprises multitâches et grandes équipes.</div>
+      <div class="pro-plan-features">
+        <div class="pro-plan-feature"><i data-lucide="check"></i> Accès prioritaire à tous les projets</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> Toutes catégories et toutes zones</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> Badge "Contracteur recommandé"</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> Publicité premium de la compagnie</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> Recommandation prioritaire après formulaires</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> Mention comme compagnie numéro 1</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> Leads premium et ultra qualifiés</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> Visibilité maximale sur la plateforme</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> 0 % de commission</div>
+      </div>
+      <button class="pro-btn pro-btn-secondary pro-w-full">Passer à Élite</button>
+    </div>
+
   </div>
 
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
