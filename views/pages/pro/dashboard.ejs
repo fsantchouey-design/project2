@@ -1,0 +1,1289 @@
+<!-- ============================================================
+     CraftyCrib Pro Dashboard — All Sections
+     ============================================================ -->
+
+<!-- ===================== DASHBOARD ===================== -->
+<div class="pro-section active" id="sec-dashboard">
+  <div class="pro-page-header">
+    <div>
+      <div class="pro-page-title">
+        Bonjour <% if (typeof user !== 'undefined' && user) { %><%= user.firstName || 'Pro' %><% } else { %>Pro<% } %> 👋
+      </div>
+      <div class="pro-page-sub">Voici votre activité business du jour — Vendredi 9 mai 2026</div>
+    </div>
+    <div class="pro-page-actions">
+      <button class="pro-btn pro-btn-secondary"><i data-lucide="download"></i> Rapport</button>
+      <button class="pro-btn pro-btn-primary"><i data-lucide="plus"></i> Nouveau projet</button>
+    </div>
+  </div>
+
+  <!-- KPI GRID -->
+  <div class="pro-kpi-grid">
+    <div class="pro-kpi-card kpi-green">
+      <div class="pro-kpi-top">
+        <div class="pro-kpi-icon"><i data-lucide="users"></i></div>
+        <span class="pro-kpi-trend up"><i data-lucide="trending-up"></i> +12%</span>
+      </div>
+      <div class="pro-kpi-value">47</div>
+      <div class="pro-kpi-label">Total Leads ce mois</div>
+      <div class="pro-kpi-sparkline">
+        <div class="pro-kpi-bar" style="height:30%"></div>
+        <div class="pro-kpi-bar" style="height:50%"></div>
+        <div class="pro-kpi-bar" style="height:40%"></div>
+        <div class="pro-kpi-bar" style="height:65%"></div>
+        <div class="pro-kpi-bar" style="height:55%"></div>
+        <div class="pro-kpi-bar" style="height:80%"></div>
+        <div class="pro-kpi-bar" style="height:70%"></div>
+        <div class="pro-kpi-bar" style="height:90%"></div>
+        <div class="pro-kpi-bar" style="height:100%"></div>
+      </div>
+    </div>
+
+    <div class="pro-kpi-card kpi-cyan">
+      <div class="pro-kpi-top">
+        <div class="pro-kpi-icon"><i data-lucide="folder-open"></i></div>
+        <span class="pro-kpi-trend up"><i data-lucide="trending-up"></i> +2</span>
+      </div>
+      <div class="pro-kpi-value">8</div>
+      <div class="pro-kpi-label">Projets actifs</div>
+      <div class="pro-kpi-sparkline">
+        <div class="pro-kpi-bar" style="height:40%"></div>
+        <div class="pro-kpi-bar" style="height:60%"></div>
+        <div class="pro-kpi-bar" style="height:50%"></div>
+        <div class="pro-kpi-bar" style="height:70%"></div>
+        <div class="pro-kpi-bar" style="height:65%"></div>
+        <div class="pro-kpi-bar" style="height:85%"></div>
+        <div class="pro-kpi-bar" style="height:75%"></div>
+        <div class="pro-kpi-bar" style="height:100%"></div>
+        <div class="pro-kpi-bar" style="height:90%"></div>
+      </div>
+    </div>
+
+    <div class="pro-kpi-card kpi-purple">
+      <div class="pro-kpi-top">
+        <div class="pro-kpi-icon"><i data-lucide="percent"></i></div>
+        <span class="pro-kpi-trend up"><i data-lucide="trending-up"></i> +5%</span>
+      </div>
+      <div class="pro-kpi-value">34%</div>
+      <div class="pro-kpi-label">Taux de conversion</div>
+      <div class="pro-kpi-sparkline">
+        <div class="pro-kpi-bar" style="height:50%"></div>
+        <div class="pro-kpi-bar" style="height:45%"></div>
+        <div class="pro-kpi-bar" style="height:60%"></div>
+        <div class="pro-kpi-bar" style="height:55%"></div>
+        <div class="pro-kpi-bar" style="height:70%"></div>
+        <div class="pro-kpi-bar" style="height:80%"></div>
+        <div class="pro-kpi-bar" style="height:75%"></div>
+        <div class="pro-kpi-bar" style="height:90%"></div>
+        <div class="pro-kpi-bar" style="height:100%"></div>
+      </div>
+    </div>
+
+    <div class="pro-kpi-card kpi-amber">
+      <div class="pro-kpi-top">
+        <div class="pro-kpi-icon"><i data-lucide="euro"></i></div>
+        <span class="pro-kpi-trend up"><i data-lucide="trending-up"></i> +8%</span>
+      </div>
+      <div class="pro-kpi-value">€42.8K</div>
+      <div class="pro-kpi-label">Revenus estimés</div>
+      <div class="pro-kpi-sparkline">
+        <div class="pro-kpi-bar" style="height:35%"></div>
+        <div class="pro-kpi-bar" style="height:55%"></div>
+        <div class="pro-kpi-bar" style="height:48%"></div>
+        <div class="pro-kpi-bar" style="height:68%"></div>
+        <div class="pro-kpi-bar" style="height:72%"></div>
+        <div class="pro-kpi-bar" style="height:85%"></div>
+        <div class="pro-kpi-bar" style="height:78%"></div>
+        <div class="pro-kpi-bar" style="height:92%"></div>
+        <div class="pro-kpi-bar" style="height:100%"></div>
+      </div>
+    </div>
+
+    <div class="pro-kpi-card kpi-blue">
+      <div class="pro-kpi-top">
+        <div class="pro-kpi-icon"><i data-lucide="eye"></i></div>
+        <span class="pro-kpi-trend up"><i data-lucide="trending-up"></i> +18%</span>
+      </div>
+      <div class="pro-kpi-value">1,284</div>
+      <div class="pro-kpi-label">Vues profil / mois</div>
+      <div class="pro-kpi-sparkline">
+        <div class="pro-kpi-bar" style="height:45%"></div>
+        <div class="pro-kpi-bar" style="height:60%"></div>
+        <div class="pro-kpi-bar" style="height:52%"></div>
+        <div class="pro-kpi-bar" style="height:72%"></div>
+        <div class="pro-kpi-bar" style="height:80%"></div>
+        <div class="pro-kpi-bar" style="height:88%"></div>
+        <div class="pro-kpi-bar" style="height:76%"></div>
+        <div class="pro-kpi-bar" style="height:95%"></div>
+        <div class="pro-kpi-bar" style="height:100%"></div>
+      </div>
+    </div>
+
+    <div class="pro-kpi-card kpi-red">
+      <div class="pro-kpi-top">
+        <div class="pro-kpi-icon"><i data-lucide="clock"></i></div>
+        <span class="pro-kpi-trend down"><i data-lucide="trending-down"></i> -0.3h</span>
+      </div>
+      <div class="pro-kpi-value">2.4h</div>
+      <div class="pro-kpi-label">Temps de réponse moyen</div>
+      <div class="pro-kpi-sparkline">
+        <div class="pro-kpi-bar" style="height:80%"></div>
+        <div class="pro-kpi-bar" style="height:65%"></div>
+        <div class="pro-kpi-bar" style="height:90%"></div>
+        <div class="pro-kpi-bar" style="height:70%"></div>
+        <div class="pro-kpi-bar" style="height:55%"></div>
+        <div class="pro-kpi-bar" style="height:60%"></div>
+        <div class="pro-kpi-bar" style="height:45%"></div>
+        <div class="pro-kpi-bar" style="height:40%"></div>
+        <div class="pro-kpi-bar" style="height:35%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- BOTTOM GRID -->
+  <div class="pro-dash-grid">
+    <!-- Left: Activity + AI Insights -->
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <!-- AI Insights -->
+      <div class="pro-card">
+        <div class="pro-card-header">
+          <span class="pro-card-title pro-flex-center"><i data-lucide="cpu" style="width:15px;height:15px;color:var(--pro-green)"></i> Insights Criby IA</span>
+          <button class="pro-btn pro-btn-ghost pro-btn-sm"><i data-lucide="refresh-cw"></i></button>
+        </div>
+        <div class="pro-card-body" style="padding-top:12px;">
+          <div class="pro-insight-card">
+            <div class="pro-insight-label"><i data-lucide="trending-up"></i> Opportunité</div>
+            <div class="pro-insight-text">Les cuisines modernes performent 34% mieux ce mois. Mettez en avant vos réalisations cuisine dans votre portfolio.</div>
+          </div>
+          <div class="pro-insight-card" style="background:linear-gradient(135deg,rgba(6,182,212,0.08),rgba(59,130,246,0.05));border-color:rgba(6,182,212,0.2)">
+            <div class="pro-insight-label" style="color:var(--pro-cyan)"><i data-lucide="eye"></i> Visibilité</div>
+            <div class="pro-insight-text">Votre profil a gagné +18% de visibilité cette semaine. Répondez aux 3 leads en attente pour maximiser la conversion.</div>
+          </div>
+          <div class="pro-insight-card" style="background:linear-gradient(135deg,rgba(139,92,246,0.08),rgba(59,130,246,0.05));border-color:rgba(139,92,246,0.2)">
+            <div class="pro-insight-label" style="color:var(--pro-purple)"><i data-lucide="map-pin"></i> Régional</div>
+            <div class="pro-insight-text">Les clients parisiens convertissent 2.3x mieux que la moyenne nationale. Zone prioritaire recommandée : 75001–75016.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="pro-card">
+        <div class="pro-card-header">
+          <span class="pro-card-title">Activité récente</span>
+          <button class="pro-btn pro-btn-ghost pro-btn-sm">Tout voir</button>
+        </div>
+        <div class="pro-card-body">
+          <div class="pro-activity-item">
+            <div class="pro-activity-dot green"><i data-lucide="user-plus"></i></div>
+            <div>
+              <div style="font-size:13px;color:var(--pro-text);">Nouveau lead — <strong>Thomas R.</strong></div>
+              <div class="pro-activity-meta">Appartement complet · Paris 75008 · €35,000</div>
+              <div class="pro-activity-time">Il y a 23 min</div>
+            </div>
+          </div>
+          <div class="pro-activity-item">
+            <div class="pro-activity-dot cyan"><i data-lucide="message-square"></i></div>
+            <div>
+              <div style="font-size:13px;color:var(--pro-text);">Message de <strong>Sarah M.</strong></div>
+              <div class="pro-activity-meta">"Pouvez-vous m'envoyer le devis final ?"</div>
+              <div class="pro-activity-time">Il y a 1h</div>
+            </div>
+          </div>
+          <div class="pro-activity-item">
+            <div class="pro-activity-dot amber"><i data-lucide="star"></i></div>
+            <div>
+              <div style="font-size:13px;color:var(--pro-text);">Nouvel avis <strong>5★</strong> de Julie P.</div>
+              <div class="pro-activity-meta">"Travail exceptionnel, très professionnel."</div>
+              <div class="pro-activity-time">Il y a 3h</div>
+            </div>
+          </div>
+          <div class="pro-activity-item">
+            <div class="pro-activity-dot purple"><i data-lucide="folder-check"></i></div>
+            <div>
+              <div style="font-size:13px;color:var(--pro-text);">Projet complété — <strong>Dupont Living</strong></div>
+              <div class="pro-activity-meta">Salon moderne · 85% satisfaction client</div>
+              <div class="pro-activity-time">Hier, 16h30</div>
+            </div>
+          </div>
+          <div class="pro-activity-item">
+            <div class="pro-activity-dot green"><i data-lucide="credit-card"></i></div>
+            <div>
+              <div style="font-size:13px;color:var(--pro-text);">Paiement reçu — <strong>€4,200</strong></div>
+              <div class="pro-activity-meta">Projet Renovation Bernard · Acompte 30%</div>
+              <div class="pro-activity-time">Hier, 09h15</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Tasks + Messages -->
+    <div style="display:flex;flex-direction:column;gap:16px;">
+      <!-- Today's tasks -->
+      <div class="pro-card">
+        <div class="pro-card-header">
+          <span class="pro-card-title">Tâches du jour</span>
+          <button class="pro-btn pro-btn-ghost pro-btn-sm"><i data-lucide="plus"></i></button>
+        </div>
+        <div class="pro-card-body">
+          <div class="pro-task-item">
+            <div class="pro-task-check done"></div>
+            <span class="pro-task-label" style="text-decoration:line-through;color:var(--pro-text3)">Envoyer devis Marc D.</span>
+            <span class="pro-task-due">09:00</span>
+          </div>
+          <div class="pro-task-item">
+            <div class="pro-task-check"></div>
+            <span class="pro-task-label">Répondre à Thomas R.</span>
+            <span class="pro-task-due">11:00</span>
+          </div>
+          <div class="pro-task-item">
+            <div class="pro-task-check"></div>
+            <span class="pro-task-label">Appel client Julie P.</span>
+            <span class="pro-task-due" style="color:var(--pro-amber)">14:00</span>
+          </div>
+          <div class="pro-task-item">
+            <div class="pro-task-check"></div>
+            <span class="pro-task-label">Upload photos projet Dupont</span>
+            <span class="pro-task-due">16:00</span>
+          </div>
+          <div class="pro-task-item">
+            <div class="pro-task-check"></div>
+            <span class="pro-task-label">Réviser portfolio cuisine</span>
+            <span class="pro-task-due">18:00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick messages -->
+      <div class="pro-card">
+        <div class="pro-card-header">
+          <span class="pro-card-title">Messages récents</span>
+          <button class="pro-btn pro-btn-ghost pro-btn-sm">Voir tout</button>
+        </div>
+        <div class="pro-card-body" style="padding-top:8px;">
+          <% var msgs = [
+            { name: 'Sarah M.', msg: 'Pouvez-vous m\'envoyer le devis ?', time: '23min', unread: true, color: '#10b981' },
+            { name: 'Thomas R.', msg: 'Parfait ! J\'attends votre retour.', time: '1h', unread: true, color: '#06b6d4' },
+            { name: 'Marc D.', msg: 'Merci pour les rendus IA !', time: '3h', unread: false, color: '#8b5cf6' }
+          ]; %>
+          <% msgs.forEach(function(m) { %>
+          <div class="pro-activity-item" style="cursor:pointer;">
+            <div class="pro-activity-dot" style="background:rgba(255,255,255,0.05);color:<%= m.color %>;font-size:12px;font-weight:700;">
+              <%= m.name.charAt(0) %>
+            </div>
+            <div style="flex:1;min-width:0;">
+              <div style="font-size:12.5px;font-weight:<%= m.unread ? '700' : '500' %>;color:var(--pro-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><%= m.name %></div>
+              <div class="pro-activity-meta" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><%= m.msg %></div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
+              <span class="pro-activity-time"><%= m.time %></span>
+              <% if (m.unread) { %><span style="width:7px;height:7px;border-radius:50%;background:var(--pro-green);display:block;"></span><% } %>
+            </div>
+          </div>
+          <% }); %>
+        </div>
+      </div>
+
+      <!-- Upcoming -->
+      <div class="pro-card">
+        <div class="pro-card-header">
+          <span class="pro-card-title">Prochains rendez-vous</span>
+          <button class="pro-btn pro-btn-ghost pro-btn-sm"><i data-lucide="calendar"></i></button>
+        </div>
+        <div class="pro-card-body" style="padding-top:8px;">
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div style="display:flex;align-items:center;gap:10px;padding:10px;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.15);border-radius:9px;">
+              <div style="text-align:center;min-width:36px;">
+                <div style="font-size:17px;font-weight:800;color:var(--pro-green);line-height:1;">10</div>
+                <div style="font-size:9px;text-transform:uppercase;color:var(--pro-text3);">Mai</div>
+              </div>
+              <div>
+                <div style="font-size:12.5px;font-weight:600;color:var(--pro-text);">Appel client — Julie P.</div>
+                <div style="font-size:11px;color:var(--pro-text3);">14:00 – Salle de bain · €5,500</div>
+              </div>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:10px;background:rgba(6,182,212,0.06);border:1px solid rgba(6,182,212,0.15);border-radius:9px;">
+              <div style="text-align:center;min-width:36px;">
+                <div style="font-size:17px;font-weight:800;color:var(--pro-cyan);line-height:1;">12</div>
+                <div style="font-size:9px;text-transform:uppercase;color:var(--pro-text3);">Mai</div>
+              </div>
+              <div>
+                <div style="font-size:12.5px;font-weight:600;color:var(--pro-text);">Visite — Projet Bernard</div>
+                <div style="font-size:11px;color:var(--pro-text3);">10:00 – Lyon 69001 · Renovation</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== LEADS ===================== -->
+<div class="pro-section" id="sec-leads">
+  <div class="pro-page-header">
+    <div>
+      <div class="pro-page-title">Leads</div>
+      <div class="pro-page-sub">47 leads ce mois · 12 nouveaux · Pipeline de conversion</div>
+    </div>
+    <div class="pro-page-actions">
+      <button class="pro-btn pro-btn-secondary"><i data-lucide="download"></i> Export</button>
+      <button class="pro-btn pro-btn-primary"><i data-lucide="plus"></i> Ajouter lead</button>
+    </div>
+  </div>
+
+  <div class="pro-leads-toolbar">
+    <div class="pro-search-input" style="flex:1;max-width:280px;">
+      <i data-lucide="search"></i>
+      <input type="text" placeholder="Chercher un lead…">
+    </div>
+    <button class="pro-filter-btn"><i data-lucide="filter"></i> Filtrer</button>
+    <button class="pro-filter-btn"><i data-lucide="arrow-up-down"></i> Trier</button>
+    <button class="pro-filter-btn"><i data-lucide="calendar"></i> Cette semaine</button>
+    <div style="margin-left:auto;display:flex;gap:6px;">
+      <button class="pro-filter-btn" style="border-color:rgba(16,185,129,0.3);color:var(--pro-green);"><i data-lucide="layout-grid"></i> Kanban</button>
+      <button class="pro-filter-btn"><i data-lucide="list"></i> Liste</button>
+    </div>
+  </div>
+
+  <div class="pro-kanban">
+    <!-- NEW -->
+    <div class="pro-kanban-col">
+      <div class="pro-kanban-header">
+        <div class="pro-kanban-title"><span class="pro-kanban-dot" style="background:var(--pro-blue)"></span> New</div>
+        <span class="pro-kanban-count">4</span>
+      </div>
+      <div class="pro-kanban-items">
+        <div class="pro-lead-card">
+          <div class="pro-lead-card-header">
+            <div><div class="pro-lead-name">Thomas R.</div><div class="pro-lead-room">Appartement complet</div></div>
+            <span class="pro-lead-score high">95%</span>
+          </div>
+          <div class="pro-lead-meta">
+            <span class="pro-lead-tag"><i data-lucide="euro"></i> €35,000</span>
+            <span class="pro-lead-tag"><i data-lucide="map-pin"></i> Paris 75008</span>
+            <span class="pro-lead-tag"><i data-lucide="zap"></i> Urgent</span>
+          </div>
+          <div class="pro-lead-actions">
+            <button class="pro-lead-act-btn accept"><i data-lucide="check"></i> Accept</button>
+            <button class="pro-lead-act-btn decline"><i data-lucide="x"></i> Decline</button>
+          </div>
+        </div>
+        <div class="pro-lead-card">
+          <div class="pro-lead-card-header">
+            <div><div class="pro-lead-name">Emma L.</div><div class="pro-lead-room">Cuisine moderne</div></div>
+            <span class="pro-lead-score high">88%</span>
+          </div>
+          <div class="pro-lead-meta">
+            <span class="pro-lead-tag"><i data-lucide="euro"></i> €18,000</span>
+            <span class="pro-lead-tag"><i data-lucide="map-pin"></i> Paris 75016</span>
+          </div>
+          <div class="pro-lead-actions">
+            <button class="pro-lead-act-btn accept"><i data-lucide="check"></i> Accept</button>
+            <button class="pro-lead-act-btn decline"><i data-lucide="x"></i> Decline</button>
+          </div>
+        </div>
+        <div class="pro-lead-card">
+          <div class="pro-lead-card-header">
+            <div><div class="pro-lead-name">Lucas B.</div><div class="pro-lead-room">Bureau à domicile</div></div>
+            <span class="pro-lead-score medium">72%</span>
+          </div>
+          <div class="pro-lead-meta">
+            <span class="pro-lead-tag"><i data-lucide="euro"></i> €8,500</span>
+            <span class="pro-lead-tag"><i data-lucide="map-pin"></i> Lyon 69001</span>
+          </div>
+          <div class="pro-lead-actions">
+            <button class="pro-lead-act-btn accept"><i data-lucide="check"></i> Accept</button>
+            <button class="pro-lead-act-btn decline"><i data-lucide="x"></i> Decline</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTACTED -->
+    <div class="pro-kanban-col">
+      <div class="pro-kanban-header">
+        <div class="pro-kanban-title"><span class="pro-kanban-dot" style="background:var(--pro-cyan)"></span> Contacted</div>
+        <span class="pro-kanban-count">6</span>
+      </div>
+      <div class="pro-kanban-items">
+        <div class="pro-lead-card">
+          <div class="pro-lead-card-header">
+            <div><div class="pro-lead-name">Sarah M.</div><div class="pro-lead-room">Salon living</div></div>
+            <span class="pro-lead-score high">92%</span>
+          </div>
+          <div class="pro-lead-meta">
+            <span class="pro-lead-tag"><i data-lucide="euro"></i> €8,000</span>
+            <span class="pro-lead-tag"><i data-lucide="map-pin"></i> Paris 75001</span>
+          </div>
+          <div class="pro-lead-actions">
+            <button class="pro-lead-act-btn" style="flex:1;"><i data-lucide="send"></i> Quote</button>
+            <button class="pro-lead-act-btn" style="flex:1;"><i data-lucide="phone"></i> Call</button>
+          </div>
+        </div>
+        <div class="pro-lead-card">
+          <div class="pro-lead-card-header">
+            <div><div class="pro-lead-name">Marc D.</div><div class="pro-lead-room">Cuisine renovation</div></div>
+            <span class="pro-lead-score high">78%</span>
+          </div>
+          <div class="pro-lead-meta">
+            <span class="pro-lead-tag"><i data-lucide="euro"></i> €15,000</span>
+            <span class="pro-lead-tag"><i data-lucide="map-pin"></i> Lyon 69002</span>
+          </div>
+          <div class="pro-lead-actions">
+            <button class="pro-lead-act-btn" style="flex:1;"><i data-lucide="send"></i> Quote</button>
+            <button class="pro-lead-act-btn" style="flex:1;"><i data-lucide="message-square"></i> Msg</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- QUOTE SENT -->
+    <div class="pro-kanban-col">
+      <div class="pro-kanban-header">
+        <div class="pro-kanban-title"><span class="pro-kanban-dot" style="background:var(--pro-purple)"></span> Quote Sent</div>
+        <span class="pro-kanban-count">3</span>
+      </div>
+      <div class="pro-kanban-items">
+        <div class="pro-lead-card">
+          <div class="pro-lead-card-header">
+            <div><div class="pro-lead-name">Julie P.</div><div class="pro-lead-room">Salle de bain</div></div>
+            <span class="pro-lead-score high">85%</span>
+          </div>
+          <div class="pro-lead-meta">
+            <span class="pro-lead-tag"><i data-lucide="euro"></i> €5,500</span>
+            <span class="pro-lead-tag"><i data-lucide="map-pin"></i> Bordeaux</span>
+            <span class="pro-lead-tag" style="color:var(--pro-amber)"><i data-lucide="clock"></i> 2j</span>
+          </div>
+          <div class="pro-lead-actions">
+            <button class="pro-lead-act-btn" style="flex:1;"><i data-lucide="refresh-cw"></i> Relance</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEGOTIATION -->
+    <div class="pro-kanban-col">
+      <div class="pro-kanban-header">
+        <div class="pro-kanban-title"><span class="pro-kanban-dot" style="background:var(--pro-amber)"></span> Negotiation</div>
+        <span class="pro-kanban-count">2</span>
+      </div>
+      <div class="pro-kanban-items">
+        <div class="pro-lead-card">
+          <div class="pro-lead-card-header">
+            <div><div class="pro-lead-name">Claire V.</div><div class="pro-lead-room">Villa entière</div></div>
+            <span class="pro-lead-score high">90%</span>
+          </div>
+          <div class="pro-lead-meta">
+            <span class="pro-lead-tag"><i data-lucide="euro"></i> €80,000</span>
+            <span class="pro-lead-tag"><i data-lucide="map-pin"></i> Cannes</span>
+          </div>
+          <div class="pro-lead-actions">
+            <button class="pro-lead-act-btn accept"><i data-lucide="handshake"></i> Confirmer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONFIRMED -->
+    <div class="pro-kanban-col">
+      <div class="pro-kanban-header">
+        <div class="pro-kanban-title"><span class="pro-kanban-dot" style="background:var(--pro-green)"></span> Confirmed</div>
+        <span class="pro-kanban-count">5</span>
+      </div>
+      <div class="pro-kanban-items">
+        <div class="pro-lead-card">
+          <div class="pro-lead-card-header">
+            <div><div class="pro-lead-name">Antoine B.</div><div class="pro-lead-room">Loft Montmartre</div></div>
+            <span class="pro-lead-score high">96%</span>
+          </div>
+          <div class="pro-lead-meta">
+            <span class="pro-lead-tag"><i data-lucide="euro"></i> €28,000</span>
+            <span class="pro-lead-tag"><i data-lucide="calendar"></i> 15 mai</span>
+          </div>
+          <div class="pro-lead-actions">
+            <button class="pro-lead-act-btn" style="flex:1;"><i data-lucide="folder-open"></i> Projet</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COMPLETED -->
+    <div class="pro-kanban-col">
+      <div class="pro-kanban-header">
+        <div class="pro-kanban-title"><span class="pro-kanban-dot" style="background:var(--pro-text3)"></span> Completed</div>
+        <span class="pro-kanban-count">12</span>
+      </div>
+      <div class="pro-kanban-items">
+        <div class="pro-lead-card" style="opacity:0.65;">
+          <div class="pro-lead-card-header">
+            <div><div class="pro-lead-name">Sophie M.</div><div class="pro-lead-room">Chambre parentale</div></div>
+            <span class="pro-lead-score" style="background:rgba(255,255,255,0.06);color:var(--pro-text3);">★ 5.0</span>
+          </div>
+          <div class="pro-lead-meta">
+            <span class="pro-lead-tag"><i data-lucide="euro"></i> €12,000</span>
+            <span class="pro-lead-tag">Terminé</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== PROJECTS ===================== -->
+<div class="pro-section" id="sec-projects">
+  <div class="pro-page-header">
+    <div>
+      <div class="pro-page-title">Projects</div>
+      <div class="pro-page-sub">8 projets actifs · 3 en révision · 12 complétés</div>
+    </div>
+    <div class="pro-page-actions">
+      <button class="pro-btn pro-btn-secondary"><i data-lucide="filter"></i> Filtrer</button>
+      <button class="pro-btn pro-btn-primary"><i data-lucide="plus"></i> Nouveau projet</button>
+    </div>
+  </div>
+
+  <div class="pro-projects-grid">
+    <% var projects = [
+      { name: 'Rénovation Dupont', client: 'Claire Dupont', status: 'active', statusLabel: 'En cours', prog: 68, budget: '€28,000', deadline: '15 juin', emoji: '🛋️', bg: 'linear-gradient(135deg,#0f2d1e,#0a2233)' },
+      { name: 'Cuisine Bernard', client: 'Marc Bernard', status: 'review', statusLabel: 'En révision', prog: 90, budget: '€15,000', deadline: '20 mai', emoji: '🍳', bg: 'linear-gradient(135deg,#1a1a0f,#1a0f2d)' },
+      { name: 'Loft Montmartre', client: 'Antoine Brun', status: 'active', statusLabel: 'En cours', prog: 35, budget: '€42,000', deadline: '1 juil.', emoji: '🏙️', bg: 'linear-gradient(135deg,#0a1a2d,#1a0a2d)' },
+      { name: 'Villa Cannes', client: 'Claire Verdier', status: 'active', statusLabel: 'En cours', prog: 15, budget: '€80,000', deadline: '1 sept.', emoji: '🌴', bg: 'linear-gradient(135deg,#1a1a0a,#0a1a1a)' },
+      { name: 'Salle de bain Julie', client: 'Julie Petit', status: 'done', statusLabel: 'Terminé', prog: 100, budget: '€5,500', deadline: 'Terminé', emoji: '🚿', bg: 'linear-gradient(135deg,#0a1a0a,#0a0a1a)' },
+      { name: 'Bureau Paris 8', client: 'Lucas Moreau', status: 'draft', statusLabel: 'Brouillon', prog: 5, budget: '€8,500', deadline: 'TBD', emoji: '💼', bg: 'linear-gradient(135deg,#1a0a0a,#0a0a1a)' }
+    ]; %>
+    <% projects.forEach(function(p) { %>
+    <div class="pro-project-card">
+      <div class="pro-project-preview" style="background:<%= p.bg %>">
+        <div class="pro-project-preview-inner" style="font-size:48px;"><%= p.emoji %></div>
+      </div>
+      <div class="pro-project-body">
+        <div class="pro-project-header">
+          <div>
+            <div class="pro-project-name"><%= p.name %></div>
+            <div class="pro-project-client"><%= p.client %></div>
+          </div>
+          <span class="pro-status-badge <%= p.status %>"><%= p.statusLabel %></span>
+        </div>
+        <div class="pro-progress-wrap">
+          <div class="pro-progress-label">
+            <span>Progression</span>
+            <span><%= p.prog %>%</span>
+          </div>
+          <div class="pro-progress-bar-outer">
+            <div class="pro-progress-bar-fill" style="width:<%= p.prog %>%"></div>
+          </div>
+        </div>
+        <div class="pro-project-footer">
+          <span class="pro-flex-center" style="font-size:11.5px;"><i data-lucide="euro" style="width:12px;height:12px;"></i> <%= p.budget %></span>
+          <span class="pro-flex-center" style="font-size:11.5px;"><i data-lucide="calendar" style="width:12px;height:12px;"></i> <%= p.deadline %></span>
+        </div>
+      </div>
+    </div>
+    <% }); %>
+  </div>
+</div>
+
+<!-- ===================== PORTFOLIO ===================== -->
+<div class="pro-section" id="sec-portfolio">
+  <div class="pro-page-header">
+    <div>
+      <div class="pro-page-title">Portfolio</div>
+      <div class="pro-page-sub">24 réalisations · 8,420 vues · Note moyenne 4.9★</div>
+    </div>
+    <div class="pro-page-actions">
+      <button class="pro-btn pro-btn-secondary"><i data-lucide="sparkles"></i> Générer rendu IA</button>
+      <button class="pro-btn pro-btn-primary"><i data-lucide="upload"></i> Ajouter réalisation</button>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;">
+    <div style="background:var(--pro-card);border:1px solid var(--pro-border);border-radius:var(--pro-radius);padding:16px;text-align:center;">
+      <div style="font-size:22px;font-weight:800;color:var(--pro-green);">8,420</div>
+      <div style="font-size:11.5px;color:var(--pro-text3);margin-top:3px;">Vues totales</div>
+    </div>
+    <div style="background:var(--pro-card);border:1px solid var(--pro-border);border-radius:var(--pro-radius);padding:16px;text-align:center;">
+      <div style="font-size:22px;font-weight:800;color:var(--pro-cyan);">6.8%</div>
+      <div style="font-size:11.5px;color:var(--pro-text3);margin-top:3px;">Taux de clic</div>
+    </div>
+    <div style="background:var(--pro-card);border:1px solid var(--pro-border);border-radius:var(--pro-radius);padding:16px;text-align:center;">
+      <div style="font-size:22px;font-weight:800;color:var(--pro-amber);">342</div>
+      <div style="font-size:11.5px;color:var(--pro-text3);margin-top:3px;">Favoris clients</div>
+    </div>
+  </div>
+
+  <div class="pro-portfolio-grid">
+    <% var portfolios = [
+      { title: 'Salon Haussmannien Moderne', img: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=600&q=80', views: '1,240', likes: '48', clicks: '7.2%' },
+      { title: 'Cuisine Ouverte Scandinave', img: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=600&q=80', views: '980', likes: '36', clicks: '6.1%' },
+      { title: 'Suite Parentale Minimaliste', img: 'https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=600&q=80', views: '820', likes: '31', clicks: '5.8%' },
+      { title: 'Salle de Bain Luxe', img: 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?auto=format&fit=crop&w=600&q=80', views: '650', likes: '28', clicks: '8.3%' },
+      { title: 'Loft Industriel Artistique', img: 'https://images.unsplash.com/photo-1560184897-ae75f418493e?auto=format&fit=crop&w=600&q=80', views: '740', likes: '40', clicks: '9.1%' },
+      { title: 'Terrasse Rooftop Design', img: 'https://images.unsplash.com/photo-1572912702419-7fe48f2ece2e?auto=format&fit=crop&w=600&q=80', views: '1,120', likes: '55', clicks: '7.8%' }
+    ]; %>
+    <% portfolios.forEach(function(p) { %>
+    <div class="pro-portfolio-card">
+      <div class="pro-portfolio-preview">
+        <img src="<%= p.img %>" alt="<%= p.title %>">
+        <div class="pro-portfolio-overlay">
+          <button class="pro-btn pro-btn-sm pro-btn-primary"><i data-lucide="eye"></i> Voir</button>
+          <button class="pro-btn pro-btn-sm pro-btn-secondary"><i data-lucide="edit"></i> Modifier</button>
+        </div>
+      </div>
+      <div class="pro-portfolio-body">
+        <div class="pro-portfolio-title"><%= p.title %></div>
+        <div class="pro-portfolio-stats">
+          <div class="pro-portfolio-stat"><i data-lucide="eye"></i> <%= p.views %></div>
+          <div class="pro-portfolio-stat"><i data-lucide="heart"></i> <%= p.likes %></div>
+          <div class="pro-portfolio-stat"><i data-lucide="mouse-pointer-click"></i> <%= p.clicks %></div>
+        </div>
+      </div>
+    </div>
+    <% }); %>
+  </div>
+</div>
+
+<!-- ===================== MESSAGES ===================== -->
+<div class="pro-section" id="sec-messages">
+  <div class="pro-page-header">
+    <div>
+      <div class="pro-page-title">Messages</div>
+      <div class="pro-page-sub">3 conversations non lues</div>
+    </div>
+    <button class="pro-btn pro-btn-primary"><i data-lucide="edit"></i> Nouveau message</button>
+  </div>
+
+  <div class="pro-messages-wrap">
+    <div class="pro-convo-list">
+      <div class="pro-convo-header">Conversations</div>
+      <div class="pro-convo-search">
+        <input type="text" placeholder="Rechercher…">
+      </div>
+      <div class="pro-convo-items">
+        <div class="pro-convo-item active">
+          <div class="pro-convo-ava" style="background:linear-gradient(135deg,#10b981,#059669)">S</div>
+          <div class="pro-convo-info">
+            <div class="pro-convo-name">Sarah M.</div>
+            <div class="pro-convo-preview">Pouvez-vous m'envoyer le devis final ?</div>
+          </div>
+          <div class="pro-convo-time">23min</div>
+          <div class="pro-convo-unread">1</div>
+        </div>
+        <div class="pro-convo-item">
+          <div class="pro-convo-ava" style="background:linear-gradient(135deg,#06b6d4,#0ea5e9)">T</div>
+          <div class="pro-convo-info">
+            <div class="pro-convo-name">Thomas R.</div>
+            <div class="pro-convo-preview">Parfait ! J'attends votre retour.</div>
+          </div>
+          <div class="pro-convo-time">1h</div>
+          <div class="pro-convo-unread">2</div>
+        </div>
+        <div class="pro-convo-item">
+          <div class="pro-convo-ava" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed)">M</div>
+          <div class="pro-convo-info">
+            <div class="pro-convo-name">Marc D.</div>
+            <div class="pro-convo-preview">Merci pour les rendus IA !</div>
+          </div>
+          <div class="pro-convo-time">3h</div>
+        </div>
+        <div class="pro-convo-item">
+          <div class="pro-convo-ava" style="background:linear-gradient(135deg,#f59e0b,#d97706)">J</div>
+          <div class="pro-convo-info">
+            <div class="pro-convo-name">Julie P.</div>
+            <div class="pro-convo-preview">Super, à demain 14h !</div>
+          </div>
+          <div class="pro-convo-time">Hier</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pro-chat-area">
+      <div class="pro-chat-header">
+        <div class="pro-convo-ava" style="width:34px;height:34px;background:linear-gradient(135deg,#10b981,#059669);font-size:12px;font-weight:700;color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;">S</div>
+        <div>
+          <div style="font-size:13.5px;font-weight:700;color:var(--pro-text);">Sarah M.</div>
+          <div style="font-size:11px;color:var(--pro-green);display:flex;align-items:center;gap:4px;"><span style="width:6px;height:6px;background:var(--pro-green);border-radius:50%;display:inline-block;"></span> En ligne</div>
+        </div>
+        <div style="margin-left:auto;display:flex;gap:6px;">
+          <button class="pro-btn pro-btn-ghost pro-btn-sm"><i data-lucide="phone"></i></button>
+          <button class="pro-btn pro-btn-ghost pro-btn-sm"><i data-lucide="more-horizontal"></i></button>
+        </div>
+      </div>
+      <div class="pro-chat-messages">
+        <div class="pro-chat-msg">
+          <div class="pro-chat-msg-ava" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:11px;font-weight:700;">S</div>
+          <div class="pro-chat-bubble">Bonjour ! J'ai regardé les rendus IA que vous m'avez envoyés. Je préfère l'option 2 avec le canapé gris.</div>
+        </div>
+        <div class="pro-chat-msg mine">
+          <div class="pro-chat-msg-ava" style="background:linear-gradient(135deg,var(--pro-green),#059669);color:#fff;font-size:11px;font-weight:700;">P</div>
+          <div class="pro-chat-bubble">Parfait choix ! Le gris anthracite s'accorde très bien avec le parquet chêne. Je vais préparer le devis final.</div>
+        </div>
+        <div class="pro-chat-msg">
+          <div class="pro-chat-msg-ava" style="background:linear-gradient(135deg,#10b981,#059669);color:#fff;font-size:11px;font-weight:700;">S</div>
+          <div class="pro-chat-bubble">Pouvez-vous m'envoyer le devis final ? J'aimerais également voir un rendu avec les rideaux beiges dont on avait parlé.</div>
+        </div>
+      </div>
+      <div class="pro-chat-input-area">
+        <button class="pro-btn pro-btn-ghost pro-btn-sm"><i data-lucide="paperclip"></i></button>
+        <button class="pro-btn pro-btn-ghost pro-btn-sm"><i data-lucide="image"></i></button>
+        <input type="text" class="pro-chat-input" placeholder="Écrire un message…">
+        <button class="pro-chat-send"><i data-lucide="send"></i></button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== CALENDAR ===================== -->
+<div class="pro-section" id="sec-calendar">
+  <div class="pro-page-header">
+    <div>
+      <div class="pro-page-title">Calendar</div>
+      <div class="pro-page-sub">3 rendez-vous cette semaine · 1 deadline projet</div>
+    </div>
+    <div class="pro-page-actions">
+      <button class="pro-btn pro-btn-secondary"><i data-lucide="sync"></i> Synchroniser</button>
+      <button class="pro-btn pro-btn-primary"><i data-lucide="plus"></i> Nouveau RDV</button>
+    </div>
+  </div>
+
+  <div class="pro-cal-header">
+    <div class="pro-cal-nav">
+      <button class="pro-btn pro-btn-ghost pro-btn-sm"><i data-lucide="chevron-left"></i></button>
+      <span class="pro-cal-month">Mai 2026</span>
+      <button class="pro-btn pro-btn-ghost pro-btn-sm"><i data-lucide="chevron-right"></i></button>
+    </div>
+    <div class="pro-cal-views">
+      <button class="pro-cal-view-btn active">Mois</button>
+      <button class="pro-cal-view-btn">Semaine</button>
+      <button class="pro-cal-view-btn">Jour</button>
+    </div>
+  </div>
+
+  <div class="pro-cal-grid-header">
+    <% ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].forEach(function(d) { %>
+    <div class="pro-cal-day-label"><%= d %></div>
+    <% }); %>
+  </div>
+
+  <div class="pro-cal-grid">
+    <div class="pro-cal-cell other-month"><div class="pro-cal-date">28</div></div>
+    <div class="pro-cal-cell other-month"><div class="pro-cal-date">29</div></div>
+    <div class="pro-cal-cell other-month"><div class="pro-cal-date">30</div></div>
+    <div class="pro-cal-cell"><div class="pro-cal-date">1</div></div>
+    <div class="pro-cal-cell"><div class="pro-cal-date">2</div></div>
+    <div class="pro-cal-cell"><div class="pro-cal-date">3</div></div>
+    <div class="pro-cal-cell"><div class="pro-cal-date">4</div></div>
+    <div class="pro-cal-cell"><div class="pro-cal-date">5</div></div>
+    <div class="pro-cal-cell"><div class="pro-cal-date">6</div><div class="pro-cal-event cyan">Marc D. — Appel</div></div>
+    <div class="pro-cal-cell"><div class="pro-cal-date">7</div></div>
+    <div class="pro-cal-cell"><div class="pro-cal-date">8</div></div>
+    <div class="pro-cal-cell today"><div class="pro-cal-date">9</div><div class="pro-cal-event green">Thomas R. — Lead</div></div>
+    <div class="pro-cal-cell"><div class="pro-cal-date">10</div></div>
+    <div class="pro-cal-cell"><div class="pro-cal-date">11</div></div>
+    <div class="pro-cal-cell"><div class="pro-cal-date">12</div><div class="pro-cal-event purple">Visite Bernard</div></div>
+    <div class="pro-cal-cell"><div class="pro-cal-date">13</div></div>
+    <div class="pro-cal-cell"><div class="pro-cal-date">14</div></div>
+    <div class="pro-cal-cell"><div class="pro-cal-date">15</div><div class="pro-cal-event amber">Deadline Dupont</div></div>
+    <div class="pro-cal-cell"><div class="pro-cal-date">16</div></div>
+    <div class="pro-cal-cell"><div class="pro-cal-date">17</div></div>
+    <div class="pro-cal-cell"><div class="pro-cal-date">18</div></div>
+    <div class="pro-cal-cell"><div class="pro-cal-date">19</div><div class="pro-cal-event green">Julie P. — Appel</div></div>
+    <div class="pro-cal-cell"><div class="pro-cal-date">20</div></div>
+    <div class="pro-cal-cell"><div class="pro-cal-date">21</div></div>
+    <div class="pro-cal-cell"><div class="pro-cal-date">22</div></div>
+    <div class="pro-cal-cell"><div class="pro-cal-date">23</div></div>
+    <div class="pro-cal-cell"><div class="pro-cal-date">24</div></div>
+    <div class="pro-cal-cell"><div class="pro-cal-date">25</div></div>
+    <div class="pro-cal-cell"><div class="pro-cal-date">26</div></div>
+    <div class="pro-cal-cell"><div class="pro-cal-date">27</div></div>
+    <div class="pro-cal-cell"><div class="pro-cal-date">28</div></div>
+    <div class="pro-cal-cell"><div class="pro-cal-date">29</div></div>
+    <div class="pro-cal-cell"><div class="pro-cal-date">30</div></div>
+    <div class="pro-cal-cell"><div class="pro-cal-date">31</div></div>
+    <div class="pro-cal-cell other-month"><div class="pro-cal-date">1</div></div>
+  </div>
+</div>
+
+<!-- ===================== ANALYTICS ===================== -->
+<div class="pro-section" id="sec-analytics">
+  <div class="pro-page-header">
+    <div>
+      <div class="pro-page-title">Analytics</div>
+      <div class="pro-page-sub">Performances business · Mai 2026</div>
+    </div>
+    <div class="pro-page-actions">
+      <button class="pro-btn pro-btn-secondary"><i data-lucide="calendar"></i> Ce mois</button>
+      <button class="pro-btn pro-btn-secondary"><i data-lucide="download"></i> Export</button>
+    </div>
+  </div>
+
+  <div class="pro-analytics-kpi">
+    <div class="pro-analytics-kpi-card">
+      <div class="pro-analytics-kpi-value">1,284</div>
+      <div class="pro-analytics-kpi-label">Vues profil</div>
+      <div class="pro-analytics-kpi-change up"><i data-lucide="trending-up"></i> +18% vs mois dernier</div>
+    </div>
+    <div class="pro-analytics-kpi-card">
+      <div class="pro-analytics-kpi-value">34%</div>
+      <div class="pro-analytics-kpi-label">Taux de conversion</div>
+      <div class="pro-analytics-kpi-change up"><i data-lucide="trending-up"></i> +5 points</div>
+    </div>
+    <div class="pro-analytics-kpi-card">
+      <div class="pro-analytics-kpi-value">€42,800</div>
+      <div class="pro-analytics-kpi-label">Revenus estimés</div>
+      <div class="pro-analytics-kpi-change up"><i data-lucide="trending-up"></i> +8% croissance</div>
+    </div>
+    <div class="pro-analytics-kpi-card">
+      <div class="pro-analytics-kpi-value">4.9 ★</div>
+      <div class="pro-analytics-kpi-label">Note moyenne</div>
+      <div class="pro-analytics-kpi-change up"><i data-lucide="trending-up"></i> 47 avis clients</div>
+    </div>
+  </div>
+
+  <div class="pro-analytics-grid">
+    <div class="pro-chart-area">
+      <div class="pro-chart-title">Revenus mensuels</div>
+      <div class="pro-chart-sub">6 derniers mois · en euros</div>
+      <svg class="pro-line-chart" viewBox="0 0 600 180" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#10b981" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <path d="M0,140 L100,110 L200,120 L300,80 L400,65 L500,40 L600,20" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M0,140 L100,110 L200,120 L300,80 L400,65 L500,40 L600,20 L600,180 L0,180 Z" fill="url(#chartGrad)"/>
+        <circle cx="100" cy="110" r="4" fill="#10b981"/>
+        <circle cx="200" cy="120" r="4" fill="#10b981"/>
+        <circle cx="300" cy="80"  r="4" fill="#10b981"/>
+        <circle cx="400" cy="65"  r="4" fill="#10b981"/>
+        <circle cx="500" cy="40"  r="4" fill="#10b981"/>
+        <circle cx="600" cy="20"  r="6" fill="#10b981" stroke="#0f172a" stroke-width="2"/>
+        <line x1="0" y1="180" x2="600" y2="180" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <line x1="0" y1="120" x2="600" y2="120" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,4"/>
+        <line x1="0" y1="60"  x2="600" y2="60"  stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,4"/>
+        <text x="5"   y="175" fill="rgba(255,255,255,0.25)" font-size="10" font-family="Inter,sans-serif">Déc</text>
+        <text x="100" y="175" fill="rgba(255,255,255,0.25)" font-size="10" font-family="Inter,sans-serif">Jan</text>
+        <text x="200" y="175" fill="rgba(255,255,255,0.25)" font-size="10" font-family="Inter,sans-serif">Fév</text>
+        <text x="300" y="175" fill="rgba(255,255,255,0.25)" font-size="10" font-family="Inter,sans-serif">Mar</text>
+        <text x="400" y="175" fill="rgba(255,255,255,0.25)" font-size="10" font-family="Inter,sans-serif">Avr</text>
+        <text x="500" y="175" fill="rgba(255,255,255,0.25)" font-size="10" font-family="Inter,sans-serif">Mai</text>
+      </svg>
+      <div style="margin-top:16px;">
+        <div class="pro-chart-title" style="font-size:13px;margin-bottom:10px;">Leads par source</div>
+        <div class="pro-bar-chart">
+          <% var sources = [
+            { label: 'CraftyCrib', h: 90 }, { label: 'Bouche à oreille', h: 70 },
+            { label: 'Google', h: 55 }, { label: 'Instagram', h: 45 },
+            { label: 'LinkedIn', h: 30 }, { label: 'Autre', h: 20 }
+          ]; %>
+          <% sources.forEach(function(s) { %>
+          <div class="pro-bar-col">
+            <div class="pro-bar-fill" style="height:<%= s.h %>%;"></div>
+            <div class="pro-bar-label"><%= s.label %></div>
+          </div>
+          <% }); %>
+        </div>
+      </div>
+    </div>
+
+    <div class="pro-ai-insights">
+      <div style="font-size:14px;font-weight:700;color:var(--pro-text);margin-bottom:12px;display:flex;align-items:center;gap:7px;"><i data-lucide="cpu" style="width:15px;height:15px;color:var(--pro-green)"></i> Recommandations IA</div>
+      <div class="pro-ai-insight-card">
+        <div class="pro-ai-insight-tag"><i data-lucide="trending-up"></i> Opportunité marché</div>
+        <div class="pro-ai-insight-text">"Modern kitchens perform 34% better this month. Push kitchen projects in your portfolio."</div>
+        <div class="pro-ai-insight-change">↑ +34% vs segment moyen</div>
+      </div>
+      <div class="pro-ai-insight-card">
+        <div class="pro-ai-insight-tag"><i data-lucide="eye"></i> Visibilité profil</div>
+        <div class="pro-ai-insight-text">"Your profile visibility increased by 18%. Respond to pending leads to maximize conversion."</div>
+        <div class="pro-ai-insight-change">3 leads en attente de réponse</div>
+      </div>
+      <div class="pro-ai-insight-card">
+        <div class="pro-ai-insight-tag"><i data-lucide="map-pin"></i> Zone géographique</div>
+        <div class="pro-ai-insight-text">"Paris clients convert 2.3x better than average. Focus efforts on Paris 75008-75016."</div>
+        <div class="pro-ai-insight-change">Zone prioritaire recommandée</div>
+      </div>
+      <div class="pro-ai-insight-card">
+        <div class="pro-ai-insight-tag"><i data-lucide="clock"></i> Réactivité</div>
+        <div class="pro-ai-insight-text">"Responding within 2h increases your conversion by 60%. You're averaging 2.4h — excellent!"</div>
+        <div class="pro-ai-insight-change">Objectif : maintenir sous 3h</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== REVIEWS ===================== -->
+<div class="pro-section" id="sec-reviews">
+  <div class="pro-page-header">
+    <div>
+      <div class="pro-page-title">Reviews</div>
+      <div class="pro-page-sub">47 avis · Note globale 4.9★</div>
+    </div>
+    <button class="pro-btn pro-btn-secondary"><i data-lucide="share-2"></i> Partager</button>
+  </div>
+
+  <div class="pro-reviews-header">
+    <div class="pro-rating-big">
+      <div class="pro-rating-score">4.9</div>
+      <div class="pro-rating-stars">★★★★★</div>
+      <div class="pro-rating-count">47 avis clients</div>
+    </div>
+    <div style="background:var(--pro-card);border:1px solid var(--pro-border);border-radius:var(--pro-radius-lg);padding:20px;flex:1;">
+      <div class="pro-rating-bars">
+        <% [['5', 82], ['4', 12], ['3', 4], ['2', 1], ['1', 1]].forEach(function(r) { %>
+        <div class="pro-rating-bar-row">
+          <span class="pro-rating-bar-label"><%= r[0] %></span>
+          <div class="pro-rating-bar-outer"><div class="pro-rating-bar-inner" style="width:<%= r[1] %>%;"></div></div>
+          <span class="pro-rating-bar-count"><%= Math.round(47 * r[1] / 100) %></span>
+        </div>
+        <% }); %>
+      </div>
+    </div>
+  </div>
+
+  <% var reviews = [
+    { name: 'Julie P.', date: '8 mai 2026', stars: 5, text: 'Travail exceptionnel ! La rénovation de notre salle de bain est magnifique. Chaque détail a été soigné, le rendu IA correspondait exactement au résultat final. Je recommande vivement.', color: '#10b981' },
+    { name: 'Marc D.', date: '2 mai 2026', stars: 5, text: 'Très professionnel, excellent écoute, et les rendus IA avant travaux nous ont vraiment aidés à visualiser le projet. La cuisine est parfaite, merci !', color: '#06b6d4' },
+    { name: 'Antoine B.', date: '24 avr. 2026', stars: 5, text: 'Conception du loft au-delà de nos espérances. Le suivi projet a été impeccable du début à la fin. Criby AI a vraiment facilité notre prise de décision.', color: '#8b5cf6' }
+  ]; %>
+  <% reviews.forEach(function(r) { %>
+  <div class="pro-review-card">
+    <div class="pro-review-header">
+      <div class="pro-review-user">
+        <div class="pro-review-avatar" style="background:<%= r.color %>"><%= r.name.charAt(0) %></div>
+        <div>
+          <div class="pro-review-name"><%= r.name %></div>
+          <div class="pro-review-date"><%= r.date %></div>
+        </div>
+      </div>
+      <span class="pro-review-verified"><i data-lucide="shield-check"></i> Client vérifié</span>
+    </div>
+    <div class="pro-review-stars"><% for(var i=0;i<r.stars;i++){%>★<%}%></div>
+    <div class="pro-review-text"><%= r.text %></div>
+    <div style="margin-top:10px;">
+      <button class="pro-btn pro-btn-ghost pro-btn-sm"><i data-lucide="reply"></i> Répondre</button>
+    </div>
+  </div>
+  <% }); %>
+</div>
+
+<!-- ===================== TEAM ===================== -->
+<div class="pro-section" id="sec-team">
+  <div class="pro-page-header">
+    <div>
+      <div class="pro-page-title">Team</div>
+      <div class="pro-page-sub">3 membres · 1 invitation en attente</div>
+    </div>
+    <button class="pro-btn pro-btn-primary"><i data-lucide="user-plus"></i> Inviter</button>
+  </div>
+
+  <div class="pro-team-grid">
+    <% var members = [
+      { name: 'Vous (Owner)', role: 'Architecte d\'intérieur', color: '#10b981', plan: 'Pro Owner' },
+      { name: 'Sophie Martin', role: 'Designer junior', color: '#06b6d4', plan: 'Membre' },
+      { name: 'Lucas Dubois', role: 'Photographe', color: '#8b5cf6', plan: 'Collaborateur' }
+    ]; %>
+    <% members.forEach(function(m) { %>
+    <div class="pro-team-card">
+      <div class="pro-team-avatar" style="background:linear-gradient(135deg,<%= m.color %>,<%= m.color %>99)">
+        <%= m.name.charAt(0) %>
+      </div>
+      <div class="pro-team-name"><%= m.name %></div>
+      <div class="pro-team-role"><%= m.role %></div>
+      <div style="margin-bottom:14px;">
+        <span class="pro-tag pro-tag-green" style="font-size:10.5px;"><%= m.plan %></span>
+      </div>
+      <div class="pro-team-actions">
+        <button class="pro-btn pro-btn-sm pro-btn-secondary"><i data-lucide="settings"></i> Rôle</button>
+        <button class="pro-btn pro-btn-sm pro-btn-ghost"><i data-lucide="mail"></i></button>
+      </div>
+    </div>
+    <% }); %>
+
+    <div class="pro-team-invite-card">
+      <div class="pro-team-invite-icon"><i data-lucide="user-plus"></i></div>
+      <div class="pro-team-invite-text">Inviter un collaborateur</div>
+      <button class="pro-btn pro-btn-sm pro-btn-primary"><i data-lucide="send"></i> Inviter</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== BILLING ===================== -->
+<div class="pro-section" id="sec-billing">
+  <div class="pro-page-header">
+    <div>
+      <div class="pro-page-title">Billing</div>
+      <div class="pro-page-sub">Plan Pro · Renouvellement le 1 juin 2026</div>
+    </div>
+    <button class="pro-btn pro-btn-secondary"><i data-lucide="download"></i> Factures</button>
+  </div>
+
+  <div class="pro-billing-grid">
+    <div class="pro-plan-card">
+      <div class="pro-plan-name">Starter</div>
+      <div class="pro-plan-price">€0 <span>/mois</span></div>
+      <div class="pro-plan-desc">Pour débuter sur CraftyCrib</div>
+      <div class="pro-plan-features">
+        <div class="pro-plan-feature"><i data-lucide="check"></i> 5 leads / mois</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> 3 crédits IA</div>
+        <div class="pro-plan-feature"><i data-lucide="x" style="color:var(--pro-red)"></i> Analytics</div>
+        <div class="pro-plan-feature"><i data-lucide="x" style="color:var(--pro-red)"></i> Portfolio pro</div>
+      </div>
+      <button class="pro-btn pro-btn-secondary pro-w-full">Plan actuel</button>
+    </div>
+
+    <div class="pro-plan-card featured">
+      <div class="pro-plan-name">Pro</div>
+      <div class="pro-plan-price">€49 <span>/mois</span></div>
+      <div class="pro-plan-desc">Pour les professionnels actifs</div>
+      <div class="pro-plan-features">
+        <div class="pro-plan-feature"><i data-lucide="check"></i> Leads illimités</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> 50 crédits IA / mois</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> Analytics avancés</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> Portfolio pro + SEO</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> Kanban pipeline</div>
+      </div>
+      <button class="pro-btn pro-btn-primary pro-w-full">Plan actuel</button>
+    </div>
+
+    <div class="pro-plan-card">
+      <div class="pro-plan-name">Studio</div>
+      <div class="pro-plan-price">€149 <span>/mois</span></div>
+      <div class="pro-plan-desc">Pour les agences et studios</div>
+      <div class="pro-plan-features">
+        <div class="pro-plan-feature"><i data-lucide="check"></i> Tout Pro inclus</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> 200 crédits IA / mois</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> Gestion équipe (10)</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> API access</div>
+        <div class="pro-plan-feature"><i data-lucide="check"></i> Support prioritaire</div>
+      </div>
+      <button class="pro-btn pro-btn-secondary pro-w-full">Upgrader</button>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+    <div class="pro-card">
+      <div class="pro-card-header"><span class="pro-card-title">Crédits IA</span></div>
+      <div class="pro-card-body">
+        <div class="pro-credits-bar">
+          <div class="pro-credits-header">
+            <span class="pro-credits-label">Crédits utilisés ce mois</span>
+            <span class="pro-credits-count">32 / 50</span>
+          </div>
+          <div class="pro-credits-outer"><div class="pro-credits-fill" style="width:64%"></div></div>
+        </div>
+        <div style="font-size:12px;color:var(--pro-text3);">18 crédits restants · Renouvellement dans 22 jours</div>
+        <div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:8px;">
+          <span class="pro-tag pro-tag-green"><i data-lucide="image"></i> 14 Redesign</span>
+          <span class="pro-tag pro-tag-cyan"><i data-lucide="maximize-2"></i> 10 Full HD</span>
+          <span class="pro-tag pro-tag-purple"><i data-lucide="sparkles"></i> 8 Magic</span>
+        </div>
+        <button class="pro-btn pro-btn-secondary pro-w-full" style="margin-top:16px;"><i data-lucide="plus"></i> Acheter des crédits</button>
+      </div>
+    </div>
+
+    <div class="pro-card">
+      <div class="pro-card-header"><span class="pro-card-title">Historique paiements</span></div>
+      <div class="pro-card-body">
+        <div class="pro-payment-item">
+          <div class="pro-payment-icon" style="background:var(--pro-green-dim);color:var(--pro-green)"><i data-lucide="credit-card"></i></div>
+          <div class="pro-payment-info">
+            <div class="pro-payment-desc">Plan Pro — Mai 2026</div>
+            <div class="pro-payment-date">1 mai 2026</div>
+          </div>
+          <span class="pro-payment-amount negative">-€49</span>
+          <span class="pro-payment-status paid">Payé</span>
+        </div>
+        <div class="pro-payment-item">
+          <div class="pro-payment-icon" style="background:var(--pro-cyan-dim);color:var(--pro-cyan)"><i data-lucide="zap"></i></div>
+          <div class="pro-payment-info">
+            <div class="pro-payment-desc">Pack crédits IA x50</div>
+            <div class="pro-payment-date">15 avr. 2026</div>
+          </div>
+          <span class="pro-payment-amount negative">-€29</span>
+          <span class="pro-payment-status paid">Payé</span>
+        </div>
+        <div class="pro-payment-item">
+          <div class="pro-payment-icon" style="background:var(--pro-green-dim);color:var(--pro-green)"><i data-lucide="credit-card"></i></div>
+          <div class="pro-payment-info">
+            <div class="pro-payment-desc">Plan Pro — Avr. 2026</div>
+            <div class="pro-payment-date">1 avr. 2026</div>
+          </div>
+          <span class="pro-payment-amount negative">-€49</span>
+          <span class="pro-payment-status paid">Payé</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== SETTINGS ===================== -->
+<div class="pro-section" id="sec-settings">
+  <div class="pro-page-header">
+    <div>
+      <div class="pro-page-title">Settings</div>
+      <div class="pro-page-sub">Gérez votre profil professionnel et vos préférences</div>
+    </div>
+    <button class="pro-btn pro-btn-primary"><i data-lucide="save"></i> Sauvegarder</button>
+  </div>
+
+  <div class="pro-settings-tabs">
+    <button class="pro-settings-tab active" data-tab="business">Entreprise</button>
+    <button class="pro-settings-tab" data-tab="profile">Profil public</button>
+    <button class="pro-settings-tab" data-tab="notifications">Notifications</button>
+    <button class="pro-settings-tab" data-tab="integrations">Intégrations</button>
+  </div>
+
+  <!-- Business Tab -->
+  <div class="pro-settings-panel active" id="stab-business">
+    <div class="pro-settings-section">
+      <div class="pro-settings-section-title">Informations entreprise</div>
+      <div class="pro-form-grid">
+        <div class="pro-form-group">
+          <label class="pro-form-label">Nom de l'entreprise</label>
+          <input type="text" class="pro-form-input" placeholder="Studio Design Pro" value="Studio Design Pro">
+        </div>
+        <div class="pro-form-group">
+          <label class="pro-form-label">SIRET</label>
+          <input type="text" class="pro-form-input" placeholder="123 456 789 00010">
+        </div>
+        <div class="pro-form-group">
+          <label class="pro-form-label">Spécialités</label>
+          <select class="pro-form-select">
+            <option>Architecture intérieure</option>
+            <option>Rénovation complète</option>
+            <option>Décoration</option>
+          </select>
+        </div>
+        <div class="pro-form-group">
+          <label class="pro-form-label">Zone d'intervention</label>
+          <input type="text" class="pro-form-input" placeholder="Paris, Île-de-France" value="Paris, Île-de-France">
+        </div>
+        <div class="pro-form-group full">
+          <label class="pro-form-label">Bio professionnelle</label>
+          <textarea class="pro-form-textarea" placeholder="Décrivez votre expertise…">Studio spécialisé en design intérieur haut de gamme depuis 2015. Expertise en rénovation complète, architecture d'intérieur et home staging IA.</textarea>
+        </div>
+        <div class="pro-form-group">
+          <label class="pro-form-label">Site web</label>
+          <input type="url" class="pro-form-input" placeholder="https://votresite.fr">
+        </div>
+        <div class="pro-form-group">
+          <label class="pro-form-label">Instagram</label>
+          <input type="text" class="pro-form-input" placeholder="@votre_studio">
+        </div>
+      </div>
+    </div>
+
+    <div class="pro-settings-section">
+      <div class="pro-settings-section-title">Certifications &amp; Licences</div>
+      <div class="pro-form-grid">
+        <div class="pro-form-group">
+          <label class="pro-form-label">Numéro de licence</label>
+          <input type="text" class="pro-form-input" placeholder="Licence professionnelle">
+        </div>
+        <div class="pro-form-group">
+          <label class="pro-form-label">Assurance décennale</label>
+          <input type="text" class="pro-form-input" placeholder="Numéro d'assurance">
+        </div>
+        <div class="pro-form-group full">
+          <label class="pro-form-label">Horaires de disponibilité</label>
+          <input type="text" class="pro-form-input" placeholder="Lundi–Vendredi, 9h–18h" value="Lundi–Vendredi, 9h–18h">
+          <div class="pro-form-hint">Ces horaires seront affichés sur votre profil public</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile Tab -->
+  <div class="pro-settings-panel" id="stab-profile">
+    <div class="pro-settings-section">
+      <div class="pro-settings-section-title">Photo de profil &amp; couverture</div>
+      <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;">
+        <div style="text-align:center;">
+          <div style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#10b981,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:800;color:#fff;margin:0 auto 10px;">P</div>
+          <button class="pro-btn pro-btn-sm pro-btn-secondary"><i data-lucide="upload"></i> Changer</button>
+        </div>
+        <div style="flex:1;min-width:200px;">
+          <div class="pro-form-group">
+            <label class="pro-form-label">Prénom</label>
+            <input type="text" class="pro-form-input" value="<% if (typeof user !== 'undefined' && user) { %><%= user.firstName || '' %><% } %>">
+          </div>
+          <div class="pro-form-group" style="margin-top:10px;">
+            <label class="pro-form-label">Nom</label>
+            <input type="text" class="pro-form-input" value="<% if (typeof user !== 'undefined' && user) { %><%= user.lastName || '' %><% } %>">
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="pro-settings-section">
+      <div class="pro-settings-section-title">Aperçu profil public</div>
+      <div style="background:rgba(255,255,255,0.02);border:1px solid var(--pro-border);border-radius:var(--pro-radius);padding:20px;">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:14px;">
+          <div style="width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,#10b981,#06b6d4);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;color:#fff;">P</div>
+          <div>
+            <div style="font-size:16px;font-weight:800;color:var(--pro-text);">Studio Design Pro</div>
+            <div style="font-size:12px;color:var(--pro-text3);">Paris, Île-de-France · Architecture intérieure</div>
+            <div style="display:flex;gap:6px;margin-top:5px;">
+              <span class="pro-tag pro-tag-green" style="font-size:10px;"><i data-lucide="shield-check"></i> Vérifié Pro</span>
+              <span style="font-size:11.5px;color:var(--pro-amber);">★★★★★ 4.9 (47)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Notifications Tab -->
+  <div class="pro-settings-panel" id="stab-notifications">
+    <div class="pro-settings-section">
+      <div class="pro-settings-section-title">Préférences de notification</div>
+      <div style="display:flex;flex-direction:column;gap:14px;">
+        <% [
+          ['Nouveaux leads', 'Recevoir une notification pour chaque nouveau lead', true],
+          ['Messages clients', 'Notifications de messages non lus', true],
+          ['Avis clients', 'Nouveaux avis sur votre profil', true],
+          ['Rappels rendez-vous', 'Rappel 1h avant chaque RDV', true],
+          ['Rapports hebdomadaires', 'Résumé hebdomadaire de vos performances', false],
+          ['Recommandations IA', 'Suggestions Criby pour optimiser votre business', true]
+        ].forEach(function(n) { %>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--pro-border);">
+          <div>
+            <div style="font-size:13px;font-weight:600;color:var(--pro-text)"><%= n[0] %></div>
+            <div style="font-size:11.5px;color:var(--pro-text3);margin-top:2px;"><%= n[1] %></div>
+          </div>
+          <div style="width:42px;height:24px;border-radius:999px;background:<%= n[2] ? 'var(--pro-green)' : 'rgba(255,255,255,0.1)' %>;cursor:pointer;position:relative;transition:all 0.2s;flex-shrink:0;">
+            <div style="width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;top:3px;left:<%= n[2] ? '21px' : '3px' %>;transition:left 0.2s;box-shadow:0 1px 4px rgba(0,0,0,0.3);"></div>
+          </div>
+        </div>
+        <% }); %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Integrations Tab -->
+  <div class="pro-settings-panel" id="stab-integrations">
+    <div class="pro-settings-section">
+      <div class="pro-settings-section-title">Intégrations disponibles</div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <% [
+          ['Google Calendar', 'Synchronisez vos rendez-vous', 'calendar', false],
+          ['Stripe', 'Paiements en ligne intégrés', 'credit-card', true],
+          ['Slack', 'Notifications équipe en temps réel', 'hash', false],
+          ['Zapier', 'Automatisez vos workflows', 'zap', false]
+        ].forEach(function(i) { %>
+        <div style="display:flex;align-items:center;gap:14px;padding:14px;background:rgba(255,255,255,0.02);border:1px solid var(--pro-border);border-radius:var(--pro-radius);">
+          <div style="width:40px;height:40px;border-radius:9px;background:rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:center;"><i data-lucide="<%= i[2] %>" style="width:18px;height:18px;color:var(--pro-text2);"></i></div>
+          <div style="flex:1;">
+            <div style="font-size:13px;font-weight:600;color:var(--pro-text);"><%= i[0] %></div>
+            <div style="font-size:11.5px;color:var(--pro-text3);"><%= i[1] %></div>
+          </div>
+          <button class="pro-btn pro-btn-sm <%= i[3] ? 'pro-btn-danger' : 'pro-btn-secondary' %>">
+            <%= i[3] ? 'Déconnecter' : 'Connecter' %>
+          </button>
+        </div>
+        <% }); %>
+      </div>
+    </div>
+  </div>
+</div>
