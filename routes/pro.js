@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { ensureAuthenticated } = require('../middleware/auth');
 const Note = require('../models/Note');
+const QuoteRequest = require('../models/QuoteRequest');
 
 router.use((req, res, next) => {
   res.locals.layout = 'layouts/pro-dashboard';
@@ -10,13 +11,16 @@ router.use((req, res, next) => {
 
 router.get('/dashboard', ensureAuthenticated, async (req, res) => {
   try {
-    const proNotes = await Note.find({ user: req.user.id, source: 'pro' })
-      .sort({ pinned: -1, updatedAt: -1 });
+    const [proNotes, quoteRequests] = await Promise.all([
+      Note.find({ user: req.user.id, source: 'pro' }).sort({ pinned: -1, updatedAt: -1 }),
+      QuoteRequest.find({}).sort({ createdAt: -1 })
+    ]);
     res.render('pages/pro/dashboard', {
       title: 'Pro Dashboard — CraftyCrib',
       layout: 'layouts/pro-dashboard',
       activePage: 'dashboard',
-      proNotes
+      proNotes,
+      quoteRequests
     });
   } catch (err) {
     console.error('Pro dashboard error:', err);
@@ -24,8 +28,26 @@ router.get('/dashboard', ensureAuthenticated, async (req, res) => {
       title: 'Pro Dashboard — CraftyCrib',
       layout: 'layouts/pro-dashboard',
       activePage: 'dashboard',
-      proNotes: []
+      proNotes: [],
+      quoteRequests: []
     });
+  }
+});
+
+router.put('/quotes/:id/status', ensureAuthenticated, async (req, res) => {
+  try {
+    const { status } = req.body;
+    const allowed = ['new', 'contacted', 'accepted', 'refused', 'closed'];
+    if (!allowed.includes(status)) return res.status(400).json({ error: 'Statut invalide' });
+    const quote = await QuoteRequest.findByIdAndUpdate(
+      req.params.id,
+      { status, statusUpdatedAt: new Date() },
+      { new: true }
+    );
+    if (!quote) return res.status(404).json({ error: 'Demande introuvable' });
+    res.json({ success: true, status: quote.status });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

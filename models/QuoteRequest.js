@@ -30,9 +30,10 @@ const QuoteRequestSchema = new mongoose.Schema({
 
   status: {
     type: String,
-    enum: ['new', 'contacted', 'closed'],
+    enum: ['new', 'contacted', 'accepted', 'refused', 'closed'],
     default: 'new'
   },
+  statusUpdatedAt: { type: Date },
   createdAt: { type: Date, default: Date.now }
 });
 

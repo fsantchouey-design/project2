@@ -6,317 +6,512 @@
 <div class="pro-section active" id="sec-dashboard">
   <div class="pro-page-header">
     <div>
-      <div class="pro-page-title">
-        Bonjour <% if (typeof user !== 'undefined' && user) { %><%= user.firstName || 'Pro' %><% } else { %>Pro<% } %> 👋
-      </div>
-      <div class="pro-page-sub">Voici votre activité business du jour — Vendredi 9 mai 2026</div>
-    </div>
-    <div class="pro-page-actions">
-      <button class="pro-btn pro-btn-secondary"><i data-lucide="download"></i> Rapport</button>
-      <button class="pro-btn pro-btn-primary"><i data-lucide="plus"></i> Nouveau projet</button>
+      <div class="pro-page-title">Demandes clients reçues</div>
+      <div class="pro-page-sub">Formulaires soumis depuis la section Entrepreneurs</div>
     </div>
   </div>
 
-  <!-- KPI GRID -->
-  <div class="pro-kpi-grid">
-    <div class="pro-kpi-card kpi-green">
-      <div class="pro-kpi-top">
-        <div class="pro-kpi-icon"><i data-lucide="users"></i></div>
-        <span class="pro-kpi-trend up"><i data-lucide="trending-up"></i> +12%</span>
-      </div>
-      <div class="pro-kpi-value">47</div>
-      <div class="pro-kpi-label">Total Leads ce mois</div>
-      <div class="pro-kpi-sparkline">
-        <div class="pro-kpi-bar" style="height:30%"></div>
-        <div class="pro-kpi-bar" style="height:50%"></div>
-        <div class="pro-kpi-bar" style="height:40%"></div>
-        <div class="pro-kpi-bar" style="height:65%"></div>
-        <div class="pro-kpi-bar" style="height:55%"></div>
-        <div class="pro-kpi-bar" style="height:80%"></div>
-        <div class="pro-kpi-bar" style="height:70%"></div>
-        <div class="pro-kpi-bar" style="height:90%"></div>
-        <div class="pro-kpi-bar" style="height:100%"></div>
-      </div>
-    </div>
+  <style>
+  .prq-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+  .prq-tab {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 16px;
+    border-radius: 8px;
+    border: 1px solid var(--pro-border);
+    background: transparent;
+    color: rgba(255,255,255,0.45);
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .prq-tab:hover { background: rgba(255,255,255,0.04); color: #e2e8f0; }
+  .prq-tab.active {
+    background: var(--pro-card2);
+    border-color: var(--pro-green);
+    color: var(--pro-green);
+  }
+  .prq-tab-count {
+    font-size: 0.7rem;
+    padding: 1px 6px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.1);
+    color: rgba(255,255,255,0.5);
+  }
+  .prq-tab.active .prq-tab-count {
+    background: rgba(16,185,129,0.2);
+    color: var(--pro-green);
+  }
+  .prq-empty {
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    padding: 64px 24px;
+    text-align: center;
+    color: rgba(255,255,255,0.2);
+    border: 1px dashed var(--pro-border);
+    border-radius: 14px;
+  }
+  .prq-empty svg { width:40px; height:40px; }
+  .prq-empty p { font-size:0.85rem; margin:0; }
+  .prq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .prq-card {
+    background: var(--pro-card);
+    border: 1px solid var(--pro-border);
+    border-radius: 14px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .prq-card:hover { border-color: rgba(255,255,255,0.12); }
+  .prq-card-top {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--pro-border);
+    flex-wrap: wrap;
+  }
+  .prq-service-chip {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    background: rgba(16,185,129,0.15);
+    color: var(--pro-green);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .prq-subservice {
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    flex: 1;
+  }
+  .prq-date {
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.3);
+    white-space: nowrap;
+  }
+  .prq-status-badge {
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+    white-space: nowrap;
+  }
+  .prq-s-new       { background: rgba(6,182,212,0.15);  color: #22d3ee; }
+  .prq-s-accepted  { background: rgba(16,185,129,0.15); color: var(--pro-green); }
+  .prq-s-refused   { background: rgba(239,68,68,0.12);  color: #f87171; }
+  .prq-s-contacted { background: rgba(245,158,11,0.15); color: var(--pro-amber); }
+  .prq-s-closed    { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.35); }
+  .prq-card-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .prq-btn {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 7px;
+    border: 1px solid var(--pro-border);
+    background: transparent;
+    color: rgba(255,255,255,0.45);
+    font-size: 0.74rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+    white-space: nowrap;
+  }
+  .prq-btn svg { width: 12px; height: 12px; flex-shrink: 0; }
+  .prq-btn:hover { background: rgba(255,255,255,0.05); color: #e2e8f0; }
+  .prq-btn.accept {
+    border-color: rgba(16,185,129,0.35);
+    color: var(--pro-green);
+  }
+  .prq-btn.accept:hover { background: rgba(16,185,129,0.1); }
+  .prq-btn.refuse {
+    border-color: rgba(239,68,68,0.3);
+    color: #f87171;
+  }
+  .prq-btn.refuse:hover { background: rgba(239,68,68,0.08); }
+  .prq-details-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    padding: 0;
+  }
+  .prq-col {
+    padding: 16px 18px;
+  }
+  .prq-col:first-child {
+    border-right: 1px solid var(--pro-border);
+  }
+  .prq-col-title {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: rgba(255,255,255,0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 12px;
+  }
+  .prq-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 9px;
+  }
+  .prq-row:last-child { margin-bottom: 0; }
+  .prq-row-label {
+    font-size: 0.71rem;
+    color: rgba(255,255,255,0.3);
+    white-space: nowrap;
+    min-width: 90px;
+    padding-top: 1px;
+  }
+  .prq-row-val {
+    font-size: 0.8rem;
+    color: #cbd5e1;
+    line-height: 1.45;
+    word-break: break-word;
+  }
+  .prq-row-val a {
+    color: var(--pro-cyan);
+    text-decoration: none;
+  }
+  .prq-row-val a:hover { text-decoration: underline; }
+  .prq-desc {
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.6;
+    font-style: italic;
+    padding: 10px 18px;
+    border-top: 1px solid var(--pro-border);
+    border-bottom: 1px solid var(--pro-border);
+  }
+  .prq-photos {
+    display: flex;
+    gap: 8px;
+    padding: 12px 18px;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--pro-border);
+  }
+  .prq-photo-thumb {
+    width: 72px;
+    height: 72px;
+    object-fit: cover;
+    border-radius: 7px;
+    border: 1px solid var(--pro-border);
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .prq-photo-thumb:hover { opacity: 0.8; }
+  @media (max-width: 700px) {
+    .prq-details-grid { grid-template-columns: 1fr; }
+    .prq-col:first-child { border-right: none; border-bottom: 1px solid var(--pro-border); }
+    .prq-card-top { gap: 8px; }
+    .prq-row-label { min-width: 72px; }
+  }
+  </style>
 
-    <div class="pro-kpi-card kpi-cyan">
-      <div class="pro-kpi-top">
-        <div class="pro-kpi-icon"><i data-lucide="folder-open"></i></div>
-        <span class="pro-kpi-trend up"><i data-lucide="trending-up"></i> +2</span>
-      </div>
-      <div class="pro-kpi-value">8</div>
-      <div class="pro-kpi-label">Projets actifs</div>
-      <div class="pro-kpi-sparkline">
-        <div class="pro-kpi-bar" style="height:40%"></div>
-        <div class="pro-kpi-bar" style="height:60%"></div>
-        <div class="pro-kpi-bar" style="height:50%"></div>
-        <div class="pro-kpi-bar" style="height:70%"></div>
-        <div class="pro-kpi-bar" style="height:65%"></div>
-        <div class="pro-kpi-bar" style="height:85%"></div>
-        <div class="pro-kpi-bar" style="height:75%"></div>
-        <div class="pro-kpi-bar" style="height:100%"></div>
-        <div class="pro-kpi-bar" style="height:90%"></div>
-      </div>
-    </div>
-
-    <div class="pro-kpi-card kpi-purple">
-      <div class="pro-kpi-top">
-        <div class="pro-kpi-icon"><i data-lucide="percent"></i></div>
-        <span class="pro-kpi-trend up"><i data-lucide="trending-up"></i> +5%</span>
-      </div>
-      <div class="pro-kpi-value">34%</div>
-      <div class="pro-kpi-label">Taux de conversion</div>
-      <div class="pro-kpi-sparkline">
-        <div class="pro-kpi-bar" style="height:50%"></div>
-        <div class="pro-kpi-bar" style="height:45%"></div>
-        <div class="pro-kpi-bar" style="height:60%"></div>
-        <div class="pro-kpi-bar" style="height:55%"></div>
-        <div class="pro-kpi-bar" style="height:70%"></div>
-        <div class="pro-kpi-bar" style="height:80%"></div>
-        <div class="pro-kpi-bar" style="height:75%"></div>
-        <div class="pro-kpi-bar" style="height:90%"></div>
-        <div class="pro-kpi-bar" style="height:100%"></div>
-      </div>
-    </div>
-
-    <div class="pro-kpi-card kpi-amber">
-      <div class="pro-kpi-top">
-        <div class="pro-kpi-icon"><i data-lucide="euro"></i></div>
-        <span class="pro-kpi-trend up"><i data-lucide="trending-up"></i> +8%</span>
-      </div>
-      <div class="pro-kpi-value">€42.8K</div>
-      <div class="pro-kpi-label">Revenus estimés</div>
-      <div class="pro-kpi-sparkline">
-        <div class="pro-kpi-bar" style="height:35%"></div>
-        <div class="pro-kpi-bar" style="height:55%"></div>
-        <div class="pro-kpi-bar" style="height:48%"></div>
-        <div class="pro-kpi-bar" style="height:68%"></div>
-        <div class="pro-kpi-bar" style="height:72%"></div>
-        <div class="pro-kpi-bar" style="height:85%"></div>
-        <div class="pro-kpi-bar" style="height:78%"></div>
-        <div class="pro-kpi-bar" style="height:92%"></div>
-        <div class="pro-kpi-bar" style="height:100%"></div>
-      </div>
-    </div>
-
-    <div class="pro-kpi-card kpi-blue">
-      <div class="pro-kpi-top">
-        <div class="pro-kpi-icon"><i data-lucide="eye"></i></div>
-        <span class="pro-kpi-trend up"><i data-lucide="trending-up"></i> +18%</span>
-      </div>
-      <div class="pro-kpi-value">1,284</div>
-      <div class="pro-kpi-label">Vues profil / mois</div>
-      <div class="pro-kpi-sparkline">
-        <div class="pro-kpi-bar" style="height:45%"></div>
-        <div class="pro-kpi-bar" style="height:60%"></div>
-        <div class="pro-kpi-bar" style="height:52%"></div>
-        <div class="pro-kpi-bar" style="height:72%"></div>
-        <div class="pro-kpi-bar" style="height:80%"></div>
-        <div class="pro-kpi-bar" style="height:88%"></div>
-        <div class="pro-kpi-bar" style="height:76%"></div>
-        <div class="pro-kpi-bar" style="height:95%"></div>
-        <div class="pro-kpi-bar" style="height:100%"></div>
-      </div>
-    </div>
-
-    <div class="pro-kpi-card kpi-red">
-      <div class="pro-kpi-top">
-        <div class="pro-kpi-icon"><i data-lucide="clock"></i></div>
-        <span class="pro-kpi-trend down"><i data-lucide="trending-down"></i> -0.3h</span>
-      </div>
-      <div class="pro-kpi-value">2.4h</div>
-      <div class="pro-kpi-label">Temps de réponse moyen</div>
-      <div class="pro-kpi-sparkline">
-        <div class="pro-kpi-bar" style="height:80%"></div>
-        <div class="pro-kpi-bar" style="height:65%"></div>
-        <div class="pro-kpi-bar" style="height:90%"></div>
-        <div class="pro-kpi-bar" style="height:70%"></div>
-        <div class="pro-kpi-bar" style="height:55%"></div>
-        <div class="pro-kpi-bar" style="height:60%"></div>
-        <div class="pro-kpi-bar" style="height:45%"></div>
-        <div class="pro-kpi-bar" style="height:40%"></div>
-        <div class="pro-kpi-bar" style="height:35%"></div>
-      </div>
-    </div>
+  <!-- Filter tabs -->
+  <div class="prq-tabs" id="prq-tabs">
+    <button class="prq-tab active" data-filter="">
+      Toutes <span class="prq-tab-count" id="prq-count-all">0</span>
+    </button>
+    <button class="prq-tab" data-filter="new">
+      Nouvelles <span class="prq-tab-count" id="prq-count-new">0</span>
+    </button>
+    <button class="prq-tab" data-filter="accepted">
+      Acceptées <span class="prq-tab-count" id="prq-count-accepted">0</span>
+    </button>
+    <button class="prq-tab" data-filter="refused">
+      Refusées <span class="prq-tab-count" id="prq-count-refused">0</span>
+    </button>
   </div>
 
-  <!-- BOTTOM GRID -->
-  <div class="pro-dash-grid">
-    <!-- Left: Activity + AI Insights -->
-    <div style="display:flex;flex-direction:column;gap:16px;">
-      <!-- AI Insights -->
-      <div class="pro-card">
-        <div class="pro-card-header">
-          <span class="pro-card-title pro-flex-center"><i data-lucide="cpu" style="width:15px;height:15px;color:var(--pro-green)"></i> Insights Criby IA</span>
-          <button class="pro-btn pro-btn-ghost pro-btn-sm"><i data-lucide="refresh-cw"></i></button>
-        </div>
-        <div class="pro-card-body" style="padding-top:12px;">
-          <div class="pro-insight-card">
-            <div class="pro-insight-label"><i data-lucide="trending-up"></i> Opportunité</div>
-            <div class="pro-insight-text">Les cuisines modernes performent 34% mieux ce mois. Mettez en avant vos réalisations cuisine dans votre portfolio.</div>
-          </div>
-          <div class="pro-insight-card" style="background:linear-gradient(135deg,rgba(6,182,212,0.08),rgba(59,130,246,0.05));border-color:rgba(6,182,212,0.2)">
-            <div class="pro-insight-label" style="color:var(--pro-cyan)"><i data-lucide="eye"></i> Visibilité</div>
-            <div class="pro-insight-text">Votre profil a gagné +18% de visibilité cette semaine. Répondez aux 3 leads en attente pour maximiser la conversion.</div>
-          </div>
-          <div class="pro-insight-card" style="background:linear-gradient(135deg,rgba(139,92,246,0.08),rgba(59,130,246,0.05));border-color:rgba(139,92,246,0.2)">
-            <div class="pro-insight-label" style="color:var(--pro-purple)"><i data-lucide="map-pin"></i> Régional</div>
-            <div class="pro-insight-text">Les clients parisiens convertissent 2.3x mieux que la moyenne nationale. Zone prioritaire recommandée : 75001–75016.</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Recent Activity -->
-      <div class="pro-card">
-        <div class="pro-card-header">
-          <span class="pro-card-title">Activité récente</span>
-          <button class="pro-btn pro-btn-ghost pro-btn-sm">Tout voir</button>
-        </div>
-        <div class="pro-card-body">
-          <div class="pro-activity-item">
-            <div class="pro-activity-dot green"><i data-lucide="user-plus"></i></div>
-            <div>
-              <div style="font-size:13px;color:var(--pro-text);">Nouveau lead — <strong>Thomas R.</strong></div>
-              <div class="pro-activity-meta">Appartement complet · Paris 75008 · €35,000</div>
-              <div class="pro-activity-time">Il y a 23 min</div>
-            </div>
-          </div>
-          <div class="pro-activity-item">
-            <div class="pro-activity-dot cyan"><i data-lucide="message-square"></i></div>
-            <div>
-              <div style="font-size:13px;color:var(--pro-text);">Message de <strong>Sarah M.</strong></div>
-              <div class="pro-activity-meta">"Pouvez-vous m'envoyer le devis final ?"</div>
-              <div class="pro-activity-time">Il y a 1h</div>
-            </div>
-          </div>
-          <div class="pro-activity-item">
-            <div class="pro-activity-dot amber"><i data-lucide="star"></i></div>
-            <div>
-              <div style="font-size:13px;color:var(--pro-text);">Nouvel avis <strong>5★</strong> de Julie P.</div>
-              <div class="pro-activity-meta">"Travail exceptionnel, très professionnel."</div>
-              <div class="pro-activity-time">Il y a 3h</div>
-            </div>
-          </div>
-          <div class="pro-activity-item">
-            <div class="pro-activity-dot purple"><i data-lucide="folder-check"></i></div>
-            <div>
-              <div style="font-size:13px;color:var(--pro-text);">Projet complété — <strong>Dupont Living</strong></div>
-              <div class="pro-activity-meta">Salon moderne · 85% satisfaction client</div>
-              <div class="pro-activity-time">Hier, 16h30</div>
-            </div>
-          </div>
-          <div class="pro-activity-item">
-            <div class="pro-activity-dot green"><i data-lucide="credit-card"></i></div>
-            <div>
-              <div style="font-size:13px;color:var(--pro-text);">Paiement reçu — <strong>€4,200</strong></div>
-              <div class="pro-activity-meta">Projet Renovation Bernard · Acompte 30%</div>
-              <div class="pro-activity-time">Hier, 09h15</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Right: Tasks + Messages -->
-    <div style="display:flex;flex-direction:column;gap:16px;">
-      <!-- Today's tasks -->
-      <div class="pro-card">
-        <div class="pro-card-header">
-          <span class="pro-card-title">Tâches du jour</span>
-          <button class="pro-btn pro-btn-ghost pro-btn-sm"><i data-lucide="plus"></i></button>
-        </div>
-        <div class="pro-card-body">
-          <div class="pro-task-item">
-            <div class="pro-task-check done"></div>
-            <span class="pro-task-label" style="text-decoration:line-through;color:var(--pro-text3)">Envoyer devis Marc D.</span>
-            <span class="pro-task-due">09:00</span>
-          </div>
-          <div class="pro-task-item">
-            <div class="pro-task-check"></div>
-            <span class="pro-task-label">Répondre à Thomas R.</span>
-            <span class="pro-task-due">11:00</span>
-          </div>
-          <div class="pro-task-item">
-            <div class="pro-task-check"></div>
-            <span class="pro-task-label">Appel client Julie P.</span>
-            <span class="pro-task-due" style="color:var(--pro-amber)">14:00</span>
-          </div>
-          <div class="pro-task-item">
-            <div class="pro-task-check"></div>
-            <span class="pro-task-label">Upload photos projet Dupont</span>
-            <span class="pro-task-due">16:00</span>
-          </div>
-          <div class="pro-task-item">
-            <div class="pro-task-check"></div>
-            <span class="pro-task-label">Réviser portfolio cuisine</span>
-            <span class="pro-task-due">18:00</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Quick messages -->
-      <div class="pro-card">
-        <div class="pro-card-header">
-          <span class="pro-card-title">Messages récents</span>
-          <button class="pro-btn pro-btn-ghost pro-btn-sm">Voir tout</button>
-        </div>
-        <div class="pro-card-body" style="padding-top:8px;">
-          <% var msgs = [
-            { name: 'Sarah M.', msg: 'Pouvez-vous m\'envoyer le devis ?', time: '23min', unread: true, color: '#10b981' },
-            { name: 'Thomas R.', msg: 'Parfait ! J\'attends votre retour.', time: '1h', unread: true, color: '#06b6d4' },
-            { name: 'Marc D.', msg: 'Merci pour les rendus IA !', time: '3h', unread: false, color: '#8b5cf6' }
-          ]; %>
-          <% msgs.forEach(function(m) { %>
-          <div class="pro-activity-item" style="cursor:pointer;">
-            <div class="pro-activity-dot" style="background:rgba(255,255,255,0.05);color:<%= m.color %>;font-size:12px;font-weight:700;">
-              <%= m.name.charAt(0) %>
-            </div>
-            <div style="flex:1;min-width:0;">
-              <div style="font-size:12.5px;font-weight:<%= m.unread ? '700' : '500' %>;color:var(--pro-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><%= m.name %></div>
-              <div class="pro-activity-meta" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;"><%= m.msg %></div>
-            </div>
-            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;">
-              <span class="pro-activity-time"><%= m.time %></span>
-              <% if (m.unread) { %><span style="width:7px;height:7px;border-radius:50%;background:var(--pro-green);display:block;"></span><% } %>
-            </div>
-          </div>
-          <% }); %>
-        </div>
-      </div>
-
-      <!-- Upcoming -->
-      <div class="pro-card">
-        <div class="pro-card-header">
-          <span class="pro-card-title">Prochains rendez-vous</span>
-          <button class="pro-btn pro-btn-ghost pro-btn-sm"><i data-lucide="calendar"></i></button>
-        </div>
-        <div class="pro-card-body" style="padding-top:8px;">
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            <div style="display:flex;align-items:center;gap:10px;padding:10px;background:rgba(16,185,129,0.06);border:1px solid rgba(16,185,129,0.15);border-radius:9px;">
-              <div style="text-align:center;min-width:36px;">
-                <div style="font-size:17px;font-weight:800;color:var(--pro-green);line-height:1;">10</div>
-                <div style="font-size:9px;text-transform:uppercase;color:var(--pro-text3);">Mai</div>
-              </div>
-              <div>
-                <div style="font-size:12.5px;font-weight:600;color:var(--pro-text);">Appel client — Julie P.</div>
-                <div style="font-size:11px;color:var(--pro-text3);">14:00 – Salle de bain · €5,500</div>
-              </div>
-            </div>
-            <div style="display:flex;align-items:center;gap:10px;padding:10px;background:rgba(6,182,212,0.06);border:1px solid rgba(6,182,212,0.15);border-radius:9px;">
-              <div style="text-align:center;min-width:36px;">
-                <div style="font-size:17px;font-weight:800;color:var(--pro-cyan);line-height:1;">12</div>
-                <div style="font-size:9px;text-transform:uppercase;color:var(--pro-text3);">Mai</div>
-              </div>
-              <div>
-                <div style="font-size:12.5px;font-weight:600;color:var(--pro-text);">Visite — Projet Bernard</div>
-                <div style="font-size:11px;color:var(--pro-text3);">10:00 – Lyon 69001 · Renovation</div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+  <!-- Empty state -->
+  <div class="prq-empty" id="prq-empty">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+    <p>Aucune demande dans cette catégorie.</p>
   </div>
+
+  <!-- Requests list -->
+  <div class="prq-list" id="prq-list">
+
+    <% var timingLabel = function(t) {
+      if (t === 'asap')     return 'Dès que possible';
+      if (t === 'week')     return "D'ici une semaine";
+      if (t === 'later')    return 'Dans plus d'une semaine';
+      if (t === 'flexible') return 'Flexible';
+      return t || '-';
+    }; %>
+
+    <% var statusLabel = function(s) {
+      if (s === 'new')       return 'Nouvelle';
+      if (s === 'accepted')  return 'Acceptée';
+      if (s === 'refused')   return 'Refusée';
+      if (s === 'contacted') return 'Contactée';
+      if (s === 'closed')    return 'Fermée';
+      return s || 'Nouvelle';
+    }; %>
+
+    <% if (typeof quoteRequests !== 'undefined' && quoteRequests.length > 0) { %>
+      <% quoteRequests.forEach(function(q) { %>
+
+        <div class="prq-card" data-id="<%= q._id %>" data-status="<%= q.status || 'new' %>">
+
+          <!-- Top bar -->
+          <div class="prq-card-top">
+            <span class="prq-service-chip"><%= q.specialty || 'Service' %></span>
+            <span class="prq-subservice"><%= q.service || '' %></span>
+            <span class="prq-date">
+              <%= new Date(q.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) %>
+              &nbsp;·&nbsp;
+              <%= new Date(q.createdAt).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) %>
+            </span>
+            <span class="prq-status-badge prq-s-<%= q.status || 'new' %>">
+              <%= statusLabel(q.status) %>
+            </span>
+            <div class="prq-card-actions">
+              <% if (q.status !== 'accepted') { %>
+                <button class="prq-btn accept" onclick="prqSetStatus('<%= q._id %>', 'accepted')">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  <%= q.status === 'refused' ? 'Accepter quand même' : 'Accepter' %>
+                </button>
+              <% } %>
+              <% if (q.status !== 'refused') { %>
+                <button class="prq-btn refuse" onclick="prqSetStatus('<%= q._id %>', 'refused')">
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                  Refuser
+                </button>
+              <% } %>
+            </div>
+          </div>
+
+          <!-- Details grid -->
+          <div class="prq-details-grid">
+            <!-- Col 1 : Projet -->
+            <div class="prq-col">
+              <div class="prq-col-title">Projet</div>
+              <div class="prq-row">
+                <span class="prq-row-label">Code postal</span>
+                <span class="prq-row-val"><%= q.postalCode || '-' %></span>
+              </div>
+              <div class="prq-row">
+                <span class="prq-row-label">Délai</span>
+                <span class="prq-row-val"><%= timingLabel(q.timing) %></span>
+              </div>
+              <% if (q.photos && q.photos.length > 0) { %>
+                <div class="prq-row">
+                  <span class="prq-row-label">Photos</span>
+                  <span class="prq-row-val"><%= q.photos.length %> photo<%= q.photos.length > 1 ? 's' : '' %></span>
+                </div>
+              <% } %>
+            </div>
+            <!-- Col 2 : Coordonnées -->
+            <div class="prq-col">
+              <div class="prq-col-title">Coordonnées</div>
+              <div class="prq-row">
+                <span class="prq-row-label">Nom</span>
+                <span class="prq-row-val"><%= q.firstName %> <%= q.lastName %></span>
+              </div>
+              <div class="prq-row">
+                <span class="prq-row-label">Adresse</span>
+                <span class="prq-row-val">
+                  <%= q.address || '' %><% if (q.apartment) { %>, Apt <%= q.apartment %><% } %><br>
+                  <%= q.city || '' %><% if (q.province) { %>, <%= q.province %><% } %><% if (q.contactPostalCode) { %> &nbsp;<%= q.contactPostalCode %><% } %>
+                </span>
+              </div>
+              <div class="prq-row">
+                <span class="prq-row-label">Téléphone</span>
+                <span class="prq-row-val">
+                  <a href="tel:<%= q.phone %>"><%= q.phone %></a>
+                  <% if (q.altPhone) { %><br><a href="tel:<%= q.altPhone %>"><%= q.altPhone %></a><% } %>
+                </span>
+              </div>
+              <div class="prq-row">
+                <span class="prq-row-label">Courriel</span>
+                <span class="prq-row-val"><a href="mailto:<%= q.email %>"><%= q.email %></a></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <% if (q.description && q.description.trim()) { %>
+            <div class="prq-desc">"<%= q.description %>"</div>
+          <% } %>
+
+          <!-- Photos -->
+          <% if (q.photos && q.photos.length > 0) { %>
+            <div class="prq-photos">
+              <% q.photos.forEach(function(photo) { %>
+                <img class="prq-photo-thumb" src="<%= photo %>" alt="Photo projet" onclick="window.open('<%= photo %>','_blank')">
+              <% }); %>
+            </div>
+          <% } %>
+
+        </div><!-- /.prq-card -->
+
+      <% }); %>
+    <% } %>
+
+  </div><!-- /#prq-list -->
+
+  <script>
+  (function() {
+
+    var STATUS_LABELS = {
+      'new':       'Nouvelle',
+      'accepted':  'Acceptée',
+      'refused':   'Refusée',
+      'contacted': 'Contactée',
+      'closed':    'Fermée'
+    };
+
+    var currentFilter = '';
+
+    function countByStatus(status) {
+      var cards = document.querySelectorAll('.prq-card');
+      var n = 0;
+      cards.forEach(function(c) {
+        if (!status || c.getAttribute('data-status') === status) n++;
+      });
+      return n;
+    }
+
+    function updateCounts() {
+      var el;
+      el = document.getElementById('prq-count-all');
+      if (el) el.textContent = countByStatus('');
+      el = document.getElementById('prq-count-new');
+      if (el) el.textContent = countByStatus('new');
+      el = document.getElementById('prq-count-accepted');
+      if (el) el.textContent = countByStatus('accepted');
+      el = document.getElementById('prq-count-refused');
+      if (el) el.textContent = countByStatus('refused');
+    }
+
+    function applyFilter() {
+      var cards = document.querySelectorAll('.prq-card');
+      var visible = 0;
+      cards.forEach(function(card) {
+        var s = card.getAttribute('data-status');
+        var show = !currentFilter || s === currentFilter;
+        card.style.display = show ? '' : 'none';
+        if (show) visible++;
+      });
+      var empty = document.getElementById('prq-empty');
+      if (empty) empty.style.display = visible === 0 ? 'flex' : 'none';
+    }
+
+    document.querySelectorAll('.prq-tab').forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.prq-tab').forEach(function(t) { t.classList.remove('active'); });
+        this.classList.add('active');
+        currentFilter = this.getAttribute('data-filter') || '';
+        applyFilter();
+      });
+    });
+
+    updateCounts();
+    applyFilter();
+
+  })();
+
+  function prqSetStatus(id, newStatus) {
+    var STATUS_LABELS = {
+      'new': 'Nouvelle', 'accepted': 'Acceptée',
+      'refused': 'Refusée', 'contacted': 'Contactée', 'closed': 'Fermée'
+    };
+    var xhr = new XMLHttpRequest();
+    xhr.open('PUT', '/pro/quotes/' + id + '/status');
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.onload = function() {
+      if (xhr.status === 200) {
+        var card = document.querySelector('.prq-card[data-id="' + id + '"]');
+        if (!card) return;
+        var res = JSON.parse(xhr.responseText);
+        var s = res.status;
+        card.setAttribute('data-status', s);
+
+        // Update status badge
+        var badge = card.querySelector('.prq-status-badge');
+        if (badge) {
+          badge.className = 'prq-status-badge prq-s-' + s;
+          badge.textContent = STATUS_LABELS[s] || s;
+        }
+
+        // Rebuild action buttons
+        var actionsDiv = card.querySelector('.prq-card-actions');
+        if (actionsDiv) {
+          actionsDiv.innerHTML = '';
+          if (s !== 'accepted') {
+            var btnA = document.createElement('button');
+            btnA.className = 'prq-btn accept';
+            btnA.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> ' + (s === 'refused' ? 'Accepter quand même' : 'Accepter');
+            btnA.onclick = function() { prqSetStatus(id, 'accepted'); };
+            actionsDiv.appendChild(btnA);
+          }
+          if (s !== 'refused') {
+            var btnR = document.createElement('button');
+            btnR.className = 'prq-btn refuse';
+            btnR.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Refuser';
+            btnR.onclick = function() { prqSetStatus(id, 'refused'); };
+            actionsDiv.appendChild(btnR);
+          }
+        }
+
+        // Re-apply current filter + recount
+        (function() {
+          var tabs = document.querySelectorAll('.prq-tab');
+          var currentFilter = '';
+          tabs.forEach(function(t) { if (t.classList.contains('active')) currentFilter = t.getAttribute('data-filter') || ''; });
+          var cards = document.querySelectorAll('.prq-card');
+          var visible = 0;
+          cards.forEach(function(c) {
+            var show = !currentFilter || c.getAttribute('data-status') === currentFilter;
+            c.style.display = show ? '' : 'none';
+            if (show) visible++;
+          });
+          var empty = document.getElementById('prq-empty');
+          if (empty) empty.style.display = visible === 0 ? 'flex' : 'none';
+          var el;
+          el = document.getElementById('prq-count-all');
+          if (el) el.textContent = (function() { var n=0; cards.forEach(function(c){ n++; }); return n; })();
+          el = document.getElementById('prq-count-new');
+          if (el) el.textContent = (function() { var n=0; cards.forEach(function(c){ if(c.getAttribute('data-status')==='new') n++; }); return n; })();
+          el = document.getElementById('prq-count-accepted');
+          if (el) el.textContent = (function() { var n=0; cards.forEach(function(c){ if(c.getAttribute('data-status')==='accepted') n++; }); return n; })();
+          el = document.getElementById('prq-count-refused');
+          if (el) el.textContent = (function() { var n=0; cards.forEach(function(c){ if(c.getAttribute('data-status')==='refused') n++; }); return n; })();
+        })();
+      }
+    };
+    xhr.onerror = function() { alert('Erreur réseau, veuillez réessayer.'); };
+    xhr.send(JSON.stringify({ status: newStatus }));
+  }
+  </script>
+
 </div>
 
 <!-- ===================== LEADS ===================== -->
