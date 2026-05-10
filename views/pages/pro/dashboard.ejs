@@ -779,65 +779,6 @@
   </div>
 </div>
 
-<!-- ===================== PORTFOLIO ===================== -->
-<div class="pro-section" id="sec-portfolio">
-  <div class="pro-page-header">
-    <div>
-      <div class="pro-page-title">Portfolio</div>
-      <div class="pro-page-sub">24 réalisations · 8,420 vues · Note moyenne 4.9★</div>
-    </div>
-    <div class="pro-page-actions">
-      <button class="pro-btn pro-btn-secondary"><i data-lucide="sparkles"></i> Générer rendu IA</button>
-      <button class="pro-btn pro-btn-primary"><i data-lucide="upload"></i> Ajouter réalisation</button>
-    </div>
-  </div>
-
-  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px;">
-    <div style="background:var(--pro-card);border:1px solid var(--pro-border);border-radius:var(--pro-radius);padding:16px;text-align:center;">
-      <div style="font-size:22px;font-weight:800;color:var(--pro-green);">8,420</div>
-      <div style="font-size:11.5px;color:var(--pro-text3);margin-top:3px;">Vues totales</div>
-    </div>
-    <div style="background:var(--pro-card);border:1px solid var(--pro-border);border-radius:var(--pro-radius);padding:16px;text-align:center;">
-      <div style="font-size:22px;font-weight:800;color:var(--pro-cyan);">6.8%</div>
-      <div style="font-size:11.5px;color:var(--pro-text3);margin-top:3px;">Taux de clic</div>
-    </div>
-    <div style="background:var(--pro-card);border:1px solid var(--pro-border);border-radius:var(--pro-radius);padding:16px;text-align:center;">
-      <div style="font-size:22px;font-weight:800;color:var(--pro-amber);">342</div>
-      <div style="font-size:11.5px;color:var(--pro-text3);margin-top:3px;">Favoris clients</div>
-    </div>
-  </div>
-
-  <div class="pro-portfolio-grid">
-    <% var portfolios = [
-      { title: 'Salon Haussmannien Moderne', img: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?auto=format&fit=crop&w=600&q=80', views: '1,240', likes: '48', clicks: '7.2%' },
-      { title: 'Cuisine Ouverte Scandinave', img: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?auto=format&fit=crop&w=600&q=80', views: '980', likes: '36', clicks: '6.1%' },
-      { title: 'Suite Parentale Minimaliste', img: 'https://images.unsplash.com/photo-1540518614846-7eded433c457?auto=format&fit=crop&w=600&q=80', views: '820', likes: '31', clicks: '5.8%' },
-      { title: 'Salle de Bain Luxe', img: 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?auto=format&fit=crop&w=600&q=80', views: '650', likes: '28', clicks: '8.3%' },
-      { title: 'Loft Industriel Artistique', img: 'https://images.unsplash.com/photo-1560184897-ae75f418493e?auto=format&fit=crop&w=600&q=80', views: '740', likes: '40', clicks: '9.1%' },
-      { title: 'Terrasse Rooftop Design', img: 'https://images.unsplash.com/photo-1572912702419-7fe48f2ece2e?auto=format&fit=crop&w=600&q=80', views: '1,120', likes: '55', clicks: '7.8%' }
-    ]; %>
-    <% portfolios.forEach(function(p) { %>
-    <div class="pro-portfolio-card">
-      <div class="pro-portfolio-preview">
-        <img src="<%= p.img %>" alt="<%= p.title %>">
-        <div class="pro-portfolio-overlay">
-          <button class="pro-btn pro-btn-sm pro-btn-primary"><i data-lucide="eye"></i> Voir</button>
-          <button class="pro-btn pro-btn-sm pro-btn-secondary"><i data-lucide="edit"></i> Modifier</button>
-        </div>
-      </div>
-      <div class="pro-portfolio-body">
-        <div class="pro-portfolio-title"><%= p.title %></div>
-        <div class="pro-portfolio-stats">
-          <div class="pro-portfolio-stat"><i data-lucide="eye"></i> <%= p.views %></div>
-          <div class="pro-portfolio-stat"><i data-lucide="heart"></i> <%= p.likes %></div>
-          <div class="pro-portfolio-stat"><i data-lucide="mouse-pointer-click"></i> <%= p.clicks %></div>
-        </div>
-      </div>
-    </div>
-    <% }); %>
-  </div>
-</div>
-
 <!-- ===================== MESSAGES ===================== -->
 <!-- ===================== NOTES ===================== -->
 <div class="pro-section" id="sec-notes">
@@ -1674,47 +1615,6 @@
     </div>
   </div>
   <% }); %>
-</div>
-
-<!-- ===================== TEAM ===================== -->
-<div class="pro-section" id="sec-team">
-  <div class="pro-page-header">
-    <div>
-      <div class="pro-page-title">Team</div>
-      <div class="pro-page-sub">3 membres · 1 invitation en attente</div>
-    </div>
-    <button class="pro-btn pro-btn-primary"><i data-lucide="user-plus"></i> Inviter</button>
-  </div>
-
-  <div class="pro-team-grid">
-    <% var members = [
-      { name: 'Vous (Owner)', role: 'Architecte d\'intérieur', color: '#10b981', plan: 'Pro Owner' },
-      { name: 'Sophie Martin', role: 'Designer junior', color: '#06b6d4', plan: 'Membre' },
-      { name: 'Lucas Dubois', role: 'Photographe', color: '#8b5cf6', plan: 'Collaborateur' }
-    ]; %>
-    <% members.forEach(function(m) { %>
-    <div class="pro-team-card">
-      <div class="pro-team-avatar" style="background:linear-gradient(135deg,<%= m.color %>,<%= m.color %>99)">
-        <%= m.name.charAt(0) %>
-      </div>
-      <div class="pro-team-name"><%= m.name %></div>
-      <div class="pro-team-role"><%= m.role %></div>
-      <div style="margin-bottom:14px;">
-        <span class="pro-tag pro-tag-green" style="font-size:10.5px;"><%= m.plan %></span>
-      </div>
-      <div class="pro-team-actions">
-        <button class="pro-btn pro-btn-sm pro-btn-secondary"><i data-lucide="settings"></i> Rôle</button>
-        <button class="pro-btn pro-btn-sm pro-btn-ghost"><i data-lucide="mail"></i></button>
-      </div>
-    </div>
-    <% }); %>
-
-    <div class="pro-team-invite-card">
-      <div class="pro-team-invite-icon"><i data-lucide="user-plus"></i></div>
-      <div class="pro-team-invite-text">Inviter un collaborateur</div>
-      <button class="pro-btn pro-btn-sm pro-btn-primary"><i data-lucide="send"></i> Inviter</button>
-    </div>
-  </div>
 </div>
 
 <!-- ===================== BILLING ===================== -->
