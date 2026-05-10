@@ -722,60 +722,244 @@
         </div>
       </div>
     </div>
-  </div>
-</div>
 
-<!-- ===================== PROJECTS ===================== -->
-<div class="pro-section" id="sec-projects">
-  <div class="pro-page-header">
-    <div>
-      <div class="pro-page-title">Projects</div>
-      <div class="pro-page-sub">8 projets actifs · 3 en révision · 12 complétés</div>
+  <!-- ===== HISTORIQUE DES LEADS ACCEPTÉS ===== -->
+  <style>
+  .prh-wrap {
+    margin-top: 36px;
+    border-top: 1px solid var(--pro-border);
+    padding-top: 28px;
+  }
+  .prh-header { margin-bottom: 18px; }
+  .prh-title {
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: #e2e8f0;
+    margin-bottom: 4px;
+  }
+  .prh-sub {
+    font-size: 0.78rem;
+    color: rgba(255,255,255,0.35);
+  }
+  .prh-cats {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+  .prh-cat {
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--pro-border);
+    background: transparent;
+    color: rgba(255,255,255,0.4);
+    font-size: 0.76rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
+  }
+  .prh-cat:hover { color: #e2e8f0; background: rgba(255,255,255,0.04); }
+  .prh-cat.active {
+    background: rgba(16,185,129,0.12);
+    border-color: rgba(16,185,129,0.4);
+    color: var(--pro-green);
+  }
+  .prh-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    padding: 48px 24px;
+    text-align: center;
+    color: rgba(255,255,255,0.2);
+    border: 1px dashed var(--pro-border);
+    border-radius: 14px;
+  }
+  .prh-empty svg { width: 36px; height: 36px; }
+  .prh-empty p { font-size: 0.82rem; margin: 0; }
+  .prh-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+  }
+  .prh-card {
+    background: var(--pro-card);
+    border: 1px solid var(--pro-border);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    transition: border-color 0.2s;
+  }
+  .prh-card:hover { border-color: rgba(255,255,255,0.12); }
+  .prh-card[style*="display:none"], .prh-card[style*="display: none"] { display: none !important; }
+  .prh-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .prh-client-name {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #e2e8f0;
+  }
+  .prh-badge {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    background: rgba(16,185,129,0.15);
+    color: var(--pro-green);
+    white-space: nowrap;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    flex-shrink: 0;
+  }
+  .prh-project-type {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.4;
+  }
+  .prh-details { display: flex; flex-direction: column; gap: 6px; }
+  .prh-detail-row {
+    display: flex;
+    gap: 8px;
+    align-items: flex-start;
+  }
+  .prh-detail-label {
+    font-size: 0.68rem;
+    color: rgba(255,255,255,0.28);
+    min-width: 70px;
+    padding-top: 1px;
+    flex-shrink: 0;
+  }
+  .prh-detail-val {
+    font-size: 0.76rem;
+    color: #cbd5e1;
+    word-break: break-word;
+  }
+  .prh-detail-val a { color: var(--pro-cyan); text-decoration: none; }
+  .prh-detail-val a:hover { text-decoration: underline; }
+  .prh-cat-chip {
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 2px 9px;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.35);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    align-self: flex-start;
+  }
+  .prh-cat-peinture   { background: rgba(139,92,246,0.12); color: #a78bfa; }
+  .prh-cat-cuisine    { background: rgba(245,158,11,0.12);  color: var(--pro-amber); }
+  .prh-cat-salle-de-bain { background: rgba(6,182,212,0.12); color: var(--pro-cyan); }
+  .prh-cat-renovation { background: rgba(16,185,129,0.12);  color: var(--pro-green); }
+  .prh-cat-mobilier   { background: rgba(236,72,153,0.12);  color: #f472b6; }
+  .prh-cat-decoration { background: rgba(99,102,241,0.12);  color: #818cf8; }
+  .prh-cat-exterieur  { background: rgba(16,185,129,0.08);  color: #34d399; }
+  .prh-cat-autre      { background: rgba(255,255,255,0.06);  color: rgba(255,255,255,0.35); }
+  </style>
+
+  <div class="prh-wrap" id="prh-wrap">
+    <div class="prh-header">
+      <div class="prh-title">Historique des leads acceptés</div>
+      <div class="prh-sub">Vos clients confirmés, classés par type de projet</div>
     </div>
-    <div class="pro-page-actions">
-      <button class="pro-btn pro-btn-secondary"><i data-lucide="filter"></i> Filtrer</button>
-      <button class="pro-btn pro-btn-primary"><i data-lucide="plus"></i> Nouveau projet</button>
+
+    <div class="prh-cats" id="prh-cats">
+      <button class="prh-cat active" data-cat="">Tous</button>
+      <button class="prh-cat" data-cat="peinture">Peinture</button>
+      <button class="prh-cat" data-cat="cuisine">Cuisine</button>
+      <button class="prh-cat" data-cat="salle-de-bain">Salle de bain</button>
+      <button class="prh-cat" data-cat="renovation">Rénovation</button>
+      <button class="prh-cat" data-cat="mobilier">Mobilier</button>
+      <button class="prh-cat" data-cat="decoration">Décoration</button>
+      <button class="prh-cat" data-cat="exterieur">Extérieur</button>
+      <button class="prh-cat" data-cat="autre">Autre</button>
     </div>
+
+    <% var acceptedLeads = (typeof quoteRequests !== 'undefined' ? quoteRequests : []).filter(function(q) { return q.status === 'accepted'; }); %>
+
+    <% var getLeadCat = function(q) {
+      var s = ((q.service || '') + ' ' + (q.specialty || '')).toLowerCase();
+      if (s.indexOf('peint') !== -1) return 'peinture';
+      if (s.indexOf('cuisin') !== -1) return 'cuisine';
+      if (s.indexOf('salle') !== -1 || s.indexOf('bain') !== -1 || s.indexOf('douche') !== -1) return 'salle-de-bain';
+      if (s.indexOf('renov') !== -1 || s.indexOf('complet') !== -1) return 'renovation';
+      if (s.indexOf('mobil') !== -1 || s.indexOf('meuble') !== -1 || s.indexOf('armoir') !== -1) return 'mobilier';
+      if (s.indexOf('decor') !== -1 || s.indexOf('design') !== -1) return 'decoration';
+      if (s.indexOf('exter') !== -1 || s.indexOf('jardin') !== -1 || s.indexOf('terrasse') !== -1) return 'exterieur';
+      return 'autre';
+    }; %>
+
+    <% if (acceptedLeads.length === 0) { %>
+      <div class="prh-empty">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>
+        <p>Aucun lead accepté pour le moment.</p>
+        <p style="font-size:0.75rem;">Les demandes que vous acceptez depuis la page Demandes apparaissent ici automatiquement.</p>
+      </div>
+    <% } else { %>
+      <div class="prh-grid" id="prh-grid">
+        <% acceptedLeads.forEach(function(q) { %>
+          <% var leadCat = getLeadCat(q); %>
+          <div class="prh-card" data-cat="<%= leadCat %>">
+            <div class="prh-card-head">
+              <div class="prh-client-name"><%= q.firstName %> <%= q.lastName %></div>
+              <span class="prh-badge">Accepté</span>
+            </div>
+            <div class="prh-project-type"><%= q.service || q.specialty || 'Projet' %></div>
+            <div class="prh-details">
+              <% if (q.city || q.address) { %>
+              <div class="prh-detail-row">
+                <span class="prh-detail-label">Adresse</span>
+                <span class="prh-detail-val"><%= q.address || '' %><% if (q.address && q.city) { %>, <% } %><%= q.city || '' %><% if (q.province) { %>, <%= q.province %><% } %></span>
+              </div>
+              <% } %>
+              <div class="prh-detail-row">
+                <span class="prh-detail-label">Téléphone</span>
+                <span class="prh-detail-val"><a href="tel:<%= q.phone %>"><%= q.phone %></a></span>
+              </div>
+              <div class="prh-detail-row">
+                <span class="prh-detail-label">Courriel</span>
+                <span class="prh-detail-val"><a href="mailto:<%= q.email %>"><%= q.email %></a></span>
+              </div>
+              <div class="prh-detail-row">
+                <span class="prh-detail-label">Reçu le</span>
+                <span class="prh-detail-val"><%= new Date(q.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) %></span>
+              </div>
+            </div>
+            <span class="prh-cat-chip prh-cat-<%= leadCat %>"><%= q.specialty || 'Autre' %></span>
+          </div>
+        <% }); %>
+      </div>
+    <% } %>
   </div>
 
-  <div class="pro-projects-grid">
-    <% var projects = [
-      { name: 'Rénovation Dupont', client: 'Claire Dupont', status: 'active', statusLabel: 'En cours', prog: 68, budget: '€28,000', deadline: '15 juin', emoji: '🛋️', bg: 'linear-gradient(135deg,#0f2d1e,#0a2233)' },
-      { name: 'Cuisine Bernard', client: 'Marc Bernard', status: 'review', statusLabel: 'En révision', prog: 90, budget: '€15,000', deadline: '20 mai', emoji: '🍳', bg: 'linear-gradient(135deg,#1a1a0f,#1a0f2d)' },
-      { name: 'Loft Montmartre', client: 'Antoine Brun', status: 'active', statusLabel: 'En cours', prog: 35, budget: '€42,000', deadline: '1 juil.', emoji: '🏙️', bg: 'linear-gradient(135deg,#0a1a2d,#1a0a2d)' },
-      { name: 'Villa Cannes', client: 'Claire Verdier', status: 'active', statusLabel: 'En cours', prog: 15, budget: '€80,000', deadline: '1 sept.', emoji: '🌴', bg: 'linear-gradient(135deg,#1a1a0a,#0a1a1a)' },
-      { name: 'Salle de bain Julie', client: 'Julie Petit', status: 'done', statusLabel: 'Terminé', prog: 100, budget: '€5,500', deadline: 'Terminé', emoji: '🚿', bg: 'linear-gradient(135deg,#0a1a0a,#0a0a1a)' },
-      { name: 'Bureau Paris 8', client: 'Lucas Moreau', status: 'draft', statusLabel: 'Brouillon', prog: 5, budget: '€8,500', deadline: 'TBD', emoji: '💼', bg: 'linear-gradient(135deg,#1a0a0a,#0a0a1a)' }
-    ]; %>
-    <% projects.forEach(function(p) { %>
-    <div class="pro-project-card">
-      <div class="pro-project-preview" style="background:<%= p.bg %>">
-        <div class="pro-project-preview-inner" style="font-size:48px;"><%= p.emoji %></div>
-      </div>
-      <div class="pro-project-body">
-        <div class="pro-project-header">
-          <div>
-            <div class="pro-project-name"><%= p.name %></div>
-            <div class="pro-project-client"><%= p.client %></div>
-          </div>
-          <span class="pro-status-badge <%= p.status %>"><%= p.statusLabel %></span>
-        </div>
-        <div class="pro-progress-wrap">
-          <div class="pro-progress-label">
-            <span>Progression</span>
-            <span><%= p.prog %>%</span>
-          </div>
-          <div class="pro-progress-bar-outer">
-            <div class="pro-progress-bar-fill" style="width:<%= p.prog %>%"></div>
-          </div>
-        </div>
-        <div class="pro-project-footer">
-          <span class="pro-flex-center" style="font-size:11.5px;"><i data-lucide="euro" style="width:12px;height:12px;"></i> <%= p.budget %></span>
-          <span class="pro-flex-center" style="font-size:11.5px;"><i data-lucide="calendar" style="width:12px;height:12px;"></i> <%= p.deadline %></span>
-        </div>
-      </div>
-    </div>
-    <% }); %>
+  <script>
+  (function() {
+    var cats = document.querySelectorAll('#prh-cats .prh-cat');
+    var cards = document.querySelectorAll('#prh-grid .prh-card');
+
+    cats.forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var selectedCat = this.getAttribute('data-cat');
+        cats.forEach(function(b) { b.classList.remove('active'); });
+        this.classList.add('active');
+        cards.forEach(function(card) {
+          if (!selectedCat || card.getAttribute('data-cat') === selectedCat) {
+            card.style.display = '';
+          } else {
+            card.style.display = 'none';
+          }
+        });
+      });
+    });
+  })();
+  </script>
   </div>
 </div>
 
