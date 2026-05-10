@@ -860,6 +860,31 @@
   box-sizing: border-box;
 }
 .qm-input:focus, .qm-textarea:focus, .qm-select:focus { border-color: var(--accent-primary, #00ff88); }
+/* ─── Field errors ─── */
+.qm-input.qm-has-error,
+.qm-select.qm-has-error,
+.qm-textarea.qm-has-error {
+  border-color: #ef4444 !important;
+  background: rgba(239,68,68,0.04);
+  box-shadow: 0 0 0 3px rgba(239,68,68,0.10);
+}
+.qm-error-msg {
+  display: none;
+  align-items: flex-start;
+  gap: 5px;
+  font-size: 0.72rem;
+  color: #f87171;
+  margin-top: 5px;
+  line-height: 1.4;
+  padding-left: 1px;
+}
+.qm-error-msg.visible { display: flex; }
+.qm-error-msg::before {
+  content: '\26a0';
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  margin-top: 1px;
+}
 .qm-textarea { resize: vertical; min-height: 90px; }
 
 .qm-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -1300,6 +1325,7 @@ let qmState = { specialty: '', service: '', catLabel: '', timing: '', currentSte
 
 function openQuoteModal(specialty, service, catLabel) {
   qmState = { specialty, service, catLabel, timing: '', currentStep: 1 };
+  clearAllErrors();
 
   document.getElementById('qm-cat-label').textContent = catLabel;
   document.getElementById('qm-service-label').textContent = service;
@@ -1364,7 +1390,15 @@ function goToStep(n) {
 function qmNext(fromStep) {
   if (fromStep === 1) {
     const postal = document.getElementById('qm-postal').value.trim();
-    if (!postal) { shakeField('qm-postal'); return; }
+    if (!postal) {
+      showFieldError('qm-postal', 'Veuillez entrer un code postal canadien valide (ex. H2X 1Y6).');
+      return;
+    }
+    if (!isValidCanadianPostal(postal)) {
+      showFieldError('qm-postal', 'Veuillez entrer un code postal canadien valide (ex. H2X 1Y6).');
+      return;
+    }
+    clearFieldError('qm-postal');
     goToStep(2);
   } else if (fromStep === 2) {
     if (!qmState.timing) {
@@ -1385,12 +1419,155 @@ function selectTiming(btn) {
   qmState.timing = btn.dataset.val;
 }
 
-function shakeField(id) {
-  const el = document.getElementById(id);
-  el.style.borderColor = '#ef4444';
-  el.focus();
-  setTimeout(() => { el.style.borderColor = ''; }, 2000);
+// =============================================
+// CANADIAN VALIDATION & FORMATTING MODULE
+// =============================================
+
+function formatCanadianPostal(v) {
+  const s = v.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 6);
+  return s.length > 3 ? s.slice(0, 3) + ' ' + s.slice(3) : s;
 }
+
+function isValidCanadianPostal(v) {
+  // A1A 1A1 — first letter excludes D,F,I,O,Q,U; cannot start with W,Z
+  return /^[ABCEGHJKLMNPRSTVXY][0-9][ABCEGHJKLMNPRSTVWXYZ] [0-9][ABCEGHJKLMNPRSTVWXYZ][0-9]$/i.test(v.trim());
+}
+
+function formatCanadianPhone(v) {
+  let d = v.replace(/\D/g, '');
+  if (d.length === 11 && d[0] === '1') d = d.slice(1);
+  d = d.slice(0, 10);
+  if (d.length >= 7) return d.slice(0,3) + '-' + d.slice(3,6) + '-' + d.slice(6);
+  if (d.length >= 4) return d.slice(0,3) + '-' + d.slice(3);
+  return d;
+}
+
+function isValidCanadianPhone(v) {
+  let d = v.replace(/\D/g, '');
+  if (d.length === 11 && d[0] === '1') d = d.slice(1);
+  return /^[2-9]\d{2}[2-9]\d{6}$/.test(d);
+}
+
+function isValidEmail(v) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
+}
+
+function isValidAddress(v) {
+  const t = v.trim();
+  return t.length >= 5 && /\d/.test(t);
+}
+
+function showFieldError(id, msg) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add('qm-has-error');
+  let errEl = document.getElementById('err-' + id);
+  if (!errEl) {
+    errEl = document.createElement('div');
+    errEl.id = 'err-' + id;
+    errEl.className = 'qm-error-msg';
+    el.parentNode.insertBefore(errEl, el.nextSibling);
+  }
+  if (msg) errEl.textContent = msg;
+  errEl.classList.add('visible');
+}
+
+function clearFieldError(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('qm-has-error');
+  const errEl = document.getElementById('err-' + id);
+  if (errEl) errEl.classList.remove('visible');
+}
+
+function clearAllErrors() {
+  document.querySelectorAll('.qm-has-error').forEach(el => el.classList.remove('qm-has-error'));
+  document.querySelectorAll('.qm-error-msg').forEach(el => el.classList.remove('visible'));
+}
+
+function shakeField(id) {
+  showFieldError(id, '');
+}
+
+// ─── Auto-format & real-time validation listeners ───
+document.addEventListener('DOMContentLoaded', function() {
+
+  // Postal codes — format + validate on blur
+  ['qm-postal', 'qm-cpostale'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('input', function() {
+      this.value = formatCanadianPostal(this.value);
+      clearFieldError(id);
+    });
+    el.addEventListener('blur', function() {
+      if (!this.value.trim()) return;
+      if (!isValidCanadianPostal(this.value)) {
+        showFieldError(id, 'Veuillez entrer un code postal canadien valide (ex. H2X 1Y6).');
+      } else {
+        clearFieldError(id);
+      }
+    });
+  });
+
+  // Phone numbers — block letters, auto-format, strip +1
+  ['qm-phone', 'qm-altphone'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('keydown', function(e) {
+      const nav = ['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Tab','Home','End'];
+      if (nav.includes(e.key)) return;
+      if (!/^\d$/.test(e.key) && e.key !== '+') { e.preventDefault(); }
+    });
+    el.addEventListener('input', function() {
+      let raw = this.value;
+      if (raw.startsWith('+1')) raw = raw.slice(2);
+      else if (raw.startsWith('+')) raw = raw.slice(1);
+      this.value = formatCanadianPhone(raw);
+      clearFieldError(id);
+    });
+    el.addEventListener('blur', function() {
+      if (!this.value.trim()) return;
+      if (!isValidCanadianPhone(this.value)) {
+        showFieldError(id, 'Veuillez entrer un numéro de téléphone canadien valide (ex. 438-542-9215).');
+      } else {
+        clearFieldError(id);
+      }
+    });
+  });
+
+  // Email
+  const emailEl = document.getElementById('qm-email');
+  if (emailEl) {
+    emailEl.addEventListener('input', () => clearFieldError('qm-email'));
+    emailEl.addEventListener('blur', function() {
+      if (!this.value.trim()) return;
+      if (!isValidEmail(this.value)) {
+        showFieldError('qm-email', 'Veuillez entrer une adresse courriel valide.');
+      }
+    });
+  }
+
+  // Address
+  const addrEl = document.getElementById('qm-addr');
+  if (addrEl) {
+    addrEl.addEventListener('input', () => clearFieldError('qm-addr'));
+    addrEl.addEventListener('blur', function() {
+      if (!this.value.trim()) return;
+      if (!isValidAddress(this.value)) {
+        showFieldError('qm-addr', 'Veuillez entrer une adresse canadienne complète et valide.');
+      }
+    });
+  }
+
+  // Text fields — clear error on input
+  ['qm-fn','qm-ln','qm-city'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', () => clearFieldError(id));
+  });
+
+  const provEl = document.getElementById('qm-prov');
+  if (provEl) provEl.addEventListener('change', () => clearFieldError('qm-prov'));
+});
 
 function previewPhotos(input) {
   const container = document.getElementById('qm-photo-previews');
@@ -1409,22 +1586,49 @@ function previewPhotos(input) {
 }
 
 async function submitQuote() {
-  // Validate step 3
-  const required = [
-    { id: 'qm-fn', label: 'Prénom' },
-    { id: 'qm-ln', label: 'Nom' },
-    { id: 'qm-addr', label: 'Adresse' },
-    { id: 'qm-city', label: 'Ville' },
-    { id: 'qm-prov', label: 'Province' },
-    { id: 'qm-cpostale', label: 'Code postal' },
-    { id: 'qm-phone', label: 'Téléphone' },
-    { id: 'qm-email', label: 'Courriel' }
-  ];
-  for (const f of required) {
-    if (!document.getElementById(f.id).value.trim()) {
-      shakeField(f.id);
-      return;
-    }
+  // Validate step 3 — field by field with precise error messages
+  let formValid = true;
+
+  if (!document.getElementById('qm-fn').value.trim()) {
+    showFieldError('qm-fn', 'Le prénom est requis.');
+    formValid = false;
+  }
+  if (!document.getElementById('qm-ln').value.trim()) {
+    showFieldError('qm-ln', 'Le nom de famille est requis.');
+    formValid = false;
+  }
+  const addrVal = document.getElementById('qm-addr').value.trim();
+  if (!addrVal || !isValidAddress(addrVal)) {
+    showFieldError('qm-addr', 'Veuillez entrer une adresse canadienne complète et valide.');
+    formValid = false;
+  }
+  if (!document.getElementById('qm-city').value.trim()) {
+    showFieldError('qm-city', 'La ville est requise.');
+    formValid = false;
+  }
+  if (!document.getElementById('qm-prov').value) {
+    showFieldError('qm-prov', 'Veuillez sélectionner une province canadienne.');
+    formValid = false;
+  }
+  const cpostVal = document.getElementById('qm-cpostale').value.trim();
+  if (!cpostVal || !isValidCanadianPostal(cpostVal)) {
+    showFieldError('qm-cpostale', 'Veuillez entrer un code postal canadien valide (ex. H2X 1Y6).');
+    formValid = false;
+  }
+  const phoneVal = document.getElementById('qm-phone').value.trim();
+  if (!phoneVal || !isValidCanadianPhone(phoneVal)) {
+    showFieldError('qm-phone', 'Veuillez entrer un numéro de téléphone canadien valide (ex. 438-542-9215).');
+    formValid = false;
+  }
+  const emailVal = document.getElementById('qm-email').value.trim();
+  if (!emailVal || !isValidEmail(emailVal)) {
+    showFieldError('qm-email', 'Veuillez entrer une adresse courriel valide.');
+    formValid = false;
+  }
+  if (!formValid) {
+    const firstErr = document.querySelector('#qm-pane-3 .qm-has-error');
+    if (firstErr) firstErr.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
   }
 
   const submitBtn = document.getElementById('qm-submit-btn');

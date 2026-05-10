@@ -280,5 +280,104 @@
       grid-template-columns: 1fr;
     }
   }
+
+  /* ─── Validation errors ─── */
+  .form-input.has-error,
+  .form-textarea.has-error {
+    border-color: #ef4444 !important;
+    background: rgba(239,68,68,0.04);
+    box-shadow: 0 0 0 3px rgba(239,68,68,0.10);
+  }
+  .field-error-msg {
+    display: none;
+    align-items: flex-start;
+    gap: 5px;
+    font-size: 0.73rem;
+    color: #f87171;
+    margin-top: 5px;
+    line-height: 1.4;
+  }
+  .field-error-msg.visible { display: flex; }
+  .field-error-msg::before {
+    content: '\26a0';
+    flex-shrink: 0;
+    font-size: 0.68rem;
+    margin-top: 1px;
+  }
 </style>
+
+<script>
+(function() {
+  function formatCAPhone(v) {
+    var d = v.replace(/\D/g, '');
+    if (d.length === 11 && d[0] === '1') d = d.slice(1);
+    d = d.slice(0, 10);
+    if (d.length >= 7) return d.slice(0,3) + '-' + d.slice(3,6) + '-' + d.slice(6);
+    if (d.length >= 4) return d.slice(0,3) + '-' + d.slice(3);
+    return d;
+  }
+  function isValidCAPhone(v) {
+    var d = v.replace(/\D/g, '');
+    if (d.length === 11 && d[0] === '1') d = d.slice(1);
+    return /^[2-9]\d{2}[2-9]\d{6}$/.test(d);
+  }
+  function showErr(el, msg) {
+    el.classList.add('has-error');
+    var id = 'ferr-' + el.name;
+    var errEl = document.getElementById(id);
+    if (!errEl) {
+      errEl = document.createElement('div');
+      errEl.id = id;
+      errEl.className = 'field-error-msg';
+      el.parentNode.insertBefore(errEl, el.nextSibling);
+    }
+    errEl.textContent = msg;
+    errEl.classList.add('visible');
+  }
+  function clearErr(el) {
+    el.classList.remove('has-error');
+    var errEl = document.getElementById('ferr-' + el.name);
+    if (errEl) errEl.classList.remove('visible');
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var phoneEl = document.querySelector('input[name="phone"]');
+    if (phoneEl) {
+      phoneEl.addEventListener('keydown', function(e) {
+        var nav = ['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Tab','Home','End'];
+        if (nav.indexOf(e.key) !== -1) return;
+        if (!/^\d$/.test(e.key) && e.key !== '+') { e.preventDefault(); }
+      });
+      phoneEl.addEventListener('input', function() {
+        var raw = this.value;
+        if (raw.startsWith('+1')) raw = raw.slice(2);
+        else if (raw.startsWith('+')) raw = raw.slice(1);
+        this.value = formatCAPhone(raw);
+        clearErr(this);
+      });
+      phoneEl.addEventListener('blur', function() {
+        if (!this.value.trim()) return;
+        if (!isValidCAPhone(this.value)) {
+          showErr(this, 'Veuillez entrer un numéro de téléphone canadien valide (ex. 438-542-9215).');
+        } else {
+          clearErr(this);
+        }
+      });
+    }
+
+    // Basic form submit validation
+    var form = document.querySelector('.setup-form');
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        var ph = document.querySelector('input[name="phone"]');
+        if (ph && ph.value.trim() && !isValidCAPhone(ph.value)) {
+          e.preventDefault();
+          showErr(ph, 'Veuillez entrer un numéro de téléphone canadien valide (ex. 438-542-9215).');
+          ph.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
+    }
+  });
+})();
+</script>
 
