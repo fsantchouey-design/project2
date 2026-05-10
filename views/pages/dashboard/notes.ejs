@@ -1,0 +1,878 @@
+<style>
+/* ====== NOTES PAGE ====== */
+.notes-page {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  height: calc(100vh - var(--topbar-height, 64px) - 48px);
+  min-height: 520px;
+}
+
+.notes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 0 0 20px;
+  flex-wrap: wrap;
+}
+
+.notes-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.notes-title h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary, #f1f5f9);
+  margin: 0;
+  letter-spacing: -0.3px;
+}
+.notes-title-icon {
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+}
+.notes-title-icon svg { width:18px; height:18px; stroke: #fff; }
+
+.notes-new-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 20px;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+  white-space: nowrap;
+}
+.notes-new-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+.notes-new-btn svg { width:16px; height:16px; }
+
+/* ─── Layout ─── */
+.notes-body {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 0;
+  flex: 1;
+  min-height: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+  background: var(--bg-card, #111827);
+}
+
+/* ─── LEFT PANEL ─── */
+.notes-list-panel {
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--border-color, rgba(255,255,255,0.08));
+  overflow: hidden;
+}
+
+.notes-list-top {
+  padding: 14px 14px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.07));
+}
+
+.notes-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-secondary, rgba(255,255,255,0.04));
+  border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+  border-radius: 9px;
+  padding: 0 12px;
+  transition: border-color 0.2s;
+}
+.notes-search-wrap:focus-within { border-color: #6366f1; }
+.notes-search-wrap svg { width:14px; height:14px; color: var(--text-muted, #94a3b8); flex-shrink:0; }
+.notes-search-input {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text-primary, #f1f5f9);
+  font-size: 0.8rem;
+  padding: 9px 0;
+}
+.notes-search-input::placeholder { color: var(--text-muted, #64748b); }
+
+.notes-tag-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+.notes-tag-filter {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+  background: transparent;
+  color: var(--text-muted, #94a3b8);
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.notes-tag-filter:hover,
+.notes-tag-filter.active {
+  background: #6366f1;
+  border-color: #6366f1;
+  color: #fff;
+}
+
+.notes-list-scroll {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.1) transparent;
+}
+.notes-list-scroll::-webkit-scrollbar { width: 4px; }
+.notes-list-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius:4px; }
+
+.notes-empty-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 48px 20px;
+  text-align: center;
+  color: var(--text-muted, #64748b);
+  font-size: 0.82rem;
+}
+.notes-empty-list svg { width:32px; height:32px; opacity:0.4; }
+
+/* Note card in list */
+.note-card {
+  padding: 14px 14px;
+  border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.05));
+  cursor: pointer;
+  transition: background 0.15s;
+  position: relative;
+}
+.note-card:hover { background: rgba(255,255,255,0.03); }
+.note-card.selected {
+  background: rgba(99,102,241,0.12);
+  border-left: 3px solid #6366f1;
+}
+.note-card.pinned-card::before {
+  content: '';
+  position: absolute;
+  top: 8px; right: 10px;
+  width: 6px; height: 6px;
+  background: #f59e0b;
+  border-radius: 50%;
+}
+
+.note-card-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary, #f1f5f9);
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 14px;
+}
+.note-card-preview {
+  font-size: 0.75rem;
+  color: var(--text-muted, #64748b);
+  line-height: 1.4;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  margin-bottom: 8px;
+}
+.note-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.note-card-date {
+  font-size: 0.7rem;
+  color: var(--text-muted, #475569);
+}
+.note-card-tags {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+.note-tag-pill {
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 20px;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.tag-Design    { background: rgba(99,102,241,0.2);  color: #818cf8; }
+.tag-Projet    { background: rgba(16,185,129,0.2);  color: #34d399; }
+.tag-Budget    { background: rgba(245,158,11,0.2);  color: #fbbf24; }
+.tag-Inspiration { background: rgba(236,72,153,0.2); color: #f472b6; }
+.tag-Question  { background: rgba(59,130,246,0.2);  color: #60a5fa; }
+.tag-IA        { background: rgba(168,85,247,0.2);  color: #c084fc; }
+
+/* ─── RIGHT PANEL: EDITOR ─── */
+.notes-editor-panel {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.notes-editor-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  color: var(--text-muted, #64748b);
+  text-align: center;
+  padding: 40px;
+}
+.notes-editor-empty svg { width:48px; height:48px; opacity:0.25; }
+.notes-editor-empty h3 { font-size:1rem; font-weight:600; color: var(--text-secondary, #94a3b8); margin:0; }
+.notes-editor-empty p  { font-size:0.82rem; margin:0; line-height:1.5; }
+
+.notes-editor-wrap {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.notes-editor-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.07));
+  flex-wrap: wrap;
+}
+
+.notes-editor-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.notes-project-select {
+  background: var(--bg-secondary, rgba(255,255,255,0.04));
+  border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+  border-radius: 8px;
+  color: var(--text-secondary, #94a3b8);
+  font-size: 0.78rem;
+  padding: 5px 10px;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.notes-project-select:focus { border-color: #6366f1; }
+.notes-project-select option { background: #1e293b; }
+
+.notes-editor-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.notes-action-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+  background: transparent;
+  color: var(--text-muted, #94a3b8);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.notes-action-btn svg { width:14px; height:14px; }
+.notes-action-btn:hover { background: rgba(255,255,255,0.05); color: var(--text-primary, #f1f5f9); }
+.notes-action-btn.pinned-active {
+  background: rgba(245,158,11,0.15);
+  border-color: rgba(245,158,11,0.3);
+  color: #fbbf24;
+}
+.notes-action-btn.delete-btn:hover {
+  background: rgba(239,68,68,0.12);
+  border-color: rgba(239,68,68,0.3);
+  color: #f87171;
+}
+
+.notes-save-status {
+  font-size: 0.72rem;
+  color: var(--text-muted, #475569);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 90px;
+}
+.notes-save-status svg { width:12px; height:12px; }
+.save-saved  { color: #34d399; }
+.save-saving { color: #fbbf24; }
+.save-error  { color: #f87171; }
+
+/* Tag selector in editor */
+.notes-tags-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.07));
+  flex-wrap: wrap;
+}
+.notes-tags-label {
+  font-size: 0.72rem;
+  color: var(--text-muted, #64748b);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.notes-tag-toggle {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+  background: transparent;
+  color: var(--text-muted, #94a3b8);
+  transition: all 0.15s;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+.notes-tag-toggle:hover { opacity: 0.8; }
+.notes-tag-toggle.active { border-color: transparent; color: #fff; }
+.notes-tag-toggle.active.tag-Design     { background: rgba(99,102,241,0.5); }
+.notes-tag-toggle.active.tag-Projet     { background: rgba(16,185,129,0.5); }
+.notes-tag-toggle.active.tag-Budget     { background: rgba(245,158,11,0.5); }
+.notes-tag-toggle.active.tag-Inspiration { background: rgba(236,72,153,0.5); }
+.notes-tag-toggle.active.tag-Question   { background: rgba(59,130,246,0.5); }
+.notes-tag-toggle.active.tag-IA         { background: rgba(168,85,247,0.5); }
+
+/* Title + Textarea */
+.notes-title-input {
+  width: 100%;
+  background: none;
+  border: none;
+  outline: none;
+  color: var(--text-primary, #f1f5f9);
+  font-size: 1.35rem;
+  font-weight: 700;
+  padding: 20px 24px 8px;
+  letter-spacing: -0.3px;
+  font-family: inherit;
+}
+.notes-title-input::placeholder { color: var(--text-muted, #334155); }
+
+.notes-content-textarea {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  resize: none;
+  color: var(--text-secondary, #cbd5e1);
+  font-size: 0.9rem;
+  line-height: 1.75;
+  padding: 4px 24px 24px;
+  font-family: inherit;
+  min-height: 200px;
+}
+.notes-content-textarea::placeholder { color: var(--text-muted, #334155); }
+
+/* ─── MOBILE ─── */
+@media (max-width: 768px) {
+  .notes-page { height: auto; }
+  .notes-body {
+    grid-template-columns: 1fr;
+    min-height: 70vh;
+    border-radius: 12px;
+  }
+  .notes-editor-panel { display: none; }
+  .notes-editor-panel.mobile-open {
+    display: flex;
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: var(--bg-primary, #0b1220);
+    border-radius: 0;
+  }
+  .notes-mobile-back {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 16px;
+    background: none;
+    border: none;
+    border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.08));
+    color: var(--text-muted, #94a3b8);
+    font-size: 0.85rem;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+  }
+  .notes-mobile-back svg { width:16px; height:16px; }
+  .notes-editor-toolbar { flex-direction: column; align-items: flex-start; gap: 8px; }
+  .notes-header { flex-direction: column; align-items: flex-start; }
+}
+@media (min-width: 769px) {
+  .notes-mobile-back { display: none; }
+}
+</style>
+
+<div class="notes-page">
+
+  <!-- Header -->
+  <div class="notes-header">
+    <div class="notes-title">
+      <div class="notes-title-icon">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+        </svg>
+      </div>
+      <h1>Notes</h1>
+    </div>
+    <button class="notes-new-btn" id="btn-new-note">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nouvelle note
+    </button>
+  </div>
+
+  <!-- Body -->
+  <div class="notes-body">
+
+    <!-- Left panel: list -->
+    <div class="notes-list-panel" id="notes-list-panel">
+      <div class="notes-list-top">
+        <div class="notes-search-wrap">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text" class="notes-search-input" id="notes-search" placeholder="Rechercher…">
+        </div>
+        <div class="notes-tag-filters">
+          <button class="notes-tag-filter active" data-tag="">Toutes</button>
+          <button class="notes-tag-filter" data-tag="Design">Design</button>
+          <button class="notes-tag-filter" data-tag="Projet">Projet</button>
+          <button class="notes-tag-filter" data-tag="Budget">Budget</button>
+          <button class="notes-tag-filter" data-tag="Inspiration">Inspi</button>
+          <button class="notes-tag-filter" data-tag="Question">Question</button>
+          <button class="notes-tag-filter" data-tag="IA">IA</button>
+        </div>
+      </div>
+      <div class="notes-list-scroll" id="notes-list-scroll">
+        <% if (notes.length === 0) { %>
+          <div class="notes-empty-list">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            <span>Aucune note pour l'instant</span>
+          </div>
+        <% } %>
+        <% notes.forEach(function(note) { %>
+          <div class="note-card <%= note.pinned ? 'pinned-card' : '' %>"
+               data-id="<%= note._id %>"
+               data-title="<%= (note.title || '').replace(/\"/g, '&quot;') %>"
+               data-content="<%= (note.content || '').replace(/\"/g, '&quot;') %>"
+               data-tags="<%= (note.tags || []).join(',') %>"
+               data-project="<%= note.project ? note.project._id : '' %>"
+               data-project-name="<%= note.project ? note.project.title : '' %>"
+               data-pinned="<%= note.pinned ? 'true' : 'false' %>">
+            <div class="note-card-title"><%= note.title || 'Note sans titre' %></div>
+            <div class="note-card-preview"><%= note.content || '' %></div>
+            <div class="note-card-meta">
+              <span class="note-card-date">
+                <%= new Date(note.updatedAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) %>
+              </span>
+              <div class="note-card-tags">
+                <% (note.tags || []).slice(0,2).forEach(function(tag) { %>
+                  <span class="note-tag-pill tag-<%= tag %>"><%= tag %></span>
+                <% }); %>
+              </div>
+            </div>
+          </div>
+        <% }); %>
+      </div>
+    </div>
+
+    <!-- Right panel: editor -->
+    <div class="notes-editor-panel" id="notes-editor-panel">
+
+      <!-- Mobile back button -->
+      <button class="notes-mobile-back" id="notes-mobile-back">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+        Retour aux notes
+      </button>
+
+      <!-- Empty state -->
+      <div class="notes-editor-empty" id="notes-editor-empty">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+        <h3>Sélectionnez une note</h3>
+        <p>Choisissez une note dans la liste<br>ou créez-en une nouvelle.</p>
+      </div>
+
+      <!-- Editor (hidden by default) -->
+      <div class="notes-editor-wrap" id="notes-editor-wrap" style="display:none;flex:1;flex-direction:column;min-height:0;">
+
+        <div class="notes-editor-toolbar">
+          <div class="notes-editor-meta">
+            <select class="notes-project-select" id="editor-project">
+              <option value="">Aucun projet</option>
+              <% projects.forEach(function(p) { %>
+                <option value="<%= p._id %>"><%= p.title %></option>
+              <% }); %>
+            </select>
+            <span class="notes-save-status" id="notes-save-status">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none" id="save-icon-ok"><polyline points="20 6 9 17 4 12"/></svg>
+              <span id="save-status-text"></span>
+            </span>
+          </div>
+          <div class="notes-editor-actions">
+            <button class="notes-action-btn" id="btn-pin-note" title="Épingler">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>
+              Épingler
+            </button>
+            <button class="notes-action-btn delete-btn" id="btn-delete-note" title="Supprimer">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+              Supprimer
+            </button>
+          </div>
+        </div>
+
+        <div class="notes-tags-row" id="notes-tags-row">
+          <span class="notes-tags-label">Tags :</span>
+          <button class="notes-tag-toggle tag-Design"      data-tag="Design">Design</button>
+          <button class="notes-tag-toggle tag-Projet"      data-tag="Projet">Projet</button>
+          <button class="notes-tag-toggle tag-Budget"      data-tag="Budget">Budget</button>
+          <button class="notes-tag-toggle tag-Inspiration" data-tag="Inspiration">Inspiration</button>
+          <button class="notes-tag-toggle tag-Question"    data-tag="Question">Question</button>
+          <button class="notes-tag-toggle tag-IA"          data-tag="IA">IA</button>
+        </div>
+
+        <input type="text" class="notes-title-input" id="editor-title" placeholder="Titre de la note…">
+        <textarea class="notes-content-textarea" id="editor-content" placeholder="Commencez à écrire…&#10;&#10;Idées, inspirations, questions, matériaux, budget…"></textarea>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(function() {
+
+  var currentNoteId = null;
+  var saveTimer = null;
+  var isSaving = false;
+
+  var editorEmpty = document.getElementById('notes-editor-empty');
+  var editorWrap  = document.getElementById('notes-editor-wrap');
+  var editorPanel = document.getElementById('notes-editor-panel');
+  var titleInput  = document.getElementById('editor-title');
+  var contentTA   = document.getElementById('editor-content');
+  var projectSel  = document.getElementById('editor-project');
+  var saveStatus  = document.getElementById('notes-save-status');
+  var saveText    = document.getElementById('save-status-text');
+  var saveIconOk  = document.getElementById('save-icon-ok');
+  var btnPin      = document.getElementById('btn-pin-note');
+  var btnDelete   = document.getElementById('btn-delete-note');
+  var listScroll  = document.getElementById('notes-list-scroll');
+  var searchInput = document.getElementById('notes-search');
+  var mobileBack  = document.getElementById('notes-mobile-back');
+
+  function setStatus(type, text) {
+    saveIconOk.style.display = 'none';
+    saveText.textContent = text;
+    saveStatus.className = 'notes-save-status';
+    if (type === 'saved') {
+      saveStatus.classList.add('save-saved');
+      saveIconOk.style.display = 'inline';
+    } else if (type === 'saving') {
+      saveStatus.classList.add('save-saving');
+    } else if (type === 'error') {
+      saveStatus.classList.add('save-error');
+    }
+  }
+
+  function openEditor() {
+    editorEmpty.style.display = 'none';
+    editorWrap.style.display  = 'flex';
+    if (window.innerWidth <= 768) {
+      editorPanel.classList.add('mobile-open');
+    }
+  }
+
+  function closeEditorMobile() {
+    editorPanel.classList.remove('mobile-open');
+  }
+
+  if (mobileBack) {
+    mobileBack.addEventListener('click', closeEditorMobile);
+  }
+
+  function getActiveTags() {
+    var active = [];
+    document.querySelectorAll('.notes-tag-toggle.active').forEach(function(btn) {
+      active.push(btn.getAttribute('data-tag'));
+    });
+    return active;
+  }
+
+  function isPinned() {
+    return btnPin && btnPin.classList.contains('pinned-active');
+  }
+
+  function loadNoteInEditor(card) {
+    currentNoteId = card.getAttribute('data-id');
+    titleInput.value   = card.getAttribute('data-title').replace(/&quot;/g, '"');
+    contentTA.value    = card.getAttribute('data-content').replace(/&quot;/g, '"');
+    projectSel.value   = card.getAttribute('data-project') || '';
+
+    var pinned = card.getAttribute('data-pinned') === 'true';
+    if (pinned) {
+      btnPin.classList.add('pinned-active');
+      btnPin.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg> Épinglée';
+    } else {
+      btnPin.classList.remove('pinned-active');
+      btnPin.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg> Épingler';
+    }
+
+    var tags = (card.getAttribute('data-tags') || '').split(',').filter(function(t) { return t; });
+    document.querySelectorAll('.notes-tag-toggle').forEach(function(btn) {
+      if (tags.indexOf(btn.getAttribute('data-tag')) !== -1) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    });
+
+    document.querySelectorAll('.note-card').forEach(function(c) { c.classList.remove('selected'); });
+    card.classList.add('selected');
+
+    setStatus('', '');
+    openEditor();
+  }
+
+  // Click on note card
+  document.querySelectorAll('.note-card').forEach(function(card) {
+    card.addEventListener('click', function() {
+      loadNoteInEditor(this);
+    });
+  });
+
+  // ─── Auto-save ───
+  function scheduleAutoSave() {
+    clearTimeout(saveTimer);
+    setStatus('saving', 'Enregistrement…');
+    saveTimer = setTimeout(saveCurrentNote, 1500);
+  }
+
+  function saveCurrentNote() {
+    if (!currentNoteId) return;
+    var body = {
+      title:   titleInput.value,
+      content: contentTA.value,
+      tags:    getActiveTags(),
+      project: projectSel.value || null,
+      pinned:  isPinned()
+    };
+    isSaving = true;
+    var xhr = new XMLHttpRequest();
+    xhr.open('PUT', '/dashboard/notes/' + currentNoteId);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.onload = function() {
+      isSaving = false;
+      if (xhr.status === 200) {
+        setStatus('saved', 'Sauvegardé');
+        updateCardInList(currentNoteId, body);
+      } else {
+        setStatus('error', 'Erreur');
+      }
+    };
+    xhr.onerror = function() {
+      isSaving = false;
+      setStatus('error', 'Erreur réseau');
+    };
+    xhr.send(JSON.stringify(body));
+  }
+
+  function updateCardInList(id, data) {
+    var card = document.querySelector('.note-card[data-id="' + id + '"]');
+    if (!card) return;
+    card.setAttribute('data-title',   data.title   || '');
+    card.setAttribute('data-content', data.content || '');
+    card.setAttribute('data-tags',    (data.tags || []).join(','));
+    card.setAttribute('data-project', data.project || '');
+    card.setAttribute('data-pinned',  data.pinned ? 'true' : 'false');
+    var titleEl = card.querySelector('.note-card-title');
+    if (titleEl) titleEl.textContent = data.title || 'Note sans titre';
+    var previewEl = card.querySelector('.note-card-preview');
+    if (previewEl) previewEl.textContent = data.content || '';
+    var tagsEl = card.querySelector('.note-card-tags');
+    if (tagsEl) {
+      tagsEl.innerHTML = '';
+      (data.tags || []).slice(0,2).forEach(function(tag) {
+        var s = document.createElement('span');
+        s.className = 'note-tag-pill tag-' + tag;
+        s.textContent = tag;
+        tagsEl.appendChild(s);
+      });
+    }
+    if (data.pinned) {
+      card.classList.add('pinned-card');
+    } else {
+      card.classList.remove('pinned-card');
+    }
+  }
+
+  if (titleInput)  titleInput.addEventListener('input',  scheduleAutoSave);
+  if (contentTA)   contentTA.addEventListener('input',   scheduleAutoSave);
+  if (projectSel)  projectSel.addEventListener('change', scheduleAutoSave);
+
+  // ─── Tag toggles ───
+  document.querySelectorAll('.notes-tag-toggle').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      this.classList.toggle('active');
+      scheduleAutoSave();
+    });
+  });
+
+  // ─── Pin ───
+  if (btnPin) {
+    btnPin.addEventListener('click', function() {
+      if (!currentNoteId) return;
+      this.classList.toggle('pinned-active');
+      var nowPinned = this.classList.contains('pinned-active');
+      if (nowPinned) {
+        btnPin.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg> Épinglée';
+      } else {
+        btnPin.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg> Épingler';
+      }
+      scheduleAutoSave();
+    });
+  }
+
+  // ─── Delete ───
+  if (btnDelete) {
+    btnDelete.addEventListener('click', function() {
+      if (!currentNoteId) return;
+      if (!confirm('Supprimer cette note ?')) return;
+      var idToDelete = currentNoteId;
+      var xhr = new XMLHttpRequest();
+      xhr.open('DELETE', '/dashboard/notes/' + idToDelete);
+      xhr.setRequestHeader('Content-Type', 'application/json');
+      xhr.onload = function() {
+        if (xhr.status === 200) {
+          var card = document.querySelector('.note-card[data-id="' + idToDelete + '"]');
+          if (card) card.remove();
+          currentNoteId = null;
+          editorEmpty.style.display = 'flex';
+          editorWrap.style.display  = 'none';
+          closeEditorMobile();
+          if (!document.querySelector('.note-card')) {
+            listScroll.innerHTML = '<div class="notes-empty-list"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="width:32px;height:32px;opacity:0.4"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg><span>Aucune note</span></div>';
+          }
+        }
+      };
+      xhr.send();
+    });
+  }
+
+  // ─── New note ───
+  document.getElementById('btn-new-note').addEventListener('click', function() {
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', '/dashboard/notes');
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.onload = function() {
+      if (xhr.status === 200) {
+        var res = JSON.parse(xhr.responseText);
+        var note = res.note;
+        var card = document.createElement('div');
+        card.className = 'note-card selected';
+        card.setAttribute('data-id',           note._id);
+        card.setAttribute('data-title',         '');
+        card.setAttribute('data-content',       '');
+        card.setAttribute('data-tags',          '');
+        card.setAttribute('data-project',       '');
+        card.setAttribute('data-project-name',  '');
+        card.setAttribute('data-pinned',        'false');
+        card.innerHTML =
+          '<div class="note-card-title">Note sans titre</div>' +
+          '<div class="note-card-preview"></div>' +
+          '<div class="note-card-meta">' +
+            '<span class="note-card-date">Maintenant</span>' +
+            '<div class="note-card-tags"></div>' +
+          '</div>';
+        card.addEventListener('click', function() { loadNoteInEditor(this); });
+
+        var emptyEl = listScroll.querySelector('.notes-empty-list');
+        if (emptyEl) emptyEl.remove();
+        listScroll.insertBefore(card, listScroll.firstChild);
+
+        document.querySelectorAll('.note-card').forEach(function(c) { c.classList.remove('selected'); });
+        card.classList.add('selected');
+
+        currentNoteId = note._id;
+        titleInput.value  = '';
+        contentTA.value   = '';
+        projectSel.value  = '';
+        document.querySelectorAll('.notes-tag-toggle').forEach(function(b) { b.classList.remove('active'); });
+        btnPin.classList.remove('pinned-active');
+        btnPin.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="width:14px;height:14px;"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg> Épingler';
+        setStatus('', '');
+        openEditor();
+        titleInput.focus();
+      }
+    };
+    xhr.send(JSON.stringify({ title: '', content: '' }));
+  });
+
+  // ─── Search ───
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      filterNotes();
+    });
+  }
+
+  // ─── Tag filter ───
+  document.querySelectorAll('.notes-tag-filter').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.notes-tag-filter').forEach(function(b) { b.classList.remove('active'); });
+      this.classList.add('active');
+      filterNotes();
+    });
+  });
+
+  function filterNotes() {
+    var query    = (searchInput ? searchInput.value : '').toLowerCase().trim();
+    var activeTag = '';
+    var activeTagBtn = document.querySelector('.notes-tag-filter.active');
+    if (activeTagBtn) activeTag = activeTagBtn.getAttribute('data-tag') || '';
+
+    document.querySelectorAll('.note-card').forEach(function(card) {
+      var title   = (card.getAttribute('data-title')   || '').toLowerCase();
+      var content = (card.getAttribute('data-content') || '').toLowerCase();
+      var tags    = (card.getAttribute('data-tags')    || '').toLowerCase();
+
+      var matchSearch = !query || title.indexOf(query) !== -1 || content.indexOf(query) !== -1;
+      var matchTag    = !activeTag || tags.indexOf(activeTag.toLowerCase()) !== -1;
+
+      card.style.display = (matchSearch && matchTag) ? '' : 'none';
+    });
+  }
+
+})();
+</script>

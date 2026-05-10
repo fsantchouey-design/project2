@@ -126,12 +126,9 @@
       <div class="nav-group">
         <span class="nav-label">Communication</span>
 
-        <a href="/dashboard/messages" class="nav-link <%= activePage === 'messages' ? 'active' : '' %>">
-          <i data-lucide="message-square"></i>
-          <span>Messages</span>
-          <% if (typeof unreadMessages !== 'undefined' && unreadMessages > 0) { %>
-            <span class="badge"><%= unreadMessages %></span>
-          <% } %>
+        <a href="/dashboard/notes" class="nav-link <%= activePage === 'notes' ? 'active' : '' %>">
+          <i data-lucide="notebook-pen"></i>
+          <span>Notes</span>
         </a>
         <a href="/dashboard/notifications" class="nav-link <%= activePage === 'notifications' ? 'active' : '' %>">
           <i data-lucide="bell"></i>
@@ -332,9 +329,9 @@
     <a href="/projects/new" class="mobile-nav-item mobile-nav-primary">
       <i data-lucide="plus"></i>
     </a>
-    <a href="/dashboard/messages" class="mobile-nav-item <%= typeof activePage !== 'undefined' && activePage === 'messages' ? 'active' : '' %>">
-      <i data-lucide="message-square"></i>
-      <span>Messages</span>
+    <a href="/dashboard/notes" class="mobile-nav-item <%= typeof activePage !== 'undefined' && activePage === 'notes' ? 'active' : '' %>">
+      <i data-lucide="notebook-pen"></i>
+      <span>Notes</span>
     </a>
     <a href="/dashboard/settings" class="mobile-nav-item <%= typeof activePage !== 'undefined' && activePage === 'settings' ? 'active' : '' %>">
       <i data-lucide="user"></i>

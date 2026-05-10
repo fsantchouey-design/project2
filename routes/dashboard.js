@@ -254,4 +254,70 @@ router.get('/new-project', ensureAuthenticated, (req, res) => {
   res.redirect(`/projects/new${query}`);
 });
 
+// ─── NOTES ────────────────────────────────────────────────────────────────────
+const Note = require('../models/Note');
+
+router.get('/notes', ensureAuthenticated, async (req, res) => {
+  try {
+    const projects = await Project.find({ user: req.user.id })
+      .select('title')
+      .sort({ createdAt: -1 });
+    const notes = await Note.find({ user: req.user.id })
+      .populate('project', 'title')
+      .sort({ pinned: -1, updatedAt: -1 });
+    res.render('pages/dashboard/notes', {
+      title: 'Notes — CraftyCrib',
+      layout: 'layouts/dashboard',
+      activePage: 'notes',
+      notes,
+      projects
+    });
+  } catch (err) {
+    console.error('Notes error:', err);
+    res.redirect('/dashboard');
+  }
+});
+
+router.post('/notes', ensureAuthenticated, async (req, res) => {
+  try {
+    const note = new Note({
+      user:    req.user.id,
+      title:   req.body.title   || '',
+      content: req.body.content || '',
+      tags:    req.body.tags    || [],
+      project: req.body.project || null,
+      pinned:  req.body.pinned  || false
+    });
+    await note.save();
+    res.json({ success: true, note });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/notes/:id', ensureAuthenticated, async (req, res) => {
+  try {
+    const note = await Note.findOne({ _id: req.params.id, user: req.user.id });
+    if (!note) return res.status(404).json({ error: 'Note introuvable' });
+    if (req.body.title   !== undefined) note.title   = req.body.title;
+    if (req.body.content !== undefined) note.content = req.body.content;
+    if (req.body.tags    !== undefined) note.tags    = req.body.tags;
+    if (req.body.project !== undefined) note.project = req.body.project || null;
+    if (req.body.pinned  !== undefined) note.pinned  = req.body.pinned;
+    await note.save();
+    res.json({ success: true, note });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/notes/:id', ensureAuthenticated, async (req, res) => {
+  try {
+    await Note.deleteOne({ _id: req.params.id, user: req.user.id });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
