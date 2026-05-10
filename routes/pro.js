@@ -34,6 +34,23 @@ router.get('/dashboard', ensureAuthenticated, async (req, res) => {
   }
 });
 
+router.put('/leads/:id/lead-status', ensureAuthenticated, async (req, res) => {
+  try {
+    const { proLeadStatus } = req.body;
+    const allowed = ['new_lead', 'contacted', 'won', 'lost', 'archived'];
+    if (!allowed.includes(proLeadStatus)) return res.status(400).json({ error: 'Statut invalide' });
+    const quote = await QuoteRequest.findByIdAndUpdate(
+      req.params.id,
+      { proLeadStatus },
+      { new: true }
+    );
+    if (!quote) return res.status(404).json({ error: 'Lead introuvable' });
+    res.json({ success: true, proLeadStatus: quote.proLeadStatus });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 router.put('/quotes/:id/status', ensureAuthenticated, async (req, res) => {
   try {
     const { status } = req.body;
