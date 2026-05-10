@@ -643,6 +643,274 @@
 
 <!-- How It Works -->
 <section id="how-it-works" class="how-section">
+  <style>
+    /* ===== HOW SECTION — PREMIUM REDESIGN ===== */
+    @keyframes hsw-line-travel {
+      0%   { top: -50px; opacity: 0; }
+      15%  { opacity: 1; }
+      85%  { opacity: 1; }
+      100% { top: calc(100% + 50px); opacity: 0; }
+    }
+    @keyframes hsw-ring-breathe {
+      0%, 100% { transform: scale(1); opacity: 0.35; }
+      50%       { transform: scale(1.12); opacity: 0.65; }
+    }
+    @keyframes hsw-dot-pulse {
+      0%, 100% { box-shadow: 0 0 0 4px rgba(16,185,129,0.12), 0 8px 24px rgba(16,185,129,0.20); }
+      50%       { box-shadow: 0 0 0 8px rgba(16,185,129,0.08), 0 12px 36px rgba(16,185,129,0.38); }
+    }
+    @keyframes hsw-ai-blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.35; }
+    }
+    @keyframes hsw-bar-fill {
+      0%   { width: 0%; }
+      100% { width: 68%; }
+    }
+    @keyframes hsw-float-tag {
+      0%, 100% { transform: translateY(0px); }
+      50%       { transform: translateY(-4px); }
+    }
+
+    /* Wrapper */
+    .hsw-outer {
+      position: relative;
+      max-width: 820px;
+      margin: 0 auto;
+    }
+
+    /* Vertical glowing timeline line */
+    .hsw-vline {
+      position: absolute;
+      left: 27px;
+      top: 54px;
+      bottom: 54px;
+      width: 2px;
+      background: linear-gradient(180deg,
+        rgba(16,185,129,0.9) 0%,
+        rgba(6,182,212,0.7) 40%,
+        rgba(139,92,246,0.5) 75%,
+        rgba(16,185,129,0.3) 100%);
+      z-index: 0;
+    }
+    .hsw-vline::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px;
+      height: 50px;
+      background: linear-gradient(180deg, transparent, rgba(16,185,129,0.95), transparent);
+      border-radius: 2px;
+      animation: hsw-line-travel 3.5s ease-in-out infinite;
+    }
+    @media (max-width: 640px) { .hsw-vline { display: none; } }
+
+    /* Each step row */
+    .hsw-step {
+      position: relative;
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      gap: 1.75rem;
+      align-items: flex-start;
+      margin-bottom: 2rem;
+      z-index: 1;
+    }
+    .hsw-step:last-child { margin-bottom: 0; }
+    @media (max-width: 640px) {
+      .hsw-step {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+      }
+    }
+
+    /* Number node */
+    .hsw-node {
+      position: relative;
+      width: 56px;
+      height: 56px;
+      flex-shrink: 0;
+    }
+    .hsw-ring {
+      position: absolute;
+      inset: -7px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(16,185,129,0.3);
+      animation: hsw-ring-breathe 3s ease-in-out infinite;
+    }
+    .hsw-step:nth-child(2) .hsw-ring { animation-delay: -0.8s; border-color: rgba(6,182,212,0.3); }
+    .hsw-step:nth-child(3) .hsw-ring { animation-delay: -1.6s; border-color: rgba(139,92,246,0.3); }
+    .hsw-step:nth-child(4) .hsw-ring { animation-delay: -2.4s; border-color: rgba(16,185,129,0.3); }
+    .hsw-dot {
+      position: relative;
+      z-index: 1;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.02em;
+      animation: hsw-dot-pulse 3s ease-in-out infinite;
+    }
+    .hsw-step:nth-child(1) .hsw-dot { background: linear-gradient(135deg, #10b981, #34d399); animation-delay: 0s; }
+    .hsw-step:nth-child(2) .hsw-dot { background: linear-gradient(135deg, #06b6d4, #0ea5e9); animation-delay: -0.8s; }
+    .hsw-step:nth-child(3) .hsw-dot { background: linear-gradient(135deg, #8b5cf6, #a78bfa); animation-delay: -1.6s; }
+    .hsw-step:nth-child(4) .hsw-dot { background: linear-gradient(135deg, #10b981, #06b6d4); animation-delay: -2.4s; }
+    @media (max-width: 640px) {
+      .hsw-node { display: flex; align-items: center; gap: 0.75rem; width: auto; height: auto; }
+      .hsw-ring { display: none; }
+      .hsw-dot { width: 44px; height: 44px; flex-shrink: 0; }
+      .hsw-step-label-mobile {
+        font-size: 0.7rem; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 0.08em; color: var(--accent-primary, #10b981);
+      }
+    }
+
+    /* Card */
+    .hsw-card {
+      position: relative;
+      background: rgba(17, 24, 39, 0.72);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 1.25rem;
+      padding: 1.6rem 1.75rem;
+      overflow: hidden;
+      transition: border-color 0.35s ease, transform 0.35s ease, box-shadow 0.35s ease;
+    }
+    /* Subtle glow layer */
+    .hsw-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      pointer-events: none;
+    }
+    .hsw-step:nth-child(1) .hsw-card::before { background: radial-gradient(ellipse 60% 50% at 20% 50%, rgba(16,185,129,0.09), transparent); }
+    .hsw-step:nth-child(2) .hsw-card::before { background: radial-gradient(ellipse 60% 50% at 20% 50%, rgba(6,182,212,0.09), transparent); }
+    .hsw-step:nth-child(3) .hsw-card::before { background: radial-gradient(ellipse 60% 50% at 20% 50%, rgba(139,92,246,0.09), transparent); }
+    .hsw-step:nth-child(4) .hsw-card::before { background: radial-gradient(ellipse 60% 50% at 20% 50%, rgba(16,185,129,0.09), transparent); }
+    .hsw-step:hover .hsw-card {
+      transform: translateX(6px);
+      box-shadow: 0 20px 56px rgba(0,0,0,0.3), -2px 0 20px rgba(16,185,129,0.04);
+    }
+    .hsw-step:nth-child(1):hover .hsw-card { border-color: rgba(16,185,129,0.38); box-shadow: 0 20px 56px rgba(0,0,0,0.3), 0 0 30px rgba(16,185,129,0.06); }
+    .hsw-step:nth-child(2):hover .hsw-card { border-color: rgba(6,182,212,0.38); box-shadow: 0 20px 56px rgba(0,0,0,0.3), 0 0 30px rgba(6,182,212,0.06); }
+    .hsw-step:nth-child(3):hover .hsw-card { border-color: rgba(139,92,246,0.38); box-shadow: 0 20px 56px rgba(0,0,0,0.3), 0 0 30px rgba(139,92,246,0.06); }
+    .hsw-step:nth-child(4):hover .hsw-card { border-color: rgba(16,185,129,0.38); box-shadow: 0 20px 56px rgba(0,0,0,0.3), 0 0 30px rgba(16,185,129,0.06); }
+    .hsw-step:hover .hsw-card::before { opacity: 1; }
+
+    /* Card header row */
+    .hsw-card-head {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .hsw-icon {
+      width: 42px; height: 42px;
+      border-radius: 0.75rem;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .hsw-icon i { width: 20px; height: 20px; }
+    .hsw-step:nth-child(1) .hsw-icon { background: rgba(16,185,129,0.12); color: #10b981; }
+    .hsw-step:nth-child(2) .hsw-icon { background: rgba(6,182,212,0.12);  color: #06b6d4; }
+    .hsw-step:nth-child(3) .hsw-icon { background: rgba(139,92,246,0.12); color: #8b5cf6; }
+    .hsw-step:nth-child(4) .hsw-icon { background: rgba(16,185,129,0.12); color: #10b981; }
+
+    .hsw-head-meta { display: flex; flex-direction: column; gap: 0.2rem; }
+    .hsw-badge {
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      font-size: 0.65rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+      padding: 0.2rem 0.55rem; border-radius: 999px;
+    }
+    .hsw-step:nth-child(1) .hsw-badge { background: rgba(16,185,129,0.12); color: #10b981; }
+    .hsw-step:nth-child(2) .hsw-badge { background: rgba(6,182,212,0.12);  color: #06b6d4; }
+    .hsw-step:nth-child(3) .hsw-badge { background: rgba(139,92,246,0.12); color: #8b5cf6; }
+    .hsw-step:nth-child(4) .hsw-badge { background: rgba(16,185,129,0.12); color: #10b981; }
+
+    .hsw-status {
+      display: inline-flex; align-items: center; gap: 0.3rem;
+      font-size: 0.68rem; color: var(--text-muted, #94a3b8);
+    }
+    .hsw-status-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+    }
+    .hsw-status-dot.dot-green  { background: #10b981; box-shadow: 0 0 5px rgba(16,185,129,0.6); }
+    .hsw-status-dot.dot-cyan   { background: #06b6d4; box-shadow: 0 0 5px rgba(6,182,212,0.6); }
+    .hsw-status-dot.dot-purple { background: #8b5cf6; animation: hsw-ai-blink 1.2s ease-in-out infinite; }
+    .hsw-status-dot.dot-teal   { background: #10b981; box-shadow: 0 0 5px rgba(16,185,129,0.6); }
+
+    /* Title & desc */
+    .hsw-card h3 {
+      font-size: 1.1rem; font-weight: 700;
+      color: var(--text-primary, #f8fafc); margin-bottom: 0.4rem; line-height: 1.3;
+    }
+    .hsw-card p {
+      font-size: 0.9rem; color: var(--text-muted, #94a3b8);
+      line-height: 1.65; margin-bottom: 1.1rem;
+    }
+
+    /* Micro elements row */
+    .hsw-micro {
+      display: flex; flex-wrap: wrap; gap: 0.45rem; align-items: center;
+    }
+    .hsw-tag {
+      display: inline-flex; align-items: center; gap: 0.25rem;
+      padding: 0.22rem 0.6rem; border-radius: 6px;
+      font-size: 0.68rem; font-weight: 600;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: var(--text-muted, #94a3b8);
+      animation: hsw-float-tag 4s ease-in-out infinite;
+    }
+    .hsw-tag:nth-child(2) { animation-delay: -1.3s; }
+    .hsw-tag:nth-child(3) { animation-delay: -2.6s; }
+    .hsw-tag.tag-accent {
+      background: rgba(16,185,129,0.08);
+      border-color: rgba(16,185,129,0.2);
+      color: #10b981;
+    }
+    .hsw-tag.tag-cyan {
+      background: rgba(6,182,212,0.08);
+      border-color: rgba(6,182,212,0.2);
+      color: #06b6d4;
+    }
+    .hsw-tag.tag-purple {
+      background: rgba(139,92,246,0.08);
+      border-color: rgba(139,92,246,0.2);
+      color: #8b5cf6;
+    }
+    .hsw-tag i { width: 10px; height: 10px; }
+
+    /* AI progress bar (step 3) */
+    .hsw-progress-wrap {
+      margin-top: 0.75rem;
+      background: rgba(255,255,255,0.05);
+      border-radius: 999px; height: 4px; overflow: hidden;
+      width: 100%;
+    }
+    .hsw-progress-bar {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, #8b5cf6, #06b6d4);
+      border-radius: 999px;
+    }
+    .hsw-step:hover .hsw-progress-bar {
+      animation: hsw-bar-fill 1.2s ease forwards;
+    }
+    .hsw-progress-label {
+      display: flex; justify-content: space-between; align-items: center;
+      font-size: 0.65rem; color: var(--text-muted, #94a3b8); margin-top: 0.3rem;
+    }
+  </style>
+
   <div class="container">
     <div class="section-header">
       <span class="section-badge">
@@ -652,85 +920,131 @@
       <h2 class="section-title">De la photo à la<br><span class="gradient-text">pièce de vos rêves</span></h2>
       <p class="section-subtitle">4 étapes simples pour transformer n'importe quel espace</p>
     </div>
-    
-    <div class="steps-timeline">
-      <div class="timeline-line"></div>
-      
-      <div class="step-item">
-        <div class="step-number">
-          <span>01</span>
+
+    <div class="hsw-outer">
+      <div class="hsw-vline"></div>
+
+      <!-- STEP 1 -->
+      <div class="hsw-step" data-animate="fade-up" data-delay="100">
+        <div class="hsw-node">
+          <div class="hsw-ring"></div>
+          <div class="hsw-dot">01</div>
+          <span class="hsw-step-label-mobile">Étape 01</span>
         </div>
-        <div class="step-content">
-          <div class="step-icon">
-            <i data-lucide="upload-cloud"></i>
+        <div class="hsw-card">
+          <div class="hsw-card-head">
+            <div class="hsw-icon"><i data-lucide="upload-cloud"></i></div>
+            <div class="hsw-head-meta">
+              <span class="hsw-badge"><i data-lucide="upload"></i> Étape 01</span>
+              <span class="hsw-status">
+                <span class="hsw-status-dot dot-green"></span>
+                Prêt à recevoir
+              </span>
+            </div>
           </div>
           <h3>Téléchargez votre photo</h3>
           <p>Prenez une photo de n'importe quelle pièce et téléchargez-la en un clic.</p>
-        </div>
-        <div class="step-visual">
-          <div class="step-phone">
-            <i data-lucide="smartphone"></i>
-            <i data-lucide="camera" class="phone-icon"></i>
+          <div class="hsw-micro">
+            <span class="hsw-tag"><i data-lucide="file-image"></i> JPG</span>
+            <span class="hsw-tag"><i data-lucide="file-image"></i> PNG</span>
+            <span class="hsw-tag"><i data-lucide="file-image"></i> WEBP</span>
+            <span class="hsw-tag tag-accent"><i data-lucide="zap"></i> Instant upload</span>
           </div>
         </div>
       </div>
-      
-      <div class="step-item">
-        <div class="step-number">
-          <span>02</span>
+
+      <!-- STEP 2 -->
+      <div class="hsw-step" data-animate="fade-up" data-delay="200">
+        <div class="hsw-node">
+          <div class="hsw-ring"></div>
+          <div class="hsw-dot">02</div>
+          <span class="hsw-step-label-mobile">Étape 02</span>
         </div>
-        <div class="step-content">
-          <div class="step-icon">
-            <i data-lucide="pencil-ruler"></i>
+        <div class="hsw-card">
+          <div class="hsw-card-head">
+            <div class="hsw-icon"><i data-lucide="pencil-ruler"></i></div>
+            <div class="hsw-head-meta">
+              <span class="hsw-badge"><i data-lucide="sliders"></i> Étape 02</span>
+              <span class="hsw-status">
+                <span class="hsw-status-dot dot-cyan"></span>
+                Paramètres style
+              </span>
+            </div>
           </div>
           <h3>Décrivez votre vision</h3>
           <p>Indiquez vos préférences de style, budget et éléments indispensables.</p>
-        </div>
-        <div class="step-visual">
-          <div class="step-bubbles">
-            <span class="bubble">Moderne</span>
-            <span class="bubble">Lumineux</span>
-            <span class="bubble">€5K</span>
+          <div class="hsw-micro">
+            <span class="hsw-tag tag-cyan">Moderne</span>
+            <span class="hsw-tag tag-cyan">Lumineux</span>
+            <span class="hsw-tag tag-cyan">Minimaliste</span>
+            <span class="hsw-tag"><i data-lucide="banknote"></i> Budget libre</span>
           </div>
         </div>
       </div>
-      
-      <div class="step-item">
-        <div class="step-number">
-          <span>03</span>
+
+      <!-- STEP 3 -->
+      <div class="hsw-step" data-animate="fade-up" data-delay="300">
+        <div class="hsw-node">
+          <div class="hsw-ring"></div>
+          <div class="hsw-dot">03</div>
+          <span class="hsw-step-label-mobile">Étape 03</span>
         </div>
-        <div class="step-content">
-          <div class="step-icon">
-            <i data-lucide="sparkles"></i>
+        <div class="hsw-card">
+          <div class="hsw-card-head">
+            <div class="hsw-icon"><i data-lucide="sparkles"></i></div>
+            <div class="hsw-head-meta">
+              <span class="hsw-badge"><i data-lucide="cpu"></i> Étape 03</span>
+              <span class="hsw-status">
+                <span class="hsw-status-dot dot-purple"></span>
+                IA en traitement
+              </span>
+            </div>
           </div>
           <h3>Criby crée vos designs</h3>
           <p>Notre IA génère des maquettes photoréalistes en moins de 30 secondes.</p>
-        </div>
-        <div class="step-visual">
-          <div class="step-magic">
-            <div class="magic-circle"></div>
-            <i data-lucide="wand-2"></i>
+          <div class="hsw-micro">
+            <span class="hsw-tag tag-purple"><i data-lucide="timer"></i> &lt; 30 secondes</span>
+            <span class="hsw-tag tag-purple"><i data-lucide="layers"></i> 24 outils IA</span>
+            <span class="hsw-tag"><i data-lucide="image"></i> Rendu HD</span>
+          </div>
+          <div class="hsw-progress-wrap">
+            <div class="hsw-progress-bar"></div>
+          </div>
+          <div class="hsw-progress-label">
+            <span>Génération en cours…</span>
+            <span>68%</span>
           </div>
         </div>
       </div>
-      
-      <div class="step-item">
-        <div class="step-number">
-          <span>04</span>
+
+      <!-- STEP 4 -->
+      <div class="hsw-step" data-animate="fade-up" data-delay="400">
+        <div class="hsw-node">
+          <div class="hsw-ring"></div>
+          <div class="hsw-dot">04</div>
+          <span class="hsw-step-label-mobile">Étape 04</span>
         </div>
-        <div class="step-content">
-          <div class="step-icon">
-            <i data-lucide="hammer"></i>
+        <div class="hsw-card">
+          <div class="hsw-card-head">
+            <div class="hsw-icon"><i data-lucide="hammer"></i></div>
+            <div class="hsw-head-meta">
+              <span class="hsw-badge"><i data-lucide="check-circle"></i> Étape 04</span>
+              <span class="hsw-status">
+                <span class="hsw-status-dot dot-teal"></span>
+                Projet validé
+              </span>
+            </div>
           </div>
           <h3>Réalisez votre projet</h3>
           <p>DIY avec notre guide ou connectez-vous avec des entrepreneurs vérifiés.</p>
-        </div>
-        <div class="step-visual">
-          <div class="step-success">
-            <i data-lucide="check-circle"></i>
+          <div class="hsw-micro">
+            <span class="hsw-tag tag-accent"><i data-lucide="wrench"></i> DIY</span>
+            <span class="hsw-tag tag-accent"><i data-lucide="hard-hat"></i> Pro</span>
+            <span class="hsw-tag"><i data-lucide="shield-check"></i> Entrepreneurs vérifiés</span>
           </div>
         </div>
       </div>
+
     </div>
   </div>
 </section>
