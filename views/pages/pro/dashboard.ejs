@@ -519,41 +519,61 @@
   <div class="pro-page-header">
     <div>
       <div class="pro-page-title">Leads</div>
-      <div class="pro-page-sub">Vos leads acceptés · Suivez le statut de vos clients potentiels</div>
+      <div class="pro-page-sub">Historique de vos leads acceptés · Gérez le suivi de vos clients potentiels</div>
     </div>
   </div>
 
   <style>
-  .pro-lead-contact {
+  /* ── Filter tabs ── */
+  .pll-filters {
     display: flex;
-    flex-direction: column;
-    gap: 4px;
-    padding: 6px 0 2px;
-    border-top: 1px solid var(--pro-border);
-    margin-top: 4px;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 18px;
   }
-  .pro-lead-contact-link {
+  .pll-tab {
     display: flex;
     align-items: center;
     gap: 6px;
-    font-size: 0.72rem;
-    color: var(--pro-cyan);
-    text-decoration: none;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--pro-border);
+    background: transparent;
+    color: rgba(255,255,255,0.4);
+    font-size: 0.76rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s;
+    font-family: inherit;
     white-space: nowrap;
   }
-  .pro-lead-contact-link:hover { text-decoration: underline; }
-  .pro-lead-contact-link svg { width: 11px; height: 11px; flex-shrink: 0; }
-  .pro-lead-cat-chip {
+  .pll-tab:hover { color: #e2e8f0; background: rgba(255,255,255,0.04); }
+  .pll-tab.active {
+    background: rgba(16,185,129,0.1);
+    border-color: rgba(16,185,129,0.4);
+    color: var(--pro-green);
+  }
+  .pll-tab-count {
+    font-size: 0.68rem;
+    padding: 1px 6px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.4);
+  }
+  .pll-tab.active .pll-tab-count {
+    background: rgba(16,185,129,0.2);
+    color: var(--pro-green);
+  }
+
+  /* ── Category chips ── */
+  .pll-cat-chip {
     font-size: 0.63rem;
     font-weight: 700;
-    padding: 2px 8px;
+    padding: 2px 9px;
     border-radius: 20px;
     text-transform: uppercase;
     letter-spacing: 0.04em;
     white-space: nowrap;
-    flex-shrink: 0;
   }
   .plc-peinture     { background: rgba(139,92,246,0.12);  color: #a78bfa; }
   .plc-cuisine      { background: rgba(245,158,11,0.12);  color: var(--pro-amber); }
@@ -562,7 +582,105 @@
   .plc-mobilier     { background: rgba(236,72,153,0.12);  color: #f472b6; }
   .plc-decoration   { background: rgba(99,102,241,0.12);  color: #818cf8; }
   .plc-exterieur    { background: rgba(16,185,129,0.08);  color: #34d399; }
-  .plc-autre        { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.3); }
+  .plc-autre        { background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.28); }
+
+  /* ── List table ── */
+  .pll-table {
+    background: var(--pro-card);
+    border: 1px solid var(--pro-border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+  .pll-thead {
+    display: grid;
+    grid-template-columns: 1.8fr 1.8fr 1.3fr 1fr 1fr 1.4fr 80px;
+    padding: 10px 18px;
+    border-bottom: 1px solid var(--pro-border);
+    background: rgba(255,255,255,0.03);
+  }
+  .pll-th {
+    font-size: 0.66rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: rgba(255,255,255,0.28);
+  }
+  .pll-row {
+    display: grid;
+    grid-template-columns: 1.8fr 1.8fr 1.3fr 1fr 1fr 1.4fr 80px;
+    align-items: center;
+    padding: 13px 18px;
+    border-bottom: 1px solid var(--pro-border);
+    border-left: 3px solid transparent;
+    transition: background 0.15s, border-left-color 0.2s;
+    gap: 4px;
+  }
+  .pll-row:last-child { border-bottom: none; }
+  .pll-row:hover { background: rgba(255,255,255,0.02); }
+  .pll-row[data-status="new_lead"]  { border-left-color: var(--pro-blue); }
+  .pll-row[data-status="contacted"] { border-left-color: var(--pro-cyan); }
+  .pll-row[data-status="won"]       { border-left-color: var(--pro-green); }
+  .pll-row[data-status="lost"]      { border-left-color: #f87171; }
+  .pll-row[data-status="archived"]  { border-left-color: var(--pro-text3); opacity: 0.55; }
+  .pll-cell {
+    font-size: 0.8rem;
+    color: #cbd5e1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .pll-client-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #e2e8f0;
+  }
+  .pll-project-type {
+    font-size: 0.76rem;
+    color: rgba(255,255,255,0.5);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .pll-date { font-size: 0.74rem; color: rgba(255,255,255,0.35); }
+  .pll-status-sel {
+    background: transparent;
+    border: 1px solid var(--pro-border);
+    color: #e2e8f0;
+    font-family: inherit;
+    font-size: 0.72rem;
+    font-weight: 600;
+    border-radius: 20px;
+    padding: 4px 10px;
+    cursor: pointer;
+    outline: none;
+    width: 100%;
+    max-width: 130px;
+  }
+  .pll-status-sel option { background: #1a2332; color: #e2e8f0; }
+  .pll-row[data-status="new_lead"]  .pll-status-sel { border-color: rgba(59,130,246,0.5);  color: #60a5fa; }
+  .pll-row[data-status="contacted"] .pll-status-sel { border-color: rgba(6,182,212,0.5);   color: var(--pro-cyan); }
+  .pll-row[data-status="won"]       .pll-status-sel { border-color: rgba(16,185,129,0.5);  color: var(--pro-green); }
+  .pll-row[data-status="lost"]      .pll-status-sel { border-color: rgba(239,68,68,0.4);   color: #f87171; }
+  .pll-row[data-status="archived"]  .pll-status-sel { border-color: rgba(255,255,255,0.15); color: rgba(255,255,255,0.3); }
+  .pll-btn-voir {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 12px;
+    border-radius: 7px;
+    border: 1px solid var(--pro-border);
+    background: transparent;
+    color: rgba(255,255,255,0.5);
+    font-size: 0.73rem;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .pll-btn-voir:hover { background: rgba(255,255,255,0.06); color: #e2e8f0; border-color: rgba(255,255,255,0.2); }
+
+  /* ── Empty state ── */
   .pro-leads-empty {
     display: flex;
     flex-direction: column;
@@ -576,6 +694,168 @@
   }
   .pro-leads-empty svg { width: 38px; height: 38px; }
   .pro-leads-empty p { font-size: 0.82rem; margin: 0; max-width: 320px; }
+
+  /* ── Modal ── */
+  .pll-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .pll-overlay.open { display: flex; }
+  .pll-modal {
+    background: var(--pro-card);
+    border: 1px solid var(--pro-border);
+    border-radius: 16px;
+    width: 100%;
+    max-width: 680px;
+    max-height: 88vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .pll-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 22px 16px;
+    border-bottom: 1px solid var(--pro-border);
+    flex-shrink: 0;
+  }
+  .pll-modal-title { font-size: 1rem; font-weight: 700; color: #e2e8f0; }
+  .pll-modal-sub { font-size: 0.76rem; color: rgba(255,255,255,0.35); margin-top: 2px; }
+  .pll-modal-close {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    border: 1px solid var(--pro-border);
+    background: transparent;
+    color: rgba(255,255,255,0.45);
+    font-size: 1.1rem;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+    transition: all 0.15s;
+  }
+  .pll-modal-close:hover { background: rgba(255,255,255,0.06); color: #e2e8f0; }
+  .pll-modal-body {
+    overflow-y: auto;
+    padding: 20px 22px;
+    flex: 1;
+  }
+  .pll-detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 24px;
+    margin-bottom: 18px;
+  }
+  .pll-detail-section-title {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.28);
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--pro-border);
+  }
+  .pll-dr {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin-bottom: 9px;
+  }
+  .pll-dl {
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.28);
+    min-width: 80px;
+    flex-shrink: 0;
+    padding-top: 1px;
+  }
+  .pll-dv {
+    font-size: 0.78rem;
+    color: #cbd5e1;
+    word-break: break-word;
+    line-height: 1.45;
+  }
+  .pll-dv a { color: var(--pro-cyan); text-decoration: none; }
+  .pll-dv a:hover { text-decoration: underline; }
+  .pll-detail-desc {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--pro-border);
+  }
+  .pll-detail-desc p {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.5);
+    font-style: italic;
+    line-height: 1.65;
+    margin: 10px 0 0;
+  }
+  .pll-detail-photos {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--pro-border);
+  }
+  .pll-photos-grid {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+  }
+  .pll-photo-thumb {
+    width: 80px; height: 80px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid var(--pro-border);
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+  .pll-photo-thumb:hover { opacity: 0.8; }
+  .pll-modal-status-sel {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid var(--pro-border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .pll-modal-status-sel label {
+    font-size: 0.72rem;
+    color: rgba(255,255,255,0.35);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .pll-modal-status-sel select {
+    background: var(--pro-card2);
+    border: 1px solid var(--pro-border);
+    color: #e2e8f0;
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    border-radius: 8px;
+    padding: 6px 12px;
+    cursor: pointer;
+    outline: none;
+  }
+  .pll-modal-status-sel select option { background: #1a2332; }
+
+  /* ── Responsive ── */
+  @media (max-width: 768px) {
+    .pll-thead { display: none; }
+    .pll-row {
+      grid-template-columns: 1fr;
+      gap: 8px;
+      padding: 14px 16px;
+    }
+    .pll-cell { white-space: normal; }
+    .pll-status-sel { max-width: none; }
+    .pll-detail-grid { grid-template-columns: 1fr; }
+    .pll-modal { max-height: 95vh; }
+  }
   </style>
 
   <%
@@ -594,7 +874,23 @@
       if (s.indexOf('exter') !== -1 || s.indexOf('jardin') !== -1 || s.indexOf('terrasse') !== -1) return 'exterieur';
       return 'autre';
     };
+
+    var countNew      = acceptedLeads.filter(function(q) { return (q.proLeadStatus || 'new_lead') === 'new_lead'; }).length;
+    var countContact  = acceptedLeads.filter(function(q) { return q.proLeadStatus === 'contacted'; }).length;
+    var countWon      = acceptedLeads.filter(function(q) { return q.proLeadStatus === 'won'; }).length;
+    var countLost     = acceptedLeads.filter(function(q) { return q.proLeadStatus === 'lost'; }).length;
+    var countArchived = acceptedLeads.filter(function(q) { return q.proLeadStatus === 'archived'; }).length;
   %>
+
+  <!-- Filter tabs -->
+  <div class="pll-filters" id="pll-filters">
+    <button class="pll-tab active" data-filter="">Tous <span class="pll-tab-count"><%= acceptedLeads.length %></span></button>
+    <button class="pll-tab" data-filter="new_lead">Nouveau lead <span class="pll-tab-count"><%= countNew %></span></button>
+    <button class="pll-tab" data-filter="contacted">Contacté <span class="pll-tab-count"><%= countContact %></span></button>
+    <button class="pll-tab" data-filter="won">Client gagné <span class="pll-tab-count"><%= countWon %></span></button>
+    <button class="pll-tab" data-filter="lost">Client perdu <span class="pll-tab-count"><%= countLost %></span></button>
+    <button class="pll-tab" data-filter="archived">Archivé <span class="pll-tab-count"><%= countArchived %></span></button>
+  </div>
 
   <% if (acceptedLeads.length === 0) { %>
     <div class="pro-leads-empty">
@@ -602,198 +898,276 @@
       <p>Aucun lead accepté pour le moment. Acceptez des demandes depuis la page <strong>Demandes</strong> pour les voir apparaître ici.</p>
     </div>
   <% } else { %>
-  <div class="pro-kanban">
 
-    <!-- COL : Nouveau lead -->
-    <% var colNewLead = acceptedLeads.filter(function(q) { return (q.proLeadStatus || 'new_lead') === 'new_lead'; }); %>
-    <div class="pro-kanban-col" id="leads-col-new_lead">
-      <div class="pro-kanban-header">
-        <div class="pro-kanban-title"><span class="pro-kanban-dot" style="background:var(--pro-blue)"></span> Nouveau lead</div>
-        <span class="pro-kanban-count" id="leads-count-new_lead"><%= colNewLead.length %></span>
-      </div>
-      <div class="pro-kanban-items" id="leads-items-new_lead">
-        <% colNewLead.forEach(function(q) { var cat = getLeadCat(q); %>
-        <div class="pro-lead-card" data-id="<%= q._id %>" data-status="new_lead">
-          <div class="pro-lead-card-header">
-            <div>
-              <div class="pro-lead-name"><%= q.firstName %> <%= q.lastName %></div>
-              <div class="pro-lead-room"><%= q.service || q.specialty || 'Projet' %></div>
-            </div>
-            <span class="pro-lead-cat-chip plc-<%= cat %>"><%= q.specialty || 'Autre' %></span>
-          </div>
-          <div class="pro-lead-meta">
-            <% if (q.city) { %><span class="pro-lead-tag"><i data-lucide="map-pin"></i> <%= q.city %><% if (q.province) { %>, <%= q.province %><% } %></span><% } %>
-            <span class="pro-lead-tag"><i data-lucide="calendar"></i> <%= new Date(q.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) %></span>
-          </div>
-          <div class="pro-lead-contact">
-            <a href="tel:<%= q.phone %>" class="pro-lead-contact-link"><i data-lucide="phone"></i> <%= q.phone %></a>
-            <a href="mailto:<%= q.email %>" class="pro-lead-contact-link"><i data-lucide="mail"></i> <%= q.email %></a>
-          </div>
-          <div class="pro-lead-actions">
-            <button class="pro-lead-act-btn" onclick="proLeadSetStatus('<%= q._id %>', 'contacted')"><i data-lucide="phone-outgoing"></i> Contacté</button>
-            <button class="pro-lead-act-btn accept" onclick="proLeadSetStatus('<%= q._id %>', 'won')"><i data-lucide="check"></i> Gagné</button>
-            <button class="pro-lead-act-btn decline" onclick="proLeadSetStatus('<%= q._id %>', 'lost')"><i data-lucide="x"></i> Perdu</button>
-          </div>
-        </div>
-        <% }); %>
-      </div>
+  <!-- JSON data blobs (read by modal JS) -->
+  <% acceptedLeads.forEach(function(q) { %>
+  <script type="application/json" id="lead-data-<%= q._id %>"><%- JSON.stringify(q) %></script>
+  <% }); %>
+
+  <!-- List table -->
+  <div class="pll-table">
+    <div class="pll-thead">
+      <div class="pll-th">Client</div>
+      <div class="pll-th">Projet</div>
+      <div class="pll-th">Catégorie</div>
+      <div class="pll-th">Ville</div>
+      <div class="pll-th">Date</div>
+      <div class="pll-th">Statut</div>
+      <div class="pll-th"></div>
     </div>
 
-    <!-- COL : Contacté hors plateforme -->
-    <% var colContacted = acceptedLeads.filter(function(q) { return q.proLeadStatus === 'contacted'; }); %>
-    <div class="pro-kanban-col" id="leads-col-contacted">
-      <div class="pro-kanban-header">
-        <div class="pro-kanban-title"><span class="pro-kanban-dot" style="background:var(--pro-cyan)"></span> Contacté</div>
-        <span class="pro-kanban-count" id="leads-count-contacted"><%= colContacted.length %></span>
-      </div>
-      <div class="pro-kanban-items" id="leads-items-contacted">
-        <% colContacted.forEach(function(q) { var cat = getLeadCat(q); %>
-        <div class="pro-lead-card" data-id="<%= q._id %>" data-status="contacted">
-          <div class="pro-lead-card-header">
-            <div>
-              <div class="pro-lead-name"><%= q.firstName %> <%= q.lastName %></div>
-              <div class="pro-lead-room"><%= q.service || q.specialty || 'Projet' %></div>
-            </div>
-            <span class="pro-lead-cat-chip plc-<%= cat %>"><%= q.specialty || 'Autre' %></span>
-          </div>
-          <div class="pro-lead-meta">
-            <% if (q.city) { %><span class="pro-lead-tag"><i data-lucide="map-pin"></i> <%= q.city %><% if (q.province) { %>, <%= q.province %><% } %></span><% } %>
-            <span class="pro-lead-tag"><i data-lucide="calendar"></i> <%= new Date(q.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) %></span>
-          </div>
-          <div class="pro-lead-contact">
-            <a href="tel:<%= q.phone %>" class="pro-lead-contact-link"><i data-lucide="phone"></i> <%= q.phone %></a>
-            <a href="mailto:<%= q.email %>" class="pro-lead-contact-link"><i data-lucide="mail"></i> <%= q.email %></a>
-          </div>
-          <div class="pro-lead-actions">
-            <button class="pro-lead-act-btn accept" onclick="proLeadSetStatus('<%= q._id %>', 'won')"><i data-lucide="check"></i> Gagné</button>
-            <button class="pro-lead-act-btn decline" onclick="proLeadSetStatus('<%= q._id %>', 'lost')"><i data-lucide="x"></i> Perdu</button>
-            <button class="pro-lead-act-btn" onclick="proLeadSetStatus('<%= q._id %>', 'archived')"><i data-lucide="archive"></i> Archiver</button>
-          </div>
-        </div>
-        <% }); %>
-      </div>
-    </div>
+    <% acceptedLeads.forEach(function(q) {
+         var cat = getLeadCat(q);
+         var leadStatus = q.proLeadStatus || 'new_lead';
+    %>
+    <div class="pll-row" data-id="<%= q._id %>" data-status="<%= leadStatus %>">
 
-    <!-- COL : Client gagné -->
-    <% var colWon = acceptedLeads.filter(function(q) { return q.proLeadStatus === 'won'; }); %>
-    <div class="pro-kanban-col" id="leads-col-won">
-      <div class="pro-kanban-header">
-        <div class="pro-kanban-title"><span class="pro-kanban-dot" style="background:var(--pro-green)"></span> Client gagné</div>
-        <span class="pro-kanban-count" id="leads-count-won"><%= colWon.length %></span>
+      <div class="pll-cell">
+        <div class="pll-client-name"><%= q.firstName %> <%= q.lastName %></div>
       </div>
-      <div class="pro-kanban-items" id="leads-items-won">
-        <% colWon.forEach(function(q) { var cat = getLeadCat(q); %>
-        <div class="pro-lead-card" data-id="<%= q._id %>" data-status="won">
-          <div class="pro-lead-card-header">
-            <div>
-              <div class="pro-lead-name"><%= q.firstName %> <%= q.lastName %></div>
-              <div class="pro-lead-room"><%= q.service || q.specialty || 'Projet' %></div>
-            </div>
-            <span class="pro-lead-cat-chip plc-<%= cat %>"><%= q.specialty || 'Autre' %></span>
-          </div>
-          <div class="pro-lead-meta">
-            <% if (q.city) { %><span class="pro-lead-tag"><i data-lucide="map-pin"></i> <%= q.city %><% if (q.province) { %>, <%= q.province %><% } %></span><% } %>
-            <span class="pro-lead-tag"><i data-lucide="calendar"></i> <%= new Date(q.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) %></span>
-          </div>
-          <div class="pro-lead-contact">
-            <a href="tel:<%= q.phone %>" class="pro-lead-contact-link"><i data-lucide="phone"></i> <%= q.phone %></a>
-            <a href="mailto:<%= q.email %>" class="pro-lead-contact-link"><i data-lucide="mail"></i> <%= q.email %></a>
-          </div>
-          <div class="pro-lead-actions">
-            <button class="pro-lead-act-btn" onclick="proLeadSetStatus('<%= q._id %>', 'archived')"><i data-lucide="archive"></i> Archiver</button>
-          </div>
-        </div>
-        <% }); %>
-      </div>
-    </div>
 
-    <!-- COL : Client perdu -->
-    <% var colLost = acceptedLeads.filter(function(q) { return q.proLeadStatus === 'lost'; }); %>
-    <div class="pro-kanban-col" id="leads-col-lost">
-      <div class="pro-kanban-header">
-        <div class="pro-kanban-title"><span class="pro-kanban-dot" style="background:#f87171"></span> Client perdu</div>
-        <span class="pro-kanban-count" id="leads-count-lost"><%= colLost.length %></span>
+      <div class="pll-cell">
+        <div class="pll-project-type"><%= q.service || q.specialty || '-' %></div>
       </div>
-      <div class="pro-kanban-items" id="leads-items-lost">
-        <% colLost.forEach(function(q) { var cat = getLeadCat(q); %>
-        <div class="pro-lead-card" data-id="<%= q._id %>" data-status="lost">
-          <div class="pro-lead-card-header">
-            <div>
-              <div class="pro-lead-name"><%= q.firstName %> <%= q.lastName %></div>
-              <div class="pro-lead-room"><%= q.service || q.specialty || 'Projet' %></div>
-            </div>
-            <span class="pro-lead-cat-chip plc-<%= cat %>"><%= q.specialty || 'Autre' %></span>
-          </div>
-          <div class="pro-lead-meta">
-            <% if (q.city) { %><span class="pro-lead-tag"><i data-lucide="map-pin"></i> <%= q.city %><% if (q.province) { %>, <%= q.province %><% } %></span><% } %>
-            <span class="pro-lead-tag"><i data-lucide="calendar"></i> <%= new Date(q.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) %></span>
-          </div>
-          <div class="pro-lead-contact">
-            <a href="tel:<%= q.phone %>" class="pro-lead-contact-link"><i data-lucide="phone"></i> <%= q.phone %></a>
-            <a href="mailto:<%= q.email %>" class="pro-lead-contact-link"><i data-lucide="mail"></i> <%= q.email %></a>
-          </div>
-          <div class="pro-lead-actions">
-            <button class="pro-lead-act-btn" onclick="proLeadSetStatus('<%= q._id %>', 'contacted')"><i data-lucide="phone-outgoing"></i> Réessayer</button>
-            <button class="pro-lead-act-btn" onclick="proLeadSetStatus('<%= q._id %>', 'archived')"><i data-lucide="archive"></i> Archiver</button>
-          </div>
-        </div>
-        <% }); %>
-      </div>
-    </div>
 
-    <!-- COL : Archivé -->
-    <% var colArchived = acceptedLeads.filter(function(q) { return q.proLeadStatus === 'archived'; }); %>
-    <div class="pro-kanban-col" id="leads-col-archived">
-      <div class="pro-kanban-header">
-        <div class="pro-kanban-title"><span class="pro-kanban-dot" style="background:var(--pro-text3)"></span> Archivé</div>
-        <span class="pro-kanban-count" id="leads-count-archived"><%= colArchived.length %></span>
+      <div class="pll-cell">
+        <span class="pll-cat-chip plc-<%= cat %>"><%= q.specialty || 'Autre' %></span>
       </div>
-      <div class="pro-kanban-items" id="leads-items-archived">
-        <% colArchived.forEach(function(q) { var cat = getLeadCat(q); %>
-        <div class="pro-lead-card" style="opacity:0.6;" data-id="<%= q._id %>" data-status="archived">
-          <div class="pro-lead-card-header">
-            <div>
-              <div class="pro-lead-name"><%= q.firstName %> <%= q.lastName %></div>
-              <div class="pro-lead-room"><%= q.service || q.specialty || 'Projet' %></div>
-            </div>
-            <span class="pro-lead-cat-chip plc-<%= cat %>"><%= q.specialty || 'Autre' %></span>
-          </div>
-          <div class="pro-lead-meta">
-            <% if (q.city) { %><span class="pro-lead-tag"><i data-lucide="map-pin"></i> <%= q.city %><% if (q.province) { %>, <%= q.province %><% } %></span><% } %>
-            <span class="pro-lead-tag"><i data-lucide="calendar"></i> <%= new Date(q.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' }) %></span>
-          </div>
-        </div>
-        <% }); %>
-      </div>
-    </div>
 
-  </div><!-- /.pro-kanban -->
+      <div class="pll-cell pll-date"><%= q.city || '-' %></div>
+
+      <div class="pll-cell pll-date">
+        <%= new Date(q.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) %>
+      </div>
+
+      <div class="pll-cell">
+        <select class="pll-status-sel" onchange="proLeadSetStatus('<%= q._id %>', this.value)">
+          <option value="new_lead"  <% if (leadStatus === 'new_lead')  { %>selected<% } %>>Nouveau lead</option>
+          <option value="contacted" <% if (leadStatus === 'contacted') { %>selected<% } %>>Contacté</option>
+          <option value="won"       <% if (leadStatus === 'won')       { %>selected<% } %>>Client gagné</option>
+          <option value="lost"      <% if (leadStatus === 'lost')      { %>selected<% } %>>Client perdu</option>
+          <option value="archived"  <% if (leadStatus === 'archived')  { %>selected<% } %>>Archivé</option>
+        </select>
+      </div>
+
+      <div class="pll-cell">
+        <button class="pll-btn-voir" onclick="pllOpenModal('<%= q._id %>')">Voir</button>
+      </div>
+
+    </div>
+    <% }); %>
+  </div>
+
   <% } %>
 
+  <!-- ── Modal ── -->
+  <div class="pll-overlay" id="pll-overlay">
+    <div class="pll-modal" id="pll-modal">
+      <div class="pll-modal-header">
+        <div>
+          <div class="pll-modal-title" id="pll-modal-title"></div>
+          <div class="pll-modal-sub" id="pll-modal-sub"></div>
+        </div>
+        <button class="pll-modal-close" id="pll-modal-close">
+          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="pll-modal-body" id="pll-modal-body"></div>
+    </div>
+  </div>
+
   <script>
-  function proLeadSetStatus(id, newStatus) {
-    fetch('/pro/leads/' + id + '/lead-status', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ proLeadStatus: newStatus })
-    })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (!data.success) return;
-      var card = document.querySelector('.pro-lead-card[data-id="' + id + '"]');
-      if (!card) return;
-      var oldStatus = card.getAttribute('data-status');
-      card.setAttribute('data-status', newStatus);
-      var targetItems = document.getElementById('leads-items-' + newStatus);
-      if (targetItems) targetItems.appendChild(card);
-      var oldCount = document.getElementById('leads-count-' + oldStatus);
-      var newCount = document.getElementById('leads-count-' + newStatus);
-      if (oldCount) oldCount.textContent = Math.max(0, parseInt(oldCount.textContent || '0') - 1);
-      if (newCount) newCount.textContent = parseInt(newCount.textContent || '0') + 1;
-      if (typeof lucide !== 'undefined') lucide.createIcons();
-    })
-    .catch(function(e) { console.error(e); });
-  }
+  (function() {
+    var pllCurrentFilter = '';
+
+    var TIMING_LABELS = {
+      asap: 'Dès que possible',
+      week: "D'ici une semaine",
+      later: "Dans plus d'une semaine",
+      flexible: 'Flexible'
+    };
+    var STATUS_LABELS = {
+      new_lead:  'Nouveau lead',
+      contacted: 'Contacté',
+      won:       'Client gagné',
+      lost:      'Client perdu',
+      archived:  'Archivé'
+    };
+
+    function escHtml(s) {
+      return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    /* ── Status update ── */
+    window.proLeadSetStatus = function(id, newStatus) {
+      fetch('/pro/leads/' + id + '/lead-status', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ proLeadStatus: newStatus })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!data.success) return;
+        var row = document.querySelector('.pll-row[data-id="' + id + '"]');
+        if (row) {
+          row.setAttribute('data-status', newStatus);
+          // sync select in case called from modal
+          var sel = row.querySelector('.pll-status-sel');
+          if (sel) sel.value = newStatus;
+        }
+        // Update modal status select if open
+        var modalSel = document.getElementById('pll-modal-status-select');
+        if (modalSel && modalSel.getAttribute('data-id') === id) modalSel.value = newStatus;
+        pllApplyFilter(pllCurrentFilter);
+        pllUpdateCounts();
+      })
+      .catch(function(e) { console.error(e); });
+    };
+
+    /* ── Filter ── */
+    function pllApplyFilter(filter) {
+      pllCurrentFilter = filter;
+      var rows = document.querySelectorAll('.pll-row');
+      rows.forEach(function(row) {
+        if (!filter || row.getAttribute('data-status') === filter) {
+          row.style.display = '';
+        } else {
+          row.style.display = 'none';
+        }
+      });
+    }
+
+    function pllUpdateCounts() {
+      var rows = document.querySelectorAll('.pll-row');
+      var counts = {};
+      counts[''] = 0;
+      counts['new_lead'] = 0;
+      counts['contacted'] = 0;
+      counts['won'] = 0;
+      counts['lost'] = 0;
+      counts['archived'] = 0;
+      rows.forEach(function(row) {
+        var s = row.getAttribute('data-status');
+        counts['']++;
+        if (counts[s] !== undefined) counts[s]++;
+      });
+      var tabs = document.querySelectorAll('.pll-tab');
+      tabs.forEach(function(tab) {
+        var f = tab.getAttribute('data-filter');
+        var countEl = tab.querySelector('.pll-tab-count');
+        if (countEl && counts[f] !== undefined) countEl.textContent = counts[f];
+      });
+    }
+
+    var pllTabs = document.querySelectorAll('#pll-filters .pll-tab');
+    pllTabs.forEach(function(tab) {
+      tab.addEventListener('click', function() {
+        pllTabs.forEach(function(t) { t.classList.remove('active'); });
+        this.classList.add('active');
+        pllApplyFilter(this.getAttribute('data-filter'));
+      });
+    });
+
+    /* ── Modal ── */
+    window.pllOpenModal = function(id) {
+      var dataEl = document.getElementById('lead-data-' + id);
+      if (!dataEl) return;
+      var q;
+      try { q = JSON.parse(dataEl.textContent || dataEl.innerHTML); }
+      catch(e) { console.error(e); return; }
+
+      var name = escHtml((q.firstName || '') + ' ' + (q.lastName || ''));
+      document.getElementById('pll-modal-title').textContent = (q.firstName || '') + ' ' + (q.lastName || '');
+      document.getElementById('pll-modal-sub').textContent = q.service || q.specialty || '';
+
+      var addr = '';
+      if (q.address) addr += escHtml(q.address);
+      if (q.apartment) addr += (addr ? ', Apt ' : 'Apt ') + escHtml(q.apartment);
+      if (q.city) addr += (addr ? ', ' : '') + escHtml(q.city);
+      if (q.province) addr += (addr ? ', ' : '') + escHtml(q.province);
+      if (q.contactPostalCode) addr += ' ' + escHtml(q.contactPostalCode);
+
+      var recvDate = q.createdAt ? new Date(q.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '-';
+      var timing = TIMING_LABELS[q.timing] || escHtml(q.timing) || '-';
+      var currentStatus = q.proLeadStatus || 'new_lead';
+
+      function dr(label, val) {
+        return '<div class="pll-dr"><span class="pll-dl">' + label + '</span><span class="pll-dv">' + (val || '-') + '</span></div>';
+      }
+
+      var html = '<div class="pll-detail-grid">';
+
+      html += '<div>';
+      html += '<div class="pll-detail-section-title">Contact</div>';
+      html += dr('Nom', name);
+      html += dr('Téléphone', q.phone ? '<a href="tel:' + escHtml(q.phone) + '">' + escHtml(q.phone) + '</a>' : '-');
+      if (q.altPhone) html += dr('Tél. alt.', '<a href="tel:' + escHtml(q.altPhone) + '">' + escHtml(q.altPhone) + '</a>');
+      html += dr('Courriel', q.email ? '<a href="mailto:' + escHtml(q.email) + '">' + escHtml(q.email) + '</a>' : '-');
+      html += dr('Adresse', addr || '-');
+      html += dr('Code postal', escHtml(q.postalCode) || '-');
+      html += '</div>';
+
+      html += '<div>';
+      html += '<div class="pll-detail-section-title">Projet</div>';
+      html += dr('Type de projet', escHtml(q.service));
+      html += dr('Catégorie', escHtml(q.specialty));
+      html += dr('Délai souhaité', timing);
+      html += dr('Reçu le', recvDate);
+      html += '</div>';
+
+      html += '</div>';
+
+      if (q.description && String(q.description).trim()) {
+        html += '<div class="pll-detail-desc">';
+        html += '<div class="pll-detail-section-title">Description du besoin</div>';
+        html += '<p>' + escHtml(q.description) + '</p>';
+        html += '</div>';
+      }
+
+      if (q.photos && q.photos.length > 0) {
+        html += '<div class="pll-detail-photos">';
+        html += '<div class="pll-detail-section-title">Photos / Fichiers</div>';
+        html += '<div class="pll-photos-grid">';
+        q.photos.forEach(function(photo) {
+          html += '<img src="' + escHtml(photo) + '" alt="Photo" class="pll-photo-thumb" onclick="window.open(this.src,\'_blank\')">';
+        });
+        html += '</div>';
+        html += '</div>';
+      }
+
+      html += '<div class="pll-modal-status-sel">';
+      html += '<label>Statut :</label>';
+      html += '<select id="pll-modal-status-select" data-id="' + escHtml(q._id) + '" onchange="proLeadSetStatus(this.getAttribute(\'data-id\'), this.value)">';
+      var opts = [
+        ['new_lead', 'Nouveau lead'],
+        ['contacted', 'Contacté'],
+        ['won', 'Client gagné'],
+        ['lost', 'Client perdu'],
+        ['archived', 'Archivé']
+      ];
+      opts.forEach(function(opt) {
+        html += '<option value="' + opt[0] + '"' + (opt[0] === currentStatus ? ' selected' : '') + '>' + opt[1] + '</option>';
+      });
+      html += '</select>';
+      html += '</div>';
+
+      document.getElementById('pll-modal-body').innerHTML = html;
+      document.getElementById('pll-overlay').classList.add('open');
+    };
+
+    document.getElementById('pll-modal-close').addEventListener('click', function() {
+      document.getElementById('pll-overlay').classList.remove('open');
+    });
+
+    document.getElementById('pll-overlay').addEventListener('click', function(e) {
+      if (e.target === this) this.classList.remove('open');
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') document.getElementById('pll-overlay').classList.remove('open');
+    });
+
+  })();
   </script>
 
 </div>
