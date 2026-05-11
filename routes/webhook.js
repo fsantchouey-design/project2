@@ -61,19 +61,23 @@ async function packSizeFromPriceId(priceId) {
 module.exports = async function stripeWebhook(req, res) {
   console.log('==============================');
   console.log('[Webhook] Stripe webhook raw body received');
-  console.log(`[Webhook] STRIPE_SECRET_KEY set:     ${process.env.STRIPE_SECRET_KEY ? 'yes' : '❌ NO'}`);
-  console.log(`[Webhook] STRIPE_WEBHOOK_SECRET set: ${process.env.STRIPE_WEBHOOK_SECRET ? 'yes' : '❌ NO'}`);
+  const stripeKey = process.env.STRIPE_SECRET_KEY;
+  // Use test secret first (test mode), fall back to live secret
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET_TEST || process.env.STRIPE_WEBHOOK_SECRET;
+
+  console.log(`[Webhook] STRIPE_SECRET_KEY set:          ${stripeKey ? 'yes' : '❌ NO'}`);
+  console.log(`[Webhook] STRIPE_WEBHOOK_SECRET_TEST set: ${process.env.STRIPE_WEBHOOK_SECRET_TEST ? 'yes' : 'no'}`);
+  console.log(`[Webhook] STRIPE_WEBHOOK_SECRET set:      ${process.env.STRIPE_WEBHOOK_SECRET ? 'yes' : 'no'}`);
+  console.log(`[Webhook] secret used:                    ${process.env.STRIPE_WEBHOOK_SECRET_TEST ? 'STRIPE_WEBHOOK_SECRET_TEST' : process.env.STRIPE_WEBHOOK_SECRET ? 'STRIPE_WEBHOOK_SECRET' : '❌ NONE'}`);
   console.log(`[Webhook] body is Buffer: ${Buffer.isBuffer(req.body)}`);
   console.log(`[Webhook] body length:   ${req.body ? req.body.length : 0} bytes`);
 
-  const stripeKey = process.env.STRIPE_SECRET_KEY;
   if (!stripeKey) {
     console.error('[Webhook] ❌ STRIPE_SECRET_KEY not configured');
     return res.status(500).send('Stripe not configured');
   }
 
   const stripe = require('stripe')(stripeKey);
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   const sig = req.headers['stripe-signature'];
 
   console.log(`[Webhook] stripe-signature: ${sig ? sig.substring(0, 50) + '...' : '❌ MISSING'}`);
