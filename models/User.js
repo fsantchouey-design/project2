@@ -30,8 +30,13 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ['client', 'contractor', 'admin'],
+    enum: ['client', 'contractor', 'admin', 'professional'],
     default: 'client'
+  },
+  proStatus: {
+    type: String,
+    enum: ['none', 'pending_approval', 'approved', 'rejected'],
+    default: 'none'
   },
   avatar: {
     type: String,

@@ -83,6 +83,18 @@ const ensureProjectOwner = async (req, res, next) => {
   }
 };
 
+// Ensure user is an approved professional
+const ensureProfessional = (req, res, next) => {
+  if (req.isAuthenticated() && req.user.role === 'professional' && req.user.proStatus === 'approved') {
+    return next();
+  }
+  if (req.isAuthenticated() && req.user.proStatus === 'pending_approval') {
+    return res.redirect('/pro/pending');
+  }
+  req.flash('error_msg', 'Accès réservé aux professionnels approuvés.');
+  res.redirect('/auth/login');
+};
+
 module.exports = {
   ensureAuthenticated,
   ensureGuest,
@@ -90,6 +102,7 @@ module.exports = {
   ensureContractor,
   ensureAdmin,
   ensurePremium,
-  ensureProjectOwner
+  ensureProjectOwner,
+  ensureProfessional
 };
 

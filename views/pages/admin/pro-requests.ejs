@@ -1,0 +1,135 @@
+<style>
+.pro-req-container { max-width: 1200px; margin: 0 auto; padding: 32px 24px; }
+.pro-req-header { margin-bottom: 28px; }
+.pro-req-header h1 { font-size: 26px; font-weight: 800; color: #fff; margin: 0 0 8px; }
+.pro-req-header p { color: #a0a0a0; margin: 0 0 20px; font-size: 14px; }
+.filter-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px; }
+.filter-tab { display: inline-block; padding: 8px 18px; border-radius: 20px; font-size: 13px; font-weight: 600; text-decoration: none; border: 1px solid rgba(255,255,255,0.12); color: #a0a0a0; transition: all 0.2s; }
+.filter-tab:hover { border-color: rgba(0,255,136,0.4); color: #00ff88; }
+.filter-tab.active { background: rgba(0,255,136,0.12); border-color: rgba(0,255,136,0.4); color: #00ff88; }
+.req-table { width: 100%; border-collapse: collapse; }
+.req-table th { text-align: left; font-size: 11px; font-weight: 700; color: #666; text-transform: uppercase; letter-spacing: 1px; padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.08); }
+.req-table td { padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); vertical-align: top; font-size: 13px; color: #d0d0d0; }
+.req-table tr:hover td { background: rgba(255,255,255,0.02); }
+.badge-pending { display: inline-block; background: rgba(240,160,32,0.15); color: #f0a020; border: 1px solid rgba(240,160,32,0.3); border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 700; }
+.badge-approved { display: inline-block; background: rgba(0,255,136,0.12); color: #00ff88; border: 1px solid rgba(0,255,136,0.3); border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 700; }
+.badge-rejected { display: inline-block; background: rgba(255,68,68,0.12); color: #ff6868; border: 1px solid rgba(255,68,68,0.3); border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 700; }
+.cat-chip { display: inline-block; background: rgba(0,212,255,0.1); color: #00d4ff; border-radius: 4px; padding: 2px 7px; font-size: 11px; margin: 1px 2px; }
+.action-btns { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-approve-sm { display: inline-block; background: linear-gradient(135deg,#00ff88,#00d4ff); color: #000; border: none; border-radius: 8px; padding: 7px 14px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; text-decoration: none; }
+.btn-reject-sm { display: inline-block; background: rgba(255,68,68,0.15); color: #ff6868; border: 1px solid rgba(255,68,68,0.3); border-radius: 8px; padding: 7px 14px; font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit; text-decoration: none; }
+.empty-state { text-align: center; padding: 60px 20px; color: #555; }
+.empty-state svg { margin-bottom: 16px; }
+.detail-row { font-size: 12px; color: #888; margin-top: 4px; }
+</style>
+
+<div class="pro-req-container">
+  <div class="pro-req-header">
+    <h1>Demandes professionnelles</h1>
+    <p>Gérez les demandes d'inscription des professionnels.</p>
+
+    <div class="filter-tabs">
+      <a href="/pro/admin/applications" class="filter-tab <%= statusFilter === 'all' ? 'active' : '' %>">Toutes</a>
+      <a href="/pro/admin/applications?status=pending" class="filter-tab <%= statusFilter === 'pending' ? 'active' : '' %>">En attente</a>
+      <a href="/pro/admin/applications?status=approved" class="filter-tab <%= statusFilter === 'approved' ? 'active' : '' %>">Approuvées</a>
+      <a href="/pro/admin/applications?status=rejected" class="filter-tab <%= statusFilter === 'rejected' ? 'active' : '' %>">Rejetées</a>
+    </div>
+  </div>
+
+  <% if (applications && applications.length > 0) { %>
+    <div style="overflow-x:auto;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:16px;">
+      <table class="req-table">
+        <thead>
+          <tr>
+            <th>Nom / Entreprise</th>
+            <th>Contact</th>
+            <th>Catégories</th>
+            <th>Expérience</th>
+            <th>Date</th>
+            <th>Statut</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% applications.forEach(function(app) { %>
+            <tr>
+              <td>
+                <div style="font-weight:700;color:#fff;"><%= app.firstName %> <%= app.lastName %></div>
+                <div class="detail-row"><%= app.companyName %></div>
+                <% if (app.businessNumber) { %>
+                  <div class="detail-row">REG: <%= app.businessNumber %></div>
+                <% } %>
+              </td>
+              <td>
+                <div><%= app.email %></div>
+                <div class="detail-row"><%= app.phone %></div>
+                <div class="detail-row"><%= app.city %>, <%= app.country %></div>
+                <% if (app.website) { %>
+                  <div class="detail-row"><a href="<%= app.website %>" target="_blank" style="color:#00d4ff;text-decoration:none;"><%= app.website %></a></div>
+                <% } %>
+              </td>
+              <td>
+                <% if (app.categories && app.categories.length > 0) { %>
+                  <% app.categories.forEach(function(cat) { %>
+                    <span class="cat-chip"><%= cat %></span>
+                  <% }); %>
+                <% } else { %>
+                  <span style="color:#555;">—</span>
+                <% } %>
+              </td>
+              <td>
+                <div><%= app.yearsExperience %></div>
+                <% if (app.serviceAreas) { %>
+                  <div class="detail-row"><%= app.serviceAreas %></div>
+                <% } %>
+              </td>
+              <td style="white-space:nowrap;">
+                <%= app.createdAt ? new Date(app.createdAt).toLocaleDateString("fr-CA") : "—" %>
+              </td>
+              <td>
+                <% if (app.status === "pending") { %>
+                  <span class="badge-pending">En attente</span>
+                <% } else if (app.status === "approved") { %>
+                  <span class="badge-approved">Approuvée</span>
+                <% } else if (app.status === "rejected") { %>
+                  <span class="badge-rejected">Rejetée</span>
+                <% } %>
+              </td>
+              <td>
+                <% if (app.status === "pending") { %>
+                  <div class="action-btns">
+                    <form action="/pro/admin/applications/<%= app._id %>/approve/<%= app.approvalToken %>" method="POST" style="display:inline;">
+                      <button type="submit" class="btn-approve-sm">Approuver</button>
+                    </form>
+                    <form action="/pro/admin/applications/<%= app._id %>/reject/<%= app.approvalToken %>" method="POST" style="display:inline;">
+                      <button type="submit" class="btn-reject-sm">Rejeter</button>
+                    </form>
+                  </div>
+                <% } else if (app.status === "approved") { %>
+                  <form action="/pro/admin/applications/<%= app._id %>/reject/<%= app.approvalToken %>" method="POST" style="display:inline;">
+                    <button type="submit" class="btn-reject-sm">Rejeter</button>
+                  </form>
+                <% } else { %>
+                  <form action="/pro/admin/applications/<%= app._id %>/approve/<%= app.approvalToken %>" method="POST" style="display:inline;">
+                    <button type="submit" class="btn-approve-sm">Approuver</button>
+                  </form>
+                <% } %>
+              </td>
+            </tr>
+          <% }); %>
+        </tbody>
+      </table>
+    </div>
+  <% } else { %>
+    <div class="empty-state">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#444" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+        <polyline points="14 2 14 8 20 8"/>
+        <line x1="16" y1="13" x2="8" y2="13"/>
+        <line x1="16" y1="17" x2="8" y2="17"/>
+        <polyline points="10 9 9 9 8 9"/>
+      </svg>
+      <p style="font-size:15px;margin:0;">Aucune demande trouvée.</p>
+    </div>
+  <% } %>
+</div>

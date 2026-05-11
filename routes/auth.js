@@ -17,10 +17,33 @@ router.get('/login', ensureGuest, (req, res) => {
 
 // Login Handler
 router.post('/login', ensureGuest, (req, res, next) => {
-  passport.authenticate('local', {
-    successRedirect: '/dashboard',
-    failureRedirect: '/auth/login',
-    failureFlash: true
+  passport.authenticate('local', (err, user, info) => {
+    if (err) { return next(err); }
+    if (!user) {
+      req.flash('error_msg', (info && info.message) ? info.message : 'Email ou mot de passe incorrect.');
+      return res.redirect('/auth/login');
+    }
+    req.login(user, (loginErr) => {
+      if (loginErr) { return next(loginErr); }
+      if (user.proStatus === 'pending_approval') {
+        return res.redirect('/pro/pending');
+      }
+      if (user.proStatus === 'rejected') {
+        req.flash('error_msg', 'Votre demande pro a été refusée.');
+        req.logout((logoutErr) => {
+          if (logoutErr) { return next(logoutErr); }
+          return res.redirect('/auth/login');
+        });
+        return;
+      }
+      if (user.role === 'professional') {
+        return res.redirect('/pro/dashboard');
+      }
+      if (user.role === 'contractor') {
+        return res.redirect('/contractors/setup');
+      }
+      return res.redirect('/dashboard');
+    });
   })(req, res, next);
 });
 
@@ -269,15 +292,36 @@ router.get('/google', ensureGuest, passport.authenticate('google', {
 }));
 
 // Google OAuth — callback
-router.get('/callback', passport.authenticate('google', {
-  failureRedirect: '/auth/login',
-  failureFlash: true
-}), (req, res) => {
-  req.flash('success_msg', `Bienvenue, ${req.user.firstName} !`);
-  if (req.user.role === 'contractor') {
-    return res.redirect('/contractors/setup');
-  }
-  res.redirect('/dashboard');
+router.get('/callback', (req, res, next) => {
+  passport.authenticate('google', (err, user, info) => {
+    if (err) { return next(err); }
+    if (!user) {
+      req.flash('error_msg', 'Connexion Google échouée. Veuillez réessayer.');
+      return res.redirect('/auth/login');
+    }
+    req.login(user, (loginErr) => {
+      if (loginErr) { return next(loginErr); }
+      req.flash('success_msg', 'Bienvenue, ' + user.firstName + ' !');
+      if (user.proStatus === 'pending_approval') {
+        return res.redirect('/pro/pending');
+      }
+      if (user.proStatus === 'rejected') {
+        req.flash('error_msg', 'Votre demande pro a été refusée.');
+        req.logout((logoutErr) => {
+          if (logoutErr) { return next(logoutErr); }
+          return res.redirect('/auth/login');
+        });
+        return;
+      }
+      if (user.role === 'professional') {
+        return res.redirect('/pro/dashboard');
+      }
+      if (user.role === 'contractor') {
+        return res.redirect('/contractors/setup');
+      }
+      return res.redirect('/dashboard');
+    });
+  })(req, res, next);
 });
 
 // Logout

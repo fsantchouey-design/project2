@@ -1,0 +1,27 @@
+const mongoose = require('mongoose');
+const ProApplicationSchema = new mongoose.Schema({
+  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  firstName: String,
+  lastName: String,
+  companyName: String,
+  email: String,
+  phone: String,
+  address: String,
+  city: String,
+  postalCode: String,
+  country: String,
+  categories: [String],
+  description: String,
+  yearsExperience: String,
+  photos: [String],
+  website: String,
+  socialInstagram: String,
+  socialFacebook: String,
+  businessNumber: String,
+  serviceAreas: String,
+  logo: String,
+  status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' },
+  adminNotes: String,
+  approvalToken: String,
+}, { timestamps: true });
+module.exports = mongoose.model('ProApplication', ProApplicationSchema);
