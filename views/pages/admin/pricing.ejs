@@ -1,8 +1,8 @@
 <div class="page-container admin-landing">
   <div class="page-header">
-    <h1>Pricing Configuration</h1>
-    <p class="text-muted">Manage pricing plans shown across the entire site — landing page, pricing page, and signed-in dashboard.</p>
-    <div style="margin-top: 12px; display: flex; gap: 8px;">
+    <h1>Gestion des Tarifs</h1>
+    <p class="text-muted">Modifiez les forfaits affichés sur la page publique /pricing et les plans legacy du site.</p>
+    <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap;">
       <a href="/admin/landing" class="btn btn-secondary btn-sm">Images</a>
       <a href="/admin/specialists" class="btn btn-secondary btn-sm">Specialists</a>
       <a href="/admin/video" class="btn btn-secondary btn-sm">Video</a>
@@ -11,159 +11,480 @@
       <a href="/admin/inspirations" class="btn btn-secondary btn-sm">Inspirations</a>
       <a href="/admin/services" class="btn btn-secondary btn-sm">Services</a>
       <a href="/admin/settings" class="btn btn-secondary btn-sm">Settings</a>
+      <a href="/pricing" target="_blank" class="btn btn-secondary btn-sm" style="margin-left:auto;">
+        <i data-lucide="external-link" style="width:13px;height:13px;"></i> Prévisualiser
+      </a>
     </div>
   </div>
 
-  <!-- Plans Section -->
-  <% const planKeys = ['regular', 'advanced', 'premium']; %>
-  <% const planIcons = { regular: 'box', advanced: 'zap', premium: 'crown' }; %>
-  <% const planColors = { regular: '#6b7280', advanced: '#00ff88', premium: '#8b5cf6' }; %>
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 1 — Forfaits abonnement (page publique /pricing)
+       ══════════════════════════════════════════════════════════ -->
+  <div id="subscription" style="margin-bottom: 48px;">
+    <div class="admin-section-group" style="margin-bottom: 0;">
+      <div class="admin-section-header">
+        <div class="admin-section-title">
+          <i data-lucide="layers" style="color: #00ff88"></i>
+          <h2>Forfaits d'abonnement — Page Tarifs</h2>
+        </div>
+        <p class="admin-section-desc">Ces 3 forfaits sont affichés sur la page publique <strong>/pricing</strong>. Les prix, avantages et Stripe Price IDs sont configurables ici.</p>
+      </div>
+    </div>
 
-  <form action="/admin/pricing/plans" method="POST" class="admin-pricing-form">
-    <div class="admin-sections-list">
-      <% planKeys.forEach(key => { %>
-        <% const plan = pricing[key]; %>
-        <div class="admin-section-group">
+    <form action="/admin/pricing/subscription" method="POST" class="admin-sub-form" id="admin-sub-form">
+
+      <% var subKeys = ['essential', 'creator', 'studioPro']; %>
+      <% var subLabels = { essential: 'Essentiel', creator: 'Créateur', studioPro: 'Studio Pro' }; %>
+      <% var subIcons = { essential: 'zap', creator: 'sparkles', studioPro: 'crown' }; %>
+      <% var subColors = { essential: '#38bdf8', creator: '#14b8a6', studioPro: '#6366f1' }; %>
+
+      <% subKeys.forEach(function(key) { %>
+        <% var plan = subscriptionPlans[key]; %>
+        <div class="admin-section-group" style="margin-bottom: 24px;">
           <div class="admin-section-header">
             <div class="admin-section-title">
-              <i data-lucide="<%= planIcons[key] %>" style="color: <%= planColors[key] %>"></i>
-              <h2><%= plan.name %> Plan</h2>
-              <% if (plan.popular) { %>
-                <span class="admin-section-count" style="background: var(--accent-gradient); color: #000;">Populaire</span>
+              <i data-lucide="<%= subIcons[key] %>" style="color: <%= subColors[key] %>"></i>
+              <h2><%= subLabels[key] %></h2>
+              <% if (plan.badgeStyle === 'popular') { %>
+                <span class="admin-section-count" style="background: linear-gradient(135deg,#14b8a6,#38bdf8);color:#000;">Most Popular</span>
+              <% } else if (plan.badgeStyle === 'value') { %>
+                <span class="admin-section-count" style="background: linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;">Best Value</span>
               <% } %>
             </div>
           </div>
 
-          <div class="admin-pricing-plan-grid">
-            <!-- Basic Info -->
+          <div class="admin-sub-plan-grid">
+
+            <!-- Col 1 — Infos de base -->
             <div class="admin-asset-card">
               <div class="admin-asset-body">
-                <h3>Basic Info</h3>
+                <h3>Informations générales</h3>
+
+                <div class="form-group" style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+                  <input type="checkbox" id="active-<%= key %>" name="sub[<%= key %>][active]" value="on" <%= plan.active !== false ? 'checked' : '' %> style="width:16px;height:16px;accent-color:#00ff88;">
+                  <label for="active-<%= key %>" class="form-label" style="margin:0;cursor:pointer;">Forfait actif (visible sur la page)</label>
+                </div>
+
                 <div class="form-group">
-                  <label class="form-label">Plan Name</label>
-                  <input type="text" name="plans[<%= key %>][name]" class="form-input" value="<%= plan.name %>">
+                  <label class="form-label">Nom du forfait</label>
+                  <input type="text" name="sub[<%= key %>][name]" class="form-input" value="<%= plan.name %>" required>
                 </div>
                 <div class="form-group">
-                  <label class="form-label">Subtitle</label>
-                  <input type="text" name="plans[<%= key %>][subtitle]" class="form-input" value="<%= plan.subtitle %>">
+                  <label class="form-label">Sous-titre</label>
+                  <input type="text" name="sub[<%= key %>][subtitle]" class="form-input" value="<%= plan.subtitle %>">
+                </div>
+
+                <div class="form-row-inline">
+                  <div class="form-group">
+                    <label class="form-label">Prix mensuel ($)</label>
+                    <input type="number" step="0.01" name="sub[<%= key %>][priceMonthly]" class="form-input" value="<%= plan.priceMonthly %>">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Prix annuel total ($)</label>
+                    <input type="number" step="0.01" name="sub[<%= key %>][priceAnnual]" class="form-input" value="<%= plan.priceAnnual %>">
+                  </div>
                 </div>
                 <div class="form-row-inline">
                   <div class="form-group">
-                    <label class="form-label">Price ($)</label>
-                    <input type="number" step="0.01" name="plans[<%= key %>][price]" class="form-input" value="<%= plan.price %>">
+                    <label class="form-label">Équivalent mensuel/an ($)</label>
+                    <input type="number" step="0.01" name="sub[<%= key %>][priceAnnualMonthly]" class="form-input" value="<%= plan.priceAnnualMonthly %>">
                   </div>
                   <div class="form-group">
-                    <label class="form-label">Period</label>
-                    <input type="text" name="plans[<%= key %>][period]" class="form-input" value="<%= plan.period %>" placeholder="e.g. /mois, gratuit">
+                    <label class="form-label">Économies annuelles ($)</label>
+                    <input type="number" step="0.01" name="sub[<%= key %>][savingsAnnual]" class="form-input" value="<%= plan.savingsAnnual %>">
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label">Crédits IA inclus / mois</label>
+                  <input type="number" name="sub[<%= key %>][credits]" class="form-input" value="<%= plan.credits %>">
+                </div>
+
+                <div class="form-row-inline">
+                  <div class="form-group">
+                    <label class="form-label">Texte du badge <span class="text-muted">(ruban)</span></label>
+                    <input type="text" name="sub[<%= key %>][badge]" class="form-input" value="<%= plan.badge %>" placeholder="Ex: Most Popular">
                   </div>
                   <div class="form-group">
-                    <label class="form-label">Generations</label>
-                    <input type="number" name="plans[<%= key %>][generations]" class="form-input" value="<%= plan.generations || 0 %>" placeholder="0 = unlimited">
+                    <label class="form-label">Style du badge</label>
+                    <select name="sub[<%= key %>][badgeStyle]" class="form-input">
+                      <option value="" <%= !plan.badgeStyle ? 'selected' : '' %>>Aucun</option>
+                      <option value="popular" <%= plan.badgeStyle === 'popular' ? 'selected' : '' %>>Popular (bleu-vert)</option>
+                      <option value="value" <%= plan.badgeStyle === 'value' ? 'selected' : '' %>>Value (violet)</option>
+                    </select>
                   </div>
                 </div>
-                <div class="form-group">
-                  <label class="form-label">Description</label>
-                  <textarea name="plans[<%= key %>][description]" class="form-input form-textarea" rows="2"><%= plan.description %></textarea>
+
+                <div class="form-row-inline">
+                  <div class="form-group">
+                    <label class="form-label">Texte du bouton CTA</label>
+                    <input type="text" name="sub[<%= key %>][ctaText]" class="form-input" value="<%= plan.ctaText %>">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Lien du bouton CTA</label>
+                    <input type="text" name="sub[<%= key %>][ctaLink]" class="form-input" value="<%= plan.ctaLink %>">
+                  </div>
                 </div>
+
                 <div class="form-group">
-                  <label class="form-label">Badge Text <span class="text-muted">(leave empty for none)</span></label>
-                  <input type="text" name="plans[<%= key %>][badge]" class="form-input" value="<%= plan.badge %>">
-                </div>
-                <div class="form-group">
-                  <label class="form-label">Bonus Text <span class="text-muted">(leave empty for none)</span></label>
-                  <input type="text" name="plans[<%= key %>][bonus]" class="form-input" value="<%= plan.bonus %>">
+                  <label class="form-label">Ordre d'affichage <span class="text-muted">(1 = premier)</span></label>
+                  <input type="number" name="sub[<%= key %>][displayOrder]" class="form-input" value="<%= plan.displayOrder || 0 %>">
                 </div>
               </div>
             </div>
 
-            <!-- CTA & Features -->
+            <!-- Col 2 — Stripe + Avantages -->
             <div class="admin-asset-card">
               <div class="admin-asset-body">
-                <h3>Call to Action</h3>
-                <div class="form-group">
-                  <label class="form-label">Button Text</label>
-                  <input type="text" name="plans[<%= key %>][cta]" class="form-input" value="<%= plan.cta %>">
+                <h3>Stripe Price IDs</h3>
+                <div class="admin-stripe-note">
+                  <i data-lucide="info" style="width:13px;height:13px;flex-shrink:0;"></i>
+                  Ces IDs sont utilisés lors du clic sur le bouton d'abonnement pour rediriger vers Stripe Checkout.
                 </div>
                 <div class="form-group">
-                  <label class="form-label">Button Link</label>
-                  <input type="text" name="plans[<%= key %>][ctaLink]" class="form-input" value="<%= plan.ctaLink %>">
+                  <label class="form-label">Stripe Price ID — Mensuel</label>
+                  <input type="text" name="sub[<%= key %>][stripePriceIdMonthly]" class="form-input admin-stripe-input" value="<%= plan.stripePriceIdMonthly %>" placeholder="price_1234...">
                 </div>
                 <div class="form-group">
-                  <label class="form-label">
-                    <input type="checkbox" name="plans[<%= key %>][popular]" value="true" <%= plan.popular ? 'checked' : '' %>>
-                    Mark as "Most Popular"
-                  </label>
+                  <label class="form-label">Stripe Price ID — Annuel</label>
+                  <input type="text" name="sub[<%= key %>][stripePriceIdAnnual]" class="form-input admin-stripe-input" value="<%= plan.stripePriceIdAnnual %>" placeholder="price_5678...">
                 </div>
 
-                <hr style="border: none; border-top: 1px solid var(--border-color); margin: 16px 0;">
+                <hr style="border:none;border-top:1px solid var(--border-color);margin:20px 0;">
 
-                <h3>Features <span class="text-muted">(one per line)</span></h3>
-                <p class="text-muted" style="font-size: 0.8rem; margin-bottom: 8px;">
-                  Prefix a line with <code>[addon]</code> to mark it as an add-on (shown in muted style).
+                <h3>Avantages</h3>
+                <p class="text-muted" style="font-size:0.8rem;margin-bottom:12px;">
+                  Cochez pour activer un avantage. Utilisez ↑ ↓ pour réordonner. Cliquez ✕ pour supprimer.
                 </p>
-                <div class="form-group">
-                  <textarea name="plans[<%= key %>][features]" class="form-input form-textarea" rows="8"><%= plan.features.map(f => (f.addon ? '[addon] ' : '') + f.text).join('\n') %></textarea>
+
+                <div class="sp-feat-list" id="sp-feat-<%= key %>">
+                  <% plan.features.forEach(function(f, fi) { %>
+                  <div class="sp-feat-row">
+                    <div class="sp-feat-drag" title="Déplacer">⠿</div>
+                    <input type="checkbox"
+                      name="sub[<%= key %>][features][<%= fi %>][enabled]"
+                      value="on"
+                      class="sp-feat-cb"
+                      <%= f.enabled !== false ? 'checked' : '' %>>
+                    <input type="text"
+                      name="sub[<%= key %>][features][<%= fi %>][text]"
+                      class="form-input sp-feat-text"
+                      value="<%= f.text %>"
+                      placeholder="Avantage...">
+                    <div class="sp-feat-btns">
+                      <button type="button" class="sp-btn-arrow" onclick="spMoveUp(this)" title="Monter">↑</button>
+                      <button type="button" class="sp-btn-arrow" onclick="spMoveDown(this)" title="Descendre">↓</button>
+                      <button type="button" class="sp-btn-rm" onclick="this.closest('.sp-feat-row').remove()" title="Supprimer">✕</button>
+                    </div>
+                  </div>
+                  <% }); %>
+                </div>
+
+                <button type="button"
+                  class="btn btn-secondary btn-sm sp-add-feat"
+                  style="margin-top:10px;"
+                  onclick="spAddFeature('<%= key %>')">
+                  <i data-lucide="plus" style="width:13px;height:13px;"></i> Ajouter un avantage
+                </button>
+              </div>
+            </div>
+
+          </div><!-- /.admin-sub-plan-grid -->
+        </div><!-- /.admin-section-group -->
+      <% }); %>
+
+      <div class="admin-sub-actions">
+        <a href="/pricing" target="_blank" class="btn btn-secondary">
+          <i data-lucide="external-link"></i> Prévisualiser
+        </a>
+        <button type="submit" class="btn btn-primary">
+          <i data-lucide="save"></i> Enregistrer les forfaits
+        </button>
+      </div>
+
+    </form>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 2 — Plans legacy (Régulier / Avancé / Premium)
+       ══════════════════════════════════════════════════════════ -->
+  <div id="legacy">
+    <div class="admin-section-group" style="margin-bottom:12px;">
+      <div class="admin-section-header">
+        <div class="admin-section-title">
+          <i data-lucide="archive" style="color:#6b7280"></i>
+          <h2>Plans legacy (Régulier / Avancé / Premium)</h2>
+        </div>
+        <p class="admin-section-desc">Ces plans sont utilisés sur d'autres sections du site (landing page, dashboard).</p>
+      </div>
+    </div>
+
+    <% const planKeys = ['regular', 'advanced', 'premium']; %>
+    <% const planIcons = { regular: 'box', advanced: 'zap', premium: 'crown' }; %>
+    <% const planColors = { regular: '#6b7280', advanced: '#00ff88', premium: '#8b5cf6' }; %>
+
+    <form action="/admin/pricing/plans" method="POST" class="admin-pricing-form">
+      <div class="admin-sections-list">
+        <% planKeys.forEach(key => { %>
+          <% const plan = pricing[key]; %>
+          <div class="admin-section-group">
+            <div class="admin-section-header">
+              <div class="admin-section-title">
+                <i data-lucide="<%= planIcons[key] %>" style="color: <%= planColors[key] %>"></i>
+                <h2><%= plan.name %> Plan</h2>
+                <% if (plan.popular) { %>
+                  <span class="admin-section-count" style="background: var(--accent-gradient); color: #000;">Populaire</span>
+                <% } %>
+              </div>
+            </div>
+
+            <div class="admin-pricing-plan-grid">
+              <div class="admin-asset-card">
+                <div class="admin-asset-body">
+                  <h3>Basic Info</h3>
+                  <div class="form-group">
+                    <label class="form-label">Plan Name</label>
+                    <input type="text" name="plans[<%= key %>][name]" class="form-input" value="<%= plan.name %>">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Subtitle</label>
+                    <input type="text" name="plans[<%= key %>][subtitle]" class="form-input" value="<%= plan.subtitle %>">
+                  </div>
+                  <div class="form-row-inline">
+                    <div class="form-group">
+                      <label class="form-label">Price ($)</label>
+                      <input type="number" step="0.01" name="plans[<%= key %>][price]" class="form-input" value="<%= plan.price %>">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Period</label>
+                      <input type="text" name="plans[<%= key %>][period]" class="form-input" value="<%= plan.period %>" placeholder="e.g. /mois, gratuit">
+                    </div>
+                    <div class="form-group">
+                      <label class="form-label">Generations</label>
+                      <input type="number" name="plans[<%= key %>][generations]" class="form-input" value="<%= plan.generations || 0 %>" placeholder="0 = unlimited">
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Description</label>
+                    <textarea name="plans[<%= key %>][description]" class="form-input form-textarea" rows="2"><%= plan.description %></textarea>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Badge Text <span class="text-muted">(leave empty for none)</span></label>
+                    <input type="text" name="plans[<%= key %>][badge]" class="form-input" value="<%= plan.badge %>">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Bonus Text <span class="text-muted">(leave empty for none)</span></label>
+                    <input type="text" name="plans[<%= key %>][bonus]" class="form-input" value="<%= plan.bonus %>">
+                  </div>
+                </div>
+              </div>
+
+              <div class="admin-asset-card">
+                <div class="admin-asset-body">
+                  <h3>Call to Action</h3>
+                  <div class="form-group">
+                    <label class="form-label">Button Text</label>
+                    <input type="text" name="plans[<%= key %>][cta]" class="form-input" value="<%= plan.cta %>">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">Button Link</label>
+                    <input type="text" name="plans[<%= key %>][ctaLink]" class="form-input" value="<%= plan.ctaLink %>">
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label">
+                      <input type="checkbox" name="plans[<%= key %>][popular]" value="true" <%= plan.popular ? 'checked' : '' %>>
+                      Mark as "Most Popular"
+                    </label>
+                  </div>
+
+                  <hr style="border: none; border-top: 1px solid var(--border-color); margin: 16px 0;">
+
+                  <h3>Features <span class="text-muted">(one per line)</span></h3>
+                  <p class="text-muted" style="font-size: 0.8rem; margin-bottom: 8px;">
+                    Prefix a line with <code>[addon]</code> to mark it as an add-on (shown in muted style).
+                  </p>
+                  <div class="form-group">
+                    <textarea name="plans[<%= key %>][features]" class="form-input form-textarea" rows="8"><%= plan.features.map(f => (f.addon ? '[addon] ' : '') + f.text).join('\n') %></textarea>
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-      <% }) %>
+        <% }) %>
 
-      <!-- Comparison Table -->
-      <div class="admin-section-group">
-        <div class="admin-section-header">
-          <div class="admin-section-title">
-            <i data-lucide="table"></i>
-            <h2>Comparison Table</h2>
+        <!-- Comparison Table -->
+        <div class="admin-section-group">
+          <div class="admin-section-header">
+            <div class="admin-section-title">
+              <i data-lucide="table"></i>
+              <h2>Comparison Table</h2>
+            </div>
+            <p class="admin-section-desc">These rows appear in the comparison table on the pricing page. Each row shows values for Régulier, Avancé, and Premium columns.</p>
           </div>
-          <p class="admin-section-desc">These rows appear in the comparison table on the pricing page. Each row shows values for Régulier, Avancé, and Premium columns.</p>
-        </div>
 
-        <div class="admin-asset-card">
-          <div class="admin-asset-body">
-            <div class="comparison-rows-editor">
-              <% pricing.comparison.forEach((row, idx) => { %>
-                <div class="comparison-row-group">
-                  <span class="comparison-row-num">#<%= idx + 1 %></span>
-                  <div class="comparison-row-fields">
-                    <input type="text" name="comparison[<%= idx %>][feature]" class="form-input" value="<%= row.feature %>" placeholder="Feature name">
-                    <input type="text" name="comparison[<%= idx %>][regular]" class="form-input" value="<%= row.regular %>" placeholder="Régulier value">
-                    <input type="text" name="comparison[<%= idx %>][advanced]" class="form-input" value="<%= row.advanced %>" placeholder="Avancé value">
-                    <input type="text" name="comparison[<%= idx %>][premium]" class="form-input" value="<%= row.premium %>" placeholder="Premium value">
+          <div class="admin-asset-card">
+            <div class="admin-asset-body">
+              <div class="comparison-rows-editor">
+                <% pricing.comparison.forEach((row, idx) => { %>
+                  <div class="comparison-row-group">
+                    <span class="comparison-row-num">#<%= idx + 1 %></span>
+                    <div class="comparison-row-fields">
+                      <input type="text" name="comparison[<%= idx %>][feature]" class="form-input" value="<%= row.feature %>" placeholder="Feature name">
+                      <input type="text" name="comparison[<%= idx %>][regular]" class="form-input" value="<%= row.regular %>" placeholder="Régulier value">
+                      <input type="text" name="comparison[<%= idx %>][advanced]" class="form-input" value="<%= row.advanced %>" placeholder="Avancé value">
+                      <input type="text" name="comparison[<%= idx %>][premium]" class="form-input" value="<%= row.premium %>" placeholder="Premium value">
+                    </div>
                   </div>
-                </div>
-              <% }) %>
+                <% }) %>
 
-              <!-- Extra empty rows for adding new entries -->
-              <% for (let i = pricing.comparison.length; i < pricing.comparison.length + 2; i++) { %>
-                <div class="comparison-row-group comparison-row-extra">
-                  <span class="comparison-row-num text-muted">#<%= i + 1 %></span>
-                  <div class="comparison-row-fields">
-                    <input type="text" name="comparison[<%= i %>][feature]" class="form-input" placeholder="Feature name (leave empty to skip)">
-                    <input type="text" name="comparison[<%= i %>][regular]" class="form-input" placeholder="Régulier value">
-                    <input type="text" name="comparison[<%= i %>][advanced]" class="form-input" placeholder="Avancé value">
-                    <input type="text" name="comparison[<%= i %>][premium]" class="form-input" placeholder="Premium value">
+                <% for (let i = pricing.comparison.length; i < pricing.comparison.length + 2; i++) { %>
+                  <div class="comparison-row-group comparison-row-extra">
+                    <span class="comparison-row-num text-muted">#<%= i + 1 %></span>
+                    <div class="comparison-row-fields">
+                      <input type="text" name="comparison[<%= i %>][feature]" class="form-input" placeholder="Feature name (leave empty to skip)">
+                      <input type="text" name="comparison[<%= i %>][regular]" class="form-input" placeholder="Régulier value">
+                      <input type="text" name="comparison[<%= i %>][advanced]" class="form-input" placeholder="Avancé value">
+                      <input type="text" name="comparison[<%= i %>][premium]" class="form-input" placeholder="Premium value">
+                    </div>
                   </div>
-                </div>
-              <% } %>
+                <% } %>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Save Button -->
-      <div style="text-align: right; padding: 16px 0;">
-        <button type="submit" class="btn btn-primary">
-          <i data-lucide="save"></i>
-          Save All Pricing
-        </button>
+        <div style="text-align: right; padding: 16px 0;">
+          <button type="submit" class="btn btn-primary">
+            <i data-lucide="save"></i>
+            Save Legacy Plans
+          </button>
+        </div>
       </div>
-    </div>
-  </form>
+    </form>
+  </div>
+
 </div>
 
+<!-- ── Styles ──────────────────────────────────────────────────────────────── -->
 <style>
+  .admin-sub-plan-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-lg);
+    margin-bottom: 0;
+  }
+
+  .admin-sub-actions {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 0 8px;
+    border-top: 1px solid var(--border-color);
+    margin-top: 8px;
+  }
+
+  .admin-stripe-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: rgba(99,102,241,0.08);
+    border: 1px solid rgba(99,102,241,0.2);
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    line-height: 1.5;
+    margin-bottom: 14px;
+  }
+
+  .admin-stripe-input {
+    font-family: monospace;
+    font-size: 0.83rem;
+    letter-spacing: 0.02em;
+  }
+
+  /* Feature rows */
+  .sp-feat-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    max-height: 340px;
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+
+  .sp-feat-row {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 7px 10px;
+    transition: border-color 0.15s;
+  }
+
+  .sp-feat-row:hover { border-color: var(--accent-color, #00ff88); }
+
+  .sp-feat-drag {
+    cursor: grab;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    user-select: none;
+    flex-shrink: 0;
+  }
+
+  .sp-feat-cb {
+    width: 15px;
+    height: 15px;
+    accent-color: #00ff88;
+    flex-shrink: 0;
+    cursor: pointer;
+  }
+
+  .sp-feat-text {
+    flex: 1;
+    min-width: 0;
+    padding: 5px 9px;
+    font-size: 0.83rem;
+    height: auto;
+  }
+
+  .sp-feat-btns {
+    display: flex;
+    gap: 3px;
+    flex-shrink: 0;
+  }
+
+  .sp-btn-arrow, .sp-btn-rm {
+    border: none;
+    border-radius: 5px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+
+  .sp-btn-arrow {
+    background: rgba(255,255,255,0.07);
+    color: var(--text-secondary);
+  }
+
+  .sp-btn-arrow:hover { background: rgba(255,255,255,0.14); }
+
+  .sp-btn-rm {
+    background: rgba(239,68,68,0.1);
+    color: #ef4444;
+  }
+
+  .sp-btn-rm:hover { background: rgba(239,68,68,0.22); }
+
+  /* Legacy styles */
   .admin-pricing-plan-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -172,13 +493,11 @@
 
   .form-row-inline {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: var(--spacing-md);
   }
 
-  .form-group {
-    margin-bottom: var(--spacing-md);
-  }
+  .form-group { margin-bottom: var(--spacing-md); }
 
   .form-textarea {
     resize: vertical;
@@ -214,13 +533,8 @@
     gap: var(--spacing-sm);
   }
 
-  .comparison-row-extra {
-    opacity: 0.6;
-  }
-
-  .comparison-row-extra:focus-within {
-    opacity: 1;
-  }
+  .comparison-row-extra { opacity: 0.6; }
+  .comparison-row-extra:focus-within { opacity: 1; }
 
   code {
     background: var(--bg-secondary);
@@ -229,18 +543,82 @@
     font-size: 0.8rem;
   }
 
-  @media (max-width: 768px) {
-    .admin-pricing-plan-grid {
-      grid-template-columns: 1fr;
-    }
-
-    .form-row-inline {
-      grid-template-columns: 1fr;
-    }
-
-    .comparison-row-fields {
-      grid-template-columns: 1fr;
-    }
+  @media (max-width: 900px) {
+    .admin-sub-plan-grid,
+    .admin-pricing-plan-grid { grid-template-columns: 1fr; }
+    .form-row-inline { grid-template-columns: 1fr; }
+    .comparison-row-fields { grid-template-columns: 1fr; }
   }
 </style>
 
+<!-- ── Scripts ─────────────────────────────────────────────────────────────── -->
+<script>
+(function () {
+
+  /* ── Move feature row up ── */
+  function spMoveUp(btn) {
+    var row = btn.closest('.sp-feat-row');
+    var prev = row.previousElementSibling;
+    if (prev && prev.classList.contains('sp-feat-row')) {
+      row.parentNode.insertBefore(row, prev);
+    }
+  }
+
+  /* ── Move feature row down ── */
+  function spMoveDown(btn) {
+    var row = btn.closest('.sp-feat-row');
+    var next = row.nextElementSibling;
+    if (next && next.classList.contains('sp-feat-row')) {
+      row.parentNode.insertBefore(next, row);
+    }
+  }
+
+  /* ── Add a new feature row ── */
+  function spAddFeature(planKey) {
+    var list = document.getElementById('sp-feat-' + planKey);
+    var idx = list.querySelectorAll('.sp-feat-row').length;
+    var row = document.createElement('div');
+    row.className = 'sp-feat-row';
+    row.innerHTML =
+      '<div class="sp-feat-drag" title="Déplacer">⠿</div>' +
+      '<input type="checkbox" name="sub[' + planKey + '][features][' + idx + '][enabled]" value="on" class="sp-feat-cb" checked>' +
+      '<input type="text" name="sub[' + planKey + '][features][' + idx + '][text]" class="form-input sp-feat-text" value="" placeholder="Avantage...">' +
+      '<div class="sp-feat-btns">' +
+        '<button type="button" class="sp-btn-arrow" onclick="spMoveUp(this)" title="Monter">↑</button>' +
+        '<button type="button" class="sp-btn-arrow" onclick="spMoveDown(this)" title="Descendre">↓</button>' +
+        '<button type="button" class="sp-btn-rm" onclick="this.closest(\'.sp-feat-row\').remove()" title="Supprimer">✕</button>' +
+      '</div>';
+    list.appendChild(row);
+    row.querySelector('.sp-feat-text').focus();
+    if (typeof lucide !== 'undefined') lucide.createIcons();
+  }
+
+  /* ── Reindex all feature name attributes before submit ── */
+  function reindexFeatures(planKey) {
+    var rows = document.querySelectorAll('#sp-feat-' + planKey + ' .sp-feat-row');
+    rows.forEach(function (row, i) {
+      row.querySelectorAll('[name]').forEach(function (el) {
+        el.name = el.name.replace(/\[features\]\[\d+\]/, '[features][' + i + ']');
+      });
+    });
+  }
+
+  var form = document.getElementById('admin-sub-form');
+  if (form) {
+    form.addEventListener('submit', function () {
+      ['essential', 'creator', 'studioPro'].forEach(function (key) {
+        reindexFeatures(key);
+      });
+    });
+  }
+
+  /* ── Expose helpers to inline onclick handlers ── */
+  window.spMoveUp = spMoveUp;
+  window.spMoveDown = spMoveDown;
+  window.spAddFeature = spAddFeature;
+
+  /* ── Init Lucide icons ── */
+  if (typeof lucide !== 'undefined') lucide.createIcons();
+
+})();
+</script>

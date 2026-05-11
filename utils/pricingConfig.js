@@ -86,6 +86,92 @@ const defaultPricingConfig = {
   ]
 };
 
+// ── Subscription plan defaults (public pricing page) ──────────────────────────
+
+const defaultSubscriptionPlans = {
+  essential: {
+    name: 'Essential',
+    subtitle: 'Perfect to get started',
+    priceMonthly: 19.99,
+    priceAnnual: 199.90,
+    priceAnnualMonthly: 16.66,
+    savingsAnnual: 39.98,
+    credits: 250,
+    badge: '',
+    badgeStyle: '',
+    features: [
+      { text: 'Access to all AI design tools', enabled: true, order: 0 },
+      { text: 'Standard rendering speed', enabled: true, order: 1 },
+      { text: 'Up to 5 active projects', enabled: true, order: 2 },
+      { text: 'Project gallery', enabled: true, order: 3 },
+      { text: 'Share with contractors', enabled: true, order: 4 },
+      { text: 'Standard quality renders', enabled: true, order: 5 }
+    ],
+    active: true,
+    stripePriceIdMonthly: '',
+    stripePriceIdAnnual: '',
+    ctaText: 'Get Started',
+    ctaLink: '/auth/register?plan=essential',
+    displayOrder: 1
+  },
+  creator: {
+    name: 'Creator',
+    subtitle: 'For active designers',
+    priceMonthly: 39.99,
+    priceAnnual: 399.90,
+    priceAnnualMonthly: 33.33,
+    savingsAnnual: 79.98,
+    credits: 700,
+    badge: 'Most Popular',
+    badgeStyle: 'popular',
+    features: [
+      { text: 'Access to all AI design tools', enabled: true, order: 0 },
+      { text: 'Fast rendering speed', enabled: true, order: 1 },
+      { text: 'Unlimited projects', enabled: true, order: 2 },
+      { text: 'Project gallery', enabled: true, order: 3 },
+      { text: 'Share with contractors', enabled: true, order: 4 },
+      { text: 'High quality renders', enabled: true, order: 5 },
+      { text: 'PDF export included', enabled: true, order: 6 }
+    ],
+    active: true,
+    stripePriceIdMonthly: '',
+    stripePriceIdAnnual: '',
+    ctaText: 'Get Creator',
+    ctaLink: '/auth/register?plan=creator',
+    displayOrder: 2
+  },
+  studioPro: {
+    name: 'Studio Pro',
+    subtitle: 'For power users & studios',
+    priceMonthly: 79.99,
+    priceAnnual: 799.90,
+    priceAnnualMonthly: 66.66,
+    savingsAnnual: 159.98,
+    credits: 1800,
+    badge: 'Best Value',
+    badgeStyle: 'value',
+    features: [
+      { text: 'Access to all AI design tools', enabled: true, order: 0 },
+      { text: 'Priority rendering speed', enabled: true, order: 1 },
+      { text: 'Unlimited projects', enabled: true, order: 2 },
+      { text: 'Project gallery', enabled: true, order: 3 },
+      { text: 'Share with contractors', enabled: true, order: 4 },
+      { text: 'Ultra HD quality renders', enabled: true, order: 5 },
+      { text: 'PDF export included', enabled: true, order: 6 },
+      { text: 'Priority support', enabled: true, order: 7 },
+      { text: 'Advanced AI parameters', enabled: true, order: 8 }
+    ],
+    active: true,
+    stripePriceIdMonthly: '',
+    stripePriceIdAnnual: '',
+    ctaText: 'Get Studio Pro',
+    ctaLink: '/auth/register?plan=studio-pro',
+    displayOrder: 3
+  }
+};
+
+// ── Contractor plans (unchanged) ──────────────────────────────────────────────
+
 const contractorPlans = [
   {
     id: 'free',
@@ -168,6 +254,8 @@ const contractorPlans = [
   }
 ];
 
+// ── Merge helpers ─────────────────────────────────────────────────────────────
+
 function mergePlan(stored, defaultPlan) {
   if (!stored) return { ...defaultPlan };
   return {
@@ -189,6 +277,28 @@ function mergePlan(stored, defaultPlan) {
   };
 }
 
+function mergeSubscriptionPlan(stored, def) {
+  if (!stored || !stored.name) return { ...def };
+  return {
+    name: stored.name || def.name,
+    subtitle: stored.subtitle !== undefined ? stored.subtitle : def.subtitle,
+    priceMonthly: stored.priceMonthly !== undefined ? stored.priceMonthly : def.priceMonthly,
+    priceAnnual: stored.priceAnnual !== undefined ? stored.priceAnnual : def.priceAnnual,
+    priceAnnualMonthly: stored.priceAnnualMonthly !== undefined ? stored.priceAnnualMonthly : def.priceAnnualMonthly,
+    savingsAnnual: stored.savingsAnnual !== undefined ? stored.savingsAnnual : def.savingsAnnual,
+    credits: stored.credits !== undefined ? stored.credits : def.credits,
+    badge: stored.badge !== undefined ? stored.badge : def.badge,
+    badgeStyle: stored.badgeStyle !== undefined ? stored.badgeStyle : def.badgeStyle,
+    features: stored.features && stored.features.length > 0 ? stored.features : def.features,
+    active: stored.active !== undefined ? stored.active : def.active,
+    stripePriceIdMonthly: stored.stripePriceIdMonthly || def.stripePriceIdMonthly,
+    stripePriceIdAnnual: stored.stripePriceIdAnnual || def.stripePriceIdAnnual,
+    ctaText: stored.ctaText || def.ctaText,
+    ctaLink: stored.ctaLink || def.ctaLink,
+    displayOrder: stored.displayOrder !== undefined ? stored.displayOrder : def.displayOrder
+  };
+}
+
 const mergePricingConfig = (storedConfig) => {
   if (!storedConfig) return { ...defaultPricingConfig };
 
@@ -202,8 +312,19 @@ const mergePricingConfig = (storedConfig) => {
   };
 };
 
+const mergeSubscriptionPlans = (storedConfig) => {
+  if (!storedConfig) return { ...defaultSubscriptionPlans };
+  return {
+    essential: mergeSubscriptionPlan(storedConfig.essential, defaultSubscriptionPlans.essential),
+    creator: mergeSubscriptionPlan(storedConfig.creator, defaultSubscriptionPlans.creator),
+    studioPro: mergeSubscriptionPlan(storedConfig.studioPro, defaultSubscriptionPlans.studioPro)
+  };
+};
+
 module.exports = {
   defaultPricingConfig,
+  defaultSubscriptionPlans,
   mergePricingConfig,
+  mergeSubscriptionPlans,
   contractorPlans
 };

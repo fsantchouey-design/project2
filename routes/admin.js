@@ -19,7 +19,7 @@ const {
 const { mergeSpecialistsConfig, defaultSpecialistsConfig } = require('../utils/specialistsConfig');
 const path = require('path');
 const PricingConfig = require('../models/PricingConfig');
-const { mergePricingConfig, defaultPricingConfig } = require('../utils/pricingConfig');
+const { mergePricingConfig, mergeSubscriptionPlans, defaultPricingConfig, defaultSubscriptionPlans } = require('../utils/pricingConfig');
 
 router.get('/', (req, res) => {
   res.redirect('/admin/landing');
@@ -378,12 +378,14 @@ router.get('/pricing', async (req, res) => {
   try {
     const storedConfig = await PricingConfig.findOne({});
     const pricing = mergePricingConfig(storedConfig);
+    const subscriptionPlans = mergeSubscriptionPlans(storedConfig);
 
     res.render('pages/admin/pricing', {
       title: 'Pricing Configuration - Admin',
       layout: 'layouts/minimal',
       extraStyles: ['/css/dashboard.css'],
-      pricing
+      pricing,
+      subscriptionPlans
     });
   } catch (err) {
     console.error('Admin pricing error:', err);
@@ -392,6 +394,67 @@ router.get('/pricing', async (req, res) => {
   }
 });
 
+// Save subscription plans (Essential / Creator / Studio Pro)
+router.post('/pricing/subscription', async (req, res) => {
+  try {
+    const { sub } = req.body;
+    let config = await PricingConfig.findOne({});
+    if (!config) config = new PricingConfig();
+
+    ['essential', 'creator', 'studioPro'].forEach(key => {
+      if (!sub || !sub[key]) return;
+      const p = sub[key];
+
+      // Build ordered feature array from indexed inputs
+      const features = [];
+      if (p.features) {
+        const idxs = Object.keys(p.features).sort((a, b) => parseInt(a) - parseInt(b));
+        idxs.forEach((idx, order) => {
+          const f = p.features[idx];
+          const text = (f.text || '').trim();
+          if (text) {
+            features.push({
+              text,
+              enabled: f.enabled === 'on' || f.enabled === 'true' || f.enabled === '1',
+              order
+            });
+          }
+        });
+      }
+
+      config[key] = {
+        name: (p.name || '').trim(),
+        subtitle: (p.subtitle || '').trim(),
+        priceMonthly: parseFloat(p.priceMonthly) || 0,
+        priceAnnual: parseFloat(p.priceAnnual) || 0,
+        priceAnnualMonthly: parseFloat(p.priceAnnualMonthly) || 0,
+        savingsAnnual: parseFloat(p.savingsAnnual) || 0,
+        credits: parseInt(p.credits) || 0,
+        badge: (p.badge || '').trim(),
+        badgeStyle: (p.badgeStyle || '').trim(),
+        features: features.length > 0 ? features : defaultSubscriptionPlans[key].features,
+        active: p.active === 'on' || p.active === '1',
+        stripePriceIdMonthly: (p.stripePriceIdMonthly || '').trim(),
+        stripePriceIdAnnual: (p.stripePriceIdAnnual || '').trim(),
+        ctaText: (p.ctaText || '').trim(),
+        ctaLink: (p.ctaLink || '').trim(),
+        displayOrder: parseInt(p.displayOrder) || 0
+      };
+    });
+
+    config.updatedAt = new Date();
+    await config.save();
+
+    req.flash('success_msg', 'Forfaits d\'abonnement mis à jour avec succès.');
+    res.redirect('/admin/pricing#subscription');
+  } catch (err) {
+    console.error('Admin subscription plans save error:', err);
+    req.flash('error_msg', 'Impossible de sauvegarder les forfaits.');
+    res.redirect('/admin/pricing');
+  }
+});
+
+// Save legacy plans (Régulier / Avancé / Premium) + comparison table
 router.post('/pricing/plans', async (req, res) => {
   try {
     const { plans, comparison } = req.body;

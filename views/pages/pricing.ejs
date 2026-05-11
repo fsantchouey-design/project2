@@ -723,102 +723,61 @@
     </div>
 
     <!-- Cards -->
+    <%
+      var subPlanKeys = ['essential', 'creator', 'studioPro'];
+      var subPlans = typeof subscriptionPlans !== 'undefined'
+        ? subPlanKeys.map(function(k) { return subscriptionPlans[k]; })
+        : [];
+      subPlans = subPlans.filter(function(p) { return p && p.active !== false; });
+      subPlans.sort(function(a, b) { return (a.displayOrder || 0) - (b.displayOrder || 0); });
+    %>
     <div class="ph-plans-grid">
 
-      <!-- Essential -->
-      <div class="ph-plan-card">
-        <span class="ph-plan-name">Essential</span>
-        <span class="ph-plan-tagline">Perfect to get started</span>
+      <% subPlans.forEach(function(plan, pidx) {
+        var style = plan.badgeStyle || '';
+        var cardCls = 'ph-plan-card' + (style === 'popular' ? ' ph-plan-card--popular' : style === 'value' ? ' ph-plan-card--value' : '');
+        var ctaCls  = 'ph-plan-cta' + (style === 'popular' ? ' ph-plan-cta--popular' : style === 'value' ? ' ph-plan-cta--value' : ' ph-plan-cta--default');
+        var ribbonCls = 'ph-plan-ribbon ph-plan-ribbon--' + (style || 'popular');
+        var mPrice = (plan.priceMonthly || 0).toFixed(2);
+        var aPrice = (plan.priceAnnualMonthly || 0).toFixed(2);
+        var aTotal = (plan.priceAnnual || 0).toFixed(2);
+        var aSave  = (plan.savingsAnnual || 0).toFixed(2);
+        var creditsStr = (plan.credits || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
+        var activeFeatures = (plan.features || []).filter(function(f) { return f.enabled !== false; });
+        var ctaLink = plan.stripePriceIdAnnual ? (plan.ctaLink || '#') : (plan.ctaLink || '#');
+      %>
+      <div class="<%= cardCls %>">
+        <% if (plan.badge) { %>
+          <div class="<%= ribbonCls %>"><%= plan.badge %></div>
+        <% } %>
+        <span class="ph-plan-name"><%= plan.name %></span>
+        <span class="ph-plan-tagline"><%= plan.subtitle %></span>
         <div class="ph-plan-price">
-          <span class="ph-plan-amount" data-monthly="19.99" data-annual="16.66">16.66$</span>
+          <span class="ph-plan-amount" data-monthly="<%= mPrice %>" data-annual="<%= aPrice %>"><%= aPrice %>$</span>
           <span class="ph-plan-period">CAD / month</span>
         </div>
-        <div class="ph-plan-annual-info is-visible" id="ph-annual-info-essential">
-          <span>Billed 199.90$ CAD / year</span>
-          <span class="ph-plan-savings">Save 39.98$</span>
+        <% if (plan.priceAnnual) { %>
+        <div class="ph-plan-annual-info is-visible" id="ph-annual-info-<%= pidx %>">
+          <span>Billed <%= aTotal %>$ CAD / year</span>
+          <span class="ph-plan-savings">Save <%= aSave %>$</span>
         </div>
+        <% } %>
         <div class="ph-plan-credits">
           <i data-lucide="zap"></i>
-          250 AI Credits / month
+          <%= creditsStr %> AI Credits / month
         </div>
         <ul class="ph-plan-features">
-          <li><i data-lucide="check"></i> Access to all AI design tools</li>
-          <li><i data-lucide="check"></i> Standard rendering speed</li>
-          <li><i data-lucide="check"></i> Up to 5 active projects</li>
-          <li><i data-lucide="check"></i> Project gallery</li>
-          <li><i data-lucide="check"></i> Share with contractors</li>
-          <li><i data-lucide="check"></i> Standard quality renders</li>
+          <% activeFeatures.forEach(function(f) { %>
+            <li><i data-lucide="check"></i> <%= f.text %></li>
+          <% }); %>
         </ul>
-        <a href="/auth/register?plan=essential" class="ph-plan-cta ph-plan-cta--default">
-          Get Started
+        <a href="<%= plan.ctaLink || '#' %>" class="<%= ctaCls %>">
+          <% if (style === 'popular') { %><i data-lucide="sparkles"></i><% } %>
+          <% if (style === 'value') { %><i data-lucide="crown"></i><% } %>
+          <%= plan.ctaText %>
         </a>
       </div>
-
-      <!-- Creator (Popular) -->
-      <div class="ph-plan-card ph-plan-card--popular">
-        <div class="ph-plan-ribbon ph-plan-ribbon--popular">Most Popular</div>
-        <span class="ph-plan-name">Creator</span>
-        <span class="ph-plan-tagline">For active designers</span>
-        <div class="ph-plan-price">
-          <span class="ph-plan-amount" data-monthly="39.99" data-annual="33.33">33.33$</span>
-          <span class="ph-plan-period">CAD / month</span>
-        </div>
-        <div class="ph-plan-annual-info is-visible" id="ph-annual-info-creator">
-          <span>Billed 399.90$ CAD / year</span>
-          <span class="ph-plan-savings">Save 79.98$</span>
-        </div>
-        <div class="ph-plan-credits">
-          <i data-lucide="zap"></i>
-          700 AI Credits / month
-        </div>
-        <ul class="ph-plan-features">
-          <li><i data-lucide="check"></i> Access to all AI design tools</li>
-          <li><i data-lucide="check"></i> Fast rendering speed</li>
-          <li><i data-lucide="check"></i> Unlimited projects</li>
-          <li><i data-lucide="check"></i> Project gallery</li>
-          <li><i data-lucide="check"></i> Share with contractors</li>
-          <li><i data-lucide="check"></i> High quality renders</li>
-          <li><i data-lucide="check"></i> PDF export included</li>
-        </ul>
-        <a href="/auth/register?plan=creator" class="ph-plan-cta ph-plan-cta--popular">
-          <i data-lucide="sparkles"></i>
-          Get Creator
-        </a>
-      </div>
-
-      <!-- Studio Pro (Best Value) -->
-      <div class="ph-plan-card ph-plan-card--value">
-        <div class="ph-plan-ribbon ph-plan-ribbon--value">Best Value</div>
-        <span class="ph-plan-name">Studio Pro</span>
-        <span class="ph-plan-tagline">For power users &amp; studios</span>
-        <div class="ph-plan-price">
-          <span class="ph-plan-amount" data-monthly="79.99" data-annual="66.66">66.66$</span>
-          <span class="ph-plan-period">CAD / month</span>
-        </div>
-        <div class="ph-plan-annual-info is-visible" id="ph-annual-info-studio">
-          <span>Billed 799.90$ CAD / year</span>
-          <span class="ph-plan-savings">Save 159.98$</span>
-        </div>
-        <div class="ph-plan-credits">
-          <i data-lucide="zap"></i>
-          1 800 AI Credits / month
-        </div>
-        <ul class="ph-plan-features">
-          <li><i data-lucide="check"></i> Access to all AI design tools</li>
-          <li><i data-lucide="check"></i> Priority rendering speed</li>
-          <li><i data-lucide="check"></i> Unlimited projects</li>
-          <li><i data-lucide="check"></i> Project gallery</li>
-          <li><i data-lucide="check"></i> Share with contractors</li>
-          <li><i data-lucide="check"></i> Ultra HD quality renders</li>
-          <li><i data-lucide="check"></i> PDF export included</li>
-          <li><i data-lucide="check"></i> Priority support</li>
-          <li><i data-lucide="check"></i> Advanced AI parameters</li>
-        </ul>
-        <a href="/auth/register?plan=studio-pro" class="ph-plan-cta ph-plan-cta--value">
-          <i data-lucide="crown"></i>
-          Get Studio Pro
-        </a>
-      </div>
+      <% }); %>
 
     </div>
   </section>

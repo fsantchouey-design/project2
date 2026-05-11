@@ -10,7 +10,7 @@ const ContactMessage = require('../models/ContactMessage');
 const InspirationImage = require('../models/InspirationImage');
 const GalleryVideo = require('../models/GalleryVideo');
 const PricingConfig = require('../models/PricingConfig');
-const { mergePricingConfig, contractorPlans } = require('../utils/pricingConfig');
+const { mergePricingConfig, mergeSubscriptionPlans, contractorPlans } = require('../utils/pricingConfig');
 
 // Landing Page
 router.get('/', async (req, res) => {
@@ -67,9 +67,11 @@ router.get('/how-it-works', (req, res) => {
 // Pricing Page
 router.get('/pricing', async (req, res) => {
   let pricingConfig = mergePricingConfig(null);
+  let subscriptionPlans = mergeSubscriptionPlans(null);
   try {
     const storedPricing = await PricingConfig.findOne({});
     pricingConfig = mergePricingConfig(storedPricing);
+    subscriptionPlans = mergeSubscriptionPlans(storedPricing);
   } catch (err) {
     console.error('Pricing config load error:', err);
   }
@@ -80,6 +82,7 @@ router.get('/pricing', async (req, res) => {
     keywords: 'interior design pricing, AI design cost, renovation platform pricing, home design subscription',
     layout: 'layouts/landing',
     plans: pricingConfig,
+    subscriptionPlans,
     contractorPlans
   });
 });
