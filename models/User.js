@@ -93,6 +93,7 @@ const userSchema = new mongoose.Schema({
     // Stripe/Payment
     stripeCustomerId: String,
     stripeSubscriptionId: String,
+    stripePlanKey: { type: String, enum: ['essential', 'creator', 'studioPro', null], default: null },
     // Status
     status: {
       type: String,

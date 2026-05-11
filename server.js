@@ -26,6 +26,9 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.set('layout', 'layouts/main');
 
+// Stripe webhook — must receive raw body BEFORE express.json() parses it
+app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), require('./routes/webhook'));
+
 // Body Parser
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
 app.use(express.json({ limit: '20mb' }));
