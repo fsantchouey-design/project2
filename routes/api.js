@@ -19,6 +19,7 @@ const {
 } = require('../utils/homedesigns');
 const { uploadProjectImages, getImageUrl } = require('../config/cloudinary');
 const aiToolsConfig = require('../config/toolsConfig');
+const { checkUserCreditsBeforeGeneration, deductCreditsAfterSuccessfulGeneration } = require('../utils/credits');
 
 const VIDEO_GENERATION_MOTIONS = [
   'pan_up',
@@ -378,6 +379,17 @@ router.post('/generate-design', ensureAuthenticated, uploadProjectImages.fields(
       return res.status(400).json({ success: false, error: 'Please select a valid AI tool.' });
     }
 
+    // ── Credit check (before any API call) ────────────────────────────────────
+    const creditCheck = await checkUserCreditsBeforeGeneration(req.user.id, toolKey);
+    if (!creditCheck.ok) {
+      return res.status(402).json({
+        success: false,
+        error: creditCheck.error,
+        creditsRequired: creditCheck.cost,
+        creditsBalance:  creditCheck.balance
+      });
+    }
+
     if (!process.env.HOMEDESIGNS_API_KEY && !process.env.HOMEDESIGNS_API_TOKEN) {
       return res.status(500).json({
         success: false,
@@ -507,7 +519,13 @@ router.post('/generate-design', ensureAuthenticated, uploadProjectImages.fields(
       return res.status(502).json({ success: false, error: result?.error || 'HomeDesigns returned an invalid response.' });
     }
 
+    // ── Deduct credits after successful generation only ────────────────────────
+    const newBalance = await deductCreditsAfterSuccessfulGeneration(req.user.id, creditCheck.cost);
+    console.log(`[Credits] ${toolKey} — deducted ${creditCheck.cost} credits from user ${req.user.id}, new balance: ${newBalance}`);
+
     const responsePayload = buildGenerateDesignResponse(result, tool.name, endpoint);
+    responsePayload.creditsDeducted  = creditCheck.cost;
+    responsePayload.creditsRemaining = newBalance;
 
     if (project) {
       if (uploadedImageUrl) {
@@ -571,9 +589,21 @@ router.post('/generate-design', ensureAuthenticated, uploadProjectImages.fields(
 // TODO: Configure HOMEDESIGNS_API_KEY in the server environment before production use.
 router.post('/v2/:tool', ensureAuthenticated, uploadProjectImages.single('image'), async (req, res) => {
   try {
-    const tool = aiToolHandlers[req.params.tool];
+    const toolKey = req.params.tool;
+    const tool = aiToolHandlers[toolKey];
     if (!tool) {
       return res.status(404).json({ success: false, error: 'Unknown AI tool endpoint.' });
+    }
+
+    // ── Credit check (before any API call) ──────────────────────────────────
+    const creditCheck = await checkUserCreditsBeforeGeneration(req.user.id, toolKey);
+    if (!creditCheck.ok) {
+      return res.status(402).json({
+        success: false,
+        error: creditCheck.error,
+        creditsRequired: creditCheck.cost,
+        creditsBalance:  creditCheck.balance
+      });
     }
 
     if (!req.file) {
@@ -609,16 +639,22 @@ router.post('/v2/:tool', ensureAuthenticated, uploadProjectImages.single('image'
       });
     }
 
+    // ── Deduct credits after successful generation only ──────────────────────
+    const newBalance = await deductCreditsAfterSuccessfulGeneration(req.user.id, creditCheck.cost);
+    console.log(`[Credits] ${toolKey} — deducted ${creditCheck.cost} credits from user ${req.user.id}, new balance: ${newBalance}`);
+
     const images = result.allImages || (result.imageUrl ? [result.imageUrl] : []);
 
     return res.json({
       success: true,
       tool: tool.name,
-      endpoint: `/api/v2/${req.params.tool}`,
+      endpoint: `/api/v2/${toolKey}`,
       imageUrl: result.imageUrl,
       videoUrl: result.videoUrl,
       textResult: result.textResult,
       resultArray: result.resultArray,
+      creditsDeducted:  creditCheck.cost,
+      creditsRemaining: newBalance,
       designs: images.map((url, index) => ({
         name: `${tool.name}${images.length > 1 ? ` #${index + 1}` : ''}`,
         imageUrl: url
