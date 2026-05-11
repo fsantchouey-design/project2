@@ -948,6 +948,7 @@ router.post('/create-checkout-session', ensureAuthenticated, async (req, res) =>
       mode: sessionMode,
       line_items: [{ price: priceId, quantity: 1 }],
       customer_email: req.user.email || undefined,
+      client_reference_id: String(req.user.id),
       success_url: `${appUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url:  `${appUrl}/pricing`,
       metadata: {
