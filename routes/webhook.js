@@ -1,5 +1,3 @@
-const express = require('express');
-const router = express.Router();
 const User = require('../models/User');
 const StripeEvent = require('../models/StripeEvent');
 const PricingConfig = require('../models/PricingConfig');
@@ -23,110 +21,100 @@ const PLAN_ENV_PRICES = {
 
 async function priceIdToPlanKey(priceId) {
   if (!priceId) return null;
-
   const config = await PricingConfig.findOne({});
   if (config) {
     for (const key of ['essential', 'creator', 'studioPro']) {
       const plan = config[key];
       if (plan && (plan.stripePriceIdMonthly === priceId || plan.stripePriceIdAnnual === priceId)) {
-        console.log(`[Webhook] priceId matched DB config → planKey: ${key}`);
+        console.log(`[Webhook] priceId matched DB → planKey: ${key}`);
         return key;
       }
     }
   }
-
   for (const [planKey, envKeys] of Object.entries(PLAN_ENV_PRICES)) {
     const mv = process.env[envKeys.monthly];
     const av = process.env[envKeys.annual];
-    console.log(`[Webhook]   check ${envKeys.monthly}=${mv || '(not set)'} | ${envKeys.annual}=${av || '(not set)'}`);
+    console.log(`[Webhook]   ${envKeys.monthly}=${mv || '(not set)'} | ${envKeys.annual}=${av || '(not set)'}`);
     if (mv === priceId || av === priceId) {
       console.log(`[Webhook] priceId matched env var → planKey: ${planKey}`);
       return planKey;
     }
   }
-
   console.error(`[Webhook] ❌ priceId ${priceId} did not match any plan`);
   return null;
 }
 
 async function packSizeFromPriceId(priceId) {
-  const PACK_ENV = {
+  const MAP = {
     '100': 'STRIPE_PRICE_PACK_100', '250': 'STRIPE_PRICE_PACK_250',
     '500': 'STRIPE_PRICE_PACK_500', '1000': 'STRIPE_PRICE_PACK_1000',
     '2000': 'STRIPE_PRICE_PACK_2000', '4000': 'STRIPE_PRICE_PACK_4000'
   };
-  for (const [size, envKey] of Object.entries(PACK_ENV)) {
+  for (const [size, envKey] of Object.entries(MAP)) {
     if (process.env[envKey] === priceId) return size;
   }
   return null;
 }
 
-router.post('/', async (req, res) => {
+// Plain middleware function — exported directly so app.post() in server.js works correctly.
+// req.body is a raw Buffer set by express.raw() — do NOT JSON.parse or stringify it.
+module.exports = async function stripeWebhook(req, res) {
   console.log('==============================');
-  console.log('[Webhook] WEBHOOK RECEIVED');
+  console.log('[Webhook] Stripe webhook raw body received');
+  console.log(`[Webhook] STRIPE_SECRET_KEY set:     ${process.env.STRIPE_SECRET_KEY ? 'yes' : '❌ NO'}`);
+  console.log(`[Webhook] STRIPE_WEBHOOK_SECRET set: ${process.env.STRIPE_WEBHOOK_SECRET ? 'yes' : '❌ NO'}`);
+  console.log(`[Webhook] body is Buffer: ${Buffer.isBuffer(req.body)}`);
+  console.log(`[Webhook] body length:   ${req.body ? req.body.length : 0} bytes`);
 
   const stripeKey = process.env.STRIPE_SECRET_KEY;
-  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
-  console.log(`[Webhook] STRIPE_SECRET_KEY set:      ${stripeKey ? 'yes' : '❌ NO'}`);
-  console.log(`[Webhook] STRIPE_WEBHOOK_SECRET set:  ${webhookSecret ? 'yes' : '❌ NO'}`);
-
   if (!stripeKey) {
     console.error('[Webhook] ❌ STRIPE_SECRET_KEY not configured');
     return res.status(500).send('Stripe not configured');
   }
 
   const stripe = require('stripe')(stripeKey);
-
-  // Use rawBody saved by express.raw verify callback; fall back to req.body
-  const rawPayload = req.rawBody || req.body;
-  console.log(`[Webhook] body type:   ${typeof rawPayload}`);
-  console.log(`[Webhook] is Buffer:   ${Buffer.isBuffer(rawPayload)}`);
-  console.log(`[Webhook] body length: ${rawPayload ? rawPayload.length : 0} bytes`);
-
+  const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   const sig = req.headers['stripe-signature'];
-  console.log(`[Webhook] stripe-signature: ${sig ? sig.substring(0, 40) + '...' : '❌ MISSING'}`);
+
+  console.log(`[Webhook] stripe-signature: ${sig ? sig.substring(0, 50) + '...' : '❌ MISSING'}`);
 
   let event;
 
   if (webhookSecret) {
     if (!sig) {
-      console.error('[Webhook] ❌ stripe-signature header missing — cannot verify');
+      console.error('[Webhook] ❌ stripe-signature header missing');
       return res.status(400).send('Missing stripe-signature header');
     }
     try {
-      event = stripe.webhooks.constructEvent(rawPayload, sig, webhookSecret);
-      console.log('[Webhook] ✅ stripe signature verified');
+      // req.body is the raw Buffer from express.raw() — passed directly, never JSON-parsed
+      event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+      console.log('[Webhook] ✅ Stripe signature verified');
     } catch (err) {
       console.error('[Webhook] ❌ Signature verification failed:', err.message);
-      console.error('[Webhook]    Make sure STRIPE_WEBHOOK_SECRET in Render matches');
-      console.error('[Webhook]    the signing secret shown in Stripe Dashboard → Webhooks → your endpoint');
       return res.status(400).send(`Webhook signature error: ${err.message}`);
     }
   } else {
-    // No secret set — parse raw body as JSON (accepts unsigned events for initial setup)
     try {
-      event = JSON.parse(rawPayload.toString());
-      console.warn('[Webhook] ⚠️  STRIPE_WEBHOOK_SECRET not set — signature NOT verified');
+      event = JSON.parse(req.body.toString());
+      console.warn('[Webhook] ⚠️  STRIPE_WEBHOOK_SECRET not set — running unverified (dev only)');
     } catch (err) {
-      console.error('[Webhook] ❌ Failed to parse body as JSON:', err.message);
-      return res.status(400).send('Invalid JSON body');
+      console.error('[Webhook] ❌ Failed to parse body:', err.message);
+      return res.status(400).send('Invalid body');
     }
   }
 
   console.log(`[Webhook] event.type: ${event.type}`);
   console.log(`[Webhook] event.id:   ${event.id}`);
 
-  // Idempotency — skip already-processed events
+  // Idempotency
   try {
     await StripeEvent.create({ stripeEventId: event.id });
   } catch (err) {
     if (err.code === 11000) {
-      console.log(`[Webhook] ⏭  Event ${event.id} already processed, skipping`);
+      console.log(`[Webhook] ⏭  Event ${event.id} already processed`);
       return res.json({ received: true });
     }
     console.error('[Webhook] ⚠️  StripeEvent.create error:', err.message);
-    // Continue — don't block credit delivery over a dedup write error
   }
 
   try {
@@ -135,18 +123,16 @@ router.post('/', async (req, res) => {
     } else if (event.type === 'invoice.payment_succeeded') {
       await handleInvoicePaymentSucceeded(event.data.object);
     } else {
-      console.log(`[Webhook] Event type "${event.type}" not handled`);
+      console.log(`[Webhook] event type "${event.type}" not handled`);
     }
   } catch (err) {
-    // Return 200 so Stripe doesn't retry — logic errors are logged, not fatal
-    console.error(`[Webhook] ❌ Handler error (${event.type}):`, err.message, err.stack);
+    console.error(`[Webhook] ❌ Handler error (${event.type}):`, err.message);
   }
 
   console.log('==============================');
   res.json({ received: true });
-});
+};
 
-// ── checkout.session.completed ─────────────────────────────────────────────────
 async function handleCheckoutCompleted(stripe, session) {
   console.log('[Webhook] --- checkout.session.completed ---');
   console.log('[Webhook] session.id:                ', session.id);
@@ -156,22 +142,21 @@ async function handleCheckoutCompleted(stripe, session) {
   console.log('[Webhook] session.client_reference_id:', session.client_reference_id || '(none)');
   console.log('[Webhook] session.metadata:          ', JSON.stringify(session.metadata));
 
-  const userId  = (session.metadata && session.metadata.userId) || session.client_reference_id;
+  const userId   = (session.metadata && session.metadata.userId) || session.client_reference_id;
   const planKey  = session.metadata && session.metadata.planKey;
   const billing  = session.metadata && session.metadata.billing;
   const packSize = session.metadata && session.metadata.packSize;
 
   console.log('[Webhook] userId:   ', userId   || '❌ MISSING');
   console.log('[Webhook] planKey:  ', planKey  || '(none)');
-  console.log('[Webhook] billing:  ', billing  || '(none)');
   console.log('[Webhook] packSize: ', packSize || '(none)');
 
   if (!userId) {
-    console.error('[Webhook] ❌ Cannot fulfill — no userId in metadata.userId or client_reference_id');
+    console.error('[Webhook] ❌ No userId in metadata or client_reference_id');
     return;
   }
 
-  // Expand line_items to get the real priceId
+  // Get the actual priceId by expanding line_items
   let priceId = null;
   try {
     const full = await stripe.checkout.sessions.retrieve(session.id, { expand: ['line_items'] });
@@ -185,7 +170,7 @@ async function handleCheckoutCompleted(stripe, session) {
     console.error('[Webhook] ⚠️  Could not expand line_items:', err.message);
   }
 
-  // ── Credit pack (one-time payment) ──────────────────────────────────────────
+  // ── Credit pack ─────────────────────────────────────────────────────────────
   if (session.mode === 'payment') {
     const size    = packSize || (priceId ? await packSizeFromPriceId(priceId) : null);
     const credits = size ? PACK_CREDITS[String(size)] : null;
@@ -194,7 +179,7 @@ async function handleCheckoutCompleted(stripe, session) {
     console.log('[Webhook] creditsToAdd:', credits || '❌ UNKNOWN');
 
     if (!credits) {
-      console.error(`[Webhook] ❌ Cannot resolve credits for pack — packSize:${packSize} priceId:${priceId}`);
+      console.error(`[Webhook] ❌ Cannot resolve credits — packSize:${packSize} priceId:${priceId}`);
       return;
     }
 
@@ -203,23 +188,17 @@ async function handleCheckoutCompleted(stripe, session) {
       { $inc: { 'subscription.credits': credits } },
       { new: true }
     );
-
-    if (!updated) {
-      console.error(`[Webhook] ❌ User not found: ${userId}`);
-      return;
-    }
+    if (!updated) { console.error(`[Webhook] ❌ User not found: ${userId}`); return; }
 
     console.log(`[Webhook] ✅ Pack +${credits} crédits → user ${userId} | balance: ${updated.subscription.credits}`);
     console.log('[Webhook] database updated successfully');
     return;
   }
 
-  // ── Subscription plan ────────────────────────────────────────────────────────
+  // ── Subscription ─────────────────────────────────────────────────────────────
   if (session.mode === 'subscription') {
     let resolvedPlanKey = planKey;
-    if (!resolvedPlanKey && priceId) {
-      resolvedPlanKey = await priceIdToPlanKey(priceId);
-    }
+    if (!resolvedPlanKey && priceId) resolvedPlanKey = await priceIdToPlanKey(priceId);
 
     console.log('[Webhook] planKey resolved:', resolvedPlanKey || '❌ UNKNOWN');
 
@@ -237,42 +216,35 @@ async function handleCheckoutCompleted(stripe, session) {
     endDate.setDate(endDate.getDate() + (isAnnual ? 366 : 31));
 
     const update = {
-      'subscription.type':        'advanced',
-      'subscription.stripePlanKey': resolvedPlanKey,
-      'subscription.credits':     credits,
-      'subscription.creditsUsed': 0,
-      'subscription.status':      'active',
-      'subscription.startDate':   now,
-      'subscription.endDate':     endDate,
-      'isPremium':                true
+      'subscription.type':              'advanced',
+      'subscription.stripePlanKey':     resolvedPlanKey,
+      'subscription.credits':           credits,
+      'subscription.creditsUsed':       0,
+      'subscription.status':            'active',
+      'subscription.startDate':         now,
+      'subscription.endDate':           endDate,
+      'isPremium':                      true
     };
     if (session.customer)     update['subscription.stripeCustomerId']    = session.customer;
     if (session.subscription) update['subscription.stripeSubscriptionId'] = session.subscription;
 
     const updated = await User.findByIdAndUpdate(userId, { $set: update }, { new: true });
-
-    if (!updated) {
-      console.error(`[Webhook] ❌ User not found: ${userId}`);
-      return;
-    }
+    if (!updated) { console.error(`[Webhook] ❌ User not found: ${userId}`); return; }
 
     console.log(`[Webhook] ✅ Subscription ${resolvedPlanKey} (${billing}) → ${credits} crédits → user ${userId}`);
-    console.log(`[Webhook]    subscription.type:    ${updated.subscription.type}`);
     console.log(`[Webhook]    subscription.credits: ${updated.subscription.credits}`);
     console.log(`[Webhook]    subscription.status:  ${updated.subscription.status}`);
     console.log('[Webhook] database updated successfully');
   }
 }
 
-// ── invoice.payment_succeeded (renewals only) ──────────────────────────────────
 async function handleInvoicePaymentSucceeded(invoice) {
   console.log('[Webhook] --- invoice.payment_succeeded ---');
-  console.log('[Webhook] invoice.id:            ', invoice.id);
-  console.log('[Webhook] invoice.billing_reason:', invoice.billing_reason);
-  console.log('[Webhook] invoice.subscription:  ', invoice.subscription || '(none)');
+  console.log('[Webhook] billing_reason:', invoice.billing_reason);
+  console.log('[Webhook] subscription:  ', invoice.subscription || '(none)');
 
   if (invoice.billing_reason === 'subscription_create') {
-    console.log('[Webhook] ⏭  billing_reason=subscription_create — handled by checkout.session.completed');
+    console.log('[Webhook] ⏭  subscription_create — handled by checkout.session.completed');
     return;
   }
 
@@ -280,22 +252,18 @@ async function handleInvoicePaymentSucceeded(invoice) {
   if (!subscriptionId) { console.error('[Webhook] ❌ No subscription ID on invoice'); return; }
 
   const user = await User.findOne({ 'subscription.stripeSubscriptionId': subscriptionId });
-  if (!user) { console.error(`[Webhook] ❌ No user for stripeSubscriptionId: ${subscriptionId}`); return; }
+  if (!user) { console.error(`[Webhook] ❌ No user for subscriptionId: ${subscriptionId}`); return; }
 
   console.log(`[Webhook] user found: ${user._id}`);
 
-  const priceId = invoice.lines &&
-                  invoice.lines.data &&
-                  invoice.lines.data[0] &&
-                  invoice.lines.data[0].price &&
+  const priceId = invoice.lines && invoice.lines.data &&
+                  invoice.lines.data[0] && invoice.lines.data[0].price &&
                   invoice.lines.data[0].price.id;
-
-  console.log('[Webhook] priceId:', priceId || '(none)');
 
   let planKey = user.subscription.stripePlanKey;
   if (!planKey && priceId) planKey = await priceIdToPlanKey(priceId);
 
-  console.log('[Webhook] planKey resolved:', planKey || '❌ UNKNOWN');
+  console.log('[Webhook] planKey:', planKey || '❌ UNKNOWN');
 
   const credits = PLAN_CREDITS[planKey];
   if (!credits) { console.error(`[Webhook] ❌ Cannot resolve credits — planKey:${planKey}`); return; }
@@ -315,9 +283,7 @@ async function handleInvoicePaymentSucceeded(invoice) {
     { new: true }
   );
 
-  console.log(`[Webhook] ✅ Renewal ${planKey} → ${credits} crédits → user ${user._id} (invoice ${invoice.id})`);
+  console.log(`[Webhook] ✅ Renewal ${planKey} → ${credits} crédits → user ${user._id}`);
   console.log(`[Webhook]    subscription.credits: ${updated.subscription.credits}`);
   console.log('[Webhook] database updated successfully');
 }
-
-module.exports = router;
