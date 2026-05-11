@@ -26,11 +26,11 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.set('layout', 'layouts/main');
 
-// Stripe webhook — must receive raw body BEFORE express.json() parses it
-// Both URL forms are supported (/api/stripe-webhook and /api/stripe/webhook)
+// Stripe webhook — raw body BEFORE express.json(), app.use() so Express
+// strips the mount path before passing to the Router (app.post() does not strip)
 const stripeWebhookHandler = require('./routes/webhook');
-app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), stripeWebhookHandler);
-app.post('/api/stripe/webhook', express.raw({ type: 'application/json' }), stripeWebhookHandler);
+app.use('/api/stripe-webhook', express.raw({ type: 'application/json' }), stripeWebhookHandler);
+app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }), stripeWebhookHandler);
 
 // Body Parser
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
