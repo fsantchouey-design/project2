@@ -1848,10 +1848,19 @@
 
 <!-- ===================== ANALYTICS ===================== -->
 <div class="pro-section" id="sec-analytics">
+  <%
+    var moisNoms = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+    var anaToday = new Date();
+    var moisLabel = moisNoms[anaToday.getMonth()] + ' ' + anaToday.getFullYear();
+    var ana = typeof analytics !== 'undefined' ? analytics : {
+      leadsThisMonth:0,leadsLastMonth:0,leadsThisYear:0,monthlyTrend:0,conversionRate:0,
+      topZones:[],maxZoneCount:1,topCategories:[],maxCatCount:1,monthlyLeads:[],hasCertifiedBadge:false
+    };
+  %>
   <div class="pro-page-header">
     <div>
       <div class="pro-page-title">Analytics</div>
-      <div class="pro-page-sub">Performances business · Mai 2026</div>
+      <div class="pro-page-sub">Statistiques plateforme · <%= moisLabel %></div>
     </div>
     <div class="pro-page-actions">
       <button class="pro-btn pro-btn-secondary"><i data-lucide="calendar"></i> Ce mois</button>
@@ -1861,31 +1870,52 @@
 
   <div class="pro-analytics-kpi">
     <div class="pro-analytics-kpi-card">
-      <div class="pro-analytics-kpi-value">1,284</div>
-      <div class="pro-analytics-kpi-label">Vues profil</div>
-      <div class="pro-analytics-kpi-change up"><i data-lucide="trending-up"></i> +18% vs mois dernier</div>
+      <div class="pro-analytics-kpi-value"><%= ana.leadsThisMonth %></div>
+      <div class="pro-analytics-kpi-label">Leads ce mois</div>
+      <% if (ana.monthlyTrend > 0) { %>
+        <div class="pro-analytics-kpi-change up"><i data-lucide="trending-up"></i> +<%= ana.monthlyTrend %>% vs mois dernier</div>
+      <% } else if (ana.monthlyTrend < 0) { %>
+        <div class="pro-analytics-kpi-change down"><i data-lucide="trending-down"></i> <%= ana.monthlyTrend %>% vs mois dernier</div>
+      <% } else { %>
+        <div class="pro-analytics-kpi-change"><i data-lucide="minus"></i> Stable vs mois dernier</div>
+      <% } %>
     </div>
     <div class="pro-analytics-kpi-card">
-      <div class="pro-analytics-kpi-value">34%</div>
-      <div class="pro-analytics-kpi-label">Taux de conversion</div>
-      <div class="pro-analytics-kpi-change up"><i data-lucide="trending-up"></i> +5 points</div>
+      <div class="pro-analytics-kpi-value"><%= ana.leadsThisYear %></div>
+      <div class="pro-analytics-kpi-label">Leads cette année</div>
+      <div class="pro-analytics-kpi-change up"><i data-lucide="bar-chart-2"></i> Total <%= anaToday.getFullYear() %></div>
     </div>
     <div class="pro-analytics-kpi-card">
-      <div class="pro-analytics-kpi-value">€42,800</div>
-      <div class="pro-analytics-kpi-label">Revenus estimés</div>
-      <div class="pro-analytics-kpi-change up"><i data-lucide="trending-up"></i> +8% croissance</div>
+      <div class="pro-analytics-kpi-value">—</div>
+      <div class="pro-analytics-kpi-label">Vues du profil</div>
+      <div class="pro-analytics-kpi-change"><i data-lucide="eye"></i> Bientôt disponible</div>
     </div>
     <div class="pro-analytics-kpi-card">
-      <div class="pro-analytics-kpi-value">4.9 ★</div>
-      <div class="pro-analytics-kpi-label">Note moyenne</div>
-      <div class="pro-analytics-kpi-change up"><i data-lucide="trending-up"></i> 47 avis clients</div>
+      <div class="pro-analytics-kpi-value"><%= ana.conversionRate %>%</div>
+      <div class="pro-analytics-kpi-label">Leads convertis</div>
+      <div class="pro-analytics-kpi-change up"><i data-lucide="check-circle"></i> Leads gagnés / total</div>
     </div>
   </div>
 
   <div class="pro-analytics-grid">
     <div class="pro-chart-area">
-      <div class="pro-chart-title">Revenus mensuels</div>
-      <div class="pro-chart-sub">6 derniers mois · en euros</div>
+      <div class="pro-chart-title">Leads mensuels</div>
+      <div class="pro-chart-sub">6 derniers mois</div>
+      <%
+        var mlMax = 1;
+        ana.monthlyLeads.forEach(function(m) { if (m.count > mlMax) mlMax = m.count; });
+        var mlXPos = [50, 150, 250, 350, 450, 550];
+        var mlPoints = [];
+        ana.monthlyLeads.forEach(function(m, idx) {
+          var y = Math.round(155 - (m.count / mlMax) * 145);
+          mlPoints.push({ x: mlXPos[idx] || (idx * 100 + 50), y: y, label: m.label, count: m.count });
+        });
+        var mlPathD = '';
+        mlPoints.forEach(function(p, idx) { mlPathD += (idx === 0 ? 'M' : ' L') + p.x + ',' + p.y; });
+        var mlFillD = mlPoints.length > 0
+          ? (mlPathD + ' L' + mlPoints[mlPoints.length - 1].x + ',165 L' + mlPoints[0].x + ',165 Z')
+          : '';
+      %>
       <svg class="pro-line-chart" viewBox="0 0 600 180" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
         <defs>
           <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
@@ -1893,63 +1923,87 @@
             <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
           </linearGradient>
         </defs>
-        <path d="M0,140 L100,110 L200,120 L300,80 L400,65 L500,40 L600,20" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round"/>
-        <path d="M0,140 L100,110 L200,120 L300,80 L400,65 L500,40 L600,20 L600,180 L0,180 Z" fill="url(#chartGrad)"/>
-        <circle cx="100" cy="110" r="4" fill="#10b981"/>
-        <circle cx="200" cy="120" r="4" fill="#10b981"/>
-        <circle cx="300" cy="80"  r="4" fill="#10b981"/>
-        <circle cx="400" cy="65"  r="4" fill="#10b981"/>
-        <circle cx="500" cy="40"  r="4" fill="#10b981"/>
-        <circle cx="600" cy="20"  r="6" fill="#10b981" stroke="#0f172a" stroke-width="2"/>
-        <line x1="0" y1="180" x2="600" y2="180" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
-        <line x1="0" y1="120" x2="600" y2="120" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,4"/>
-        <line x1="0" y1="60"  x2="600" y2="60"  stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,4"/>
-        <text x="5"   y="175" fill="rgba(255,255,255,0.25)" font-size="10" font-family="Inter,sans-serif">Déc</text>
-        <text x="100" y="175" fill="rgba(255,255,255,0.25)" font-size="10" font-family="Inter,sans-serif">Jan</text>
-        <text x="200" y="175" fill="rgba(255,255,255,0.25)" font-size="10" font-family="Inter,sans-serif">Fév</text>
-        <text x="300" y="175" fill="rgba(255,255,255,0.25)" font-size="10" font-family="Inter,sans-serif">Mar</text>
-        <text x="400" y="175" fill="rgba(255,255,255,0.25)" font-size="10" font-family="Inter,sans-serif">Avr</text>
-        <text x="500" y="175" fill="rgba(255,255,255,0.25)" font-size="10" font-family="Inter,sans-serif">Mai</text>
-      </svg>
-      <div style="margin-top:16px;">
-        <div class="pro-chart-title" style="font-size:13px;margin-bottom:10px;">Leads par source</div>
-        <div class="pro-bar-chart">
-          <% var sources = [
-            { label: 'CraftyCrib', h: 90 }, { label: 'Bouche à oreille', h: 70 },
-            { label: 'Google', h: 55 }, { label: 'Instagram', h: 45 },
-            { label: 'LinkedIn', h: 30 }, { label: 'Autre', h: 20 }
-          ]; %>
-          <% sources.forEach(function(s) { %>
-          <div class="pro-bar-col">
-            <div class="pro-bar-fill" style="height:<%= s.h %>%;"></div>
-            <div class="pro-bar-label"><%= s.label %></div>
-          </div>
+        <% if (mlPoints.length > 0) { %>
+          <path d="<%= mlPathD %>" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round"/>
+          <path d="<%= mlFillD %>" fill="url(#chartGrad)"/>
+          <% mlPoints.forEach(function(p, idx) { %>
+            <% if (idx === mlPoints.length - 1) { %>
+              <circle cx="<%= p.x %>" cy="<%= p.y %>" r="6" fill="#10b981" stroke="#0f172a" stroke-width="2"/>
+            <% } else { %>
+              <circle cx="<%= p.x %>" cy="<%= p.y %>" r="4" fill="#10b981"/>
+            <% } %>
           <% }); %>
-        </div>
+          <% mlPoints.forEach(function(p) { %>
+            <text x="<%= p.x - 10 %>" y="178" fill="rgba(255,255,255,0.25)" font-size="10" font-family="Inter,sans-serif"><%= p.label %></text>
+          <% }); %>
+        <% } else { %>
+          <text x="250" y="95" fill="rgba(255,255,255,0.2)" font-size="13" font-family="Inter,sans-serif">Aucun lead pour le moment</text>
+        <% } %>
+        <line x1="0" y1="165" x2="600" y2="165" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+        <line x1="0" y1="110" x2="600" y2="110" stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,4"/>
+        <line x1="0" y1="55"  x2="600" y2="55"  stroke="rgba(255,255,255,0.04)" stroke-width="1" stroke-dasharray="4,4"/>
+      </svg>
+
+      <div style="margin-top:16px;">
+        <div class="pro-chart-title" style="font-size:13px;margin-bottom:10px;">Catégories les plus demandées</div>
+        <% if (ana.topCategories.length > 0) { %>
+          <div class="pro-bar-chart">
+            <% ana.topCategories.forEach(function(cat) { %>
+              <% var barH = Math.round((cat.count / ana.maxCatCount) * 100); %>
+              <div class="pro-bar-col">
+                <div class="pro-bar-fill" style="height:<%= barH %>%;"></div>
+                <div class="pro-bar-label"><%= cat.name %></div>
+              </div>
+            <% }); %>
+          </div>
+        <% } else { %>
+          <div style="color:rgba(255,255,255,0.3);font-size:13px;text-align:center;padding:20px 0;">Aucune donnée ce mois</div>
+        <% } %>
       </div>
     </div>
 
     <div class="pro-ai-insights">
-      <div style="font-size:14px;font-weight:700;color:var(--pro-text);margin-bottom:12px;display:flex;align-items:center;gap:7px;"><i data-lucide="cpu" style="width:15px;height:15px;color:var(--pro-green)"></i> Recommandations IA</div>
-      <div class="pro-ai-insight-card">
-        <div class="pro-ai-insight-tag"><i data-lucide="trending-up"></i> Opportunité marché</div>
-        <div class="pro-ai-insight-text">"Modern kitchens perform 34% better this month. Push kitchen projects in your portfolio."</div>
-        <div class="pro-ai-insight-change">↑ +34% vs segment moyen</div>
+      <div style="font-size:14px;font-weight:700;color:var(--pro-text);margin-bottom:16px;display:flex;align-items:center;gap:7px;">
+        <i data-lucide="map-pin" style="width:15px;height:15px;color:var(--pro-green)"></i> Zones géographiques actives
       </div>
-      <div class="pro-ai-insight-card">
-        <div class="pro-ai-insight-tag"><i data-lucide="eye"></i> Visibilité profil</div>
-        <div class="pro-ai-insight-text">"Your profile visibility increased by 18%. Respond to pending leads to maximize conversion."</div>
-        <div class="pro-ai-insight-change">3 leads en attente de réponse</div>
-      </div>
-      <div class="pro-ai-insight-card">
-        <div class="pro-ai-insight-tag"><i data-lucide="map-pin"></i> Zone géographique</div>
-        <div class="pro-ai-insight-text">"Paris clients convert 2.3x better than average. Focus efforts on Paris 75008-75016."</div>
-        <div class="pro-ai-insight-change">Zone prioritaire recommandée</div>
-      </div>
-      <div class="pro-ai-insight-card">
-        <div class="pro-ai-insight-tag"><i data-lucide="clock"></i> Réactivité</div>
-        <div class="pro-ai-insight-text">"Responding within 2h increases your conversion by 60%. You're averaging 2.4h — excellent!"</div>
-        <div class="pro-ai-insight-change">Objectif : maintenir sous 3h</div>
+      <% if (ana.topZones.length > 0) { %>
+        <% ana.topZones.forEach(function(zone, zi) { %>
+          <% var zonePct = Math.round((zone.count / ana.maxZoneCount) * 100); %>
+          <div style="margin-bottom:12px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+              <span style="font-size:13px;color:var(--pro-text);display:flex;align-items:center;gap:6px;">
+                <span style="width:18px;height:18px;background:rgba(16,185,129,0.15);border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--pro-green);flex-shrink:0;"><%= zi + 1 %></span>
+                <%= zone.name %>
+              </span>
+              <span style="font-size:12px;color:rgba(255,255,255,0.4);white-space:nowrap;margin-left:8px;"><%= zone.count %> lead<%= zone.count > 1 ? "s" : "" %></span>
+            </div>
+            <div style="height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;">
+              <div style="height:100%;width:<%= zonePct %>%;background:linear-gradient(90deg,#10b981,#00d4ff);border-radius:2px;"></div>
+            </div>
+          </div>
+        <% }); %>
+      <% } else { %>
+        <div style="color:rgba(255,255,255,0.3);font-size:13px;text-align:center;padding:30px 0;">Aucun lead reçu pour le moment</div>
+      <% } %>
+
+      <div style="margin-top:20px;padding-top:16px;border-top:1px solid rgba(255,255,255,0.06);">
+        <div style="font-size:14px;font-weight:700;color:var(--pro-text);margin-bottom:12px;display:flex;align-items:center;gap:7px;">
+          <i data-lucide="award" style="width:15px;height:15px;color:var(--pro-green)"></i> Contractor Certified
+        </div>
+        <% if (ana.hasCertifiedBadge) { %>
+          <div style="background:linear-gradient(135deg,rgba(16,185,129,0.15),rgba(0,212,255,0.08));border:1px solid rgba(16,185,129,0.3);border-radius:12px;padding:16px;text-align:center;">
+            <div style="font-size:28px;margin-bottom:8px;">✦</div>
+            <div style="font-size:13px;font-weight:700;background:linear-gradient(135deg,#00ff88,#00d4ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:4px;">Certifié CraftyCrib</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.4);">Badge actif · Profil mis en avant</div>
+          </div>
+        <% } else { %>
+          <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);border-radius:12px;padding:16px;text-align:center;">
+            <div style="font-size:28px;margin-bottom:8px;opacity:0.3;">⬡</div>
+            <div style="font-size:13px;font-weight:600;color:rgba(255,255,255,0.4);margin-bottom:4px;">Badge non activé</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.25);margin-bottom:12px;">Disponible avec le plan Advanced</div>
+            <a href="/pricing" style="font-size:12px;color:var(--pro-green);text-decoration:none;font-weight:600;">Passer à Advanced →</a>
+          </div>
+        <% } %>
       </div>
     </div>
   </div>

@@ -410,15 +410,83 @@ router.post('/admin/applications/:id/reject/:token', ensureAdmin, async function
 // ─── PRO DASHBOARD (approved professionals only) ─────────────────────────────
 
 router.get('/dashboard', ensureProfessional, async function(req, res) {
+  var emptyAnalytics = {
+    leadsThisMonth: 0, leadsLastMonth: 0, leadsThisYear: 0,
+    monthlyTrend: 0, conversionRate: 0,
+    topZones: [], maxZoneCount: 1,
+    topCategories: [], maxCatCount: 1,
+    monthlyLeads: [], hasCertifiedBadge: false
+  };
   try {
     var proNotes = await Note.find({ user: req.user.id, source: 'pro' }).sort({ pinned: -1, updatedAt: -1 });
     var quoteRequests = await QuoteRequest.find({}).sort({ createdAt: -1 });
+
+    // ── Analytics ──
+    var now = new Date();
+    var startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    var startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    var startOfYear = new Date(now.getFullYear(), 0, 1);
+
+    var leadsThisMonth = quoteRequests.filter(function(q) { return q.createdAt >= startOfMonth; }).length;
+    var leadsLastMonth = quoteRequests.filter(function(q) { return q.createdAt >= startOfLastMonth && q.createdAt < startOfMonth; }).length;
+    var leadsThisYear = quoteRequests.filter(function(q) { return q.createdAt >= startOfYear; }).length;
+    var monthlyTrend = leadsLastMonth > 0 ? Math.round((leadsThisMonth - leadsLastMonth) / leadsLastMonth * 100) : 0;
+
+    var wonLeads = quoteRequests.filter(function(q) { return q.proLeadStatus === 'won'; }).length;
+    var conversionRate = quoteRequests.length > 0 ? Math.round(wonLeads / quoteRequests.length * 100) : 0;
+
+    // Top zones (all time)
+    var zoneCounts = {};
+    quoteRequests.forEach(function(q) {
+      if (q.city) { zoneCounts[q.city] = (zoneCounts[q.city] || 0) + 1; }
+    });
+    var topZones = Object.keys(zoneCounts).map(function(k) { return { name: k, count: zoneCounts[k] }; });
+    topZones.sort(function(a, b) { return b.count - a.count; });
+    topZones = topZones.slice(0, 5);
+    var maxZoneCount = topZones.length > 0 ? topZones[0].count : 1;
+
+    // Top categories this month
+    var catCounts = {};
+    quoteRequests.filter(function(q) { return q.createdAt >= startOfMonth; }).forEach(function(q) {
+      var cat = q.specialty || q.service || 'Autre';
+      catCounts[cat] = (catCounts[cat] || 0) + 1;
+    });
+    var topCategories = Object.keys(catCounts).map(function(k) { return { name: k, count: catCounts[k] }; });
+    topCategories.sort(function(a, b) { return b.count - a.count; });
+    topCategories = topCategories.slice(0, 6);
+    var maxCatCount = topCategories.length > 0 ? topCategories[0].count : 1;
+
+    // Monthly leads — last 6 months
+    var monthNames = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+    var monthlyLeads = [];
+    for (var i = 5; i >= 0; i--) {
+      var d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      var dNext = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+      var cnt = quoteRequests.filter(function(q) { return q.createdAt >= d && q.createdAt < dNext; }).length;
+      monthlyLeads.push({ label: monthNames[d.getMonth()], count: cnt });
+    }
+
+    var hasCertifiedBadge = req.user.role === 'admin' || (req.user.subscription && req.user.subscription.type === 'advanced');
+
     res.render('pages/pro/dashboard', {
       title: 'Pro Dashboard — CraftyCrib',
       layout: 'layouts/pro-dashboard',
       activePage: 'dashboard',
       proNotes: proNotes,
-      quoteRequests: quoteRequests
+      quoteRequests: quoteRequests,
+      analytics: {
+        leadsThisMonth: leadsThisMonth,
+        leadsLastMonth: leadsLastMonth,
+        leadsThisYear: leadsThisYear,
+        monthlyTrend: monthlyTrend,
+        conversionRate: conversionRate,
+        topZones: topZones,
+        maxZoneCount: maxZoneCount,
+        topCategories: topCategories,
+        maxCatCount: maxCatCount,
+        monthlyLeads: monthlyLeads,
+        hasCertifiedBadge: hasCertifiedBadge
+      }
     });
   } catch (err) {
     console.error('Pro dashboard error:', err);
@@ -427,7 +495,8 @@ router.get('/dashboard', ensureProfessional, async function(req, res) {
       layout: 'layouts/pro-dashboard',
       activePage: 'dashboard',
       proNotes: [],
-      quoteRequests: []
+      quoteRequests: [],
+      analytics: emptyAnalytics
     });
   }
 });
