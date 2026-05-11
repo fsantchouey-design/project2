@@ -522,6 +522,8 @@
   position: relative;
   overflow: hidden;
   animation: float-soft 6s ease-in-out infinite;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .hero-badge::after {
@@ -554,10 +556,14 @@
   line-height: 1.1;
   margin-bottom: 1.5rem;
   color: var(--text-primary);
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .title-line {
   display: block;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .title-gradient {
@@ -567,6 +573,8 @@
   background-clip: text;
   background-size: 200% 200%;
   animation: gradient-shift 5s ease infinite;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .hero-subtitle {
@@ -574,6 +582,8 @@
   color: var(--text-secondary);
   line-height: 1.7;
   margin-bottom: 2rem;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .hero-actions {
