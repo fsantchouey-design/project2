@@ -1,236 +1,383 @@
 <style>
-.pro-signup-form { width: 100%; }
-.pro-signup-form h1 { font-size: 24px; font-weight: 800; color: #fff; margin: 0 0 6px; }
-.pro-signup-form .subtitle { color: #a0a0a0; font-size: 14px; margin: 0 0 28px; }
-.pro-section-title {
-  font-size: 11px;
-  font-weight: 700;
-  color: #00ff88;
-  text-transform: uppercase;
-  letter-spacing: 1.2px;
-  margin: 28px 0 14px;
-  padding-bottom: 8px;
+.sp-wrap { width: 100%; }
+.sp-wrap h1 { font-size: 22px; font-weight: 800; color: #fff; margin: 0 0 4px; }
+.sp-wrap .sp-sub { color: #a0a0a0; font-size: 13px; margin: 0 0 24px; }
+
+/* Progress bar */
+.sp-progress { display: flex; align-items: center; gap: 0; margin-bottom: 28px; }
+.sp-step-dot {
+  display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1;
+}
+.sp-dot-circle {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.15);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; color: #666;
+  transition: all 0.25s;
+}
+.sp-step-dot.active .sp-dot-circle { background: #00ff88; border-color: #00ff88; color: #000; }
+.sp-step-dot.done .sp-dot-circle { background: rgba(0,255,136,0.2); border-color: #00ff88; color: #00ff88; }
+.sp-dot-label { font-size: 10px; color: #666; text-align: center; white-space: nowrap; }
+.sp-step-dot.active .sp-dot-label { color: #00ff88; }
+.sp-step-dot.done .sp-dot-label { color: #00ff88; }
+.sp-connector { flex: 0 0 20px; height: 2px; background: rgba(255,255,255,0.1); margin-bottom: 14px; transition: background 0.25s; }
+.sp-connector.done { background: #00ff88; }
+
+/* Step panels */
+.sp-panel { display: none; }
+.sp-panel.active { display: block; }
+
+.sp-section-title {
+  font-size: 11px; font-weight: 700; color: #00ff88;
+  text-transform: uppercase; letter-spacing: 1.2px;
+  margin: 24px 0 12px; padding-bottom: 6px;
   border-bottom: 1px solid rgba(255,255,255,0.08);
 }
-.pro-field-group { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.pro-field-group.full { grid-template-columns: 1fr; }
-.form-group { margin-bottom: 14px; }
-.form-group label { display: block; font-size: 13px; font-weight: 600; color: #d0d0d0; margin-bottom: 6px; }
-.form-group label span.req { color: #00ff88; }
-.form-group input,
-.form-group textarea,
-.form-group select {
-  width: 100%;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.12);
-  border-radius: 10px;
-  padding: 11px 14px;
-  color: #fff;
-  font-size: 14px;
-  font-family: inherit;
-  box-sizing: border-box;
+.sp-section-title:first-child { margin-top: 0; }
+
+.sp-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.sp-row.full { grid-template-columns: 1fr; }
+.sp-row.triple { grid-template-columns: 1fr 1fr 1fr; }
+.sp-fg { margin-bottom: 14px; }
+.sp-fg label { display: block; font-size: 13px; font-weight: 600; color: #d0d0d0; margin-bottom: 5px; }
+.sp-fg label .req { color: #00ff88; }
+.sp-fg label .opt { color: #555; font-weight: 400; font-size: 11px; margin-left: 4px; }
+.sp-fg input,
+.sp-fg textarea,
+.sp-fg select {
+  width: 100%; background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12); border-radius: 10px;
+  padding: 10px 13px; color: #fff; font-size: 14px;
+  font-family: inherit; box-sizing: border-box; outline: none;
   transition: border-color 0.2s;
-  outline: none;
 }
-.form-group input:focus,
-.form-group textarea:focus,
-.form-group select:focus {
-  border-color: rgba(0,255,136,0.5);
+.sp-fg input:focus, .sp-fg textarea:focus, .sp-fg select:focus { border-color: rgba(0,255,136,0.5); }
+.sp-fg textarea { resize: vertical; min-height: 80px; }
+.sp-fg .sp-hint { font-size: 11px; color: #555; margin-top: 4px; }
+
+/* File input */
+.sp-fg input[type="file"] {
+  padding: 8px 13px; cursor: pointer;
 }
-.form-group textarea { resize: vertical; min-height: 100px; }
-.categories-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-  margin-top: 4px;
+
+/* Service type checkboxes */
+.sp-svc-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 4px;
 }
-.cat-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 8px;
-  padding: 9px 12px;
-  cursor: pointer;
-  font-size: 13px;
-  color: #c0c0c0;
-  transition: all 0.15s;
+.sp-svc-label {
+  display: flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 8px; padding: 8px 11px; cursor: pointer;
+  font-size: 13px; color: #c0c0c0; transition: all 0.15s;
 }
-.cat-label input[type="checkbox"] { accent-color: #00ff88; width: 15px; height: 15px; flex-shrink: 0; }
-.cat-label:hover { border-color: rgba(0,255,136,0.35); color: #fff; }
-.pro-submit-btn {
-  width: 100%;
-  background: linear-gradient(135deg, #00ff88, #00d4ff);
-  color: #000;
-  border: none;
-  border-radius: 12px;
-  padding: 15px;
-  font-size: 15px;
-  font-weight: 700;
-  cursor: pointer;
-  margin-top: 28px;
-  font-family: inherit;
-  transition: opacity 0.2s;
+.sp-svc-label input[type="checkbox"] { accent-color: #00ff88; width: 14px; height: 14px; flex-shrink: 0; }
+.sp-svc-label:hover { border-color: rgba(0,255,136,0.35); color: #fff; }
+
+/* Navigation buttons */
+.sp-nav { display: flex; gap: 12px; margin-top: 24px; }
+.sp-btn-back {
+  flex: 0 0 auto; background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.15); border-radius: 10px;
+  padding: 12px 20px; color: #c0c0c0; font-size: 14px;
+  font-weight: 600; cursor: pointer; font-family: inherit; transition: opacity 0.2s;
 }
-.pro-submit-btn:hover { opacity: 0.9; }
-.file-hint { font-size: 12px; color: #666; margin-top: 5px; }
-.alert-error-inline {
-  background: rgba(255,68,68,0.1);
-  border: 1px solid rgba(255,68,68,0.3);
-  border-radius: 10px;
-  padding: 12px 16px;
-  color: #ff8888;
-  font-size: 14px;
-  margin-bottom: 20px;
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
+.sp-btn-back:hover { opacity: 0.8; }
+.sp-btn-next {
+  flex: 1; background: linear-gradient(135deg, #00ff88, #00d4ff);
+  border: none; border-radius: 10px; padding: 13px;
+  color: #000; font-size: 15px; font-weight: 700;
+  cursor: pointer; font-family: inherit; transition: opacity 0.2s;
+}
+.sp-btn-next:hover { opacity: 0.9; }
+
+/* Error box */
+.sp-error {
+  background: rgba(255,68,68,0.1); border: 1px solid rgba(255,68,68,0.3);
+  border-radius: 10px; padding: 12px 16px; color: #ff8888;
+  font-size: 14px; margin-bottom: 18px;
+  display: flex; align-items: flex-start; gap: 10px;
+}
+.sp-error.hidden { display: none; }
+
+/* Password strength */
+.sp-pw-row { display: flex; gap: 4px; margin-top: 6px; }
+.sp-pw-seg {
+  flex: 1; height: 3px; border-radius: 2px;
+  background: rgba(255,255,255,0.1); transition: background 0.3s;
 }
 </style>
 
-<div class="pro-signup-form">
-  <h1>Créer un compte pro</h1>
-  <p class="subtitle">Remplissez ce formulaire pour rejoindre le réseau CraftyCrib Pro.</p>
+<div class="sp-wrap">
+  <h1>Demande d'inscription professionnelle</h1>
+  <p class="sp-sub">Complétez les 5 étapes pour soumettre votre candidature.</p>
 
   <% if (typeof error_msg !== "undefined" && error_msg && error_msg.length > 0) { %>
-    <div class="alert-error-inline">
+    <div class="sp-error">
       <i data-lucide="alert-circle" style="width:16px;height:16px;flex-shrink:0;margin-top:1px;"></i>
       <span><%= error_msg %></span>
     </div>
   <% } %>
 
-  <form action="/pro/signup" method="POST" enctype="multipart/form-data" class="pro-signup-form" id="proSignupForm">
+  <!-- Progress -->
+  <div class="sp-progress" id="spProgress">
+    <div class="sp-step-dot active" id="spDot1">
+      <div class="sp-dot-circle">1</div>
+      <div class="sp-dot-label">Représentant</div>
+    </div>
+    <div class="sp-connector" id="spConn1"></div>
+    <div class="sp-step-dot" id="spDot2">
+      <div class="sp-dot-circle">2</div>
+      <div class="sp-dot-label">Entreprise</div>
+    </div>
+    <div class="sp-connector" id="spConn2"></div>
+    <div class="sp-step-dot" id="spDot3">
+      <div class="sp-dot-circle">3</div>
+      <div class="sp-dot-label">Licences</div>
+    </div>
+    <div class="sp-connector" id="spConn3"></div>
+    <div class="sp-step-dot" id="spDot4">
+      <div class="sp-dot-circle">4</div>
+      <div class="sp-dot-label">Assurances</div>
+    </div>
+    <div class="sp-connector" id="spConn4"></div>
+    <div class="sp-step-dot" id="spDot5">
+      <div class="sp-dot-circle">5</div>
+      <div class="sp-dot-label">Profil</div>
+    </div>
+  </div>
 
-    <!-- IDENTITE -->
-    <div class="pro-section-title">Identité</div>
-    <div class="pro-field-group">
-      <div class="form-group">
-        <label>Prénom <span class="req">*</span></label>
-        <input type="text" name="firstName" value="<%= typeof formData !== 'undefined' && formData.firstName ? formData.firstName : '' %>" required>
-      </div>
-      <div class="form-group">
-        <label>Nom <span class="req">*</span></label>
-        <input type="text" name="lastName" value="<%= typeof formData !== 'undefined' && formData.lastName ? formData.lastName : '' %>" required>
-      </div>
-    </div>
-    <div class="form-group">
-      <label>Nom de l'entreprise <span class="req">*</span></label>
-      <input type="text" name="companyName" value="<%= typeof formData !== 'undefined' && formData.companyName ? formData.companyName : '' %>" required>
-    </div>
-    <div class="pro-field-group">
-      <div class="form-group">
-        <label>Email professionnel <span class="req">*</span></label>
-        <input type="email" name="email" value="<%= typeof formData !== 'undefined' && formData.email ? formData.email : '' %>" required>
-      </div>
-      <div class="form-group">
-        <label>Téléphone <span class="req">*</span></label>
-        <input type="tel" name="phone" value="<%= typeof formData !== 'undefined' && formData.phone ? formData.phone : '' %>" required>
-      </div>
-    </div>
+  <form action="/pro/signup" method="POST" enctype="multipart/form-data" id="spForm">
 
-    <!-- ADRESSE -->
-    <div class="pro-section-title">Adresse</div>
-    <div class="form-group">
-      <label>Adresse <span class="req">*</span></label>
-      <input type="text" name="address" value="<%= typeof formData !== 'undefined' && formData.address ? formData.address : '' %>" required>
-    </div>
-    <div class="pro-field-group">
-      <div class="form-group">
-        <label>Ville <span class="req">*</span></label>
-        <input type="text" name="city" value="<%= typeof formData !== 'undefined' && formData.city ? formData.city : '' %>" required>
+    <!-- STEP 1: Représentant -->
+    <div class="sp-panel active" id="spPanel1">
+      <div class="sp-section-title">Représentant</div>
+      <div class="sp-row">
+        <div class="sp-fg">
+          <label>Prénom <span class="req">*</span></label>
+          <input type="text" name="firstName" id="sp_firstName" value="<%= typeof formData !== 'undefined' && formData.firstName ? formData.firstName : '' %>" placeholder="Jean">
+        </div>
+        <div class="sp-fg">
+          <label>Nom <span class="req">*</span></label>
+          <input type="text" name="lastName" id="sp_lastName" value="<%= typeof formData !== 'undefined' && formData.lastName ? formData.lastName : '' %>" placeholder="Tremblay">
+        </div>
       </div>
-      <div class="form-group">
-        <label>Code postal <span class="req">*</span></label>
-        <input type="text" name="postalCode" value="<%= typeof formData !== 'undefined' && formData.postalCode ? formData.postalCode : '' %>" required>
+      <div class="sp-fg">
+        <label>Titre / Poste <span class="req">*</span></label>
+        <input type="text" name="jobTitle" id="sp_jobTitle" value="<%= typeof formData !== 'undefined' && formData.jobTitle ? formData.jobTitle : '' %>" placeholder="ex: Directeur général, Entrepreneur général">
       </div>
-    </div>
-    <div class="form-group">
-      <label>Pays <span class="req">*</span></label>
-      <input type="text" name="country" value="<%= typeof formData !== 'undefined' && formData.country ? formData.country : 'Canada' %>" required>
-    </div>
-
-    <!-- METIER -->
-    <div class="pro-section-title">Métier</div>
-    <div class="form-group">
-      <label>Catégories de services <span class="req">*</span></label>
-      <div class="categories-grid">
-        <% var cats = ['Peinture et décoration','Rénovation cuisine','Rénovation salle de bain','Planchers et revêtements','Éclairage','Mobilier et aménagement','Jardinage et extérieur','Plomberie','Électricité','Nettoyage','Chauffage et climatisation','Portes et fenêtres']; %>
-        <% var selectedCats = (typeof formData !== 'undefined' && formData.categories) ? (Array.isArray(formData.categories) ? formData.categories : [formData.categories]) : []; %>
-        <% cats.forEach(function(cat) { %>
-          <label class="cat-label">
-            <input type="checkbox" name="categories" value="<%= cat %>" <%= selectedCats.indexOf(cat) !== -1 ? 'checked' : '' %>>
-            <%= cat %>
-          </label>
-        <% }); %>
+      <div class="sp-row">
+        <div class="sp-fg">
+          <label>Email professionnel <span class="req">*</span></label>
+          <input type="email" name="email" id="sp_email" value="<%= typeof formData !== 'undefined' && formData.email ? formData.email : '' %>" placeholder="jean@entreprise.ca">
+        </div>
+        <div class="sp-fg">
+          <label>Téléphone <span class="req">*</span></label>
+          <input type="tel" name="phone" id="sp_phone" value="<%= typeof formData !== 'undefined' && formData.phone ? formData.phone : '' %>" placeholder="514-000-0000">
+        </div>
       </div>
-    </div>
-    <div class="pro-field-group">
-      <div class="form-group">
-        <label>Années d'expérience <span class="req">*</span></label>
-        <input type="text" name="yearsExperience" placeholder="ex: 5 ans" value="<%= typeof formData !== 'undefined' && formData.yearsExperience ? formData.yearsExperience : '' %>" required>
-      </div>
-      <div class="form-group">
-        <label>Numéro d'entreprise</label>
-        <input type="text" name="businessNumber" placeholder="optionnel" value="<%= typeof formData !== 'undefined' && formData.businessNumber ? formData.businessNumber : '' %>">
-      </div>
-    </div>
-    <div class="form-group">
-      <label>Zones de service <span class="req">*</span></label>
-      <input type="text" name="serviceAreas" placeholder="ex: Montréal, Laval, Longueuil" value="<%= typeof formData !== 'undefined' && formData.serviceAreas ? formData.serviceAreas : '' %>" required>
-    </div>
-
-    <!-- PRESENTATION -->
-    <div class="pro-section-title">Présentation</div>
-    <div class="form-group">
-      <label>Description de votre activité <span class="req">*</span></label>
-      <textarea name="description" placeholder="Décrivez votre expertise, vos réalisations..."><%= typeof formData !== 'undefined' && formData.description ? formData.description : '' %></textarea>
-    </div>
-    <div class="form-group">
-      <label>Site web</label>
-      <input type="url" name="website" placeholder="https://monsite.com" value="<%= typeof formData !== 'undefined' && formData.website ? formData.website : '' %>">
-    </div>
-    <div class="pro-field-group">
-      <div class="form-group">
-        <label>Instagram</label>
-        <input type="text" name="socialInstagram" placeholder="@moncompte" value="<%= typeof formData !== 'undefined' && formData.socialInstagram ? formData.socialInstagram : '' %>">
-      </div>
-      <div class="form-group">
-        <label>Facebook</label>
-        <input type="text" name="socialFacebook" placeholder="facebook.com/..." value="<%= typeof formData !== 'undefined' && formData.socialFacebook ? formData.socialFacebook : '' %>">
+      <div class="sp-nav">
+        <button type="button" class="sp-btn-next" onclick="spNext(1)">
+          Suivant — Entreprise &rarr;
+        </button>
       </div>
     </div>
 
-    <!-- MEDIAS -->
-    <div class="pro-section-title">Médias</div>
-    <div class="form-group">
-      <label>Logo de l'entreprise</label>
-      <input type="file" name="logo" accept="image/*">
-      <p class="file-hint">Formats acceptés : JPG, PNG, WEBP. Max 5MB.</p>
-    </div>
-    <div class="form-group">
-      <label>Photos de réalisations</label>
-      <input type="file" name="photos" accept="image/*" multiple>
-      <p class="file-hint">Jusqu'à 10 photos. Formats acceptés : JPG, PNG, WEBP.</p>
+    <!-- STEP 2: Entreprise -->
+    <div class="sp-panel" id="spPanel2">
+      <div class="sp-section-title">Entreprise</div>
+      <div class="sp-fg">
+        <label>Nom de l'entreprise <span class="req">*</span></label>
+        <input type="text" name="companyName" id="sp_companyName" value="<%= typeof formData !== 'undefined' && formData.companyName ? formData.companyName : '' %>" placeholder="Construction XYZ inc.">
+      </div>
+      <div class="sp-fg">
+        <label>Numéro d'entreprise du Québec (NEQ) <span class="opt">(optionnel)</span></label>
+        <input type="text" name="nEQ" value="<%= typeof formData !== 'undefined' && formData.nEQ ? formData.nEQ : '' %>" placeholder="1234567890">
+        <p class="sp-hint">Registraire des entreprises du Québec — 10 chiffres</p>
+      </div>
+      <div class="sp-fg">
+        <label>Adresse <span class="req">*</span></label>
+        <input type="text" name="address" id="sp_address" value="<%= typeof formData !== 'undefined' && formData.address ? formData.address : '' %>" placeholder="123, rue Principale">
+      </div>
+      <div class="sp-row triple">
+        <div class="sp-fg">
+          <label>Ville <span class="req">*</span></label>
+          <input type="text" name="city" id="sp_city" value="<%= typeof formData !== 'undefined' && formData.city ? formData.city : '' %>" placeholder="Montréal">
+        </div>
+        <div class="sp-fg">
+          <label>Code postal <span class="req">*</span></label>
+          <input type="text" name="postalCode" id="sp_postalCode" value="<%= typeof formData !== 'undefined' && formData.postalCode ? formData.postalCode : '' %>" placeholder="H1A 1A1">
+        </div>
+        <div class="sp-fg">
+          <label>Pays <span class="req">*</span></label>
+          <input type="text" name="country" id="sp_country" value="<%= typeof formData !== 'undefined' && formData.country ? formData.country : 'Canada' %>">
+        </div>
+      </div>
+      <div class="sp-fg">
+        <label>Site web <span class="opt">(optionnel)</span></label>
+        <input type="url" name="website" value="<%= typeof formData !== 'undefined' && formData.website ? formData.website : '' %>" placeholder="https://monentreprise.ca">
+      </div>
+      <div class="sp-nav">
+        <button type="button" class="sp-btn-back" onclick="spBack(2)">&larr;</button>
+        <button type="button" class="sp-btn-next" onclick="spNext(2)">
+          Suivant — Licences &rarr;
+        </button>
+      </div>
     </div>
 
-    <!-- SECURITE -->
-    <div class="pro-section-title">Sécurité</div>
-    <div class="pro-field-group">
-      <div class="form-group">
-        <label>Mot de passe <span class="req">*</span></label>
-        <input type="password" name="password" placeholder="Minimum 6 caractères" required>
+    <!-- STEP 3: Licences & légal -->
+    <div class="sp-panel" id="spPanel3">
+      <div class="sp-section-title">Licence RBQ</div>
+      <div class="sp-row">
+        <div class="sp-fg">
+          <label>Numéro de licence RBQ <span class="req">*</span></label>
+          <input type="text" name="rbqLicenseNumber" id="sp_rbqLicenseNumber" value="<%= typeof formData !== 'undefined' && formData.rbqLicenseNumber ? formData.rbqLicenseNumber : '' %>" placeholder="5555-5555-55">
+        </div>
+        <div class="sp-fg">
+          <label>Catégories RBQ <span class="req">*</span></label>
+          <input type="text" name="rbqCategories" id="sp_rbqCategories" value="<%= typeof formData !== 'undefined' && formData.rbqCategories ? formData.rbqCategories : '' %>" placeholder="ex: 1.5.1, 4.2.1">
+        </div>
       </div>
-      <div class="form-group">
-        <label>Confirmer le mot de passe <span class="req">*</span></label>
-        <input type="password" name="confirmPassword" placeholder="Répétez le mot de passe" required>
+
+      <div class="sp-section-title">Numéros fiscaux</div>
+      <div class="sp-row">
+        <div class="sp-fg">
+          <label>Numéro TPS <span class="req">*</span></label>
+          <input type="text" name="tpsNumber" id="sp_tpsNumber" value="<%= typeof formData !== 'undefined' && formData.tpsNumber ? formData.tpsNumber : '' %>" placeholder="123456789 RT0001">
+        </div>
+        <div class="sp-fg">
+          <label>Numéro TVQ <span class="req">*</span></label>
+          <input type="text" name="tvqNumber" id="sp_tvqNumber" value="<%= typeof formData !== 'undefined' && formData.tvqNumber ? formData.tvqNumber : '' %>" placeholder="1234567890 TQ0001">
+        </div>
+      </div>
+
+      <div class="sp-section-title">Documents</div>
+      <div class="sp-fg">
+        <label>Attestation Revenu Québec <span class="req">*</span></label>
+        <input type="file" name="attestationRevenuQuebec" id="sp_attestationRQ" accept="image/*,.pdf">
+        <p class="sp-hint">Attestation de conformité fiscale — PDF ou image, max 10MB</p>
+      </div>
+
+      <div class="sp-nav">
+        <button type="button" class="sp-btn-back" onclick="spBack(3)">&larr;</button>
+        <button type="button" class="sp-btn-next" onclick="spNext(3)">
+          Suivant — Assurances &rarr;
+        </button>
       </div>
     </div>
 
-    <button type="submit" class="pro-submit-btn">
-      <i data-lucide="send" style="width:16px;height:16px;vertical-align:-3px;margin-right:8px;"></i>
-      Envoyer ma demande
-    </button>
+    <!-- STEP 4: Assurances & CNESST -->
+    <div class="sp-panel" id="spPanel4">
+      <div class="sp-section-title">Assurance responsabilité civile</div>
+      <div class="sp-row">
+        <div class="sp-fg">
+          <label>Assureur / Numéro de police <span class="req">*</span></label>
+          <input type="text" name="liabilityInsurance" id="sp_liabilityInsurance" value="<%= typeof formData !== 'undefined' && formData.liabilityInsurance ? formData.liabilityInsurance : '' %>" placeholder="ex: Intact — POL-12345678">
+        </div>
+        <div class="sp-fg">
+          <label>Montant de couverture <span class="req">*</span></label>
+          <input type="text" name="coverageAmount" id="sp_coverageAmount" value="<%= typeof formData !== 'undefined' && formData.coverageAmount ? formData.coverageAmount : '' %>" placeholder="ex: 2 000 000 $">
+        </div>
+      </div>
+      <div class="sp-fg">
+        <label>Certificat d'assurance RC <span class="req">*</span></label>
+        <input type="file" name="rcInsuranceCert" id="sp_rcInsuranceCert" accept="image/*,.pdf">
+        <p class="sp-hint">PDF ou image — max 10MB</p>
+      </div>
+
+      <div class="sp-section-title">CNESST</div>
+      <div class="sp-fg">
+        <label>Numéro de dossier CNESST <span class="req">*</span></label>
+        <input type="text" name="cnesstFileNumber" id="sp_cnesstFileNumber" value="<%= typeof formData !== 'undefined' && formData.cnesstFileNumber ? formData.cnesstFileNumber : '' %>" placeholder="ex: 987654321">
+      </div>
+      <div class="sp-fg">
+        <label>Attestation CNESST <span class="req">*</span></label>
+        <input type="file" name="cnesstAttestation" id="sp_cnesstAttestation" accept="image/*,.pdf">
+        <p class="sp-hint">Attestation de conformité — PDF ou image, max 10MB</p>
+      </div>
+
+      <div class="sp-nav">
+        <button type="button" class="sp-btn-back" onclick="spBack(4)">&larr;</button>
+        <button type="button" class="sp-btn-next" onclick="spNext(4)">
+          Suivant — Profil &rarr;
+        </button>
+      </div>
+    </div>
+
+    <!-- STEP 5: Profil professionnel -->
+    <div class="sp-panel" id="spPanel5">
+      <div class="sp-section-title">Types de services</div>
+      <div class="sp-fg">
+        <label>Sélectionnez vos spécialités <span class="req">*</span></label>
+        <div class="sp-svc-grid">
+          <% var svcTypes = [
+            "Peinture et décoration",
+            "Rénovation cuisine",
+            "Rénovation salle de bain",
+            "Planchers et revêtements",
+            "Éclairage",
+            "Mobilier et aménagement",
+            "Jardinage et extérieur",
+            "Plomberie",
+            "Électricité",
+            "Nettoyage",
+            "Chauffage et climatisation",
+            "Portes et fenêtres",
+            "Toiture et isolation",
+            "Fondations et structure"
+          ]; %>
+          <% var selectedSvc = (typeof formData !== "undefined" && formData.serviceTypes) ? (Array.isArray(formData.serviceTypes) ? formData.serviceTypes : [formData.serviceTypes]) : []; %>
+          <% svcTypes.forEach(function(svc) { %>
+            <label class="sp-svc-label">
+              <input type="checkbox" name="serviceTypes" value="<%= svc %>" <%= selectedSvc.indexOf(svc) !== -1 ? "checked" : "" %>>
+              <%= svc %>
+            </label>
+          <% }); %>
+        </div>
+      </div>
+
+      <div class="sp-row">
+        <div class="sp-fg">
+          <label>Zones de service <span class="req">*</span></label>
+          <input type="text" name="serviceAreas" id="sp_serviceAreas" value="<%= typeof formData !== 'undefined' && formData.serviceAreas ? formData.serviceAreas : '' %>" placeholder="ex: Montréal, Laval, Longueuil">
+        </div>
+        <div class="sp-fg">
+          <label>Années d'expérience <span class="req">*</span></label>
+          <input type="text" name="yearsExperience" id="sp_yearsExperience" value="<%= typeof formData !== 'undefined' && formData.yearsExperience ? formData.yearsExperience : '' %>" placeholder="ex: 8 ans">
+        </div>
+      </div>
+
+      <div class="sp-section-title">Sécurité du compte</div>
+      <div class="sp-row">
+        <div class="sp-fg">
+          <label>Mot de passe <span class="req">*</span></label>
+          <input type="password" name="password" id="sp_password" placeholder="Minimum 6 caractères" oninput="spPwStrength(this.value)">
+          <div class="sp-pw-row">
+            <div class="sp-pw-seg" id="spPwS1"></div>
+            <div class="sp-pw-seg" id="spPwS2"></div>
+            <div class="sp-pw-seg" id="spPwS3"></div>
+            <div class="sp-pw-seg" id="spPwS4"></div>
+          </div>
+        </div>
+        <div class="sp-fg">
+          <label>Confirmer le mot de passe <span class="req">*</span></label>
+          <input type="password" name="confirmPassword" id="sp_confirmPassword" placeholder="Répétez le mot de passe">
+        </div>
+      </div>
+
+      <div id="spStepError" class="sp-error hidden">
+        <i data-lucide="alert-circle" style="width:16px;height:16px;flex-shrink:0;margin-top:1px;"></i>
+        <span id="spStepErrorMsg"></span>
+      </div>
+
+      <div class="sp-nav">
+        <button type="button" class="sp-btn-back" onclick="spBack(5)">&larr;</button>
+        <button type="submit" class="sp-btn-next" id="spSubmitBtn" onclick="return spValidateFinal()">
+          <i data-lucide="send" style="width:15px;height:15px;vertical-align:-3px;margin-right:6px;"></i>
+          Envoyer ma demande
+        </button>
+      </div>
+    </div>
+
   </form>
 
   <div style="text-align:center;margin-top:20px;">
@@ -242,11 +389,141 @@
 </div>
 
 <script>
-document.getElementById("proSignupForm").addEventListener("submit", function(e) {
-  var checks = this.querySelectorAll("input[name='categories']:checked");
-  if (checks.length === 0) {
-    e.preventDefault();
-    alert("Veuillez sélectionner au moins une catégorie de services.");
+var spCurrent = 1;
+
+function spShowStep(n) {
+  for (var i = 1; i <= 5; i++) {
+    var panel = document.getElementById('spPanel' + i);
+    var dot = document.getElementById('spDot' + i);
+    if (panel) panel.className = 'sp-panel' + (i === n ? ' active' : '');
+    if (dot) {
+      if (i < n) dot.className = 'sp-step-dot done';
+      else if (i === n) dot.className = 'sp-step-dot active';
+      else dot.className = 'sp-step-dot';
+    }
+    if (i < 5) {
+      var conn = document.getElementById('spConn' + i);
+      if (conn) conn.className = 'sp-connector' + (i < n ? ' done' : '');
+    }
   }
-});
+  spCurrent = n;
+  window.scrollTo(0, 0);
+}
+
+function spShowError(msg) {
+  var box = document.getElementById('spStepError');
+  var txt = document.getElementById('spStepErrorMsg');
+  if (box && txt) {
+    txt.textContent = msg;
+    box.className = 'sp-error';
+  }
+}
+function spHideError() {
+  var box = document.getElementById('spStepError');
+  if (box) box.className = 'sp-error hidden';
+}
+
+function spValidateStep(n) {
+  spHideError();
+  if (n === 1) {
+    var fields = ['sp_firstName','sp_lastName','sp_jobTitle','sp_email','sp_phone'];
+    for (var i = 0; i < fields.length; i++) {
+      var el = document.getElementById(fields[i]);
+      if (!el || !el.value.trim()) {
+        spShowError('Veuillez remplir tous les champs obligatoires.');
+        if (el) el.focus();
+        return false;
+      }
+    }
+  }
+  if (n === 2) {
+    var fields2 = ['sp_companyName','sp_address','sp_city','sp_postalCode','sp_country'];
+    for (var i = 0; i < fields2.length; i++) {
+      var el = document.getElementById(fields2[i]);
+      if (!el || !el.value.trim()) {
+        spShowError('Veuillez remplir tous les champs obligatoires.');
+        if (el) el.focus();
+        return false;
+      }
+    }
+  }
+  if (n === 3) {
+    var fields3 = ['sp_rbqLicenseNumber','sp_rbqCategories','sp_tpsNumber','sp_tvqNumber'];
+    for (var i = 0; i < fields3.length; i++) {
+      var el = document.getElementById(fields3[i]);
+      if (!el || !el.value.trim()) {
+        spShowError('Veuillez remplir tous les champs obligatoires.');
+        if (el) el.focus();
+        return false;
+      }
+    }
+    var attestRQ = document.getElementById('sp_attestationRQ');
+    if (!attestRQ || !attestRQ.files || attestRQ.files.length === 0) {
+      spShowError("Veuillez joindre l'attestation Revenu Quebec.");
+      return false;
+    }
+  }
+  if (n === 4) {
+    var fields4 = ['sp_liabilityInsurance','sp_coverageAmount','sp_cnesstFileNumber'];
+    for (var i = 0; i < fields4.length; i++) {
+      var el = document.getElementById(fields4[i]);
+      if (!el || !el.value.trim()) {
+        spShowError('Veuillez remplir tous les champs obligatoires.');
+        if (el) el.focus();
+        return false;
+      }
+    }
+    var rcCert = document.getElementById('sp_rcInsuranceCert');
+    if (!rcCert || !rcCert.files || rcCert.files.length === 0) {
+      spShowError('Veuillez joindre le certificat d\'assurance RC.');
+      return false;
+    }
+    var cnesstAtt = document.getElementById('sp_cnesstAttestation');
+    if (!cnesstAtt || !cnesstAtt.files || cnesstAtt.files.length === 0) {
+      spShowError('Veuillez joindre l\'attestation CNESST.');
+      return false;
+    }
+  }
+  return true;
+}
+
+function spNext(n) {
+  if (!spValidateStep(n)) return;
+  spShowStep(n + 1);
+}
+
+function spBack(n) {
+  spShowStep(n - 1);
+}
+
+function spValidateFinal() {
+  spHideError();
+  var checks = document.querySelectorAll("input[name='serviceTypes']:checked");
+  if (checks.length === 0) {
+    spShowError('Veuillez selectionner au moins un type de service.');
+    return false;
+  }
+  var sa = document.getElementById('sp_serviceAreas');
+  var ye = document.getElementById('sp_yearsExperience');
+  var pw = document.getElementById('sp_password');
+  var cpw = document.getElementById('sp_confirmPassword');
+  if (!sa || !sa.value.trim()) { spShowError('Veuillez indiquer vos zones de service.'); return false; }
+  if (!ye || !ye.value.trim()) { spShowError("Veuillez indiquer vos annees d'experience."); return false; }
+  if (!pw || !pw.value || pw.value.length < 6) { spShowError('Le mot de passe doit contenir au moins 6 caracteres.'); return false; }
+  if (!cpw || pw.value !== cpw.value) { spShowError('Les mots de passe ne correspondent pas.'); return false; }
+  return true;
+}
+
+function spPwStrength(val) {
+  var score = 0;
+  if (val.length >= 6) score++;
+  if (val.length >= 10) score++;
+  if (/[A-Z]/.test(val) && /[0-9]/.test(val)) score++;
+  if (/[^A-Za-z0-9]/.test(val)) score++;
+  var colors = ['', '#ff4444', '#ff9900', '#00d4ff', '#00ff88'];
+  for (var i = 1; i <= 4; i++) {
+    var seg = document.getElementById('spPwS' + i);
+    if (seg) seg.style.background = i <= score ? colors[score] : 'rgba(255,255,255,0.1)';
+  }
+}
 </script>

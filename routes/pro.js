@@ -28,10 +28,10 @@ const storage = multer.diskStorage({
   }
 });
 const fileFilter = function(req, file, cb) {
-  if (file.mimetype.startsWith('image/')) {
+  if (file.mimetype.startsWith('image/') || file.mimetype === 'application/pdf') {
     cb(null, true);
   } else {
-    cb(new Error('Seules les images sont acceptées.'), false);
+    cb(new Error('Seules les images et les PDF sont acceptés.'), false);
   }
 };
 const upload = multer({ storage: storage, fileFilter: fileFilter });
@@ -68,13 +68,18 @@ router.get('/signup', function(req, res) {
 
 // POST /pro/signup — handle registration
 router.post('/signup', upload.fields([
+  { name: 'attestationRevenuQuebec', maxCount: 1 },
+  { name: 'rcInsuranceCert', maxCount: 1 },
+  { name: 'cnesstAttestation', maxCount: 1 },
   { name: 'logo', maxCount: 1 },
   { name: 'photos', maxCount: 10 }
 ]), async function(req, res) {
   var body = req.body;
-  var required = ['firstName', 'lastName', 'companyName', 'email', 'phone',
-    'address', 'city', 'postalCode', 'country', 'description',
-    'yearsExperience', 'serviceAreas', 'password'];
+  var required = ['firstName', 'lastName', 'jobTitle', 'email', 'phone',
+    'companyName', 'address', 'city', 'postalCode', 'country',
+    'rbqLicenseNumber', 'rbqCategories', 'tpsNumber', 'tvqNumber',
+    'liabilityInsurance', 'coverageAmount', 'cnesstFileNumber',
+    'serviceAreas', 'yearsExperience', 'password'];
 
   var missingFields = [];
   required.forEach(function(field) {
@@ -83,9 +88,9 @@ router.post('/signup', upload.fields([
     }
   });
 
-  // categories check
-  if (!body.categories || (Array.isArray(body.categories) && body.categories.length === 0)) {
-    missingFields.push('categories');
+  // serviceTypes check
+  if (!body.serviceTypes || (Array.isArray(body.serviceTypes) && body.serviceTypes.length === 0)) {
+    missingFields.push('serviceTypes');
   }
 
   if (missingFields.length > 0) {
@@ -139,10 +144,13 @@ router.post('/signup', upload.fields([
     await user.save();
 
     // Handle file uploads
-    var logoPath = '';
-    if (req.files && req.files['logo'] && req.files['logo'][0]) {
-      logoPath = '/uploads/pro-applications/' + req.files['logo'][0].filename;
+    function getFilePath(fieldName) {
+      if (req.files && req.files[fieldName] && req.files[fieldName][0]) {
+        return '/uploads/pro-applications/' + req.files[fieldName][0].filename;
+      }
+      return '';
     }
+    var logoPath = getFilePath('logo');
     var photoPaths = [];
     if (req.files && req.files['photos']) {
       req.files['photos'].forEach(function(f) {
@@ -154,29 +162,43 @@ router.post('/signup', upload.fields([
     var approvalToken = crypto.randomBytes(32).toString('hex');
 
     // Create ProApplication
-    var categories = body.categories
-      ? (Array.isArray(body.categories) ? body.categories : [body.categories])
+    var serviceTypes = body.serviceTypes
+      ? (Array.isArray(body.serviceTypes) ? body.serviceTypes : [body.serviceTypes])
       : [];
 
     var app = new ProApplication({
       user: user._id,
+      // Step 1
       firstName: body.firstName.trim(),
       lastName: body.lastName.trim(),
-      companyName: body.companyName.trim(),
+      jobTitle: body.jobTitle.trim(),
       email: body.email.toLowerCase().trim(),
       phone: body.phone.trim(),
+      // Step 2
+      companyName: body.companyName.trim(),
+      nEQ: (body.nEQ || '').trim(),
       address: body.address.trim(),
       city: body.city.trim(),
       postalCode: body.postalCode.trim(),
       country: body.country.trim(),
-      categories: categories,
-      description: body.description.trim(),
-      yearsExperience: body.yearsExperience.trim(),
-      serviceAreas: body.serviceAreas.trim(),
-      businessNumber: (body.businessNumber || '').trim(),
       website: (body.website || '').trim(),
-      socialInstagram: (body.socialInstagram || '').trim(),
-      socialFacebook: (body.socialFacebook || '').trim(),
+      // Step 3
+      rbqLicenseNumber: body.rbqLicenseNumber.trim(),
+      rbqCategories: body.rbqCategories.trim(),
+      tpsNumber: body.tpsNumber.trim(),
+      tvqNumber: body.tvqNumber.trim(),
+      attestationRevenuQuebec: getFilePath('attestationRevenuQuebec'),
+      // Step 4
+      liabilityInsurance: body.liabilityInsurance.trim(),
+      coverageAmount: body.coverageAmount.trim(),
+      rcInsuranceCert: getFilePath('rcInsuranceCert'),
+      cnesstFileNumber: body.cnesstFileNumber.trim(),
+      cnesstAttestation: getFilePath('cnesstAttestation'),
+      // Step 5
+      serviceTypes: serviceTypes,
+      serviceAreas: body.serviceAreas.trim(),
+      yearsExperience: body.yearsExperience.trim(),
+      // Legacy
       logo: logoPath,
       photos: photoPaths,
       approvalToken: approvalToken,
@@ -185,12 +207,10 @@ router.post('/signup', upload.fields([
     await app.save();
 
     // Send admin notification email
-    var emailTemplates = require('../utils/email');
-    // Build the email inline since we need access to the template
     var appUrl = process.env.APP_URL || 'http://localhost:3000';
     var subject = '[CraftyCrib] Nouvelle demande pro — ' + (app.companyName || (app.firstName + ' ' + app.lastName));
-    var categoriesHtml = categories.length
-      ? categories.map(function(c) { return '<span style="display:inline-block;background:rgba(0,255,136,0.15);color:#00ff88;border:1px solid rgba(0,255,136,0.3);border-radius:20px;padding:3px 10px;font-size:12px;margin:2px 3px;">' + c + '</span>'; }).join('')
+    var svcHtml = serviceTypes.length
+      ? serviceTypes.map(function(s) { return '<span style="display:inline-block;background:rgba(0,255,136,0.15);color:#00ff88;border:1px solid rgba(0,255,136,0.3);border-radius:20px;padding:3px 10px;font-size:12px;margin:2px 3px;">' + s + '</span>'; }).join('')
       : '—';
     var html = '<!DOCTYPE html><html><head><style>' +
       'body{font-family:"Segoe UI",Arial,sans-serif;background:#0a0a0f;color:#ffffff;margin:0;padding:0;}' +
@@ -198,48 +218,48 @@ router.post('/signup', upload.fields([
       '.logo{font-size:28px;font-weight:bold;color:#00ff88;margin-bottom:24px;display:block;text-align:center;}' +
       '.card{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:16px;padding:36px;}' +
       'h1{color:#ffffff;font-size:22px;margin:0 0 24px;}' +
-      '.section-title{color:#00ff88;font-size:13px;text-transform:uppercase;letter-spacing:1px;margin:24px 0 10px;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:6px;}' +
-      '.field{display:flex;gap:12px;margin-bottom:10px;}' +
-      '.field-label{color:#888;font-size:13px;min-width:160px;flex-shrink:0;}' +
-      '.field-value{color:#e0e0e0;font-size:13px;word-break:break-all;}' +
+      '.st{color:#00ff88;font-size:13px;text-transform:uppercase;letter-spacing:1px;margin:24px 0 10px;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:6px;}' +
+      '.f{display:flex;gap:12px;margin-bottom:10px;}' +
+      '.fl{color:#888;font-size:13px;min-width:160px;flex-shrink:0;}' +
+      '.fv{color:#e0e0e0;font-size:13px;word-break:break-all;}' +
       '.action-row{text-align:center;margin-top:32px;}' +
-      '.btn-approve{display:inline-block;background:#00ff88;color:#000;text-decoration:none;padding:14px 32px;border-radius:50px;font-weight:bold;font-size:14px;margin:0 8px;}' +
-      '.btn-reject{display:inline-block;background:#ff4444;color:#fff;text-decoration:none;padding:14px 32px;border-radius:50px;font-weight:bold;font-size:14px;margin:0 8px;}' +
+      '.btn-a{display:inline-block;background:#00ff88;color:#000;text-decoration:none;padding:14px 32px;border-radius:50px;font-weight:bold;font-size:14px;margin:0 8px;}' +
+      '.btn-r{display:inline-block;background:#ff4444;color:#fff;text-decoration:none;padding:14px 32px;border-radius:50px;font-weight:bold;font-size:14px;margin:0 8px;}' +
       '.footer{text-align:center;color:#555;font-size:12px;margin-top:32px;}' +
       '</style></head><body>' +
-      '<div class="container">' +
-      '<span class="logo">CraftyCrib Admin</span>' +
-      '<div class="card">' +
+      '<div class="container"><span class="logo">CraftyCrib Admin</span><div class="card">' +
       '<h1>Nouvelle demande professionnelle</h1>' +
-      '<div class="section-title">Identite</div>' +
-      '<div class="field"><span class="field-label">Prenom</span><span class="field-value">' + (app.firstName || '—') + '</span></div>' +
-      '<div class="field"><span class="field-label">Nom</span><span class="field-value">' + (app.lastName || '—') + '</span></div>' +
-      '<div class="field"><span class="field-label">Entreprise</span><span class="field-value">' + (app.companyName || '—') + '</span></div>' +
-      '<div class="field"><span class="field-label">Email</span><span class="field-value">' + (app.email || '—') + '</span></div>' +
-      '<div class="field"><span class="field-label">Telephone</span><span class="field-value">' + (app.phone || '—') + '</span></div>' +
-      '<div class="field"><span class="field-label">Numero entreprise</span><span class="field-value">' + (app.businessNumber || '—') + '</span></div>' +
-      '<div class="section-title">Adresse</div>' +
-      '<div class="field"><span class="field-label">Adresse</span><span class="field-value">' + (app.address || '—') + '</span></div>' +
-      '<div class="field"><span class="field-label">Ville</span><span class="field-value">' + (app.city || '—') + '</span></div>' +
-      '<div class="field"><span class="field-label">Code postal</span><span class="field-value">' + (app.postalCode || '—') + '</span></div>' +
-      '<div class="field"><span class="field-label">Pays</span><span class="field-value">' + (app.country || '—') + '</span></div>' +
-      '<div class="section-title">Metier</div>' +
-      '<div class="field"><span class="field-label">Categories</span><span class="field-value">' + categoriesHtml + '</span></div>' +
-      '<div class="field"><span class="field-label">Experience</span><span class="field-value">' + (app.yearsExperience || '—') + '</span></div>' +
-      '<div class="field"><span class="field-label">Zones de service</span><span class="field-value">' + (app.serviceAreas || '—') + '</span></div>' +
-      '<div class="section-title">Presentation</div>' +
-      '<div class="field"><span class="field-label">Description</span><span class="field-value">' + (app.description || '—') + '</span></div>' +
-      '<div class="field"><span class="field-label">Site web</span><span class="field-value">' + (app.website || '—') + '</span></div>' +
-      '<div class="field"><span class="field-label">Instagram</span><span class="field-value">' + (app.socialInstagram || '—') + '</span></div>' +
-      '<div class="field"><span class="field-label">Facebook</span><span class="field-value">' + (app.socialFacebook || '—') + '</span></div>' +
-      '<div class="field"><span class="field-label">Logo</span><span class="field-value">' + (app.logo ? 'Oui' : 'Non') + '</span></div>' +
-      '<div class="field"><span class="field-label">Photos</span><span class="field-value">' + (app.photos && app.photos.length ? app.photos.length + ' photo(s)' : 'Aucune') + '</span></div>' +
-      '<div class="section-title">Actions rapides</div>' +
+      '<div class="st">Representant</div>' +
+      '<div class="f"><span class="fl">Prenom</span><span class="fv">' + (app.firstName || '—') + '</span></div>' +
+      '<div class="f"><span class="fl">Nom</span><span class="fv">' + (app.lastName || '—') + '</span></div>' +
+      '<div class="f"><span class="fl">Titre</span><span class="fv">' + (app.jobTitle || '—') + '</span></div>' +
+      '<div class="f"><span class="fl">Email</span><span class="fv">' + (app.email || '—') + '</span></div>' +
+      '<div class="f"><span class="fl">Telephone</span><span class="fv">' + (app.phone || '—') + '</span></div>' +
+      '<div class="st">Entreprise</div>' +
+      '<div class="f"><span class="fl">Nom</span><span class="fv">' + (app.companyName || '—') + '</span></div>' +
+      '<div class="f"><span class="fl">NEQ</span><span class="fv">' + (app.nEQ || '—') + '</span></div>' +
+      '<div class="f"><span class="fl">Adresse</span><span class="fv">' + (app.address || '—') + ', ' + (app.city || '') + ' ' + (app.postalCode || '') + '</span></div>' +
+      '<div class="f"><span class="fl">Site web</span><span class="fv">' + (app.website || '—') + '</span></div>' +
+      '<div class="st">Licences et fiscal</div>' +
+      '<div class="f"><span class="fl">Licence RBQ</span><span class="fv">' + (app.rbqLicenseNumber || '—') + '</span></div>' +
+      '<div class="f"><span class="fl">Categories RBQ</span><span class="fv">' + (app.rbqCategories || '—') + '</span></div>' +
+      '<div class="f"><span class="fl">TPS</span><span class="fv">' + (app.tpsNumber || '—') + '</span></div>' +
+      '<div class="f"><span class="fl">TVQ</span><span class="fv">' + (app.tvqNumber || '—') + '</span></div>' +
+      '<div class="f"><span class="fl">Attestation RQ</span><span class="fv">' + (app.attestationRevenuQuebec ? 'Oui (fichier joint)' : 'Non') + '</span></div>' +
+      '<div class="st">Assurances et CNESST</div>' +
+      '<div class="f"><span class="fl">Assureur / Police</span><span class="fv">' + (app.liabilityInsurance || '—') + '</span></div>' +
+      '<div class="f"><span class="fl">Couverture</span><span class="fv">' + (app.coverageAmount || '—') + '</span></div>' +
+      '<div class="f"><span class="fl">Cert. RC</span><span class="fv">' + (app.rcInsuranceCert ? 'Oui (fichier joint)' : 'Non') + '</span></div>' +
+      '<div class="f"><span class="fl">Dossier CNESST</span><span class="fv">' + (app.cnesstFileNumber || '—') + '</span></div>' +
+      '<div class="f"><span class="fl">Attestation CNESST</span><span class="fv">' + (app.cnesstAttestation ? 'Oui (fichier joint)' : 'Non') + '</span></div>' +
+      '<div class="st">Profil</div>' +
+      '<div class="f"><span class="fl">Services</span><span class="fv">' + svcHtml + '</span></div>' +
+      '<div class="f"><span class="fl">Zones</span><span class="fv">' + (app.serviceAreas || '—') + '</span></div>' +
+      '<div class="f"><span class="fl">Experience</span><span class="fv">' + (app.yearsExperience || '—') + '</span></div>' +
       '<div class="action-row">' +
-      '<a href="' + appUrl + '/pro/admin/applications/' + app._id + '/approve/' + app.approvalToken + '" class="btn-approve">Approuver</a>' +
-      '<a href="' + appUrl + '/pro/admin/applications/' + app._id + '/reject/' + app.approvalToken + '" class="btn-reject">Rejeter</a>' +
-      '</div>' +
-      '</div>' +
+      '<a href="' + appUrl + '/pro/admin/applications/' + app._id + '/approve/' + app.approvalToken + '" class="btn-a">Approuver</a>' +
+      '<a href="' + appUrl + '/pro/admin/applications/' + app._id + '/reject/' + app.approvalToken + '" class="btn-r">Rejeter</a>' +
+      '</div></div>' +
       '<div class="footer"><p>CraftyCrib &copy; ' + new Date().getFullYear() + '</p></div>' +
       '</div></body></html>';
 
