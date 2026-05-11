@@ -3,17 +3,13 @@
 .sp-wrap h1 { font-size: 22px; font-weight: 800; color: #fff; margin: 0 0 4px; }
 .sp-wrap .sp-sub { color: #a0a0a0; font-size: 13px; margin: 0 0 24px; }
 
-/* Progress bar */
 .sp-progress { display: flex; align-items: center; gap: 0; margin-bottom: 28px; }
-.sp-step-dot {
-  display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1;
-}
+.sp-step-dot { display: flex; flex-direction: column; align-items: center; gap: 4px; flex: 1; }
 .sp-dot-circle {
   width: 30px; height: 30px; border-radius: 50%;
   background: rgba(255,255,255,0.08); border: 2px solid rgba(255,255,255,0.15);
   display: flex; align-items: center; justify-content: center;
-  font-size: 12px; font-weight: 700; color: #666;
-  transition: all 0.25s;
+  font-size: 12px; font-weight: 700; color: #666; transition: all 0.25s;
 }
 .sp-step-dot.active .sp-dot-circle { background: #00ff88; border-color: #00ff88; color: #000; }
 .sp-step-dot.done .sp-dot-circle { background: rgba(0,255,136,0.2); border-color: #00ff88; color: #00ff88; }
@@ -23,7 +19,6 @@
 .sp-connector { flex: 0 0 20px; height: 2px; background: rgba(255,255,255,0.1); margin-bottom: 14px; transition: background 0.25s; }
 .sp-connector.done { background: #00ff88; }
 
-/* Step panels */
 .sp-panel { display: none; }
 .sp-panel.active { display: block; }
 
@@ -53,17 +48,31 @@
 }
 .sp-fg input:focus, .sp-fg textarea:focus, .sp-fg select:focus { border-color: rgba(0,255,136,0.5); }
 .sp-fg textarea { resize: vertical; min-height: 80px; }
-.sp-fg .sp-hint { font-size: 11px; color: #555; margin-top: 4px; }
+.sp-fg input[type="file"] { padding: 8px 13px; cursor: pointer; }
+.sp-hint { font-size: 11px; color: #555; margin-top: 4px; }
 
-/* File input */
-.sp-fg input[type="file"] {
-  padding: 8px 13px; cursor: pointer;
+/* Validation states */
+.sp-fg input.sp-invalid,
+.sp-fg textarea.sp-invalid {
+  border-color: rgba(248,113,113,0.7) !important;
+  background: rgba(248,113,113,0.04);
 }
+.sp-fg input.sp-valid,
+.sp-fg textarea.sp-valid {
+  border-color: rgba(0,255,136,0.4) !important;
+}
+.sp-ferr {
+  display: none;
+  font-size: 12px;
+  color: #f87171;
+  margin-top: 5px;
+  line-height: 1.5;
+  padding-left: 1px;
+}
+.sp-ferr.visible { display: block; }
+.sp-ferr::before { content: '\26a0\fe0f\0020'; }
 
-/* Service type checkboxes */
-.sp-svc-grid {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 4px;
-}
+.sp-svc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: 4px; }
 .sp-svc-label {
   display: flex; align-items: center; gap: 8px;
   background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);
@@ -73,7 +82,6 @@
 .sp-svc-label input[type="checkbox"] { accent-color: #00ff88; width: 14px; height: 14px; flex-shrink: 0; }
 .sp-svc-label:hover { border-color: rgba(0,255,136,0.35); color: #fff; }
 
-/* Navigation buttons */
 .sp-nav { display: flex; gap: 12px; margin-top: 24px; }
 .sp-btn-back {
   flex: 0 0 auto; background: rgba(255,255,255,0.06);
@@ -90,21 +98,11 @@
 }
 .sp-btn-next:hover { opacity: 0.9; }
 
-/* Error box */
-.sp-error {
-  background: rgba(255,68,68,0.1); border: 1px solid rgba(255,68,68,0.3);
-  border-radius: 10px; padding: 12px 16px; color: #ff8888;
-  font-size: 14px; margin-bottom: 18px;
-  display: flex; align-items: flex-start; gap: 10px;
-}
+.sp-error { background: rgba(255,68,68,0.1); border: 1px solid rgba(255,68,68,0.3); border-radius: 10px; padding: 12px 16px; color: #ff8888; font-size: 14px; margin-bottom: 18px; display: flex; align-items: flex-start; gap: 10px; }
 .sp-error.hidden { display: none; }
 
-/* Password strength */
 .sp-pw-row { display: flex; gap: 4px; margin-top: 6px; }
-.sp-pw-seg {
-  flex: 1; height: 3px; border-radius: 2px;
-  background: rgba(255,255,255,0.1); transition: background 0.3s;
-}
+.sp-pw-seg { flex: 1; height: 3px; border-radius: 2px; background: rgba(255,255,255,0.1); transition: background 0.3s; }
 </style>
 
 <div class="sp-wrap">
@@ -118,213 +116,191 @@
     </div>
   <% } %>
 
-  <!-- Progress -->
-  <div class="sp-progress" id="spProgress">
-    <div class="sp-step-dot active" id="spDot1">
-      <div class="sp-dot-circle">1</div>
-      <div class="sp-dot-label">Représentant</div>
-    </div>
+  <div class="sp-progress">
+    <div class="sp-step-dot active" id="spDot1"><div class="sp-dot-circle">1</div><div class="sp-dot-label">Représentant</div></div>
     <div class="sp-connector" id="spConn1"></div>
-    <div class="sp-step-dot" id="spDot2">
-      <div class="sp-dot-circle">2</div>
-      <div class="sp-dot-label">Entreprise</div>
-    </div>
+    <div class="sp-step-dot" id="spDot2"><div class="sp-dot-circle">2</div><div class="sp-dot-label">Entreprise</div></div>
     <div class="sp-connector" id="spConn2"></div>
-    <div class="sp-step-dot" id="spDot3">
-      <div class="sp-dot-circle">3</div>
-      <div class="sp-dot-label">Licences</div>
-    </div>
+    <div class="sp-step-dot" id="spDot3"><div class="sp-dot-circle">3</div><div class="sp-dot-label">Licences</div></div>
     <div class="sp-connector" id="spConn3"></div>
-    <div class="sp-step-dot" id="spDot4">
-      <div class="sp-dot-circle">4</div>
-      <div class="sp-dot-label">Assurances</div>
-    </div>
+    <div class="sp-step-dot" id="spDot4"><div class="sp-dot-circle">4</div><div class="sp-dot-label">Assurances</div></div>
     <div class="sp-connector" id="spConn4"></div>
-    <div class="sp-step-dot" id="spDot5">
-      <div class="sp-dot-circle">5</div>
-      <div class="sp-dot-label">Profil</div>
-    </div>
+    <div class="sp-step-dot" id="spDot5"><div class="sp-dot-circle">5</div><div class="sp-dot-label">Profil</div></div>
   </div>
 
   <form action="/pro/signup" method="POST" enctype="multipart/form-data" id="spForm">
 
-    <!-- STEP 1: Représentant -->
+    <!-- STEP 1 -->
     <div class="sp-panel active" id="spPanel1">
       <div class="sp-section-title">Représentant</div>
       <div class="sp-row">
         <div class="sp-fg">
           <label>Prénom <span class="req">*</span></label>
           <input type="text" name="firstName" id="sp_firstName" value="<%= typeof formData !== 'undefined' && formData.firstName ? formData.firstName : '' %>" placeholder="Jean">
+          <div class="sp-ferr" id="sperr_firstName"></div>
         </div>
         <div class="sp-fg">
           <label>Nom <span class="req">*</span></label>
           <input type="text" name="lastName" id="sp_lastName" value="<%= typeof formData !== 'undefined' && formData.lastName ? formData.lastName : '' %>" placeholder="Tremblay">
+          <div class="sp-ferr" id="sperr_lastName"></div>
         </div>
       </div>
       <div class="sp-fg">
         <label>Titre / Poste <span class="req">*</span></label>
         <input type="text" name="jobTitle" id="sp_jobTitle" value="<%= typeof formData !== 'undefined' && formData.jobTitle ? formData.jobTitle : '' %>" placeholder="ex: Directeur général, Entrepreneur général">
+        <div class="sp-ferr" id="sperr_jobTitle"></div>
       </div>
       <div class="sp-row">
         <div class="sp-fg">
           <label>Email professionnel <span class="req">*</span></label>
           <input type="email" name="email" id="sp_email" value="<%= typeof formData !== 'undefined' && formData.email ? formData.email : '' %>" placeholder="jean@entreprise.ca">
+          <div class="sp-ferr" id="sperr_email"></div>
         </div>
         <div class="sp-fg">
           <label>Téléphone <span class="req">*</span></label>
-          <input type="tel" name="phone" id="sp_phone" value="<%= typeof formData !== 'undefined' && formData.phone ? formData.phone : '' %>" placeholder="514-000-0000">
+          <input type="tel" name="phone" id="sp_phone" value="<%= typeof formData !== 'undefined' && formData.phone ? formData.phone : '' %>" placeholder="514-123-4567">
+          <div class="sp-ferr" id="sperr_phone"></div>
         </div>
       </div>
       <div class="sp-nav">
-        <button type="button" class="sp-btn-next" onclick="spNext(1)">
-          Suivant — Entreprise &rarr;
-        </button>
+        <button type="button" class="sp-btn-next" onclick="spNext(1)">Suivant — Entreprise &rarr;</button>
       </div>
     </div>
 
-    <!-- STEP 2: Entreprise -->
+    <!-- STEP 2 -->
     <div class="sp-panel" id="spPanel2">
       <div class="sp-section-title">Entreprise</div>
       <div class="sp-fg">
         <label>Nom de l'entreprise <span class="req">*</span></label>
         <input type="text" name="companyName" id="sp_companyName" value="<%= typeof formData !== 'undefined' && formData.companyName ? formData.companyName : '' %>" placeholder="Construction XYZ inc.">
+        <div class="sp-ferr" id="sperr_companyName"></div>
       </div>
       <div class="sp-fg">
         <label>Numéro d'entreprise du Québec (NEQ) <span class="opt">(optionnel)</span></label>
-        <input type="text" name="nEQ" value="<%= typeof formData !== 'undefined' && formData.nEQ ? formData.nEQ : '' %>" placeholder="1234567890">
+        <input type="text" name="nEQ" id="sp_nEQ" value="<%= typeof formData !== 'undefined' && formData.nEQ ? formData.nEQ : '' %>" placeholder="1234567890" maxlength="10">
         <p class="sp-hint">Registraire des entreprises du Québec — 10 chiffres</p>
+        <div class="sp-ferr" id="sperr_nEQ"></div>
       </div>
       <div class="sp-fg">
         <label>Adresse <span class="req">*</span></label>
         <input type="text" name="address" id="sp_address" value="<%= typeof formData !== 'undefined' && formData.address ? formData.address : '' %>" placeholder="123, rue Principale">
+        <div class="sp-ferr" id="sperr_address"></div>
       </div>
       <div class="sp-row triple">
         <div class="sp-fg">
           <label>Ville <span class="req">*</span></label>
           <input type="text" name="city" id="sp_city" value="<%= typeof formData !== 'undefined' && formData.city ? formData.city : '' %>" placeholder="Montréal">
+          <div class="sp-ferr" id="sperr_city"></div>
         </div>
         <div class="sp-fg">
           <label>Code postal <span class="req">*</span></label>
-          <input type="text" name="postalCode" id="sp_postalCode" value="<%= typeof formData !== 'undefined' && formData.postalCode ? formData.postalCode : '' %>" placeholder="H1A 1A1">
+          <input type="text" name="postalCode" id="sp_postalCode" value="<%= typeof formData !== 'undefined' && formData.postalCode ? formData.postalCode : '' %>" placeholder="H1A 1A1" maxlength="7">
+          <div class="sp-ferr" id="sperr_postalCode"></div>
         </div>
         <div class="sp-fg">
           <label>Pays <span class="req">*</span></label>
           <input type="text" name="country" id="sp_country" value="<%= typeof formData !== 'undefined' && formData.country ? formData.country : 'Canada' %>">
+          <div class="sp-ferr" id="sperr_country"></div>
         </div>
       </div>
       <div class="sp-fg">
         <label>Site web <span class="opt">(optionnel)</span></label>
-        <input type="url" name="website" value="<%= typeof formData !== 'undefined' && formData.website ? formData.website : '' %>" placeholder="https://monentreprise.ca">
+        <input type="url" name="website" id="sp_website" value="<%= typeof formData !== 'undefined' && formData.website ? formData.website : '' %>" placeholder="https://monentreprise.ca">
+        <div class="sp-ferr" id="sperr_website"></div>
       </div>
       <div class="sp-nav">
         <button type="button" class="sp-btn-back" onclick="spBack(2)">&larr;</button>
-        <button type="button" class="sp-btn-next" onclick="spNext(2)">
-          Suivant — Licences &rarr;
-        </button>
+        <button type="button" class="sp-btn-next" onclick="spNext(2)">Suivant — Licences &rarr;</button>
       </div>
     </div>
 
-    <!-- STEP 3: Licences & légal -->
+    <!-- STEP 3 -->
     <div class="sp-panel" id="spPanel3">
       <div class="sp-section-title">Licence RBQ</div>
       <div class="sp-row">
         <div class="sp-fg">
           <label>Numéro de licence RBQ <span class="req">*</span></label>
-          <input type="text" name="rbqLicenseNumber" id="sp_rbqLicenseNumber" value="<%= typeof formData !== 'undefined' && formData.rbqLicenseNumber ? formData.rbqLicenseNumber : '' %>" placeholder="5555-5555-55">
+          <input type="text" name="rbqLicenseNumber" id="sp_rbqLicenseNumber" value="<%= typeof formData !== 'undefined' && formData.rbqLicenseNumber ? formData.rbqLicenseNumber : '' %>" placeholder="5555-5555-55" maxlength="12">
+          <div class="sp-ferr" id="sperr_rbqLicenseNumber"></div>
         </div>
         <div class="sp-fg">
           <label>Catégories RBQ <span class="req">*</span></label>
           <input type="text" name="rbqCategories" id="sp_rbqCategories" value="<%= typeof formData !== 'undefined' && formData.rbqCategories ? formData.rbqCategories : '' %>" placeholder="ex: 1.5.1, 4.2.1">
+          <div class="sp-ferr" id="sperr_rbqCategories"></div>
         </div>
       </div>
-
       <div class="sp-section-title">Numéros fiscaux</div>
       <div class="sp-row">
         <div class="sp-fg">
           <label>Numéro TPS <span class="req">*</span></label>
           <input type="text" name="tpsNumber" id="sp_tpsNumber" value="<%= typeof formData !== 'undefined' && formData.tpsNumber ? formData.tpsNumber : '' %>" placeholder="123456789 RT0001">
+          <div class="sp-ferr" id="sperr_tpsNumber"></div>
         </div>
         <div class="sp-fg">
           <label>Numéro TVQ <span class="req">*</span></label>
           <input type="text" name="tvqNumber" id="sp_tvqNumber" value="<%= typeof formData !== 'undefined' && formData.tvqNumber ? formData.tvqNumber : '' %>" placeholder="1234567890 TQ0001">
+          <div class="sp-ferr" id="sperr_tvqNumber"></div>
         </div>
       </div>
-
       <div class="sp-section-title">Documents</div>
       <div class="sp-fg">
         <label>Attestation Revenu Québec <span class="req">*</span></label>
         <input type="file" name="attestationRevenuQuebec" id="sp_attestationRQ" accept="image/*,.pdf">
-        <p class="sp-hint">Attestation de conformité fiscale — PDF ou image, max 10MB</p>
+        <p class="sp-hint">Attestation de conformité fiscale — PDF, JPG, PNG — max 10 MB</p>
+        <div class="sp-ferr" id="sperr_attestationRQ"></div>
       </div>
-
       <div class="sp-nav">
         <button type="button" class="sp-btn-back" onclick="spBack(3)">&larr;</button>
-        <button type="button" class="sp-btn-next" onclick="spNext(3)">
-          Suivant — Assurances &rarr;
-        </button>
+        <button type="button" class="sp-btn-next" onclick="spNext(3)">Suivant — Assurances &rarr;</button>
       </div>
     </div>
 
-    <!-- STEP 4: Assurances & CNESST -->
+    <!-- STEP 4 -->
     <div class="sp-panel" id="spPanel4">
       <div class="sp-section-title">Assurance responsabilité civile</div>
       <div class="sp-row">
         <div class="sp-fg">
           <label>Assureur / Numéro de police <span class="req">*</span></label>
           <input type="text" name="liabilityInsurance" id="sp_liabilityInsurance" value="<%= typeof formData !== 'undefined' && formData.liabilityInsurance ? formData.liabilityInsurance : '' %>" placeholder="ex: Intact — POL-12345678">
+          <div class="sp-ferr" id="sperr_liabilityInsurance"></div>
         </div>
         <div class="sp-fg">
           <label>Montant de couverture <span class="req">*</span></label>
-          <input type="text" name="coverageAmount" id="sp_coverageAmount" value="<%= typeof formData !== 'undefined' && formData.coverageAmount ? formData.coverageAmount : '' %>" placeholder="ex: 2 000 000 $">
+          <input type="text" name="coverageAmount" id="sp_coverageAmount" value="<%= typeof formData !== 'undefined' && formData.coverageAmount ? formData.coverageAmount : '' %>" placeholder="ex: 2 000 000">
+          <div class="sp-ferr" id="sperr_coverageAmount"></div>
         </div>
       </div>
       <div class="sp-fg">
         <label>Certificat d'assurance RC <span class="req">*</span></label>
         <input type="file" name="rcInsuranceCert" id="sp_rcInsuranceCert" accept="image/*,.pdf">
-        <p class="sp-hint">PDF ou image — max 10MB</p>
+        <p class="sp-hint">PDF, JPG, PNG — max 10 MB</p>
+        <div class="sp-ferr" id="sperr_rcInsuranceCert"></div>
       </div>
-
       <div class="sp-section-title">CNESST</div>
       <div class="sp-fg">
         <label>Numéro de dossier CNESST <span class="req">*</span></label>
         <input type="text" name="cnesstFileNumber" id="sp_cnesstFileNumber" value="<%= typeof formData !== 'undefined' && formData.cnesstFileNumber ? formData.cnesstFileNumber : '' %>" placeholder="ex: 987654321">
+        <div class="sp-ferr" id="sperr_cnesstFileNumber"></div>
       </div>
       <div class="sp-fg">
         <label>Attestation CNESST <span class="req">*</span></label>
         <input type="file" name="cnesstAttestation" id="sp_cnesstAttestation" accept="image/*,.pdf">
-        <p class="sp-hint">Attestation de conformité — PDF ou image, max 10MB</p>
+        <p class="sp-hint">Attestation de conformité — PDF, JPG, PNG — max 10 MB</p>
+        <div class="sp-ferr" id="sperr_cnesstAttestation"></div>
       </div>
-
       <div class="sp-nav">
         <button type="button" class="sp-btn-back" onclick="spBack(4)">&larr;</button>
-        <button type="button" class="sp-btn-next" onclick="spNext(4)">
-          Suivant — Profil &rarr;
-        </button>
+        <button type="button" class="sp-btn-next" onclick="spNext(4)">Suivant — Profil &rarr;</button>
       </div>
     </div>
 
-    <!-- STEP 5: Profil professionnel -->
+    <!-- STEP 5 -->
     <div class="sp-panel" id="spPanel5">
       <div class="sp-section-title">Types de services</div>
       <div class="sp-fg">
         <label>Sélectionnez vos spécialités <span class="req">*</span></label>
         <div class="sp-svc-grid">
-          <% var svcTypes = [
-            "Peinture et décoration",
-            "Rénovation cuisine",
-            "Rénovation salle de bain",
-            "Planchers et revêtements",
-            "Éclairage",
-            "Mobilier et aménagement",
-            "Jardinage et extérieur",
-            "Plomberie",
-            "Électricité",
-            "Nettoyage",
-            "Chauffage et climatisation",
-            "Portes et fenêtres",
-            "Toiture et isolation",
-            "Fondations et structure"
-          ]; %>
+          <% var svcTypes = ["Peinture et décoration","Rénovation cuisine","Rénovation salle de bain","Planchers et revêtements","Éclairage","Mobilier et aménagement","Jardinage et extérieur","Plomberie","Électricité","Nettoyage","Chauffage et climatisation","Portes et fenêtres","Toiture et isolation","Fondations et structure"]; %>
           <% var selectedSvc = (typeof formData !== "undefined" && formData.serviceTypes) ? (Array.isArray(formData.serviceTypes) ? formData.serviceTypes : [formData.serviceTypes]) : []; %>
           <% svcTypes.forEach(function(svc) { %>
             <label class="sp-svc-label">
@@ -333,45 +309,46 @@
             </label>
           <% }); %>
         </div>
+        <div class="sp-ferr" id="sperr_serviceTypes" style="margin-top:8px;"></div>
       </div>
-
       <div class="sp-row">
         <div class="sp-fg">
           <label>Zones de service <span class="req">*</span></label>
           <input type="text" name="serviceAreas" id="sp_serviceAreas" value="<%= typeof formData !== 'undefined' && formData.serviceAreas ? formData.serviceAreas : '' %>" placeholder="ex: Montréal, Laval, Longueuil">
+          <div class="sp-ferr" id="sperr_serviceAreas"></div>
         </div>
         <div class="sp-fg">
           <label>Années d'expérience <span class="req">*</span></label>
           <input type="text" name="yearsExperience" id="sp_yearsExperience" value="<%= typeof formData !== 'undefined' && formData.yearsExperience ? formData.yearsExperience : '' %>" placeholder="ex: 8 ans">
+          <div class="sp-ferr" id="sperr_yearsExperience"></div>
         </div>
       </div>
-
       <div class="sp-section-title">Sécurité du compte</div>
       <div class="sp-row">
         <div class="sp-fg">
           <label>Mot de passe <span class="req">*</span></label>
-          <input type="password" name="password" id="sp_password" placeholder="Minimum 6 caractères" oninput="spPwStrength(this.value)">
+          <input type="password" name="password" id="sp_password" placeholder="Minimum 6 caractères">
           <div class="sp-pw-row">
             <div class="sp-pw-seg" id="spPwS1"></div>
             <div class="sp-pw-seg" id="spPwS2"></div>
             <div class="sp-pw-seg" id="spPwS3"></div>
             <div class="sp-pw-seg" id="spPwS4"></div>
           </div>
+          <div class="sp-ferr" id="sperr_password"></div>
         </div>
         <div class="sp-fg">
           <label>Confirmer le mot de passe <span class="req">*</span></label>
           <input type="password" name="confirmPassword" id="sp_confirmPassword" placeholder="Répétez le mot de passe">
+          <div class="sp-ferr" id="sperr_confirmPassword"></div>
         </div>
       </div>
-
       <div id="spStepError" class="sp-error hidden">
         <i data-lucide="alert-circle" style="width:16px;height:16px;flex-shrink:0;margin-top:1px;"></i>
         <span id="spStepErrorMsg"></span>
       </div>
-
       <div class="sp-nav">
         <button type="button" class="sp-btn-back" onclick="spBack(5)">&larr;</button>
-        <button type="submit" class="sp-btn-next" id="spSubmitBtn" onclick="return spValidateFinal()">
+        <button type="submit" class="sp-btn-next" onclick="return spValidateFinal()">
           <i data-lucide="send" style="width:15px;height:15px;vertical-align:-3px;margin-right:6px;"></i>
           Envoyer ma demande
         </button>
@@ -391,139 +368,497 @@
 <script>
 var spCurrent = 1;
 
-function spShowStep(n) {
-  for (var i = 1; i <= 5; i++) {
-    var panel = document.getElementById('spPanel' + i);
-    var dot = document.getElementById('spDot' + i);
-    if (panel) panel.className = 'sp-panel' + (i === n ? ' active' : '');
-    if (dot) {
-      if (i < n) dot.className = 'sp-step-dot done';
-      else if (i === n) dot.className = 'sp-step-dot active';
-      else dot.className = 'sp-step-dot';
-    }
-    if (i < 5) {
-      var conn = document.getElementById('spConn' + i);
-      if (conn) conn.className = 'sp-connector' + (i < n ? ' done' : '');
-    }
-  }
-  spCurrent = n;
-  window.scrollTo(0, 0);
+/* ── Validators ────────────────────────────────────────────── */
+function spIsEmail(v) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
+}
+function spIsPhone(v) {
+  var d = v.replace(/\D/g, '');
+  if (d.length === 11 && d[0] === '1') d = d.slice(1);
+  return d.length === 10 && /^[2-9]\d{2}[2-9]\d{6}$/.test(d);
+}
+function spFmtPhone(v) {
+  var d = v.replace(/\D/g, '');
+  if (d.length === 11 && d[0] === '1') d = d.slice(1);
+  d = d.slice(0, 10);
+  if (d.length >= 7) return d.slice(0,3) + '-' + d.slice(3,6) + '-' + d.slice(6);
+  if (d.length >= 4) return d.slice(0,3) + '-' + d.slice(3);
+  return d;
+}
+function spIsPostal(v) {
+  return /^[ABCEGHJKLMNPRSTVXY]\d[ABCEGHJKLMNPRSTVWXYZ]\s?\d[ABCEGHJKLMNPRSTVWXYZ]\d$/i.test(v.trim());
+}
+function spFmtPostal(v) {
+  var c = v.replace(/\s/g, '').toUpperCase().slice(0, 6);
+  return c.length > 3 ? c.slice(0,3) + ' ' + c.slice(3) : c;
+}
+function spIsURL(v) {
+  return /^https?:\/\/.+\..+/.test(v.trim());
+}
+function spIsNEQ(v) {
+  return /^\d{10}$/.test(v.trim());
+}
+function spIsRBQ(v) {
+  return /^\d{4}-\d{4}-\d{2}$/.test(v.trim());
+}
+function spFmtRBQ(v) {
+  var d = v.replace(/\D/g, '').slice(0, 10);
+  if (d.length > 8) return d.slice(0,4) + '-' + d.slice(4,8) + '-' + d.slice(8);
+  if (d.length > 4) return d.slice(0,4) + '-' + d.slice(4);
+  return d;
+}
+function spIsTPS(v) {
+  return /^\d{9}\s*RT\d{4}$/i.test(v.trim());
+}
+function spIsTVQ(v) {
+  return /^\d{10}\s*TQ\d{4}$/i.test(v.trim());
+}
+function spIsCoverage(v) {
+  var n = parseFloat(v.replace(/[\s$,]/g, ''));
+  return !isNaN(n) && n > 0;
+}
+function spIsCnesstNum(v) {
+  return /^\d{5,}$/.test(v.trim());
+}
+function spIsAddress(v) {
+  return v.trim().length >= 5 && /\d/.test(v);
+}
+function spIsFile(input) {
+  if (!input || !input.files || input.files.length === 0) return 'empty';
+  var f = input.files[0];
+  var ok = ['image/jpeg','image/png','image/webp','image/gif','application/pdf'];
+  if (ok.indexOf(f.type) === -1) return 'type';
+  if (f.size > 10 * 1024 * 1024) return 'size';
+  return 'ok';
 }
 
+/* ── Per-field error display ───────────────────────────────── */
+function spFerr(errId, inputId, msg) {
+  var errEl = document.getElementById(errId);
+  if (errEl) { errEl.innerHTML = msg; errEl.classList.add('visible'); }
+  var inp = inputId ? document.getElementById(inputId) : null;
+  if (inp) { inp.classList.add('sp-invalid'); inp.classList.remove('sp-valid'); }
+}
+function spFok(errId, inputId) {
+  var errEl = document.getElementById(errId);
+  if (errEl) { errEl.innerHTML = ''; errEl.classList.remove('visible'); }
+  var inp = inputId ? document.getElementById(inputId) : null;
+  if (inp) { inp.classList.remove('sp-invalid'); inp.classList.add('sp-valid'); }
+}
+function spFclear(errId, inputId) {
+  var errEl = document.getElementById(errId);
+  if (errEl) { errEl.innerHTML = ''; errEl.classList.remove('visible'); }
+  var inp = inputId ? document.getElementById(inputId) : null;
+  if (inp) { inp.classList.remove('sp-invalid'); inp.classList.remove('sp-valid'); }
+}
+
+/* ── Step-level error (step 5 / serviceTypes) ──────────────── */
 function spShowError(msg) {
   var box = document.getElementById('spStepError');
   var txt = document.getElementById('spStepErrorMsg');
-  if (box && txt) {
-    txt.textContent = msg;
-    box.className = 'sp-error';
-  }
+  if (box && txt) { txt.textContent = msg; box.className = 'sp-error'; }
 }
 function spHideError() {
   var box = document.getElementById('spStepError');
   if (box) box.className = 'sp-error hidden';
 }
 
+/* ── Step navigation ───────────────────────────────────────── */
+function spShowStep(n) {
+  for (var i = 1; i <= 5; i++) {
+    var p = document.getElementById('spPanel' + i);
+    var d = document.getElementById('spDot' + i);
+    if (p) p.className = 'sp-panel' + (i === n ? ' active' : '');
+    if (d) d.className = 'sp-step-dot' + (i < n ? ' done' : i === n ? ' active' : '');
+    if (i < 5) {
+      var c = document.getElementById('spConn' + i);
+      if (c) c.className = 'sp-connector' + (i < n ? ' done' : '');
+    }
+  }
+  spCurrent = n;
+  window.scrollTo(0, 0);
+}
+
+/* ── Step validation (marks all failing fields at once) ─────── */
 function spValidateStep(n) {
-  spHideError();
+  var allOk = true;
+  var firstErrEl = null;
+
+  function g(id) {
+    var el = document.getElementById(id);
+    return el ? el.value.trim() : '';
+  }
+  function fieldErr(errId, inputId, msg) {
+    spFerr(errId, inputId, msg);
+    if (!firstErrEl && inputId) firstErrEl = document.getElementById(inputId);
+    allOk = false;
+  }
+
   if (n === 1) {
-    var fields = ['sp_firstName','sp_lastName','sp_jobTitle','sp_email','sp_phone'];
-    for (var i = 0; i < fields.length; i++) {
-      var el = document.getElementById(fields[i]);
-      if (!el || !el.value.trim()) {
-        spShowError('Veuillez remplir tous les champs obligatoires.');
-        if (el) el.focus();
-        return false;
-      }
-    }
+    if (!g('sp_firstName')) fieldErr('sperr_firstName', 'sp_firstName', 'Le prénom est obligatoire.');
+    if (!g('sp_lastName')) fieldErr('sperr_lastName', 'sp_lastName', 'Le nom est obligatoire.');
+    if (!g('sp_jobTitle')) fieldErr('sperr_jobTitle', 'sp_jobTitle', 'Le titre / poste est obligatoire.');
+    var ev = g('sp_email');
+    if (!ev) fieldErr('sperr_email', 'sp_email', "L'adresse email est obligatoire.");
+    else if (!spIsEmail(ev)) fieldErr('sperr_email', 'sp_email', 'Veuillez entrer une adresse email valide.<br>Exemple : nom@entreprise.com');
+    var pv = g('sp_phone');
+    if (!pv) fieldErr('sperr_phone', 'sp_phone', 'Le numéro de téléphone est obligatoire.');
+    else if (!spIsPhone(pv)) fieldErr('sperr_phone', 'sp_phone', 'Veuillez entrer un numéro valide.<br>Exemple Canada : 514-123-4567');
   }
+
   if (n === 2) {
-    var fields2 = ['sp_companyName','sp_address','sp_city','sp_postalCode','sp_country'];
-    for (var i = 0; i < fields2.length; i++) {
-      var el = document.getElementById(fields2[i]);
-      if (!el || !el.value.trim()) {
-        spShowError('Veuillez remplir tous les champs obligatoires.');
-        if (el) el.focus();
-        return false;
-      }
-    }
+    if (!g('sp_companyName')) fieldErr('sperr_companyName', 'sp_companyName', "Le nom de l'entreprise est obligatoire.");
+    var nv = g('sp_nEQ');
+    if (nv && !spIsNEQ(nv)) fieldErr('sperr_nEQ', 'sp_nEQ', 'Le numéro NEQ doit contenir exactement 10 chiffres.<br>Exemple : 1234567890');
+    var av = g('sp_address');
+    if (!av) fieldErr('sperr_address', 'sp_address', "L'adresse est obligatoire.");
+    else if (!spIsAddress(av)) fieldErr('sperr_address', 'sp_address', 'Veuillez entrer une adresse complète valide (numéro + rue).<br>Exemple : 123, rue Principale');
+    if (!g('sp_city')) fieldErr('sperr_city', 'sp_city', 'La ville est obligatoire.');
+    var pov = g('sp_postalCode');
+    if (!pov) fieldErr('sperr_postalCode', 'sp_postalCode', 'Le code postal est obligatoire.');
+    else if (!spIsPostal(pov)) fieldErr('sperr_postalCode', 'sp_postalCode', 'Le code postal doit respecter le format canadien :<br>A1A 1A1 &mdash; ex : H2X 3Y4');
+    if (!g('sp_country')) fieldErr('sperr_country', 'sp_country', 'Le pays est obligatoire.');
+    var wv = g('sp_website');
+    if (wv && !spIsURL(wv)) fieldErr('sperr_website', 'sp_website', 'Veuillez entrer une URL valide.<br>Exemple : https://www.monentreprise.com');
   }
+
   if (n === 3) {
-    var fields3 = ['sp_rbqLicenseNumber','sp_rbqCategories','sp_tpsNumber','sp_tvqNumber'];
-    for (var i = 0; i < fields3.length; i++) {
-      var el = document.getElementById(fields3[i]);
-      if (!el || !el.value.trim()) {
-        spShowError('Veuillez remplir tous les champs obligatoires.');
-        if (el) el.focus();
-        return false;
-      }
-    }
-    var attestRQ = document.getElementById('sp_attestationRQ');
-    if (!attestRQ || !attestRQ.files || attestRQ.files.length === 0) {
-      spShowError("Veuillez joindre l'attestation Revenu Quebec.");
-      return false;
-    }
+    var rv = g('sp_rbqLicenseNumber');
+    if (!rv) fieldErr('sperr_rbqLicenseNumber', 'sp_rbqLicenseNumber', 'Le numéro de licence RBQ est obligatoire.');
+    else if (!spIsRBQ(rv)) fieldErr('sperr_rbqLicenseNumber', 'sp_rbqLicenseNumber', 'Veuillez entrer un numéro RBQ valide.<br>Format attendu : XXXX-XXXX-XX &mdash; ex : 5555-5555-55');
+    if (!g('sp_rbqCategories')) fieldErr('sperr_rbqCategories', 'sp_rbqCategories', 'Veuillez indiquer au moins une catégorie RBQ.<br>Exemple : 1.5.1, 4.2.1');
+    var tv = g('sp_tpsNumber');
+    if (!tv) fieldErr('sperr_tpsNumber', 'sp_tpsNumber', 'Le numéro TPS est obligatoire.');
+    else if (!spIsTPS(tv)) fieldErr('sperr_tpsNumber', 'sp_tpsNumber', 'Veuillez entrer un numéro TPS valide.<br>Format attendu : 123456789 RT0001');
+    var tvv = g('sp_tvqNumber');
+    if (!tvv) fieldErr('sperr_tvqNumber', 'sp_tvqNumber', 'Le numéro TVQ est obligatoire.');
+    else if (!spIsTVQ(tvv)) fieldErr('sperr_tvqNumber', 'sp_tvqNumber', 'Veuillez entrer un numéro TVQ valide.<br>Format attendu : 1234567890 TQ0001');
+    var fRQ = spIsFile(document.getElementById('sp_attestationRQ'));
+    if (fRQ === 'empty') fieldErr('sperr_attestationRQ', null, "Veuillez joindre l'attestation Revenu Québec.<br>Formats acceptés : PDF, JPG, PNG &mdash; max 10 MB");
+    else if (fRQ === 'type') fieldErr('sperr_attestationRQ', null, 'Format non accepté.<br>Formats acceptés : PDF, JPG, PNG, WEBP');
+    else if (fRQ === 'size') fieldErr('sperr_attestationRQ', null, 'Fichier trop volumineux.<br>Taille maximale autorisée : 10 MB');
   }
+
   if (n === 4) {
-    var fields4 = ['sp_liabilityInsurance','sp_coverageAmount','sp_cnesstFileNumber'];
-    for (var i = 0; i < fields4.length; i++) {
-      var el = document.getElementById(fields4[i]);
-      if (!el || !el.value.trim()) {
-        spShowError('Veuillez remplir tous les champs obligatoires.');
-        if (el) el.focus();
-        return false;
-      }
-    }
-    var rcCert = document.getElementById('sp_rcInsuranceCert');
-    if (!rcCert || !rcCert.files || rcCert.files.length === 0) {
-      spShowError('Veuillez joindre le certificat d\'assurance RC.');
-      return false;
-    }
-    var cnesstAtt = document.getElementById('sp_cnesstAttestation');
-    if (!cnesstAtt || !cnesstAtt.files || cnesstAtt.files.length === 0) {
-      spShowError('Veuillez joindre l\'attestation CNESST.');
-      return false;
-    }
+    if (!g('sp_liabilityInsurance')) fieldErr('sperr_liabilityInsurance', 'sp_liabilityInsurance', "Veuillez indiquer l'assureur et le numéro de police.");
+    var cv = g('sp_coverageAmount');
+    if (!cv) fieldErr('sperr_coverageAmount', 'sp_coverageAmount', 'Le montant de couverture est obligatoire.');
+    else if (!spIsCoverage(cv)) fieldErr('sperr_coverageAmount', 'sp_coverageAmount', 'Veuillez entrer un montant valide en chiffres uniquement.<br>Exemple : 2000000 ou 2 000 000');
+    var fRC = spIsFile(document.getElementById('sp_rcInsuranceCert'));
+    if (fRC === 'empty') fieldErr('sperr_rcInsuranceCert', null, "Veuillez joindre le certificat d'assurance RC.<br>Formats acceptés : PDF, JPG, PNG &mdash; max 10 MB");
+    else if (fRC === 'type') fieldErr('sperr_rcInsuranceCert', null, 'Format non accepté.<br>Formats acceptés : PDF, JPG, PNG, WEBP');
+    else if (fRC === 'size') fieldErr('sperr_rcInsuranceCert', null, 'Fichier trop volumineux.<br>Taille maximale autorisée : 10 MB');
+    var cnv = g('sp_cnesstFileNumber');
+    if (!cnv) fieldErr('sperr_cnesstFileNumber', 'sp_cnesstFileNumber', 'Le numéro de dossier CNESST est obligatoire.');
+    else if (!spIsCnesstNum(cnv)) fieldErr('sperr_cnesstFileNumber', 'sp_cnesstFileNumber', 'Le numéro de dossier CNESST doit contenir au moins 5 chiffres (chiffres uniquement).');
+    var fCN = spIsFile(document.getElementById('sp_cnesstAttestation'));
+    if (fCN === 'empty') fieldErr('sperr_cnesstAttestation', null, "Veuillez joindre l'attestation CNESST.<br>Formats acceptés : PDF, JPG, PNG &mdash; max 10 MB");
+    else if (fCN === 'type') fieldErr('sperr_cnesstAttestation', null, 'Format non accepté.<br>Formats acceptés : PDF, JPG, PNG, WEBP');
+    else if (fCN === 'size') fieldErr('sperr_cnesstAttestation', null, 'Fichier trop volumineux.<br>Taille maximale autorisée : 10 MB');
   }
-  return true;
+
+  if (!allOk && firstErrEl) {
+    firstErrEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(function() { try { firstErrEl.focus(); } catch(e){} }, 280);
+  }
+  return allOk;
 }
 
-function spNext(n) {
-  if (!spValidateStep(n)) return;
-  spShowStep(n + 1);
-}
+function spNext(n) { if (spValidateStep(n)) spShowStep(n + 1); }
+function spBack(n) { spShowStep(n - 1); }
 
-function spBack(n) {
-  spShowStep(n - 1);
-}
-
+/* ── Step 5 final validation ─────────────────────────────── */
 function spValidateFinal() {
   spHideError();
+  var allOk = true;
+  var firstErrEl = null;
+
+  function g(id) { var el = document.getElementById(id); return el ? el.value.trim() : ''; }
+  function fieldErr(errId, inputId, msg) {
+    spFerr(errId, inputId, msg);
+    if (!firstErrEl && inputId) firstErrEl = document.getElementById(inputId);
+    allOk = false;
+  }
+
   var checks = document.querySelectorAll("input[name='serviceTypes']:checked");
   if (checks.length === 0) {
-    spShowError('Veuillez selectionner au moins un type de service.');
-    return false;
+    spFerr('sperr_serviceTypes', null, 'Veuillez sélectionner au moins un type de service.');
+    allOk = false;
+  } else {
+    spFok('sperr_serviceTypes', null);
   }
-  var sa = document.getElementById('sp_serviceAreas');
-  var ye = document.getElementById('sp_yearsExperience');
-  var pw = document.getElementById('sp_password');
-  var cpw = document.getElementById('sp_confirmPassword');
-  if (!sa || !sa.value.trim()) { spShowError('Veuillez indiquer vos zones de service.'); return false; }
-  if (!ye || !ye.value.trim()) { spShowError("Veuillez indiquer vos annees d'experience."); return false; }
-  if (!pw || !pw.value || pw.value.length < 6) { spShowError('Le mot de passe doit contenir au moins 6 caracteres.'); return false; }
-  if (!cpw || pw.value !== cpw.value) { spShowError('Les mots de passe ne correspondent pas.'); return false; }
-  return true;
+
+  if (!g('sp_serviceAreas')) fieldErr('sperr_serviceAreas', 'sp_serviceAreas', 'Les zones de service sont obligatoires.');
+  if (!g('sp_yearsExperience')) fieldErr('sperr_yearsExperience', 'sp_yearsExperience', "Les années d'expérience sont obligatoires.");
+
+  var pw = g('sp_password');
+  if (!pw) fieldErr('sperr_password', 'sp_password', 'Le mot de passe est obligatoire.');
+  else if (pw.length < 6) fieldErr('sperr_password', 'sp_password', 'Le mot de passe doit contenir au moins 6 caractères.');
+
+  var cpw = g('sp_confirmPassword');
+  if (!cpw) fieldErr('sperr_confirmPassword', 'sp_confirmPassword', 'Veuillez confirmer votre mot de passe.');
+  else if (pw && cpw !== pw) fieldErr('sperr_confirmPassword', 'sp_confirmPassword', 'Les mots de passe ne correspondent pas.');
+
+  if (!allOk && firstErrEl) {
+    firstErrEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    setTimeout(function() { try { firstErrEl.focus(); } catch(e){} }, 280);
+  }
+  return allOk;
 }
 
-function spPwStrength(val) {
+/* ── Password strength ───────────────────────────────────── */
+function spPwStrength(v) {
   var score = 0;
-  if (val.length >= 6) score++;
-  if (val.length >= 10) score++;
-  if (/[A-Z]/.test(val) && /[0-9]/.test(val)) score++;
-  if (/[^A-Za-z0-9]/.test(val)) score++;
+  if (v.length >= 6) score++;
+  if (v.length >= 10) score++;
+  if (/[A-Z]/.test(v) && /[0-9]/.test(v)) score++;
+  if (/[^A-Za-z0-9]/.test(v)) score++;
   var colors = ['', '#ff4444', '#ff9900', '#00d4ff', '#00ff88'];
   for (var i = 1; i <= 4; i++) {
     var seg = document.getElementById('spPwS' + i);
     if (seg) seg.style.background = i <= score ? colors[score] : 'rgba(255,255,255,0.1)';
   }
 }
+
+/* ── Real-time event listeners ───────────────────────────── */
+document.addEventListener('DOMContentLoaded', function() {
+
+  function onBlurRequired(id, errId, label) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.addEventListener('blur', function() {
+      if (!this.value.trim()) spFerr(errId, id, label + ' est obligatoire.');
+      else spFok(errId, id);
+    });
+    el.addEventListener('input', function() {
+      if (this.value.trim()) spFok(errId, id);
+    });
+  }
+
+  /* Step 1 */
+  onBlurRequired('sp_firstName', 'sperr_firstName', 'Le prénom');
+  onBlurRequired('sp_lastName', 'sperr_lastName', 'Le nom');
+  onBlurRequired('sp_jobTitle', 'sperr_jobTitle', 'Le titre');
+
+  var emailEl = document.getElementById('sp_email');
+  if (emailEl) {
+    emailEl.addEventListener('blur', function() {
+      if (!this.value.trim()) spFerr('sperr_email', 'sp_email', "L'adresse email est obligatoire.");
+      else if (!spIsEmail(this.value)) spFerr('sperr_email', 'sp_email', 'Veuillez entrer une adresse email valide.<br>Exemple : nom@entreprise.com');
+      else spFok('sperr_email', 'sp_email');
+    });
+    emailEl.addEventListener('input', function() {
+      if (spIsEmail(this.value)) spFok('sperr_email', 'sp_email');
+      else spFclear('sperr_email', 'sp_email');
+    });
+  }
+
+  var phoneEl = document.getElementById('sp_phone');
+  if (phoneEl) {
+    phoneEl.addEventListener('keydown', function(e) {
+      var nav = ['Backspace','Delete','ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Tab','Home','End'];
+      if (nav.indexOf(e.key) !== -1) return;
+      if (!/^\d$/.test(e.key)) e.preventDefault();
+    });
+    phoneEl.addEventListener('input', function() {
+      this.value = spFmtPhone(this.value);
+      if (spIsPhone(this.value)) spFok('sperr_phone', 'sp_phone');
+      else spFclear('sperr_phone', 'sp_phone');
+    });
+    phoneEl.addEventListener('blur', function() {
+      if (!this.value.trim()) spFerr('sperr_phone', 'sp_phone', 'Le numéro de téléphone est obligatoire.');
+      else if (!spIsPhone(this.value)) spFerr('sperr_phone', 'sp_phone', 'Veuillez entrer un numéro valide.<br>Exemple Canada : 514-123-4567');
+      else spFok('sperr_phone', 'sp_phone');
+    });
+  }
+
+  /* Step 2 */
+  onBlurRequired('sp_companyName', 'sperr_companyName', "Le nom de l'entreprise");
+
+  var neqEl = document.getElementById('sp_nEQ');
+  if (neqEl) {
+    neqEl.addEventListener('input', function() {
+      this.value = this.value.replace(/\D/g, '').slice(0, 10);
+      if (!this.value || spIsNEQ(this.value)) spFok('sperr_nEQ', 'sp_nEQ');
+      else spFclear('sperr_nEQ', 'sp_nEQ');
+    });
+    neqEl.addEventListener('blur', function() {
+      if (!this.value.trim()) { spFok('sperr_nEQ', 'sp_nEQ'); return; }
+      if (!spIsNEQ(this.value)) spFerr('sperr_nEQ', 'sp_nEQ', 'Le numéro NEQ doit contenir exactement 10 chiffres.<br>Exemple : 1234567890');
+      else spFok('sperr_nEQ', 'sp_nEQ');
+    });
+  }
+
+  var addrEl = document.getElementById('sp_address');
+  if (addrEl) {
+    addrEl.addEventListener('blur', function() {
+      if (!this.value.trim()) spFerr('sperr_address', 'sp_address', "L'adresse est obligatoire.");
+      else if (!spIsAddress(this.value)) spFerr('sperr_address', 'sp_address', 'Veuillez entrer une adresse complète valide (numéro + rue).<br>Exemple : 123, rue Principale');
+      else spFok('sperr_address', 'sp_address');
+    });
+    addrEl.addEventListener('input', function() {
+      if (spIsAddress(this.value)) spFok('sperr_address', 'sp_address');
+      else spFclear('sperr_address', 'sp_address');
+    });
+  }
+
+  onBlurRequired('sp_city', 'sperr_city', 'La ville');
+
+  var postalEl = document.getElementById('sp_postalCode');
+  if (postalEl) {
+    postalEl.addEventListener('input', function() {
+      this.value = spFmtPostal(this.value);
+      if (spIsPostal(this.value)) spFok('sperr_postalCode', 'sp_postalCode');
+      else spFclear('sperr_postalCode', 'sp_postalCode');
+    });
+    postalEl.addEventListener('blur', function() {
+      if (!this.value.trim()) spFerr('sperr_postalCode', 'sp_postalCode', 'Le code postal est obligatoire.');
+      else if (!spIsPostal(this.value)) spFerr('sperr_postalCode', 'sp_postalCode', 'Le code postal doit respecter le format canadien :<br>A1A 1A1 &mdash; ex : H2X 3Y4');
+      else spFok('sperr_postalCode', 'sp_postalCode');
+    });
+  }
+
+  onBlurRequired('sp_country', 'sperr_country', 'Le pays');
+
+  var webEl = document.getElementById('sp_website');
+  if (webEl) {
+    webEl.addEventListener('blur', function() {
+      if (!this.value.trim()) { spFok('sperr_website', 'sp_website'); return; }
+      if (!spIsURL(this.value)) spFerr('sperr_website', 'sp_website', 'Veuillez entrer une URL valide.<br>Exemple : https://www.monentreprise.com');
+      else spFok('sperr_website', 'sp_website');
+    });
+    webEl.addEventListener('input', function() {
+      if (!this.value.trim() || spIsURL(this.value)) spFok('sperr_website', 'sp_website');
+      else spFclear('sperr_website', 'sp_website');
+    });
+  }
+
+  /* Step 3 */
+  var rbqEl = document.getElementById('sp_rbqLicenseNumber');
+  if (rbqEl) {
+    rbqEl.addEventListener('input', function() {
+      this.value = spFmtRBQ(this.value);
+      if (spIsRBQ(this.value)) spFok('sperr_rbqLicenseNumber', 'sp_rbqLicenseNumber');
+      else spFclear('sperr_rbqLicenseNumber', 'sp_rbqLicenseNumber');
+    });
+    rbqEl.addEventListener('blur', function() {
+      if (!this.value.trim()) spFerr('sperr_rbqLicenseNumber', 'sp_rbqLicenseNumber', 'Le numéro de licence RBQ est obligatoire.');
+      else if (!spIsRBQ(this.value)) spFerr('sperr_rbqLicenseNumber', 'sp_rbqLicenseNumber', 'Veuillez entrer un numéro RBQ valide.<br>Format attendu : XXXX-XXXX-XX &mdash; ex : 5555-5555-55');
+      else spFok('sperr_rbqLicenseNumber', 'sp_rbqLicenseNumber');
+    });
+  }
+
+  onBlurRequired('sp_rbqCategories', 'sperr_rbqCategories', 'Les catégories RBQ');
+
+  var tpsEl = document.getElementById('sp_tpsNumber');
+  if (tpsEl) {
+    tpsEl.addEventListener('input', function() {
+      this.value = this.value.toUpperCase();
+      if (spIsTPS(this.value)) spFok('sperr_tpsNumber', 'sp_tpsNumber');
+      else spFclear('sperr_tpsNumber', 'sp_tpsNumber');
+    });
+    tpsEl.addEventListener('blur', function() {
+      if (!this.value.trim()) spFerr('sperr_tpsNumber', 'sp_tpsNumber', 'Le numéro TPS est obligatoire.');
+      else if (!spIsTPS(this.value)) spFerr('sperr_tpsNumber', 'sp_tpsNumber', 'Veuillez entrer un numéro TPS valide.<br>Format attendu : 123456789 RT0001');
+      else spFok('sperr_tpsNumber', 'sp_tpsNumber');
+    });
+  }
+
+  var tvqEl = document.getElementById('sp_tvqNumber');
+  if (tvqEl) {
+    tvqEl.addEventListener('input', function() {
+      this.value = this.value.toUpperCase();
+      if (spIsTVQ(this.value)) spFok('sperr_tvqNumber', 'sp_tvqNumber');
+      else spFclear('sperr_tvqNumber', 'sp_tvqNumber');
+    });
+    tvqEl.addEventListener('blur', function() {
+      if (!this.value.trim()) spFerr('sperr_tvqNumber', 'sp_tvqNumber', 'Le numéro TVQ est obligatoire.');
+      else if (!spIsTVQ(this.value)) spFerr('sperr_tvqNumber', 'sp_tvqNumber', 'Veuillez entrer un numéro TVQ valide.<br>Format attendu : 1234567890 TQ0001');
+      else spFok('sperr_tvqNumber', 'sp_tvqNumber');
+    });
+  }
+
+  function addFileListener(inputId, errId) {
+    var el = document.getElementById(inputId);
+    if (!el) return;
+    el.addEventListener('change', function() {
+      var r = spIsFile(this);
+      if (r === 'ok') spFok(errId, null);
+      else if (r === 'type') spFerr(errId, null, 'Format non accepté.<br>Formats acceptés : PDF, JPG, PNG, WEBP');
+      else if (r === 'size') spFerr(errId, null, 'Fichier trop volumineux.<br>Taille maximale autorisée : 10 MB');
+    });
+  }
+  addFileListener('sp_attestationRQ', 'sperr_attestationRQ');
+
+  /* Step 4 */
+  onBlurRequired('sp_liabilityInsurance', 'sperr_liabilityInsurance', "L'assureur / numéro de police");
+
+  var covEl = document.getElementById('sp_coverageAmount');
+  if (covEl) {
+    covEl.addEventListener('blur', function() {
+      if (!this.value.trim()) spFerr('sperr_coverageAmount', 'sp_coverageAmount', 'Le montant de couverture est obligatoire.');
+      else if (!spIsCoverage(this.value)) spFerr('sperr_coverageAmount', 'sp_coverageAmount', 'Veuillez entrer un montant valide en chiffres uniquement.<br>Exemple : 2000000 ou 2 000 000');
+      else spFok('sperr_coverageAmount', 'sp_coverageAmount');
+    });
+    covEl.addEventListener('input', function() {
+      if (spIsCoverage(this.value)) spFok('sperr_coverageAmount', 'sp_coverageAmount');
+      else spFclear('sperr_coverageAmount', 'sp_coverageAmount');
+    });
+  }
+
+  addFileListener('sp_rcInsuranceCert', 'sperr_rcInsuranceCert');
+
+  var cnesstNumEl = document.getElementById('sp_cnesstFileNumber');
+  if (cnesstNumEl) {
+    cnesstNumEl.addEventListener('input', function() {
+      this.value = this.value.replace(/\D/g, '');
+      if (spIsCnesstNum(this.value)) spFok('sperr_cnesstFileNumber', 'sp_cnesstFileNumber');
+      else spFclear('sperr_cnesstFileNumber', 'sp_cnesstFileNumber');
+    });
+    cnesstNumEl.addEventListener('blur', function() {
+      if (!this.value.trim()) spFerr('sperr_cnesstFileNumber', 'sp_cnesstFileNumber', 'Le numéro de dossier CNESST est obligatoire.');
+      else if (!spIsCnesstNum(this.value)) spFerr('sperr_cnesstFileNumber', 'sp_cnesstFileNumber', 'Le numéro de dossier CNESST doit contenir au moins 5 chiffres (chiffres uniquement).');
+      else spFok('sperr_cnesstFileNumber', 'sp_cnesstFileNumber');
+    });
+  }
+
+  addFileListener('sp_cnesstAttestation', 'sperr_cnesstAttestation');
+
+  /* Step 5 */
+  onBlurRequired('sp_serviceAreas', 'sperr_serviceAreas', 'Les zones de service');
+  onBlurRequired('sp_yearsExperience', 'sperr_yearsExperience', "Les années d'expérience");
+
+  var pwEl = document.getElementById('sp_password');
+  var cpwEl = document.getElementById('sp_confirmPassword');
+
+  if (pwEl) {
+    pwEl.addEventListener('input', function() {
+      spPwStrength(this.value);
+      if (this.value.length >= 6) spFok('sperr_password', 'sp_password');
+      else spFclear('sperr_password', 'sp_password');
+      if (cpwEl && cpwEl.value) {
+        if (this.value === cpwEl.value) spFok('sperr_confirmPassword', 'sp_confirmPassword');
+        else spFclear('sperr_confirmPassword', 'sp_confirmPassword');
+      }
+    });
+    pwEl.addEventListener('blur', function() {
+      if (!this.value) spFerr('sperr_password', 'sp_password', 'Le mot de passe est obligatoire.');
+      else if (this.value.length < 6) spFerr('sperr_password', 'sp_password', 'Le mot de passe doit contenir au moins 6 caractères.');
+      else spFok('sperr_password', 'sp_password');
+    });
+  }
+
+  if (cpwEl) {
+    cpwEl.addEventListener('input', function() {
+      if (pwEl && this.value === pwEl.value && this.value.length >= 6) spFok('sperr_confirmPassword', 'sp_confirmPassword');
+      else spFclear('sperr_confirmPassword', 'sp_confirmPassword');
+    });
+    cpwEl.addEventListener('blur', function() {
+      if (!this.value) spFerr('sperr_confirmPassword', 'sp_confirmPassword', 'Veuillez confirmer votre mot de passe.');
+      else if (pwEl && this.value !== pwEl.value) spFerr('sperr_confirmPassword', 'sp_confirmPassword', 'Les mots de passe ne correspondent pas.');
+      else spFok('sperr_confirmPassword', 'sp_confirmPassword');
+    });
+  }
+
+});
 </script>
