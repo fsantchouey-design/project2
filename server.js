@@ -28,9 +28,14 @@ app.set('layout', 'layouts/main');
 
 // Stripe webhook — raw body BEFORE express.json(), app.use() so Express
 // strips the mount path before passing to the Router (app.post() does not strip)
+// type:'*/*' accepts any Content-Type; verify callback preserves raw Buffer in req.rawBody
+const stripeRawBody = express.raw({
+  type: '*/*',
+  verify: (req, res, buf) => { req.rawBody = buf; }
+});
 const stripeWebhookHandler = require('./routes/webhook');
-app.use('/api/stripe-webhook', express.raw({ type: 'application/json' }), stripeWebhookHandler);
-app.use('/api/stripe/webhook', express.raw({ type: 'application/json' }), stripeWebhookHandler);
+app.use('/api/stripe-webhook', stripeRawBody, stripeWebhookHandler);
+app.use('/api/stripe/webhook',  stripeRawBody, stripeWebhookHandler);
 
 // Body Parser
 app.use(express.urlencoded({ extended: true, limit: '20mb' }));
