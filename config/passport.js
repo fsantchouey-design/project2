@@ -3,6 +3,8 @@ const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 
+const ADMIN_EMAIL = 'craftycrib.ca@gmail.com';
+
 module.exports = function(passport) {
   // ── Local Strategy ──
   passport.use(
@@ -22,6 +24,11 @@ module.exports = function(passport) {
 
         if (isMatch) {
           user.lastLogin = new Date();
+          // Self-heal: ensure admin email always has admin privileges
+          if (user.email === ADMIN_EMAIL && user.role !== 'admin') {
+            user.role = 'admin';
+            user.proStatus = 'approved';
+          }
           await user.save();
           return done(null, user);
         } else {
@@ -51,24 +58,33 @@ module.exports = function(passport) {
 
       // Check if email already registered (link accounts)
       const email = profile.emails?.[0]?.value;
+      const isAdmin = email && email.toLowerCase() === ADMIN_EMAIL;
+
       if (email) {
         user = await User.findOne({ email: email.toLowerCase() });
         if (user) {
           user.googleId = profile.id;
           user.isVerified = true;
           user.lastLogin = new Date();
+          // Ensure admin email always has admin privileges
+          if (isAdmin && user.role !== 'admin') {
+            user.role = 'admin';
+            user.proStatus = 'approved';
+          }
           await user.save();
           return done(null, user);
         }
       }
 
-      // Create new user
+      // Create new user — admin email gets elevated privileges immediately
       user = await User.create({
         googleId: profile.id,
         firstName: profile.name?.givenName || profile.displayName,
         lastName: profile.name?.familyName || '',
         email: email?.toLowerCase(),
         isVerified: true,
+        role: isAdmin ? 'admin' : 'client',
+        proStatus: isAdmin ? 'approved' : 'none',
         lastLogin: new Date()
       });
 

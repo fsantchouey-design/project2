@@ -83,14 +83,19 @@ const ensureProjectOwner = async (req, res, next) => {
   }
 };
 
-// Ensure user is an approved professional
+// Ensure user is an approved professional OR an internal admin
 const ensureProfessional = (req, res, next) => {
-  if (req.isAuthenticated() && req.user.role === 'professional' && req.user.proStatus === 'approved') {
-    return next();
+  if (!req.isAuthenticated()) {
+    req.flash('error_msg', 'Accès réservé aux professionnels approuvés.');
+    return res.redirect('/auth/login');
   }
-  if (req.isAuthenticated() && req.user.proStatus === 'pending_approval') {
-    return res.redirect('/pro/pending');
-  }
+  // Internal admin: full access to all pro routes
+  if (req.user.role === 'admin') return next();
+  // Approved professional
+  if (req.user.role === 'professional' && req.user.proStatus === 'approved') return next();
+  // Pending approval — show waiting page
+  if (req.user.proStatus === 'pending_approval') return res.redirect('/pro/pending');
+  // Everyone else (client, contractor, suspended) is blocked
   req.flash('error_msg', 'Accès réservé aux professionnels approuvés.');
   res.redirect('/auth/login');
 };

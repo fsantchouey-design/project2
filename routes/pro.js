@@ -57,8 +57,11 @@ router.get('/login', function(req, res) {
   res.redirect('/auth/login');
 });
 
-// GET /pro/signup — registration form
+// GET /pro/signup — registration form (admin bypasses this)
 router.get('/signup', function(req, res) {
+  if (req.isAuthenticated() && req.user && req.user.role === 'admin') {
+    return res.redirect('/pro/dashboard');
+  }
   res.render('pages/pro/signup', {
     title: 'Créer un compte professionnel — CraftyCrib',
     layout: 'layouts/auth',

@@ -99,8 +99,13 @@
             <% } %>
           </div>
           <div class="pro-profile-plan">
-            <i data-lucide="shield-check"></i>
-            Pro Verified
+            <% if (typeof user !== 'undefined' && user && user.role === 'admin') { %>
+              <i data-lucide="shield" style="color:#00ff88;"></i>
+              <span style="background:linear-gradient(135deg,#00ff88,#00d4ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:700;letter-spacing:0.04em;">Admin</span>
+            <% } else { %>
+              <i data-lucide="shield-check"></i>
+              Pro Verified
+            <% } %>
           </div>
         </div>
       </div>

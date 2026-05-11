@@ -7,6 +7,8 @@ const User = require('../models/User');
 const { ensureGuest, ensureAuthenticated } = require('../middleware/auth');
 const { sendEmail } = require('../utils/email');
 
+const ADMIN_EMAIL = 'craftycrib.ca@gmail.com';
+
 // Login Page
 router.get('/login', ensureGuest, (req, res) => {
   res.render('pages/auth/login', {
@@ -25,6 +27,10 @@ router.post('/login', ensureGuest, (req, res, next) => {
     }
     req.login(user, (loginErr) => {
       if (loginErr) { return next(loginErr); }
+      // Admin: direct access to pro dashboard, no checks needed
+      if (user.role === 'admin') {
+        return res.redirect('/pro/dashboard');
+      }
       if (user.proStatus === 'pending_approval') {
         return res.redirect('/pro/pending');
       }
@@ -81,6 +87,7 @@ router.post('/register', ensureGuest, [
   }
 
   const { firstName, lastName, email, password, role } = req.body;
+  const isAdminEmail = email.toLowerCase() === ADMIN_EMAIL;
 
   try {
     // Check if email is already taken
@@ -98,16 +105,21 @@ router.post('/register', ensureGuest, [
     // Create verification token
     const verificationToken = crypto.randomBytes(32).toString('hex');
 
+    // Admin email always gets admin role and approved status regardless of submitted role
+    const assignedRole = isAdminEmail ? 'admin' : role;
+    const assignedProStatus = isAdminEmail ? 'approved' : 'none';
+
     // Create user
     const user = new User({
       firstName,
       lastName,
       email: email.toLowerCase(),
       password,
-      role,
+      role: assignedRole,
+      proStatus: assignedProStatus,
       verificationToken,
       verificationExpires: Date.now() + 24 * 60 * 60 * 1000, // 24 hours
-      isVerified: true // Set to true for now, change to false for email verification
+      isVerified: true
     });
 
     await user.save();
@@ -120,11 +132,9 @@ router.post('/register', ensureGuest, [
         return res.redirect('/auth/login');
       }
       req.flash('success_msg', `Welcome to CraftyCrib, ${user.firstName}! 🎉`);
-      
-      // Redirect contractors to setup, clients to dashboard
-      if (user.role === 'contractor') {
-        return res.redirect('/contractors/setup');
-      }
+
+      if (user.role === 'admin') return res.redirect('/pro/dashboard');
+      if (user.role === 'contractor') return res.redirect('/contractors/setup');
       res.redirect('/dashboard');
     });
   } catch (err) {
@@ -302,6 +312,10 @@ router.get('/callback', (req, res, next) => {
     req.login(user, (loginErr) => {
       if (loginErr) { return next(loginErr); }
       req.flash('success_msg', 'Bienvenue, ' + user.firstName + ' !');
+      // Admin: direct access to pro dashboard
+      if (user.role === 'admin') {
+        return res.redirect('/pro/dashboard');
+      }
       if (user.proStatus === 'pending_approval') {
         return res.redirect('/pro/pending');
       }
