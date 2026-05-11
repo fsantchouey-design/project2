@@ -898,7 +898,7 @@ router.get('/stats', ensureAuthenticated, async (req, res) => {
 const STRIPE_PLAN_ENV_KEYS = {
   essential: 'ESSENTIAL',
   creator:   'CREATOR',
-  studioPro: 'STUDIO'
+  studioPro: 'STUDIO_PRO'
 };
 
 const STRIPE_PACK_ENV_KEYS = {
@@ -965,7 +965,7 @@ router.post('/create-checkout-session', ensureAuthenticated, async (req, res) =>
       // Priority 2 — env vars
       if (!priceId) {
         const envBase = STRIPE_PLAN_ENV_KEYS[planKey];
-        const envVar  = `STRIPE_PRICE_${envBase}_${isAnnual ? 'ANNUAL' : 'MONTHLY'}`;
+        const envVar  = `STRIPE_PRICE_${envBase}_${isAnnual ? 'YEARLY' : 'MONTHLY'}`;
         priceId = process.env[envVar];
         if (priceId) {
           console.log(`[Stripe] ${planKey} (${billing}) → price ID from env ${envVar}`);
@@ -973,7 +973,7 @@ router.post('/create-checkout-session', ensureAuthenticated, async (req, res) =>
           console.error(`[Stripe] ❌ No price ID for ${planKey} (${billing}). DB empty and env ${envVar} not set.`);
           return res.status(400).json({
             error: `Aucun Stripe Price ID configuré pour le forfait "${planKey}" (${billing}). ` +
-                   `Configurez-le dans l'admin /admin/pricing ou ajoutez la variable d'environnement STRIPE_PRICE_${envBase}_${isAnnual ? 'ANNUAL' : 'MONTHLY'} dans Render.`
+                   `Configurez-le dans l'admin /admin/pricing ou ajoutez la variable d'environnement STRIPE_PRICE_${envBase}_${isAnnual ? 'YEARLY' : 'MONTHLY'} dans Render.`
           });
         }
       }

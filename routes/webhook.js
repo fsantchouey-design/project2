@@ -14,9 +14,9 @@ const PACK_CREDITS = {
 };
 
 const PLAN_ENV_PRICES = {
-  essential: { monthly: 'STRIPE_PRICE_ESSENTIAL_MONTHLY', annual: 'STRIPE_PRICE_ESSENTIAL_ANNUAL' },
-  creator:   { monthly: 'STRIPE_PRICE_CREATOR_MONTHLY',   annual: 'STRIPE_PRICE_CREATOR_ANNUAL' },
-  studioPro: { monthly: 'STRIPE_PRICE_STUDIO_MONTHLY',    annual: 'STRIPE_PRICE_STUDIO_ANNUAL' }
+  essential: { monthly: 'STRIPE_PRICE_ESSENTIAL_MONTHLY', annual: 'STRIPE_PRICE_ESSENTIAL_YEARLY' },
+  creator:   { monthly: 'STRIPE_PRICE_CREATOR_MONTHLY',   annual: 'STRIPE_PRICE_CREATOR_YEARLY' },
+  studioPro: { monthly: 'STRIPE_PRICE_STUDIO_PRO_MONTHLY', annual: 'STRIPE_PRICE_STUDIO_PRO_YEARLY' }
 };
 
 async function priceIdToPlanKey(priceId) {

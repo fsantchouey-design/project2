@@ -2115,6 +2115,8 @@
   const ACCEPTED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
   const ACCEPTED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'webp'];
 
+  var userAiCredits = <%= (user && user.subscription && user.subscription.credits != null) ? user.subscription.credits : 0 %>;
+
   let selectedFile = null;
   let currentProjectId = STUDIO_PROJECT?.id || null;
   let projectSourceImageUrl = STUDIO_PROJECT?.imageUrl || '';
@@ -3150,9 +3152,16 @@
   }
 
   function updateGenerateButtonState() {
-    const currentConfig = getCurrentToolConfig();
-    const requiresImage = !currentConfig.imageOptional;
-    generateBtn.disabled = isGenerating || (requiresImage && !hasSourceImage());
+    var currentConfig = getCurrentToolConfig();
+    var requiresImage = !currentConfig.imageOptional;
+    var toolCost = currentConfig.credits || 0;
+    var hasEnoughCredits = userAiCredits >= toolCost;
+    generateBtn.disabled = isGenerating || (requiresImage && !hasSourceImage()) || !hasEnoughCredits;
+    if (!hasEnoughCredits && !isGenerating) {
+      generateBtn.title = 'Crédits IA insuffisants. Rechargez vos crédits pour continuer.';
+    } else {
+      generateBtn.title = '';
+    }
   }
 
   function setPreviewFromUrl(url, options = {}) {
@@ -3799,6 +3808,9 @@
         }
 
         renderResult(data);
+        if (typeof data.creditsRemaining === 'number') {
+          userAiCredits = data.creditsRemaining;
+        }
         setStatus(isVideoTool ? 'Video generated successfully.' : 'Design generated successfully.', 'success');
       } catch (error) {
         setStatus(error.message, 'error');
