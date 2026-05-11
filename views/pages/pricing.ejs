@@ -726,7 +726,7 @@
     <%
       var subPlanKeys = ['essential', 'creator', 'studioPro'];
       var subPlans = typeof subscriptionPlans !== 'undefined'
-        ? subPlanKeys.map(function(k) { return subscriptionPlans[k]; })
+        ? subPlanKeys.map(function(k) { var p = subscriptionPlans[k]; if (p) p._key = k; return p; })
         : [];
       subPlans = subPlans.filter(function(p) { return p && p.active !== false; });
       subPlans.sort(function(a, b) { return (a.displayOrder || 0) - (b.displayOrder || 0); });
@@ -744,7 +744,7 @@
         var aSave  = (plan.savingsAnnual || 0).toFixed(2);
         var creditsStr = (plan.credits || 0).toString().replace(/\B(?=(\d{3})+(?!\d))/g, ' ');
         var activeFeatures = (plan.features || []).filter(function(f) { return f.enabled !== false; });
-        var ctaLink = plan.stripePriceIdAnnual ? (plan.ctaLink || '#') : (plan.ctaLink || '#');
+        var planKey = plan._key || '';
       %>
       <div class="<%= cardCls %>">
         <% if (plan.badge) { %>
@@ -771,11 +771,11 @@
             <li><i data-lucide="check"></i> <%= f.text %></li>
           <% }); %>
         </ul>
-        <a href="<%= plan.ctaLink || '#' %>" class="<%= ctaCls %>">
+        <button type="button" class="<%= ctaCls %>" data-plan-key="<%= planKey %>" onclick="phStartCheckout(this)">
           <% if (style === 'popular') { %><i data-lucide="sparkles"></i><% } %>
           <% if (style === 'value') { %><i data-lucide="crown"></i><% } %>
-          <%= plan.ctaText %>
-        </a>
+          <span class="ph-cta-label"><%= plan.ctaText %></span>
+        </button>
       </div>
       <% }); %>
 
@@ -801,10 +801,10 @@
           <span class="ph-pack-credits-label">AI Credits</span>
           <span class="ph-pack-price">6.99$ CAD</span>
           <span class="ph-pack-per-credit">~0.07$ per credit</span>
-          <a href="/auth/register?pack=100" class="ph-pack-buy">
+          <button type="button" class="ph-pack-buy" data-pack-size="100" onclick="phStartPackCheckout(this)">
             <i data-lucide="shopping-cart"></i>
             Buy Pack
-          </a>
+          </button>
         </div>
 
         <!-- 250 -->
@@ -813,10 +813,10 @@
           <span class="ph-pack-credits-label">AI Credits</span>
           <span class="ph-pack-price">24.99$ CAD</span>
           <span class="ph-pack-per-credit">~0.10$ per credit</span>
-          <a href="/auth/register?pack=250" class="ph-pack-buy">
+          <button type="button" class="ph-pack-buy" data-pack-size="250" onclick="phStartPackCheckout(this)">
             <i data-lucide="shopping-cart"></i>
             Buy Pack
-          </a>
+          </button>
         </div>
 
         <!-- 500 – Popular -->
@@ -826,10 +826,10 @@
           <span class="ph-pack-credits-label">AI Credits</span>
           <span class="ph-pack-price">44.99$ CAD</span>
           <span class="ph-pack-per-credit">~0.09$ per credit</span>
-          <a href="/auth/register?pack=500" class="ph-pack-buy">
+          <button type="button" class="ph-pack-buy" data-pack-size="500" onclick="phStartPackCheckout(this)">
             <i data-lucide="shopping-cart"></i>
             Buy Pack
-          </a>
+          </button>
         </div>
 
         <!-- 1000 -->
@@ -838,10 +838,10 @@
           <span class="ph-pack-credits-label">AI Credits</span>
           <span class="ph-pack-price">79.99$ CAD</span>
           <span class="ph-pack-per-credit">~0.08$ per credit</span>
-          <a href="/auth/register?pack=1000" class="ph-pack-buy">
+          <button type="button" class="ph-pack-buy" data-pack-size="1000" onclick="phStartPackCheckout(this)">
             <i data-lucide="shopping-cart"></i>
             Buy Pack
-          </a>
+          </button>
         </div>
 
         <!-- 2000 -->
@@ -850,10 +850,10 @@
           <span class="ph-pack-credits-label">AI Credits</span>
           <span class="ph-pack-price">149.99$ CAD</span>
           <span class="ph-pack-per-credit">~0.07$ per credit</span>
-          <a href="/auth/register?pack=2000" class="ph-pack-buy">
+          <button type="button" class="ph-pack-buy" data-pack-size="2000" onclick="phStartPackCheckout(this)">
             <i data-lucide="shopping-cart"></i>
             Buy Pack
-          </a>
+          </button>
         </div>
 
         <!-- 4000 – Best Value -->
@@ -863,10 +863,10 @@
           <span class="ph-pack-credits-label">AI Credits</span>
           <span class="ph-pack-price">279.99$ CAD</span>
           <span class="ph-pack-per-credit">~0.07$ per credit</span>
-          <a href="/auth/register?pack=4000" class="ph-pack-buy">
+          <button type="button" class="ph-pack-buy" data-pack-size="4000" onclick="phStartPackCheckout(this)">
             <i data-lucide="shopping-cart"></i>
             Buy Pack
-          </a>
+          </button>
         </div>
 
       </div>
@@ -903,5 +903,54 @@
 
   switchEl.addEventListener('change', update);
   update();
+
+  function phStartCheckout(btn) {
+    var planKey = btn.getAttribute('data-plan-key');
+    var billing = switchEl.checked ? 'annual' : 'monthly';
+    var label = btn.querySelector('.ph-cta-label');
+    var orig = label ? label.textContent : btn.textContent;
+    btn.disabled = true;
+    if (label) label.textContent = 'Chargement...';
+    fetch('/api/create-checkout-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ planKey: planKey, billing: billing })
+    })
+    .then(function(res) {
+      if (res.status === 401) { window.location.href = '/auth/login?redirect=/pricing'; return null; }
+      return res.json();
+    })
+    .then(function(data) {
+      if (!data) return;
+      if (data.url) { window.location.href = data.url; }
+      else { alert(data.error || 'Erreur de paiement. Veuillez réessayer.'); btn.disabled = false; if (label) label.textContent = orig; }
+    })
+    .catch(function() { alert('Erreur de connexion.'); btn.disabled = false; if (label) label.textContent = orig; });
+  }
+
+  function phStartPackCheckout(btn) {
+    var packSize = btn.getAttribute('data-pack-size');
+    var origHTML = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = 'Chargement...';
+    fetch('/api/create-checkout-session', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ packSize: packSize })
+    })
+    .then(function(res) {
+      if (res.status === 401) { window.location.href = '/auth/login?redirect=/pricing'; return null; }
+      return res.json();
+    })
+    .then(function(data) {
+      if (!data) return;
+      if (data.url) { window.location.href = data.url; }
+      else { alert(data.error || 'Erreur de paiement.'); btn.disabled = false; btn.innerHTML = origHTML; }
+    })
+    .catch(function() { alert('Erreur de connexion.'); btn.disabled = false; btn.innerHTML = origHTML; });
+  }
+
+  window.phStartCheckout = phStartCheckout;
+  window.phStartPackCheckout = phStartPackCheckout;
 })();
 </script>

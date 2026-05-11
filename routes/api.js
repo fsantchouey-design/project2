@@ -857,7 +857,118 @@ router.get('/stats', ensureAuthenticated, async (req, res) => {
   }
 });
 
-// Live credits + subscription for the logged-in user
+// ── Stripe Checkout ───────────────────────────────────────────────────────────
+
+const STRIPE_PLAN_ENV_KEYS = {
+  essential: 'ESSENTIAL',
+  creator:   'CREATOR',
+  studioPro: 'STUDIO'
+};
+
+const STRIPE_PACK_ENV_KEYS = {
+  100:  'STRIPE_PRICE_PACK_100',
+  250:  'STRIPE_PRICE_PACK_250',
+  500:  'STRIPE_PRICE_PACK_500',
+  1000: 'STRIPE_PRICE_PACK_1000',
+  2000: 'STRIPE_PRICE_PACK_2000',
+  4000: 'STRIPE_PRICE_PACK_4000'
+};
+
+router.post('/create-checkout-session', ensureAuthenticated, async (req, res) => {
+  // Guard: key must exist
+  const stripeKey = process.env.STRIPE_SECRET_KEY;
+  if (!stripeKey) {
+    console.error('[Stripe] ❌ STRIPE_SECRET_KEY is not set');
+    return res.status(500).json({ error: 'Stripe n\'est pas configuré sur ce serveur. Ajoutez STRIPE_SECRET_KEY dans les variables d\'environnement.' });
+  }
+
+  const stripe = require('stripe')(stripeKey);
+  const { planKey, billing, packSize } = req.body;
+  const appUrl = (process.env.APP_URL || 'https://craftycrib.com').replace(/\/$/, '');
+
+  try {
+    let priceId = null;
+    let sessionMode = 'subscription';
+
+    // ── Credit pack (one-time payment) ────────────────────────────────────────
+    if (packSize) {
+      sessionMode = 'payment';
+      const packEnvKey = STRIPE_PACK_ENV_KEYS[String(packSize)];
+      if (!packEnvKey) {
+        return res.status(400).json({ error: `Taille de pack invalide : ${packSize}.` });
+      }
+      priceId = process.env[packEnvKey];
+      if (!priceId) {
+        console.error(`[Stripe] ❌ Env var ${packEnvKey} is not set`);
+        return res.status(400).json({
+          error: `Le pack ${packSize} crédits n'est pas configuré. Ajoutez ${packEnvKey} dans les variables d'environnement Render.`
+        });
+      }
+      console.log(`[Stripe] Pack ${packSize} → price ID from env ${packEnvKey}`);
+    }
+
+    // ── Subscription plan ──────────────────────────────────────────────────────
+    else {
+      sessionMode = 'subscription';
+      const validPlans = Object.keys(STRIPE_PLAN_ENV_KEYS);
+      if (!validPlans.includes(planKey)) {
+        return res.status(400).json({ error: `Plan invalide : ${planKey}.` });
+      }
+      const isAnnual = billing === 'annual';
+
+      // Priority 1 — admin DB config
+      const PricingConfig = require('../models/PricingConfig');
+      const storedConfig = await PricingConfig.findOne({});
+      if (storedConfig && storedConfig[planKey]) {
+        priceId = isAnnual
+          ? storedConfig[planKey].stripePriceIdAnnual
+          : storedConfig[planKey].stripePriceIdMonthly;
+        if (priceId) console.log(`[Stripe] ${planKey} (${billing}) → price ID from DB`);
+      }
+
+      // Priority 2 — env vars
+      if (!priceId) {
+        const envBase = STRIPE_PLAN_ENV_KEYS[planKey];
+        const envVar  = `STRIPE_PRICE_${envBase}_${isAnnual ? 'ANNUAL' : 'MONTHLY'}`;
+        priceId = process.env[envVar];
+        if (priceId) {
+          console.log(`[Stripe] ${planKey} (${billing}) → price ID from env ${envVar}`);
+        } else {
+          console.error(`[Stripe] ❌ No price ID for ${planKey} (${billing}). DB empty and env ${envVar} not set.`);
+          return res.status(400).json({
+            error: `Aucun Stripe Price ID configuré pour le forfait "${planKey}" (${billing}). ` +
+                   `Configurez-le dans l'admin /admin/pricing ou ajoutez la variable d'environnement STRIPE_PRICE_${envBase}_${isAnnual ? 'ANNUAL' : 'MONTHLY'} dans Render.`
+          });
+        }
+      }
+    }
+
+    // ── Create Stripe Checkout session ─────────────────────────────────────────
+    const session = await stripe.checkout.sessions.create({
+      mode: sessionMode,
+      line_items: [{ price: priceId, quantity: 1 }],
+      customer_email: req.user.email || undefined,
+      success_url: `${appUrl}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url:  `${appUrl}/pricing`,
+      metadata: {
+        userId:  String(req.user.id),
+        planKey: planKey  || '',
+        billing: billing  || '',
+        packSize: packSize ? String(packSize) : ''
+      },
+      allow_promotion_codes: true
+    });
+
+    console.log(`[Stripe] ✅ Session ${session.id} created (${planKey || 'pack-' + packSize}, ${billing || 'one-time'})`);
+    res.json({ url: session.url });
+
+  } catch (err) {
+    console.error('[Stripe] ❌ Checkout error:', err.message);
+    res.status(500).json({ error: err.message || 'Erreur lors de la création de la session de paiement.' });
+  }
+});
+
+// ── Live credits + subscription for the logged-in user ────────────────────────
 router.get('/me/credits', ensureAuthenticated, async (req, res) => {
   try {
     const User = require('../models/User');

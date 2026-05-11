@@ -87,6 +87,19 @@ router.get('/pricing', async (req, res) => {
   });
 });
 
+// Checkout Success / Cancel
+router.get('/checkout/success', (req, res) => {
+  res.render('pages/checkout-success', {
+    title: 'Paiement confirmé — CraftyCrib',
+    layout: 'layouts/landing',
+    sessionId: req.query.session_id || ''
+  });
+});
+
+router.get('/checkout/cancel', (req, res) => {
+  res.redirect('/pricing');
+});
+
 // Contact Page
 router.get('/contact', (req, res) => {
   res.render('pages/contact', {
