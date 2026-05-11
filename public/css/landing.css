@@ -3544,3 +3544,112 @@
   display: block !important;
   opacity: 1 !important;
 }
+
+/* =====================================================
+   PREVENT ACCIDENTAL TEXT SELECTION
+   Targets non-interactive landing elements only.
+   inputs / textareas / select / [contenteditable]
+   are explicitly excluded below.
+   ===================================================== */
+
+/* Hero */
+.hero-badge,
+.hero-title,
+.title-line,
+.hero-subtitle,
+.hero-stats,
+.stat,
+.stat-value,
+.stat-suffix,
+.stat-label,
+.stat-divider,
+.comparison-label,
+.hero-scroll-indicator,
+.floating-shapes,
+.shape,
+
+/* Section headers (shared across all landing sections) */
+.section-badge,
+.section-title,
+.section-subtitle,
+.section-header,
+
+/* Feature cards */
+.feature-card,
+.feature-icon,
+.feature-content,
+.feature-tags,
+.feature-tag,
+.feature-visual,
+.feature-mockup,
+
+/* Secondary feature cards */
+.fc-sm,
+.fcsm-icon,
+.fcsm-title,
+.fcsm-text,
+
+/* How-it-works steps */
+.hsw-outer,
+.hsw-step,
+.hsw-dot,
+.hsw-card-inner,
+.step-item,
+.step-number,
+.step-content,
+.step-title,
+.step-description,
+
+/* Styles slider */
+.style-card,
+.style-label,
+
+/* AI studio section */
+.ai-studio-badge,
+.ai-studio-title,
+.ai-studio-subtitle,
+.ai-stat-item,
+.ai-stat-value,
+.ai-stat-label,
+.ai-tool-card,
+
+/* Showcase / gallery */
+.showcase-item,
+.gallery-item,
+
+/* Testimonials */
+.testimonial-card,
+.testimonial-text,
+.testimonial-author,
+
+/* Rooms carousel */
+.room-card,
+.room-label,
+
+/* Pricing cards */
+.pricing-card,
+.pricing-card *,
+
+/* CTA section */
+.cta-section,
+.cta-content,
+
+/* Badges & decorative labels */
+.badge-new,
+.hero-badge span,
+.comparison-label-before,
+.comparison-label-after {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* Restore normal text selection in all real form fields
+   (these override the rules above for any nested inputs) */
+input,
+textarea,
+select,
+[contenteditable="true"],
+[contenteditable=""] {
+  user-select: text !important;
+  -webkit-user-select: text !important;
+}
