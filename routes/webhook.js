@@ -131,6 +131,13 @@ module.exports = async function stripeWebhook(req, res) {
     }
   } catch (err) {
     console.error(`[Webhook] ❌ Handler error (${event.type}):`, err.message);
+    // Un-mark the event so Stripe retries can reprocess it
+    try {
+      await StripeEvent.deleteOne({ stripeEventId: event.id });
+      console.log(`[Webhook] ↩  Event ${event.id} un-marked — will be retried by Stripe`);
+    } catch (delErr) {
+      console.error('[Webhook] ⚠️  Could not un-mark event for retry:', delErr.message);
+    }
   }
 
   console.log('==============================');
