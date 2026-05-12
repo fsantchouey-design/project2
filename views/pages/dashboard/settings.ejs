@@ -101,20 +101,20 @@
         <div class="settings-form">
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Ancien mot de passe</label>
-              <input type="password" class="form-input" autocomplete="current-password" placeholder="••••••••">
+              <label class="form-label" for="current-password">Ancien mot de passe</label>
+              <input type="password" id="current-password" class="form-input" autocomplete="current-password" placeholder="••••••••">
             </div>
             <div class="form-group">
-              <label class="form-label">Nouveau mot de passe</label>
-              <input type="password" class="form-input" autocomplete="new-password" placeholder="Minimum 6 caractères">
+              <label class="form-label" for="new-password">Nouveau mot de passe</label>
+              <input type="password" id="new-password" class="form-input" autocomplete="new-password" placeholder="Minimum 6 caractères">
             </div>
           </div>
           <div class="form-group">
-            <label class="form-label">Confirmation</label>
-            <input type="password" class="form-input" autocomplete="new-password" placeholder="Confirmer le nouveau mot de passe">
-            <p class="form-hint">TODO backend : connecter cette action à une route de changement de mot de passe sécurisée.</p>
+            <label class="form-label" for="confirm-password">Confirmation</label>
+            <input type="password" id="confirm-password" class="form-input" autocomplete="new-password" placeholder="Confirmer le nouveau mot de passe">
           </div>
-          <button type="button" class="settings-secondary-btn" data-toast="Le changement de mot de passe sera disponible après branchement backend.">
+          <div id="password-feedback" style="display:none; margin-bottom:12px; font-size:14px;"></div>
+          <button type="button" id="change-password-btn" class="settings-secondary-btn">
             <i data-lucide="key-round"></i>
             Changer mot de passe
           </button>
@@ -1092,6 +1092,47 @@
     document.querySelectorAll('[data-toast]').forEach(button => {
       button.addEventListener('click', () => alert(button.dataset.toast));
     });
+
+    // Password change
+    const changePasswordBtn = document.getElementById('change-password-btn');
+    if (changePasswordBtn) {
+      changePasswordBtn.addEventListener('click', async () => {
+        const currentPassword = document.getElementById('current-password').value;
+        const newPassword = document.getElementById('new-password').value;
+        const confirmPassword = document.getElementById('confirm-password').value;
+        const feedback = document.getElementById('password-feedback');
+
+        const showFeedback = (msg, ok) => {
+          feedback.textContent = msg;
+          feedback.style.display = 'block';
+          feedback.style.color = ok ? '#00ff88' : '#ff6b6b';
+        };
+
+        if (!currentPassword || !newPassword || !confirmPassword) {
+          return showFeedback('Veuillez remplir tous les champs.', false);
+        }
+
+        changePasswordBtn.disabled = true;
+        try {
+          const res = await fetch('/dashboard/settings/password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ currentPassword, newPassword, confirmPassword })
+          });
+          const data = await res.json();
+          showFeedback(data.message, data.success);
+          if (data.success) {
+            document.getElementById('current-password').value = '';
+            document.getElementById('new-password').value = '';
+            document.getElementById('confirm-password').value = '';
+          }
+        } catch {
+          showFeedback('Une erreur réseau est survenue.', false);
+        } finally {
+          changePasswordBtn.disabled = false;
+        }
+      });
+    }
   })();
 
   function confirmAccountDelete() {

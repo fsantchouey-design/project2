@@ -206,10 +206,17 @@ router.post('/forgot-password', ensureGuest, [
       return res.redirect('/auth/forgot-password');
     }
 
-    // Generate reset token
+    // Rate limit: silently succeed if a token was issued less than 5 minutes ago
+    if (user.resetPasswordExpires && user.resetPasswordExpires > Date.now() + 25 * 60 * 1000) {
+      req.flash('success_msg', 'If an account exists with that email, a reset link has been sent.');
+      return res.redirect('/auth/forgot-password');
+    }
+
+    // Generate reset token — store SHA-256 hash in DB, send plain token in email
     const resetToken = crypto.randomBytes(32).toString('hex');
-    user.resetPasswordToken = resetToken;
-    user.resetPasswordExpires = Date.now() + 60 * 60 * 1000; // 1 hour
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex');
+    user.resetPasswordToken = hashedToken;
+    user.resetPasswordExpires = Date.now() + 30 * 60 * 1000; // 30 minutes
     await user.save();
 
     // Send reset email
@@ -228,8 +235,9 @@ router.post('/forgot-password', ensureGuest, [
 // Reset Password Page
 router.get('/reset-password/:token', ensureGuest, async (req, res) => {
   try {
+    const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
     const user = await User.findOne({
-      resetPasswordToken: req.params.token,
+      resetPasswordToken: hashedToken,
       resetPasswordExpires: { $gt: Date.now() }
     });
 
@@ -272,8 +280,9 @@ router.post('/reset-password/:token', ensureGuest, [
   }
 
   try {
+    const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
     const user = await User.findOne({
-      resetPasswordToken: req.params.token,
+      resetPasswordToken: hashedToken,
       resetPasswordExpires: { $gt: Date.now() }
     });
 

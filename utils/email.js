@@ -84,7 +84,48 @@ const templates = {
             <center>
               <a href="${resetUrl}" class="button">Reset Password</a>
             </center>
-            <p>This link expires in 1 hour. If you didn't request this, please ignore this email.</p>
+            <p>This link expires in 30 minutes. If you didn't request this, please ignore this email.</p>
+          </div>
+          <div class="footer">
+            <p>© ${new Date().getFullYear()} CraftyCrib. All rights reserved.</p>
+          </div>
+        </div>
+      </body>
+      </html>
+    `
+  }),
+
+  passwordChanged: (name, loginUrl) => ({
+    subject: 'Votre mot de passe CraftyCrib a été modifié',
+    html: `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a0a0f; color: #ffffff; margin: 0; padding: 0; }
+          .container { max-width: 600px; margin: 0 auto; padding: 40px 20px; }
+          .header { text-align: center; margin-bottom: 40px; }
+          .logo { font-size: 32px; font-weight: bold; background: linear-gradient(135deg, #00ff88, #00d4ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+          .card { background: linear-gradient(135deg, rgba(255,255,255,0.1), rgba(255,255,255,0.05)); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; padding: 40px; }
+          h1 { color: #ffffff; margin: 0 0 20px; font-size: 24px; }
+          p { color: #a0a0a0; line-height: 1.6; margin: 0 0 20px; }
+          .button { display: inline-block; background: linear-gradient(135deg, #00ff88, #00d4ff); color: #000000; text-decoration: none; padding: 16px 40px; border-radius: 50px; font-weight: bold; margin: 20px 0; }
+          .footer { text-align: center; margin-top: 40px; color: #666; font-size: 12px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="header">
+            <div class="logo">🏠 CraftyCrib</div>
+          </div>
+          <div class="card">
+            <h1>Mot de passe modifié</h1>
+            <p>Bonjour ${name},</p>
+            <p>Votre mot de passe CraftyCrib a été modifié avec succès.</p>
+            <p>Si vous n'êtes pas à l'origine de cette modification, contactez-nous immédiatement et sécurisez votre compte.</p>
+            <center>
+              <a href="${loginUrl}" class="button">Se connecter</a>
+            </center>
           </div>
           <div class="footer">
             <p>© ${new Date().getFullYear()} CraftyCrib. All rights reserved.</p>

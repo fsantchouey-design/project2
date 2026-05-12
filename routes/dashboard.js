@@ -6,6 +6,8 @@ const Contractor = require('../models/Contractor');
 const { Message, Conversation } = require('../models/Message');
 const { getAiTools } = require('../utils/homedesigns');
 const { uploadAvatar } = require('../config/cloudinary');
+const { body, validationResult } = require('express-validator');
+const { sendEmail } = require('../utils/email');
 
 // Force dashboard layout for ALL routes in this router
 router.use((req, res, next) => {
@@ -128,6 +130,45 @@ router.post('/settings/avatar', ensureAuthenticated, uploadAvatar.single('avatar
     console.error('Avatar upload error:', err);
     req.flash('error_msg', "Erreur lors de l'upload de la photo");
     res.redirect('/dashboard/settings');
+  }
+});
+
+// Change Password
+router.post('/settings/password', ensureAuthenticated, [
+  body('currentPassword').notEmpty().withMessage('Le mot de passe actuel est requis.'),
+  body('newPassword').isLength({ min: 6 }).withMessage('Le nouveau mot de passe doit contenir au moins 6 caractères.'),
+  body('confirmPassword').custom((value, { req }) => {
+    if (value !== req.body.newPassword) throw new Error('Les mots de passe ne correspondent pas.');
+    return true;
+  })
+], async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ success: false, message: errors.array()[0].msg });
+  }
+
+  try {
+    const user = await require('../models/User').findById(req.user._id);
+
+    if (!user.password) {
+      return res.status(400).json({ success: false, message: 'Ce compte utilise la connexion Google. Le changement de mot de passe n\'est pas disponible.' });
+    }
+
+    const isMatch = await user.comparePassword(req.body.currentPassword);
+    if (!isMatch) {
+      return res.status(400).json({ success: false, message: 'Mot de passe actuel incorrect.' });
+    }
+
+    user.password = req.body.newPassword;
+    await user.save();
+
+    const loginUrl = `${process.env.APP_URL}/auth/login`;
+    sendEmail(user.email, 'passwordChanged', [user.firstName, loginUrl]).catch(() => {});
+
+    res.json({ success: true, message: 'Mot de passe modifié avec succès.' });
+  } catch (err) {
+    console.error('Change password error:', err);
+    res.status(500).json({ success: false, message: 'Une erreur est survenue. Veuillez réessayer.' });
   }
 });
 
