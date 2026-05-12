@@ -582,6 +582,7 @@ router.delete('/notes/:id', ensureAuthenticated, async function(req, res) {
 
 const PRO_PLAN_CONFIG = {
   lead:    { mode: 'payment',      envKey: 'STRIPE_PRICE_PRO_LEAD' },
+  pro:     { mode: 'subscription', envKey: 'STRIPE_PRICE_PRO_MONTHLY' },
   premium: { mode: 'subscription', envKey: 'STRIPE_PRICE_PRO_PREMIUM_MONTHLY' },
   elite:   { mode: 'subscription', envKey: 'STRIPE_PRICE_PRO_ELITE_MONTHLY' }
 };

@@ -181,6 +181,23 @@ async function handleCheckoutCompleted(stripe, session) {
     console.error('[Webhook] ⚠️  Could not expand line_items:', err.message);
   }
 
+  // ── Pro subscription plan (professional dashboard) ───────────────────────────
+  const proType = session.metadata && session.metadata.proType;
+  if (proType && ['pro', 'premium', 'elite'].includes(proType)) {
+    const update = { 'proSubscription.plan': proType };
+    if (session.customer)     update['proSubscription.stripeCustomerId']    = session.customer;
+    if (session.subscription) update['proSubscription.stripeSubscriptionId'] = session.subscription;
+
+    const updated = await User.findByIdAndUpdate(userId, { $set: update }, { new: true });
+    if (!updated) { console.error(`[Webhook] ❌ User not found: ${userId}`); return; }
+    console.log(`[Webhook] ✅ Pro plan → "${proType}" for user ${userId}`);
+    return;
+  }
+  if (proType === 'lead') {
+    console.log(`[Webhook] ✅ Lead purchase (one-time) for user ${userId} — no plan change`);
+    return;
+  }
+
   // ── Credit pack ─────────────────────────────────────────────────────────────
   if (session.mode === 'payment') {
     const size    = packSize || (priceId ? await packSizeFromPriceId(priceId) : null);

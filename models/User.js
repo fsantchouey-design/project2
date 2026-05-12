@@ -101,6 +101,17 @@ const userSchema = new mongoose.Schema({
       default: 'active'
     }
   },
+  // Pro dashboard subscription (professional users only)
+  proSubscription: {
+    plan: {
+      type: String,
+      enum: ['none', 'pro', 'premium', 'elite'],
+      default: 'pro'
+    },
+    stripeSubscriptionId: String,
+    stripeCustomerId: String,
+    currentPeriodEnd: Date
+  },
   // Legacy field for backwards compatibility
   isPremium: {
     type: Boolean,
