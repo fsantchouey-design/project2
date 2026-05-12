@@ -1,6 +1,7 @@
 const User = require('../models/User');
 const StripeEvent = require('../models/StripeEvent');
 const PricingConfig = require('../models/PricingConfig');
+const UnlockedLead = require('../models/UnlockedLead');
 
 const PLAN_CREDITS = {
   essential: 250,
@@ -194,7 +195,21 @@ async function handleCheckoutCompleted(stripe, session) {
     return;
   }
   if (proType === 'lead') {
-    console.log(`[Webhook] ✅ Lead purchase (one-time) for user ${userId} — no plan change`);
+    const leadId = session.metadata && session.metadata.leadId;
+    if (!leadId) {
+      console.error(`[Webhook] ❌ proType=lead but no leadId in metadata`);
+      return;
+    }
+    try {
+      await UnlockedLead.create({ proUserId: userId, leadId, stripeSessionId: session.id });
+      console.log(`[Webhook] ✅ Lead ${leadId} unlocked for user ${userId}`);
+    } catch (err) {
+      if (err.code === 11000) {
+        console.log(`[Webhook] ⏭  Lead ${leadId} already unlocked for user ${userId}`);
+      } else {
+        throw err;
+      }
+    }
     return;
   }
 

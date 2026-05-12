@@ -9,6 +9,7 @@ const ProApplication = require('../models/ProApplication');
 const User = require('../models/User');
 const Note = require('../models/Note');
 const QuoteRequest = require('../models/QuoteRequest');
+const UnlockedLead = require('../models/UnlockedLead');
 const { sendRawEmail, transporter } = require('../utils/email');
 
 // Ensure uploads directory exists
@@ -468,12 +469,23 @@ router.get('/dashboard', ensureProfessional, async function(req, res) {
 
     var hasCertifiedBadge = req.user.role === 'admin' || (req.user.subscription && req.user.subscription.type === 'advanced');
 
+    var hasMonthlySubscription = ['pro', 'premium', 'elite'].includes(
+      req.user.proSubscription && req.user.proSubscription.plan
+    );
+    var unlockedLeadIds = [];
+    if (!hasMonthlySubscription) {
+      var unlocked = await UnlockedLead.find({ proUserId: req.user.id }, 'leadId').lean();
+      unlockedLeadIds = unlocked.map(function(u) { return u.leadId.toString(); });
+    }
+
     res.render('pages/pro/dashboard', {
       title: 'Pro Dashboard — CraftyCrib',
       layout: 'layouts/pro-dashboard',
       activePage: 'dashboard',
       proNotes: proNotes,
       quoteRequests: quoteRequests,
+      hasMonthlySubscription: hasMonthlySubscription,
+      unlockedLeadIds: unlockedLeadIds,
       analytics: {
         leadsThisMonth: leadsThisMonth,
         leadsLastMonth: leadsLastMonth,
@@ -496,6 +508,8 @@ router.get('/dashboard', ensureProfessional, async function(req, res) {
       activePage: 'dashboard',
       proNotes: [],
       quoteRequests: [],
+      hasMonthlySubscription: false,
+      unlockedLeadIds: [],
       analytics: emptyAnalytics
     });
   }
@@ -594,9 +608,14 @@ router.post('/checkout-session', ensureProfessional, async function(req, res) {
   }
 
   var proType = req.body.proType;
+  var leadId  = req.body.leadId ? String(req.body.leadId) : '';
   var config = PRO_PLAN_CONFIG[proType];
   if (!config) {
     return res.status(400).json({ error: 'Type de plan invalide : ' + proType });
+  }
+
+  if (proType === 'lead' && !leadId) {
+    return res.status(400).json({ error: 'leadId requis pour l\'achat d\'un lead.' });
   }
 
   var priceId = process.env[config.envKey];
@@ -616,16 +635,17 @@ router.post('/checkout-session', ensureProfessional, async function(req, res) {
       line_items: [{ price: priceId, quantity: 1 }],
       customer_email: req.user.email || undefined,
       client_reference_id: String(req.user.id),
-      success_url: appUrl + '/pro/dashboard?billing=success',
-      cancel_url:  appUrl + '/pro/dashboard#sec-billing',
+      success_url: appUrl + '/pro/dashboard?unlocked=' + (leadId || '') + '#sec-leads',
+      cancel_url:  appUrl + '/pro/dashboard#sec-' + (proType === 'lead' ? 'leads' : 'billing'),
       metadata: {
         userId:  String(req.user.id),
-        proType: proType
+        proType: proType,
+        leadId:  leadId
       },
       allow_promotion_codes: true
     });
 
-    console.log('[ProStripe] ✅ Session ' + session.id + ' created (' + proType + ')');
+    console.log('[ProStripe] ✅ Session ' + session.id + ' created (' + proType + (leadId ? ', lead=' + leadId : '') + ')');
     res.json({ url: session.url });
   } catch (err) {
     console.error('[ProStripe] ❌ Checkout error:', err.message);
