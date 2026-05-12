@@ -93,9 +93,15 @@ const CATEGORY_COLORS = {
               </span>
             <% } %>
           </div>
-          <a class="ait-try-btn" href="/dashboard/new-project?tool=<%= encodeURIComponent(tool.slug || tool.id.replace(/-/g, '_')) %>">
-            Essayer <%= tool.name %>
-          </a>
+          <% if (tool.id === 'video-generation') { %>
+            <button class="ait-try-btn ait-try-btn--locked" disabled>
+              🔒 Bientôt disponible
+            </button>
+          <% } else { %>
+            <a class="ait-try-btn" href="/dashboard/new-project?tool=<%= encodeURIComponent(tool.slug || tool.id.replace(/-/g, '_')) %>">
+              Essayer <%= tool.name %>
+            </a>
+          <% } %>
         </div>
       </div>
     <% }) %>
@@ -145,6 +151,8 @@ const CATEGORY_COLORS = {
 
   .ait-try-btn { display: block; width: 100%; padding: 10px; background: var(--accent-primary); border: none; border-radius: 10px; color: #000; font-weight: 700; font-size: 0.85rem; cursor: pointer; transition: all 0.15s; text-align: center; text-decoration: none; }
   .ait-try-btn:hover { background: var(--accent-hover, #059669); transform: none; box-shadow: 0 4px 16px rgba(16,185,129,0.4); }
+  .ait-try-btn--locked { background: #374151; color: #9ca3af; cursor: not-allowed; }
+  .ait-try-btn--locked:hover { background: #374151; transform: none; box-shadow: none; }
 
   /* ── Responsive ──────────────────────────────────────────── */
   @media (max-width: 768px) {

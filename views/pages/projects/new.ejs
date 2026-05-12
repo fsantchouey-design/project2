@@ -72,9 +72,10 @@
           <i data-lucide="zap"></i>
           <span>Magic Redesign</span>
         </button>
-        <button type="button" class="tool-option" data-tool-name="Video Generation" data-endpoint="/api/v2/video_generation" data-requires-mask="false">
+        <button type="button" class="tool-option tool-option--locked" data-tool-name="Video Generation" data-endpoint="/api/v2/video_generation" data-requires-mask="false">
           <i data-lucide="video"></i>
           <span>Video Generation</span>
+          <span class="tool-option-lock">🔒</span>
         </button>
         <button type="button" class="tool-option" data-tool-name="Sketch To Render" data-endpoint="/api/v2/sketch_to_render" data-requires-mask="false">
           <i data-lucide="pencil-ruler"></i>
@@ -761,6 +762,19 @@
     width: 18px;
     height: 18px;
     flex-shrink: 0;
+  }
+
+  .tool-option--locked {
+    opacity: 0.55;
+  }
+  .tool-option--locked.active {
+    border-color: rgba(156, 163, 175, 0.4);
+    background: rgba(156, 163, 175, 0.08);
+    color: var(--text-secondary);
+  }
+  .tool-option-lock {
+    margin-left: auto;
+    font-size: 0.75rem;
   }
 
   .preview-stage {
@@ -3152,6 +3166,12 @@
   }
 
   function updateGenerateButtonState() {
+    if (currentToolKey() === 'video_generation') {
+      generateBtn.disabled = true;
+      generateBtn.querySelector('span').textContent = '🔒 Bientôt disponible';
+      generateBtn.title = '';
+      return;
+    }
     var currentConfig = getCurrentToolConfig();
     var requiresImage = !currentConfig.imageOptional;
     var toolCost = currentConfig.credits || 0;
@@ -3710,6 +3730,10 @@
         return;
       }
       const isVideoTool = currentToolKey() === 'video_generation';
+      if (isVideoTool) {
+        setStatus('Video Generation sera bientôt disponible.', 'error');
+        return;
+      }
       const isFloorEditor = currentToolKey() === 'floor_editor';
       if (isVideoTool && !videoMotionSelect.value) {
         setStatus('Veuillez choisir un mouvement caméra.', 'error');
