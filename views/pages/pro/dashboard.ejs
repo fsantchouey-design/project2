@@ -2067,7 +2067,7 @@
 <!-- ===================== BILLING ===================== -->
 <div class="pro-section" id="sec-billing">
   <%
-    var currentProPlan = (user && user.proSubscription && user.proSubscription.plan) || 'pro';
+    var currentProPlan = (user && user.proSubscription && user.proSubscription.plan) || 'none';
     var proPlanLabels = { none: 'À la demande', pro: 'Pro', premium: 'Premium', elite: 'Élite' };
   %>
   <div class="pro-page-header">
