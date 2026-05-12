@@ -517,12 +517,8 @@
 
       <div class="mask-tools-panel" id="mask-tools-panel" hidden>
         <div class="material-swap-tabs" id="material-swap-tabs" hidden>
-          <div class="material-tab-buttons" role="tablist" aria-label="Material Swap selection mode">
-            <button type="button" class="material-tab-btn active" id="material-auto-tab" data-material-tab="automatic">Automatic Selection</button>
-            <button type="button" class="material-tab-btn" id="material-manual-tab" data-material-tab="manual">Manual Selection</button>
-          </div>
           <div class="material-tab-copy" id="material-tab-copy">
-            Click directly on the image to automatically select an object. Our AI will help you precisely mask it for modifications.
+            Use Draw mask and Erase mask to manually paint the surface or object you want to transform.
           </div>
           <div class="material-selection-label" id="material-selection-label" hidden>
             Selected object: <strong>surface</strong>
@@ -534,20 +530,7 @@
         <div>
           <span class="mask-tools-kicker">Object Selection</span>
           <strong id="mask-tool-title">Select the area to edit</strong>
-          <p id="mask-tool-help">Click the object or area to target, or switch to brush selection for manual control.</p>
-        </div>
-        <div class="selection-mode-group" aria-label="Selection Mode">
-          <span>Selection Mode</span>
-          <div class="selection-mode-buttons">
-            <button type="button" class="selection-mode-btn active" id="click-selection-btn">
-              <i data-lucide="mouse-pointer-click"></i>
-              Click selection
-            </button>
-            <button type="button" class="selection-mode-btn" id="brush-selection-btn">
-              <i data-lucide="paintbrush"></i>
-              Brush selection
-            </button>
-          </div>
+          <p id="mask-tool-help">Brush over the area this tool should affect.</p>
         </div>
         <div class="mask-tool-buttons">
           <button type="button" class="mask-tool-btn active" id="mask-brush-btn">
@@ -900,10 +883,6 @@
     touch-action: none;
     transform: translate(var(--preview-pan-x, 0px), var(--preview-pan-y, 0px)) scale(var(--preview-zoom, 1));
     transform-origin: center;
-  }
-
-  .mask-canvas.click-mode {
-    cursor: pointer;
   }
 
   .image-action {
@@ -1479,32 +1458,17 @@
     display: none !important;
   }
 
-  .material-tab-buttons {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-
-  .material-tab-btn,
   .material-continue-btn {
     min-height: 40px;
-    border: 1px solid var(--border-color);
+    border: 1px solid rgba(16, 185, 129, 0.5);
     border-radius: 8px;
-    background: var(--bg-secondary);
-    color: var(--text-secondary);
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.92), rgba(124, 58, 237, 0.74));
+    color: #ecfeff;
     font-weight: 900;
     cursor: pointer;
     transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
   }
 
-  .material-tab-btn.active,
-  .material-continue-btn {
-    border-color: rgba(16, 185, 129, 0.5);
-    background: linear-gradient(135deg, rgba(16, 185, 129, 0.92), rgba(124, 58, 237, 0.74));
-    color: #ecfeff;
-  }
-
-  .material-tab-btn:hover,
   .material-continue-btn:hover {
     transform: translateY(-1px);
   }
@@ -1543,46 +1507,6 @@
     color: var(--text-muted);
     font-size: 13px;
     line-height: 1.45;
-  }
-
-  .selection-mode-group {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-  }
-
-  .selection-mode-group > span {
-    color: var(--text-secondary);
-    font-size: 12px;
-    font-weight: 900;
-    letter-spacing: 0.3px;
-    text-transform: uppercase;
-  }
-
-  .selection-mode-buttons {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-
-  .selection-mode-btn {
-    min-height: 40px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    background: var(--bg-secondary);
-    color: var(--text-secondary);
-    font-weight: 800;
-    cursor: pointer;
-  }
-
-  .selection-mode-btn.active {
-    border-color: rgba(16, 185, 129, 0.45);
-    background: rgba(16, 185, 129, 0.16);
-    color: var(--accent-primary);
   }
 
   .mask-tool-buttons {
@@ -2071,8 +1995,6 @@
     const maskToolsPanel = document.getElementById('mask-tools-panel');
     const maskToolTitle = document.getElementById('mask-tool-title');
     const maskToolHelp = document.getElementById('mask-tool-help');
-    const clickSelectionBtn = document.getElementById('click-selection-btn');
-    const brushSelectionBtn = document.getElementById('brush-selection-btn');
     const maskBrushBtn = document.getElementById('mask-brush-btn');
     const maskEraserBtn = document.getElementById('mask-eraser-btn');
     const maskBrushSize = document.getElementById('mask-brush-size');
@@ -2118,9 +2040,6 @@
     const styleReferenceUploadLabel = document.getElementById('style-reference-upload-label');
     const styleReferencePreview = document.getElementById('style-reference-preview');
     const materialSwapTabs = document.getElementById('material-swap-tabs');
-    const materialAutoTab = document.getElementById('material-auto-tab');
-    const materialManualTab = document.getElementById('material-manual-tab');
-    const materialTabCopy = document.getElementById('material-tab-copy');
     const materialSelectionLabel = document.getElementById('material-selection-label');
     const materialContinueBtn = document.getElementById('material-continue-btn');
 
@@ -2150,7 +2069,6 @@
     let dragStart = null;
     let isMaskDrawing = false;
     let maskMode = 'brush';
-    let selectionMode = 'click';
     let hasMaskPaint = false;
     let decorTransform = { scaleX: 1, scaleY: 1, rotation: 0, scale: 1 };
     let hasManualBrushPaint = false;
@@ -2160,8 +2078,6 @@
     let previewPanY = 0;
     let previewPanStart = null;
     let previewPanMode = false;
-    let hoverSelection = null;
-    let clickSelections = [];
     const brushCanvas = document.createElement('canvas');
     const brushCtx = brushCanvas.getContext('2d');
     [spaceTypeGroup, designContextGrid, instructionsGroup, advancedOptions].forEach((element) => {
@@ -2271,21 +2187,10 @@
       });
     }
 
-    function setMaterialSwapTab(mode) {
-      const automatic = mode === 'automatic';
-      materialAutoTab.classList.toggle('active', automatic);
-      materialManualTab.classList.toggle('active', !automatic);
-      materialTabCopy.textContent = automatic
-        ? 'Click directly on the image to automatically select an object. Our AI will help you precisely mask it for modifications.'
-        : 'Use Draw mask and Erase mask to manually paint the surface or object you want to transform.';
-      setSelectionMode(automatic ? 'click' : 'brush');
-    }
-
     function updateMaterialSelectionLabel() {
-      const hasSelection = clickSelections.length > 0 || hasManualBrushPaint;
-      materialSelectionLabel.hidden = !hasSelection;
-      if (hasSelection) {
-        materialSelectionLabel.querySelector('strong').textContent = clickSelections.length > 0 ? 'selected surface' : 'manual mask';
+      materialSelectionLabel.hidden = !hasManualBrushPaint;
+      if (hasManualBrushPaint) {
+        materialSelectionLabel.querySelector('strong').textContent = 'manual mask';
       }
     }
 
@@ -2826,173 +2731,13 @@
       };
     }
 
-    function makeObjectSelection(point) {
-      // TODO: Replace this local pixel-connected selection with API-backed object segmentation when available.
-      const pixelSelection = makePixelConnectedSelection(point);
-      if (pixelSelection) return pixelSelection;
-      return makePreviewSelection(point);
-    }
-
-    function makePreviewSelection(point) {
-      const radiusX = Math.max(maskCanvas.width * 0.11, 70);
-      const radiusY = Math.max(maskCanvas.height * 0.09, 70);
-      return {
-        type: 'ellipse',
-        x: point.x / maskCanvas.width,
-        y: point.y / maskCanvas.height,
-        rx: radiusX / maskCanvas.width,
-        ry: radiusY / maskCanvas.height
-      };
-    }
-
-    function makePixelConnectedSelection(point) {
-      if (!sourcePreview.complete || !sourcePreview.naturalWidth || !maskCanvas.width || !maskCanvas.height) return null;
-
-      try {
-        const width = maskCanvas.width;
-        const height = maskCanvas.height;
-        const sampleCanvas = document.createElement('canvas');
-        sampleCanvas.width = width;
-        sampleCanvas.height = height;
-        const sampleCtx = sampleCanvas.getContext('2d', { willReadFrequently: true });
-        drawImageCover(sampleCtx, sourcePreview, width, height);
-        const pixels = sampleCtx.getImageData(0, 0, width, height).data;
-        const startX = Math.max(0, Math.min(width - 1, Math.round(point.x)));
-        const startY = Math.max(0, Math.min(height - 1, Math.round(point.y)));
-        const startIndex = (startY * width + startX) * 4;
-        const seed = [pixels[startIndex], pixels[startIndex + 1], pixels[startIndex + 2]];
-        const tolerance = 42;
-        const visited = new Uint8Array(width * height);
-        const selected = new Uint8Array(width * height);
-        const stack = [startY * width + startX];
-        let selectedCount = 0;
-        const maxPixels = Math.floor(width * height * 0.32);
-
-        while (stack.length) {
-          const index = stack.pop();
-          if (visited[index]) continue;
-          visited[index] = 1;
-
-          const offset = index * 4;
-          const distance =
-            Math.abs(pixels[offset] - seed[0]) +
-            Math.abs(pixels[offset + 1] - seed[1]) +
-            Math.abs(pixels[offset + 2] - seed[2]);
-
-          if (distance > tolerance) continue;
-
-          selected[index] = 1;
-          selectedCount += 1;
-          if (selectedCount > maxPixels) return null;
-
-          const x = index % width;
-          const y = Math.floor(index / width);
-          if (x > 0) stack.push(index - 1);
-          if (x < width - 1) stack.push(index + 1);
-          if (y > 0) stack.push(index - width);
-          if (y < height - 1) stack.push(index + width);
-        }
-
-        if (selectedCount < 140) return null;
-
-        const selectionCanvas = document.createElement('canvas');
-        selectionCanvas.width = width;
-        selectionCanvas.height = height;
-        const selectionCtx = selectionCanvas.getContext('2d');
-        const output = selectionCtx.createImageData(width, height);
-        for (let i = 0; i < selected.length; i += 1) {
-          if (!selected[i]) continue;
-          const offset = i * 4;
-          output.data[offset] = 16;
-          output.data[offset + 1] = 185;
-          output.data[offset + 2] = 129;
-          output.data[offset + 3] = 150;
-        }
-        selectionCtx.putImageData(output, 0, 0);
-
-        return {
-          type: 'bitmap',
-          canvas: selectionCanvas,
-          ctx: selectionCtx,
-          width,
-          height
-        };
-      } catch (error) {
-        return null;
-      }
-    }
-
-    function drawImageCover(ctx, image, width, height) {
-      const imageRatio = image.naturalWidth / image.naturalHeight;
-      const canvasRatio = width / height;
-      let sourceWidth = image.naturalWidth;
-      let sourceHeight = image.naturalHeight;
-      let sourceX = 0;
-      let sourceY = 0;
-
-      if (imageRatio > canvasRatio) {
-        sourceWidth = image.naturalHeight * canvasRatio;
-        sourceX = (image.naturalWidth - sourceWidth) / 2;
-      } else {
-        sourceHeight = image.naturalWidth / canvasRatio;
-        sourceY = (image.naturalHeight - sourceHeight) / 2;
-      }
-
-      ctx.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, width, height);
-    }
-
-    function selectionToCanvas(selection) {
-      return {
-        x: selection.x * maskCanvas.width,
-        y: selection.y * maskCanvas.height,
-        rx: selection.rx * maskCanvas.width,
-        ry: selection.ry * maskCanvas.height
-      };
-    }
-
-    function findSelectionAtPoint(point) {
-      return clickSelections.findIndex((selection) => {
-        if (selection.type === 'bitmap' && selection.ctx) {
-          const x = Math.max(0, Math.min(selection.width - 1, Math.round(point.x)));
-          const y = Math.max(0, Math.min(selection.height - 1, Math.round(point.y)));
-          return selection.ctx.getImageData(x, y, 1, 1).data[3] > 0;
-        }
-        const area = selectionToCanvas(selection);
-        const dx = (point.x - area.x) / area.rx;
-        const dy = (point.y - area.y) / area.ry;
-        return dx * dx + dy * dy <= 1;
-      });
-    }
-
-    function drawSelectionShape(ctx, selection, options = {}) {
-      if (selection.type === 'bitmap' && selection.canvas) {
-        ctx.drawImage(selection.canvas, 0, 0, maskCanvas.width, maskCanvas.height);
-        return;
-      }
-
-      const area = selectionToCanvas(selection);
-      ctx.save();
-      ctx.beginPath();
-      ctx.ellipse(area.x, area.y, area.rx, area.ry, 0, 0, Math.PI * 2);
-      ctx.fillStyle = options.preview ? 'rgba(16, 185, 129, 0.22)' : 'rgba(16, 185, 129, 0.55)';
-      ctx.strokeStyle = options.preview ? 'rgba(59, 130, 246, 0.8)' : 'rgba(16, 185, 129, 0.95)';
-      ctx.lineWidth = options.preview ? 2 : 3;
-      ctx.fill();
-      ctx.stroke();
-      ctx.restore();
-    }
-
     function renderMaskOverlay() {
       if (!maskCanvas.width || !maskCanvas.height) return;
       maskCtx.clearRect(0, 0, maskCanvas.width, maskCanvas.height);
-      clickSelections.forEach((selection) => drawSelectionShape(maskCtx, selection));
       if (brushCanvas.width && brushCanvas.height) {
         maskCtx.drawImage(brushCanvas, 0, 0);
       }
-      if (hoverSelection && selectionMode === 'click') {
-        drawSelectionShape(maskCtx, hoverSelection, { preview: true });
-      }
-      hasMaskPaint = clickSelections.length > 0 || hasManualBrushPaint;
+      hasMaskPaint = hasManualBrushPaint;
       if (isMaterialSwapTool()) updateMaterialSelectionLabel();
     }
 
@@ -3002,8 +2747,6 @@
       if (brushCanvas.width && brushCanvas.height) {
         brushCtx.clearRect(0, 0, brushCanvas.width, brushCanvas.height);
       }
-      clickSelections = [];
-      hoverSelection = null;
       hasMaskPaint = false;
       hasManualBrushPaint = false;
       materialSwapReady = false;
@@ -3034,61 +2777,13 @@
       maskToolTitle.textContent = `${selectedToolName} selection`;
       maskToolHelp.textContent = config.maskHelp || 'Brush over the area this tool should affect.';
       if (needsMask && !sourcePreview.hidden) sizeMaskCanvas();
-      maskCanvas.classList.toggle('click-mode', selectionMode === 'click');
       if (config.materialSwap && !sourcePreview.hidden) updateMaterialSelectionLabel();
-
-      const brushOnlyTools = ['furniture_removal', 'change_color_textures'];
-      const brushOnly = brushOnlyTools.includes(currentToolKey());
-      const selModeGroup = document.querySelector('.selection-mode-group');
-      if (selModeGroup) selModeGroup.hidden = brushOnly;
-      if (brushOnly && needsMask) setSelectionMode('brush');
     }
 
     function setMaskMode(mode) {
       maskMode = mode;
       maskBrushBtn.classList.toggle('active', mode === 'brush');
       maskEraserBtn.classList.toggle('active', mode === 'eraser');
-    }
-
-    function setSelectionMode(mode) {
-      selectionMode = mode;
-      clickSelectionBtn.classList.toggle('active', mode === 'click');
-      brushSelectionBtn.classList.toggle('active', mode === 'brush');
-      maskCanvas.classList.toggle('click-mode', mode === 'click');
-      hoverSelection = null;
-      renderMaskOverlay();
-    }
-
-    function toggleClickSelection(event) {
-      const point = getCanvasPoint(event);
-      const existingIndex = findSelectionAtPoint(point);
-      if (existingIndex >= 0) {
-        clickSelections.splice(existingIndex, 1);
-      } else {
-        clickSelections.push(makeObjectSelection(point));
-      }
-      hoverSelection = null;
-      if (isMaterialSwapTool()) materialSwapReady = false;
-      renderMaskOverlay();
-      if (isMaterialSwapTool()) updateToolOptions();
-    }
-
-    function eraseClickSelections(point, radius) {
-      clickSelections = clickSelections.filter((selection) => {
-        if (selection.type !== 'bitmap' || !selection.ctx) {
-          const area = selectionToCanvas(selection);
-          const dx = (point.x - area.x) / (area.rx + radius);
-          const dy = (point.y - area.y) / (area.ry + radius);
-          return dx * dx + dy * dy > 1;
-        }
-        selection.ctx.save();
-        selection.ctx.globalCompositeOperation = 'destination-out';
-        selection.ctx.beginPath();
-        selection.ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
-        selection.ctx.fill();
-        selection.ctx.restore();
-        return true;
-      });
     }
 
     function drawMaskStroke(event) {
@@ -3101,7 +2796,6 @@
       brushCtx.arc(point.x, point.y, radius, 0, Math.PI * 2);
       brushCtx.fill();
       brushCtx.restore();
-      if (maskMode === 'eraser') eraseClickSelections(point, radius);
       if (maskMode === 'brush') hasManualBrushPaint = true;
       if (isMaterialSwapTool()) materialSwapReady = false;
       renderMaskOverlay();
@@ -3372,10 +3066,6 @@
 
     maskBrushBtn.addEventListener('click', () => setMaskMode('brush'));
     maskEraserBtn.addEventListener('click', () => setMaskMode('eraser'));
-    clickSelectionBtn.addEventListener('click', () => setSelectionMode('click'));
-    brushSelectionBtn.addEventListener('click', () => setSelectionMode('brush'));
-    materialAutoTab.addEventListener('click', () => setMaterialSwapTab('automatic'));
-    materialManualTab.addEventListener('click', () => setMaterialSwapTab('manual'));
     materialContinueBtn.addEventListener('click', () => {
       if (!hasMaskPaint) {
         setStatus('Select an object or draw a mask before continuing.', 'error');
@@ -3428,10 +3118,6 @@
         maskCanvas.setPointerCapture(event.pointerId);
         return;
       }
-      if (selectionMode === 'click') {
-        toggleClickSelection(event);
-        return;
-      }
       isMaskDrawing = true;
       maskCanvas.setPointerCapture(event.pointerId);
       drawMaskStroke(event);
@@ -3446,23 +3132,10 @@
         applyPreviewTransform();
         return;
       }
-      if (selectedRequiresMask && selectionMode === 'click') {
-        event.preventDefault();
-        event.stopPropagation();
-        hoverSelection = makePreviewSelection(getCanvasPoint(event));
-        renderMaskOverlay();
-        return;
-      }
       if (!isMaskDrawing) return;
       event.preventDefault();
       event.stopPropagation();
       drawMaskStroke(event);
-    });
-
-    maskCanvas.addEventListener('pointerleave', () => {
-      if (selectionMode !== 'click') return;
-      hoverSelection = null;
-      renderMaskOverlay();
     });
 
     maskCanvas.addEventListener('pointerup', (event) => {
@@ -3598,8 +3271,6 @@
       resetMaskCanvas();
       resetPreviewTransform();
       resetDecorTransform();
-      setSelectionMode('click');
-      if (currentToolKey() === 'material_swap') setMaterialSwapTab('automatic');
       updateMaskControls();
       updateToolOptions();
     }
