@@ -6,7 +6,7 @@ const toolsConfig = {
     noDesignMax: 4,
     aiIntervention: true,
     keepStructural: true,
-    credits: 10,
+    credits: 15,
     modeTools: [
       {
         label: 'Perfect Redesign',
@@ -35,7 +35,7 @@ const toolsConfig = {
     noDesignMax: 2,
     aiIntervention: true,
     keepStructural: true,
-    credits: 10
+    credits: 15
   },
   beautiful_redesign: {
     endpoint: '/api/v2/beautiful_redesign',
@@ -44,7 +44,7 @@ const toolsConfig = {
     noDesignMax: 4,
     aiIntervention: true,
     keepStructural: true,
-    credits: 12
+    credits: 15
   },
   creative_redesign: {
     endpoint: '/api/v2/creative_redesign',
@@ -53,7 +53,7 @@ const toolsConfig = {
     noDesignMax: 4,
     aiIntervention: true,
     keepStructural: true,
-    credits: 12
+    credits: 15
   },
   magic_redesign: {
     endpoint: '/api/v2/magic_redesign',
@@ -62,7 +62,7 @@ const toolsConfig = {
     promptOnly: true,
     promptLabel: 'Magic Prompt',
     promptPlaceholder: 'Tell the AI exactly what to change: layout, furniture, colors, materials, mood, or specific objects.',
-    credits: 15
+    credits: 18
   },
   sketch_to_render: {
     endpoint: '/api/v2/sketch_to_render',
@@ -70,14 +70,14 @@ const toolsConfig = {
     fields: ['design_type', 'room_type', 'design_style', 'ai_intervention', 'no_design', 'prompt'],
     noDesignMax: 4,
     aiIntervention: true,
-    credits: 15
+    credits: 18
   },
   virtual_staging: {
     endpoint: '/api/v2/virtual_staging',
     uiType: 'redesign',
     fields: ['room_type', 'design_style', 'no_design', 'prompt'],
     noDesignMax: 4,
-    credits: 28
+    credits: 15
   },
   precision: {
     endpoint: '/api/v2/precision',
@@ -87,7 +87,7 @@ const toolsConfig = {
     mask: true,
     strength: true,
     maskHelp: 'Select the exact area you want redesigned.',
-    credits: 15
+    credits: 25
   },
   fill_spaces: {
     endpoint: '/api/v2/fill_spaces',
@@ -99,7 +99,7 @@ const toolsConfig = {
     promptLabel: 'What should be added?',
     promptPlaceholder: 'Describe what the AI should add inside the selected empty area.',
     maskHelp: 'Select empty areas where furniture or decor should be added.',
-    credits: 15
+    credits: 12
   },
   decor_staging: {
     endpoint: '/api/v2/decor_staging',
@@ -114,7 +114,7 @@ const toolsConfig = {
     mask: true,
     removeAllToggle: true,
     maskHelp: 'Select the furniture you want to remove.',
-    credits: 10
+    credits: 12
   },
   change_color_textures: {
     endpoint: '/api/v2/change_color_textures',
@@ -138,13 +138,13 @@ const toolsConfig = {
     country: true,
     countryOnly: true,
     submitLabel: 'Get Products',
-    credits: 5
+    credits: 12
   },
   full_hd: {
     endpoint: '/api/v2/full_hd',
     uiType: 'single-action',
     fields: [],
-    credits: 8
+    credits: 5
   },
   text_to_design: {
     endpoint: '/api/v2/text_to_design',
@@ -155,7 +155,7 @@ const toolsConfig = {
     promptOnly: true,
     promptLabel: 'Describe the design you want',
     promptPlaceholder: 'Write the full design concept you want the AI to create.',
-    credits: 15
+    credits: 18
   },
   furniture_creator: {
     endpoint: '/api/v2/furniture_creator',
@@ -166,7 +166,7 @@ const toolsConfig = {
     promptOnly: true,
     promptLabel: 'Describe the furniture you want',
     promptPlaceholder: 'Describe the furniture or object you want to create.',
-    credits: 15
+    credits: 25
   },
   design_advisor: {
     endpoint: '/api/v2/design_advisor',
@@ -176,7 +176,7 @@ const toolsConfig = {
     imageOptional: true,
     promptLabel: 'Ask the design advisor',
     promptPlaceholder: 'Ask a design question or describe the advice you need.',
-    credits: 20
+    credits: 10
   },
   sky_colors: {
     endpoint: '/api/v2/sky_colors',
@@ -195,7 +195,7 @@ const toolsConfig = {
     styleReference: true,
     transferOnly: true,
     submitLabel: 'Transfer Design',
-    credits: 18
+    credits: 15
   },
   floor_editor: {
     endpoint: '/api/v2/floor_editor',
@@ -214,7 +214,7 @@ const toolsConfig = {
     mask: true,
     paintColor: true,
     maskHelp: 'Select the wall or surface you want to repaint.',
-    credits: 12
+    credits: 10
   },
   material_swap: {
     endpoint: '/api/v2/material_swap',
@@ -230,14 +230,14 @@ const toolsConfig = {
     textureUpload: true,
     materialSwap: true,
     maskHelp: 'Click the object automatically or use the manual brush to draw the exact material area.',
-    credits: 15
+    credits: 12
   },
   room_composer: {
     endpoint: '/api/v2/smart_room_composer',
     uiType: 'room-composer',
     fields: ['room_image', 'custom_elements'],
     imageLabel: 'Drag and drop room image',
-    credits: 20
+    credits: 30
   },
   design_critique: {
     endpoint: '/api/v2/design_critique',
@@ -252,14 +252,14 @@ const toolsConfig = {
     uiType: 'single-action',
     fields: ['labels'],
     submitLabel: 'Generate Mask',
-    credits: 5
+    credits: 10
   },
   smart_home: {
     endpoint: '/api/v2/smart_home',
     uiType: 'single-action',
     fields: [],
     submitLabel: 'Get Feedback',
-    credits: 15
+    credits: 10
   },
   video_generation: {
     endpoint: '/api/v2/video_generation',
@@ -267,7 +267,7 @@ const toolsConfig = {
     fields: ['tool_name'],
     videoMotion: true,
     submitLabel: 'Generate Video',
-    credits: 30
+    credits: 40
   }
 };
 
