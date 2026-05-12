@@ -578,4 +578,58 @@ router.delete('/notes/:id', ensureAuthenticated, async function(req, res) {
   }
 });
 
+// ─── PRO PLAN STRIPE CHECKOUT ────────────────────────────────────────────────
+
+const PRO_PLAN_CONFIG = {
+  lead:    { mode: 'payment',      envKey: 'STRIPE_PRICE_PRO_LEAD' },
+  premium: { mode: 'subscription', envKey: 'STRIPE_PRICE_PRO_PREMIUM_MONTHLY' },
+  elite:   { mode: 'subscription', envKey: 'STRIPE_PRICE_PRO_ELITE_MONTHLY' }
+};
+
+router.post('/checkout-session', ensureProfessional, async function(req, res) {
+  var stripeKey = process.env.STRIPE_SECRET_KEY;
+  if (!stripeKey) {
+    return res.status(500).json({ error: 'Stripe non configuré. Ajoutez STRIPE_SECRET_KEY dans les variables d\'environnement.' });
+  }
+
+  var proType = req.body.proType;
+  var config = PRO_PLAN_CONFIG[proType];
+  if (!config) {
+    return res.status(400).json({ error: 'Type de plan invalide : ' + proType });
+  }
+
+  var priceId = process.env[config.envKey];
+  if (!priceId) {
+    console.error('[ProStripe] ❌ Env var ' + config.envKey + ' is not set');
+    return res.status(400).json({
+      error: 'Ce plan n\'est pas encore configuré. Ajoutez ' + config.envKey + ' dans les variables d\'environnement Render.'
+    });
+  }
+
+  var appUrl = (process.env.APP_URL || 'https://craftycrib.com').replace(/\/$/, '');
+  var stripe = require('stripe')(stripeKey);
+
+  try {
+    var session = await stripe.checkout.sessions.create({
+      mode: config.mode,
+      line_items: [{ price: priceId, quantity: 1 }],
+      customer_email: req.user.email || undefined,
+      client_reference_id: String(req.user.id),
+      success_url: appUrl + '/pro/dashboard?billing=success',
+      cancel_url:  appUrl + '/pro/dashboard#sec-billing',
+      metadata: {
+        userId:  String(req.user.id),
+        proType: proType
+      },
+      allow_promotion_codes: true
+    });
+
+    console.log('[ProStripe] ✅ Session ' + session.id + ' created (' + proType + ')');
+    res.json({ url: session.url });
+  } catch (err) {
+    console.error('[ProStripe] ❌ Checkout error:', err.message);
+    res.status(500).json({ error: err.message || 'Erreur lors de la création de la session de paiement.' });
+  }
+});
+
 module.exports = router;

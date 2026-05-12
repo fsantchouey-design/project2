@@ -2113,7 +2113,7 @@
         <div class="pro-plan-feature"><i data-lucide="check"></i> 0 % de commission</div>
         <div class="pro-plan-feature"><i data-lucide="check"></i> Aucun engagement mensuel</div>
       </div>
-      <button class="pro-btn pro-btn-secondary pro-w-full">Acheter un lead</button>
+      <button class="pro-btn pro-btn-secondary pro-w-full" data-pro-plan="lead" id="btn-pro-lead">Acheter un lead</button>
     </div>
 
     <!-- Plan 2 : Pro (plan actuel) -->
@@ -2146,7 +2146,7 @@
         <div class="pro-plan-feature"><i data-lucide="check"></i> Mise en avant dans les recommandations</div>
         <div class="pro-plan-feature"><i data-lucide="check"></i> 0 % de commission</div>
       </div>
-      <button class="pro-btn pro-btn-secondary pro-w-full">Passer au Premium</button>
+      <button class="pro-btn pro-btn-secondary pro-w-full" data-pro-plan="premium" id="btn-pro-premium">Passer au Premium</button>
     </div>
 
     <!-- Plan 4 : Élite -->
@@ -2165,10 +2165,51 @@
         <div class="pro-plan-feature"><i data-lucide="check"></i> Visibilité maximale sur la plateforme</div>
         <div class="pro-plan-feature"><i data-lucide="check"></i> 0 % de commission</div>
       </div>
-      <button class="pro-btn pro-btn-secondary pro-w-full">Passer à Élite</button>
+      <button class="pro-btn pro-btn-secondary pro-w-full" data-pro-plan="elite" id="btn-pro-elite">Passer à Élite</button>
     </div>
 
   </div>
+
+  <div id="pro-billing-error" style="display:none;margin:12px 0;padding:12px 16px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);border-radius:8px;color:#f87171;font-size:13px;"></div>
+
+  <script>
+  (function() {
+    var plans = ['lead', 'premium', 'elite'];
+    plans.forEach(function(plan) {
+      var btn = document.getElementById('btn-pro-' + plan);
+      if (!btn) return;
+      btn.addEventListener('click', function() {
+        var errEl = document.getElementById('pro-billing-error');
+        errEl.style.display = 'none';
+        btn.disabled = true;
+        var originalText = btn.innerHTML;
+        btn.innerHTML = '<i data-lucide="loader-2" style="animation:spin 1s linear infinite;width:14px;height:14px;"></i> Chargement…';
+        fetch('/pro/checkout-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ proType: plan })
+        })
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          if (data.url) {
+            window.location.href = data.url;
+          } else {
+            errEl.textContent = data.error || 'Erreur lors de la création de la session Stripe.';
+            errEl.style.display = 'block';
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+          }
+        })
+        .catch(function() {
+          errEl.textContent = 'Erreur réseau. Veuillez réessayer.';
+          errEl.style.display = 'block';
+          btn.disabled = false;
+          btn.innerHTML = originalText;
+        });
+      });
+    });
+  })();
+  </script>
 
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
     <div class="pro-card">
