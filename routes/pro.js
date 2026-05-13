@@ -420,7 +420,7 @@ router.get('/dashboard', ensureProfessional, async function(req, res) {
   };
   try {
     var proNotes = await Note.find({ user: req.user.id, source: 'pro' }).sort({ pinned: -1, updatedAt: -1 });
-    var quoteRequests = await QuoteRequest.find({}).sort({ createdAt: -1 });
+    var allLeads = await QuoteRequest.find({}).sort({ createdAt: -1 });
 
     // ── Analytics ──
     var now = new Date();
@@ -428,17 +428,17 @@ router.get('/dashboard', ensureProfessional, async function(req, res) {
     var startOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     var startOfYear = new Date(now.getFullYear(), 0, 1);
 
-    var leadsThisMonth = quoteRequests.filter(function(q) { return q.createdAt >= startOfMonth; }).length;
-    var leadsLastMonth = quoteRequests.filter(function(q) { return q.createdAt >= startOfLastMonth && q.createdAt < startOfMonth; }).length;
-    var leadsThisYear = quoteRequests.filter(function(q) { return q.createdAt >= startOfYear; }).length;
+    var leadsThisMonth = allLeads.filter(function(q) { return q.createdAt >= startOfMonth; }).length;
+    var leadsLastMonth = allLeads.filter(function(q) { return q.createdAt >= startOfLastMonth && q.createdAt < startOfMonth; }).length;
+    var leadsThisYear = allLeads.filter(function(q) { return q.createdAt >= startOfYear; }).length;
     var monthlyTrend = leadsLastMonth > 0 ? Math.round((leadsThisMonth - leadsLastMonth) / leadsLastMonth * 100) : 0;
 
-    var wonLeads = quoteRequests.filter(function(q) { return q.proLeadStatus === 'won'; }).length;
-    var conversionRate = quoteRequests.length > 0 ? Math.round(wonLeads / quoteRequests.length * 100) : 0;
+    var wonLeads = allLeads.filter(function(q) { return q.proLeadStatus === 'won'; }).length;
+    var conversionRate = allLeads.length > 0 ? Math.round(wonLeads / allLeads.length * 100) : 0;
 
     // Top zones (all time)
     var zoneCounts = {};
-    quoteRequests.forEach(function(q) {
+    allLeads.forEach(function(q) {
       if (q.city) { zoneCounts[q.city] = (zoneCounts[q.city] || 0) + 1; }
     });
     var topZones = Object.keys(zoneCounts).map(function(k) { return { name: k, count: zoneCounts[k] }; });
@@ -448,7 +448,7 @@ router.get('/dashboard', ensureProfessional, async function(req, res) {
 
     // Top categories this month
     var catCounts = {};
-    quoteRequests.filter(function(q) { return q.createdAt >= startOfMonth; }).forEach(function(q) {
+    allLeads.filter(function(q) { return q.createdAt >= startOfMonth; }).forEach(function(q) {
       var cat = q.specialty || q.service || 'Autre';
       catCounts[cat] = (catCounts[cat] || 0) + 1;
     });
@@ -463,7 +463,7 @@ router.get('/dashboard', ensureProfessional, async function(req, res) {
     for (var i = 5; i >= 0; i--) {
       var d = new Date(now.getFullYear(), now.getMonth() - i, 1);
       var dNext = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
-      var cnt = quoteRequests.filter(function(q) { return q.createdAt >= d && q.createdAt < dNext; }).length;
+      var cnt = allLeads.filter(function(q) { return q.createdAt >= d && q.createdAt < dNext; }).length;
       monthlyLeads.push({ label: monthNames[d.getMonth()], count: cnt });
     }
 
@@ -472,20 +472,23 @@ router.get('/dashboard', ensureProfessional, async function(req, res) {
     var hasMonthlySubscription = ['pro', 'premium', 'elite'].includes(
       req.user.proSubscription && req.user.proSubscription.plan
     );
-    var unlockedLeadIds = [];
-    if (!hasMonthlySubscription) {
-      var unlocked = await UnlockedLead.find({ proUserId: req.user.id }, 'leadId').lean();
-      unlockedLeadIds = unlocked.map(function(u) { return u.leadId.toString(); });
-    }
+
+    // Leads for "Demandes" section: only unclaimed leads (available to all pros)
+    var availableLeads = allLeads.filter(function(q) { return !q.claimedByProUserId; });
+
+    // Leads for "Leads" section: claimed exclusively by this pro
+    var myLeads = allLeads.filter(function(q) {
+      return q.claimedByProUserId && q.claimedByProUserId.toString() === req.user.id.toString();
+    });
 
     res.render('pages/pro/dashboard', {
       title: 'Pro Dashboard — CraftyCrib',
       layout: 'layouts/pro-dashboard',
       activePage: 'dashboard',
       proNotes: proNotes,
-      quoteRequests: quoteRequests,
+      availableLeads: availableLeads,
+      myLeads: myLeads,
       hasMonthlySubscription: hasMonthlySubscription,
-      unlockedLeadIds: unlockedLeadIds,
       analytics: {
         leadsThisMonth: leadsThisMonth,
         leadsLastMonth: leadsLastMonth,
@@ -507,9 +510,9 @@ router.get('/dashboard', ensureProfessional, async function(req, res) {
       layout: 'layouts/pro-dashboard',
       activePage: 'dashboard',
       proNotes: [],
-      quoteRequests: [],
+      availableLeads: [],
+      myLeads: [],
       hasMonthlySubscription: false,
-      unlockedLeadIds: [],
       analytics: emptyAnalytics
     });
   }
@@ -616,6 +619,16 @@ router.post('/checkout-session', ensureProfessional, async function(req, res) {
 
   if (proType === 'lead' && !leadId) {
     return res.status(400).json({ error: 'leadId requis pour l\'achat d\'un lead.' });
+  }
+
+  if (proType === 'lead') {
+    const lead = await QuoteRequest.findById(leadId).select('claimedByProUserId').lean();
+    if (!lead) {
+      return res.status(404).json({ error: 'Lead introuvable.' });
+    }
+    if (lead.claimedByProUserId && lead.claimedByProUserId.toString() !== req.user.id.toString()) {
+      return res.status(409).json({ error: 'Ce lead a déjà été attribué à un autre professionnel.' });
+    }
   }
 
   var priceId = process.env[config.envKey];

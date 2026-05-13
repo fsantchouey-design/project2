@@ -28,6 +28,9 @@ const QuoteRequestSchema = new mongoose.Schema({
   altPhone:         { type: String, default: '' },
   email:            { type: String, required: true },
 
+  // Set when a pro pays $39 to claim the lead exclusively
+  claimedByProUserId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', default: null },
+
   status: {
     type: String,
     enum: ['new', 'contacted', 'accepted', 'refused', 'closed'],

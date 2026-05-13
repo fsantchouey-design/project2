@@ -322,8 +322,8 @@
       return s || 'Nouvelle';
     }; %>
 
-    <% if (typeof quoteRequests !== 'undefined' && quoteRequests.length > 0) { %>
-      <% quoteRequests.forEach(function(q) { %>
+    <% if (typeof availableLeads !== 'undefined' && availableLeads.length > 0) { %>
+      <% availableLeads.forEach(function(q) { %>
 
         <div class="prq-card" data-id="<%= q._id %>" data-status="<%= q.status || 'new' %>">
 
@@ -376,7 +376,7 @@
               <% } %>
             </div>
             <!-- Col 2 : Coordonnées -->
-            <% var qHasAccess = hasMonthlySubscription || (unlockedLeadIds && unlockedLeadIds.indexOf(q._id.toString()) !== -1); %>
+            <% var qHasAccess = hasMonthlySubscription; %>
             <div class="prq-col">
               <div class="prq-col-title">Coordonnées</div>
               <% if (qHasAccess) { %>
@@ -920,9 +920,7 @@
   </style>
 
   <%
-    var acceptedLeads = (typeof quoteRequests !== 'undefined' ? quoteRequests : []).filter(function(q) {
-      return q.status === 'accepted';
-    });
+    var acceptedLeads = typeof myLeads !== 'undefined' ? myLeads : [];
 
     var getLeadCat = function(q) {
       var s = ((q.service || '') + ' ' + (q.specialty || '')).toLowerCase();
@@ -962,13 +960,7 @@
 
   <!-- JSON data blobs (read by modal JS) — contact info stripped for locked leads -->
   <% acceptedLeads.forEach(function(q) {
-    var qAccess = hasMonthlySubscription || (unlockedLeadIds && unlockedLeadIds.indexOf(q._id.toString()) !== -1);
-    var blobData = qAccess ? q : {
-      _id: q._id, service: q.service, specialty: q.specialty,
-      postalCode: q.postalCode, timing: q.timing, description: q.description,
-      photos: q.photos, createdAt: q.createdAt,
-      proLeadStatus: q.proLeadStatus, status: q.status, locked: true
-    };
+    var blobData = q;
   %>
   <script type="application/json" id="lead-data-<%= q._id %>"><%- JSON.stringify(blobData) %></script>
   <% }); %>
@@ -988,19 +980,11 @@
     <% acceptedLeads.forEach(function(q) {
          var cat = getLeadCat(q);
          var leadStatus = q.proLeadStatus || 'new_lead';
-         var rowAccess = hasMonthlySubscription || (unlockedLeadIds && unlockedLeadIds.indexOf(q._id.toString()) !== -1);
     %>
-    <div class="pll-row" data-id="<%= q._id %>" data-status="<%= leadStatus %>" data-locked="<%= !rowAccess %>">
+    <div class="pll-row" data-id="<%= q._id %>" data-status="<%= leadStatus %>" data-locked="false">
 
       <div class="pll-cell">
-        <% if (rowAccess) { %>
         <div class="pll-client-name"><%= q.firstName %> <%= q.lastName %></div>
-        <% } else { %>
-        <div class="pll-client-name pll-name-locked">
-          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          Verrouillé
-        </div>
-        <% } %>
       </div>
 
       <div class="pll-cell">
@@ -1198,25 +1182,15 @@
 
       var html = '<div class="pll-detail-grid">';
 
-      if (q.locked) {
-        html += '<div class="pll-locked-contact">';
-        html += '<div class="pll-locked-contact-title">';
-        html += '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline;vertical-align:middle;margin-right:6px"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
-        html += 'Coordonnées verrouillées</div>';
-        html += '<div class="pll-locked-contact-sub">Débloquez ce lead pour accéder aux informations du client.</div>';
-        html += '<button class="pll-unlock-btn" onclick="proUnlockLead(\'' + escHtml(q._id) + '\')">Débloquer ce lead — 39 $</button>';
-        html += '</div>';
-      } else {
-        html += '<div>';
-        html += '<div class="pll-detail-section-title">Contact</div>';
-        html += dr('Nom', name);
-        html += dr('Téléphone', q.phone ? '<a href="tel:' + escHtml(q.phone) + '">' + escHtml(q.phone) + '</a>' : '-');
-        if (q.altPhone) html += dr('Tél. alt.', '<a href="tel:' + escHtml(q.altPhone) + '">' + escHtml(q.altPhone) + '</a>');
-        html += dr('Courriel', q.email ? '<a href="mailto:' + escHtml(q.email) + '">' + escHtml(q.email) + '</a>' : '-');
-        html += dr('Adresse', addr || '-');
-        html += dr('Code postal', escHtml(q.postalCode) || '-');
-        html += '</div>';
-      }
+      html += '<div>';
+      html += '<div class="pll-detail-section-title">Contact</div>';
+      html += dr('Nom', name);
+      html += dr('Téléphone', q.phone ? '<a href="tel:' + escHtml(q.phone) + '">' + escHtml(q.phone) + '</a>' : '-');
+      if (q.altPhone) html += dr('Tél. alt.', '<a href="tel:' + escHtml(q.altPhone) + '">' + escHtml(q.altPhone) + '</a>');
+      html += dr('Courriel', q.email ? '<a href="mailto:' + escHtml(q.email) + '">' + escHtml(q.email) + '</a>' : '-');
+      html += dr('Adresse', addr || '-');
+      html += dr('Code postal', escHtml(q.postalCode) || '-');
+      html += '</div>';
 
       html += '<div>';
       html += '<div class="pll-detail-section-title">Projet</div>';

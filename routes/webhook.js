@@ -2,6 +2,7 @@ const User = require('../models/User');
 const StripeEvent = require('../models/StripeEvent');
 const PricingConfig = require('../models/PricingConfig');
 const UnlockedLead = require('../models/UnlockedLead');
+const QuoteRequest = require('../models/QuoteRequest');
 
 const PLAN_CREDITS = {
   essential: 250,
@@ -210,6 +211,9 @@ async function handleCheckoutCompleted(stripe, session) {
         throw err;
       }
     }
+    // Claim the lead exclusively for this pro (removes it from the common pool)
+    await QuoteRequest.findByIdAndUpdate(leadId, { claimedByProUserId: userId });
+    console.log(`[Webhook] ✅ Lead ${leadId} claimed by user ${userId}`);
     return;
   }
 
