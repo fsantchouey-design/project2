@@ -1598,10 +1598,15 @@
     border-top-color: #041316;
     border-radius: 50%;
     flex-shrink: 0;
-    animation: generate-spin 0.7s linear infinite;
   }
-  @keyframes generate-spin { to { transform: rotate(360deg); } }
-  .generate-btn.loading .generate-btn-spinner { display: inline-block; }
+  @keyframes generate-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
+  .generate-btn.loading .generate-btn-spinner {
+    display: inline-block;
+    animation: generate-spin 0.75s linear infinite;
+  }
   .generate-btn.loading i[data-lucide="sparkles"] { display: none; }
 
   .studio-status {
