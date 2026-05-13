@@ -555,7 +555,7 @@
 
       <button type="button" class="generate-btn" id="generate-btn">
         <span class="generate-btn-spinner" aria-hidden="true"></span>
-        <i data-lucide="sparkles"></i>
+        <i data-lucide="sparkles" id="generate-btn-icon"></i>
         <span>Generate Design</span>
       </button>
 
@@ -1607,7 +1607,6 @@
     display: inline-block;
     animation: generate-spin 0.75s linear infinite;
   }
-  .generate-btn.loading i[data-lucide="sparkles"] { display: none; }
 
   .studio-status {
     min-height: 22px;
@@ -3508,6 +3507,7 @@
 
       isGenerating = true;
       generateBtn.classList.add('loading');
+      document.getElementById('generate-btn-icon').style.display = 'none';
       updateGenerateButtonState();
       generateBtn.querySelector('span').textContent = isVideoTool ? 'Generating video...' : currentToolKey() === 'furniture_finder' ? 'Finding products...' : 'Generating...';
       setStatus(isVideoTool ? 'Processing video...' : currentToolKey() === 'furniture_finder' ? 'Finding matching products...' : `Generating with ${selectedToolName}...`);
@@ -3533,6 +3533,7 @@
       } finally {
         isGenerating = false;
         generateBtn.classList.remove('loading');
+        document.getElementById('generate-btn-icon').style.display = '';
         generateBtn.querySelector('span').textContent = getGenerateBtnLabel(getCurrentToolConfig());
         updateGenerateButtonState();
       }
