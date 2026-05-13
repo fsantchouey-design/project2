@@ -542,9 +542,30 @@ router.put('/quotes/:id/status', ensureAuthenticated, async function(req, res) {
     var status = req.body.status;
     var allowed = ['new', 'contacted', 'accepted', 'refused', 'closed'];
     if (!allowed.includes(status)) return res.status(400).json({ error: 'Statut invalide' });
+
+    // Accept/refuse reserved for monthly subscribers only
+    if (status === 'accepted' || status === 'refused') {
+      var plan = req.user.proSubscription && req.user.proSubscription.plan;
+      if (!['pro', 'premium', 'elite'].includes(plan)) {
+        return res.status(403).json({ error: 'Un abonnement mensuel est requis pour accepter ou refuser un lead.' });
+      }
+    }
+
+    var updateFields = { status: status, statusUpdatedAt: new Date() };
+
+    // Accepting claims the lead exclusively for this pro
+    if (status === 'accepted') {
+      var lead = await QuoteRequest.findById(req.params.id).select('claimedByProUserId').lean();
+      if (!lead) return res.status(404).json({ error: 'Demande introuvable' });
+      if (lead.claimedByProUserId && lead.claimedByProUserId.toString() !== req.user.id.toString()) {
+        return res.status(409).json({ error: 'Ce lead a déjà été attribué à un autre professionnel.' });
+      }
+      updateFields.claimedByProUserId = req.user.id;
+    }
+
     var quote = await QuoteRequest.findByIdAndUpdate(
       req.params.id,
-      { status: status, statusUpdatedAt: new Date() },
+      { $set: updateFields },
       { new: true }
     );
     if (!quote) return res.status(404).json({ error: 'Demande introuvable' });

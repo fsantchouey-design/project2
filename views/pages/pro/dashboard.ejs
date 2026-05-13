@@ -340,17 +340,19 @@
               <%= statusLabel(q.status) %>
             </span>
             <div class="prq-card-actions">
-              <% if (q.status !== 'accepted') { %>
-                <button class="prq-btn accept" onclick="prqSetStatus('<%= q._id %>', 'accepted')">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
-                  <%= q.status === 'refused' ? 'Accepter quand même' : 'Accepter' %>
-                </button>
-              <% } %>
-              <% if (q.status !== 'refused') { %>
-                <button class="prq-btn refuse" onclick="prqSetStatus('<%= q._id %>', 'refused')">
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                  Refuser
-                </button>
+              <% if (hasMonthlySubscription) { %>
+                <% if (q.status !== 'accepted') { %>
+                  <button class="prq-btn accept" onclick="prqSetStatus('<%= q._id %>', 'accepted')">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <%= q.status === 'refused' ? 'Accepter quand même' : 'Accepter' %>
+                  </button>
+                <% } %>
+                <% if (q.status !== 'refused') { %>
+                  <button class="prq-btn refuse" onclick="prqSetStatus('<%= q._id %>', 'refused')">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    Refuser
+                  </button>
+                <% } %>
               <% } %>
             </div>
           </div>
@@ -508,11 +510,27 @@
     xhr.open('PUT', '/pro/quotes/' + id + '/status');
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.onload = function() {
+      if (xhr.status === 403 || xhr.status === 409) {
+        try { var errData = JSON.parse(xhr.responseText); alert(errData.error || 'Accès refusé.'); } catch(e) { alert('Accès refusé.'); }
+        return;
+      }
       if (xhr.status === 200) {
         var card = document.querySelector('.prq-card[data-id="' + id + '"]');
         if (!card) return;
         var res = JSON.parse(xhr.responseText);
         var s = res.status;
+
+        // Lead accepted → claimed exclusively, remove from common pool
+        if (s === 'accepted') {
+          card.remove();
+          var cards = document.querySelectorAll('.prq-card');
+          var empty = document.getElementById('prq-empty');
+          if (empty) empty.style.display = cards.length === 0 ? 'flex' : 'none';
+          var el = document.getElementById('prq-count-all');
+          if (el) el.textContent = cards.length;
+          return;
+        }
+
         card.setAttribute('data-status', s);
 
         // Update status badge
