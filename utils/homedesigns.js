@@ -1625,17 +1625,6 @@ const getAiTools = () => {
       maxDesigns: 4
     },
     {
-      id: 'sketch-to-render',
-      slug: 'sketch_to_render',
-      name: 'Sketch to Render',
-      description: 'Convert sketches to realistic renders',
-      icon: 'pencil-ruler',
-      category: 'redesign',
-      requiresMask: false,
-      requiresStyle: true,
-      maxDesigns: 4
-    },
-    {
       id: 'precision',
       slug: 'precision',
       name: 'Precision',
@@ -1691,17 +1680,6 @@ const getAiTools = () => {
       maxDesigns: 4
     },
     {
-      id: 'paint-visualizer',
-      slug: 'paint_visualizer',
-      name: 'Paint Visualizer',
-      description: 'Change wall paint color with precision',
-      icon: 'paintbrush',
-      category: 'mask',
-      requiresMask: true,
-      requiresStyle: false,
-      maxDesigns: 4
-    },
-    {
       id: 'furniture-finder',
       slug: 'furniture_finder',
       name: 'Furniture Finder',
@@ -1724,17 +1702,6 @@ const getAiTools = () => {
       maxDesigns: 1
     },
     {
-      id: 'sky-colors',
-      slug: 'sky_colors',
-      name: 'Sky Colors',
-      description: 'Replace sky in exterior photos',
-      icon: 'cloud-sun',
-      category: 'utility',
-      requiresMask: false,
-      requiresStyle: false,
-      maxDesigns: 4
-    },
-    {
       id: 'magic-redesign',
       slug: 'magic_redesign',
       name: 'Magic Redesign',
@@ -1744,17 +1711,6 @@ const getAiTools = () => {
       requiresMask: false,
       requiresStyle: true,
       maxDesigns: 4
-    },
-    {
-      id: 'video-generation',
-      slug: 'video_generation',
-      name: 'Video Generation',
-      description: 'Generate an animated video from your room',
-      icon: 'video',
-      category: 'utility',
-      requiresMask: false,
-      requiresStyle: true,
-      maxDesigns: 1
     },
     {
       id: 'virtual-staging',
@@ -1779,17 +1735,6 @@ const getAiTools = () => {
       maxDesigns: 4
     },
     {
-      id: 'furniture-creator',
-      slug: 'furniture_creator',
-      name: 'Furniture Creator',
-      description: 'Create custom furniture from a description',
-      icon: 'armchair',
-      category: 'utility',
-      requiresMask: false,
-      requiresStyle: false,
-      maxDesigns: 4
-    },
-    {
       id: 'design-advisor',
       slug: 'design_advisor',
       name: 'Design Advisor',
@@ -1799,28 +1744,6 @@ const getAiTools = () => {
       requiresMask: false,
       requiresStyle: false,
       maxDesigns: 0
-    },
-    {
-      id: 'design-transfer',
-      slug: 'design_transfer',
-      name: 'Design Transfer',
-      description: 'Transfer a design style to your room',
-      icon: 'arrow-right-left',
-      category: 'redesign',
-      requiresMask: false,
-      requiresStyle: true,
-      maxDesigns: 4
-    },
-    {
-      id: 'floor-editor',
-      slug: 'floor_editor',
-      name: 'Floor Editor',
-      description: 'Edit floor material and color',
-      icon: 'grid-3x3',
-      category: 'utility',
-      requiresMask: false,
-      requiresStyle: false,
-      maxDesigns: 4
     },
     {
       id: 'material-swap',
@@ -1833,50 +1756,6 @@ const getAiTools = () => {
       requiresStyle: false,
       maxDesigns: 4
     },
-    {
-      id: 'room-composer',
-      slug: 'room_composer',
-      name: 'Room Composer',
-      description: 'Compose and arrange room elements',
-      icon: 'layout-dashboard',
-      category: 'mask',
-      requiresMask: true,
-      requiresStyle: true,
-      maxDesigns: 4
-    },
-    {
-      id: 'design-critique',
-      slug: 'design_critique',
-      name: 'Design Critique',
-      description: 'Get a detailed AI critique of your design',
-      icon: 'message-square',
-      category: 'utility',
-      requiresMask: false,
-      requiresStyle: false,
-      maxDesigns: 0
-    },
-    {
-      id: 'create-mask-image',
-      slug: 'create_maskimage',
-      name: 'Create Mask Image',
-      description: 'Auto-generate a segmentation mask',
-      icon: 'scissors',
-      category: 'utility',
-      requiresMask: false,
-      requiresStyle: false,
-      maxDesigns: 1
-    },
-    {
-      id: 'smart-home',
-      slug: 'smart_home',
-      name: 'Smart Home',
-      description: 'Visualize smart home features in your space',
-      icon: 'home',
-      category: 'redesign',
-      requiresMask: false,
-      requiresStyle: true,
-      maxDesigns: 4
-    }
   ];
 };
 

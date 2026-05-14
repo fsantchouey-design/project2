@@ -72,15 +72,6 @@
           <i data-lucide="zap"></i>
           <span>Magic Redesign</span>
         </button>
-        <button type="button" class="tool-option tool-option--locked" data-tool-name="Video Generation" data-endpoint="/api/v2/video_generation" data-requires-mask="false">
-          <i data-lucide="video"></i>
-          <span>Video Generation</span>
-          <span class="tool-option-lock">🔒</span>
-        </button>
-        <button type="button" class="tool-option" data-tool-name="Sketch To Render" data-endpoint="/api/v2/sketch_to_render" data-requires-mask="false">
-          <i data-lucide="pencil-ruler"></i>
-          <span>Sketch To Render</span>
-        </button>
         <button type="button" class="tool-option" data-tool-name="Virtual Staging" data-endpoint="/api/v2/virtual_staging" data-requires-mask="false">
           <i data-lucide="sofa"></i>
           <span>Virtual Staging</span>
@@ -117,49 +108,13 @@
           <i data-lucide="type"></i>
           <span>Text To Design</span>
         </button>
-        <button type="button" class="tool-option" data-tool-name="Furniture Creator" data-endpoint="/api/v2/furniture_creator" data-requires-mask="false">
-          <i data-lucide="armchair"></i>
-          <span>Furniture Creator</span>
-        </button>
         <button type="button" class="tool-option" data-tool-name="Design Advisor" data-endpoint="/api/v2/design_advisor" data-requires-mask="false">
           <i data-lucide="messages-square"></i>
           <span>Design Advisor</span>
         </button>
-        <button type="button" class="tool-option" data-tool-name="Sky Colors" data-endpoint="/api/v2/sky_colors" data-requires-mask="false">
-          <i data-lucide="cloud-sun"></i>
-          <span>Sky Colors</span>
-        </button>
-        <button type="button" class="tool-option" data-tool-name="Design Transfer" data-endpoint="/api/v2/design_transfer" data-requires-mask="false">
-          <i data-lucide="copy-plus"></i>
-          <span>Design Transfer</span>
-        </button>
-        <button type="button" class="tool-option" data-tool-name="Floor Editor" data-endpoint="/api/v2/floor_editor" data-requires-mask="false">
-          <i data-lucide="panel-bottom"></i>
-          <span>Floor Editor</span>
-        </button>
-        <button type="button" class="tool-option" data-tool-name="Paint Visualizer" data-endpoint="/api/v2/paint_visualizer" data-requires-mask="true">
-          <i data-lucide="paintbrush"></i>
-          <span>Paint Visualizer</span>
-        </button>
         <button type="button" class="tool-option" data-tool-name="Material Swap" data-endpoint="/api/v2/material_swap" data-requires-mask="true">
           <i data-lucide="swatch-book"></i>
           <span>Material Swap</span>
-        </button>
-        <button type="button" class="tool-option" data-tool-name="Room Composer" data-endpoint="/api/v2/room_composer" data-requires-mask="false">
-          <i data-lucide="blocks"></i>
-          <span>Room Composer</span>
-        </button>
-        <button type="button" class="tool-option" data-tool-name="Design Critique" data-endpoint="/api/v2/design_critique" data-requires-mask="false">
-          <i data-lucide="search-check"></i>
-          <span>Design Critique</span>
-        </button>
-        <button type="button" class="tool-option" data-tool-name="Create Mask Image" data-endpoint="/api/v2/create_maskimage" data-requires-mask="false">
-          <i data-lucide="scan-line"></i>
-          <span>Create Mask Image</span>
-        </button>
-        <button type="button" class="tool-option" data-tool-name="Smart Home" data-endpoint="/api/v2/smart_home" data-requires-mask="false">
-          <i data-lucide="house-plug"></i>
-          <span>Smart Home</span>
         </button>
       </div>
     </aside>
@@ -2861,12 +2816,6 @@
   }
 
   function updateGenerateButtonState() {
-    if (currentToolKey() === 'video_generation') {
-      generateBtn.disabled = true;
-      generateBtn.querySelector('span').textContent = '🔒 Bientôt disponible';
-      generateBtn.title = '';
-      return;
-    }
     var currentConfig = getCurrentToolConfig();
     var requiresImage = !currentConfig.imageOptional;
     var toolCost = currentConfig.credits || 0;
@@ -3401,32 +3350,13 @@
         setStatus('Select an AI tool before generating a design.', 'error');
         return;
       }
-      const isVideoTool = currentToolKey() === 'video_generation';
-      if (isVideoTool) {
-        setStatus('Video Generation sera bientôt disponible.', 'error');
-        return;
-      }
-      const isFloorEditor = currentToolKey() === 'floor_editor';
-      if (isVideoTool && !videoMotionSelect.value) {
-        setStatus('Veuillez choisir un mouvement caméra.', 'error');
-        return;
-      }
       const isMaterialSwap = isMaterialSwapTool();
-      const isDesignTransfer = currentToolKey() === 'design_transfer';
       if (selectedRequiresMask && !hasMaskPaint) {
         setStatus('Please paint the area you want to modify before generating.', 'error');
         return;
       }
       if (isMaterialSwap && !materialSwapReady) {
         setStatus('Click Continue after selecting the object, then choose the material.', 'error');
-        return;
-      }
-      if (isDesignTransfer && !selectedStyleReferenceFile) {
-        setStatus('Upload a reference style image before transferring a design.', 'error');
-        return;
-      }
-      if (isFloorEditor && !selectedTextureFile) {
-        setStatus('Upload a texture image before editing the floor.', 'error');
         return;
       }
       if (currentToolKey() === 'change_color_textures' && !surfaceColorRow.hidden && !surfaceColorInput.value) {
@@ -3473,8 +3403,6 @@
         const selectedLabels = [...labelsSelect.selectedOptions].map(o => o.value);
         formData.append('labels', selectedLabels.length > 0 ? selectedLabels.join('|') : 'wall|floor|ceiling|sofa|chair|table|lamp');
       }
-      if (isVideoTool) formData.append('tool_name', videoMotionSelect.value);
-      if (isDesignTransfer && selectedStyleReferenceFile) formData.append('styleImage', selectedStyleReferenceFile);
       if (!textureGridRow.hidden) formData.append('noOfTexture', textureGridSelect.value);
       if (!textureUploadRow.hidden && selectedTextureFile) formData.append('textureImage', selectedTextureFile);
       if (isMaterialSwap) {
@@ -3489,8 +3417,8 @@
 
       isGenerating = true;
       updateGenerateButtonState();
-      generateBtn.querySelector('span').textContent = isVideoTool ? 'Generating video...' : currentToolKey() === 'furniture_finder' ? 'Finding products...' : 'Generating...';
-      setStatus(isVideoTool ? 'Processing video...' : currentToolKey() === 'furniture_finder' ? 'Finding matching products...' : `Generating with ${selectedToolName}...`);
+      generateBtn.querySelector('span').textContent = currentToolKey() === 'furniture_finder' ? 'Finding products...' : 'Generating...';
+      setStatus(currentToolKey() === 'furniture_finder' ? 'Finding matching products...' : `Generating with ${selectedToolName}...`);
 
       try {
         const response = await fetch('/api/generate-design', {
@@ -3507,7 +3435,7 @@
         if (typeof data.creditsRemaining === 'number') {
           userAiCredits = data.creditsRemaining;
         }
-        setStatus(isVideoTool ? 'Video generated successfully.' : 'Design generated successfully.', 'success');
+        setStatus('Design generated successfully.', 'success');
       } catch (error) {
         setStatus(error.message, 'error');
       } finally {
