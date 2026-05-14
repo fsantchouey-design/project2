@@ -137,11 +137,7 @@
           Change
         </button>
       </div>
-      <div id="text-only-placeholder" class="text-only-placeholder" hidden>
-        <span class="text-only-icon"><i data-lucide="type"></i></span>
-        <strong>Aucune image requise</strong>
-        <span>Décrivez votre design dans le champ ci-dessous, puis cliquez sur Generate Design.</span>
-      </div>
+
       <div class="image-zoom-controls" id="image-zoom-controls" hidden>
         <i data-lucide="zoom-out"></i>
         <input type="range" id="image-zoom-range" min="1" max="2.6" step="0.05" value="1" aria-label="Image zoom">
@@ -816,29 +812,6 @@
     height: 30px;
   }
 
-  .text-only-placeholder {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 14px;
-    min-height: 220px;
-    border: 2px dashed rgba(255, 255, 255, 0.1);
-    border-radius: 16px;
-    color: rgba(255, 255, 255, 0.4);
-    text-align: center;
-    padding: 36px 24px;
-  }
-  .text-only-placeholder strong { font-size: 0.95rem; color: rgba(255, 255, 255, 0.6); }
-  .text-only-placeholder span   { font-size: 0.82rem; line-height: 1.5; }
-  .text-only-icon {
-    width: 56px; height: 56px;
-    display: flex; align-items: center; justify-content: center;
-    border-radius: 12px;
-    background: rgba(16, 185, 129, 0.1);
-    color: var(--accent-primary);
-  }
-  .text-only-icon i { width: 26px; height: 26px; }
 
   .source-preview {
     width: 100%;
@@ -2655,9 +2628,7 @@
         advancedToggle.setAttribute('aria-expanded', 'false');
         toolOptionsPanel.classList.add('collapsed');
       }
-      const isTextOnly = !!config.textOnly;
-      uploadCanvas.hidden = isTextOnly;
-      document.getElementById('text-only-placeholder').hidden = !isTextOnly;
+      uploadCanvas.hidden = !!config.textOnly;
 
       generateBtn.querySelector('span').textContent = getGenerateBtnLabel(config);
       renderToolInterface();
