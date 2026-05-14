@@ -47,11 +47,11 @@ router.get('/', ensureAuthenticated, async (req, res) => {
       });
     } else {
       // Client Dashboard
-      const projects = await Project.find({ user: req.user.id })
+      const projects = await Project.find({ user: req.user.id, deletedAt: null })
         .sort({ createdAt: -1 })
         .limit(5);
-      
-      const allProjects = await Project.find({ user: req.user.id });
+
+      const allProjects = await Project.find({ user: req.user.id, deletedAt: null });
       const totalVariants = allProjects.reduce((acc, p) => acc + (p.designVariants?.length || 0), 0);
       
       const stats = {
