@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Choisir mon espace — CraftyCrib</title>
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/png" href="/assets/logoicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,400;0,14..32,500;0,14..32,600;0,14..32,700;0,14..32,800;0,14..32,900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:      #0a0a0f;
+      --bg-card: #111118;
+      --border:  rgba(255,255,255,0.08);
+      --text:    #f1f5f9;
+      --text2:   #94a3b8;
+      --green:   #00ff88;
+      --cyan:    #00d4ff;
+      --purple:  #a855f7;
+      --radius:  20px;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      overflow: hidden;
+    }
+
+    /* animated background blobs */
+    .cs-blobs {
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      overflow: hidden;
+    }
+    .cs-blob {
+      position: absolute; border-radius: 50%; filter: blur(90px); opacity: 0.18;
+      animation: blobFloat 12s ease-in-out infinite alternate;
+    }
+    .cs-blob-1 {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, #00ff88, transparent 70%);
+      top: -120px; left: -100px;
+      animation-duration: 14s;
+    }
+    .cs-blob-2 {
+      width: 420px; height: 420px;
+      background: radial-gradient(circle, #00d4ff, transparent 70%);
+      bottom: -80px; right: -80px;
+      animation-duration: 10s; animation-delay: -4s;
+    }
+    .cs-blob-3 {
+      width: 300px; height: 300px;
+      background: radial-gradient(circle, #a855f7, transparent 70%);
+      top: 50%; left: 50%; transform: translate(-50%,-50%);
+      animation-duration: 16s; animation-delay: -8s;
+    }
+    @keyframes blobFloat {
+      0%   { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(30px, 20px) scale(1.08); }
+    }
+
+    .cs-wrap {
+      position: relative; z-index: 1;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 40px;
+      width: 100%; max-width: 760px;
+    }
+
+    /* Logo */
+    .cs-logo {
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none;
+    }
+    .cs-logo img { height: 32px; width: auto; }
+    .cs-logo-text {
+      font-size: 1.2rem; font-weight: 800; letter-spacing: -0.02em;
+      background: linear-gradient(135deg, var(--green), var(--cyan));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    /* Header */
+    .cs-header { text-align: center; }
+    .cs-greeting {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 0.78rem; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--green);
+      background: rgba(0,255,136,0.08);
+      border: 1px solid rgba(0,255,136,0.2);
+      border-radius: 20px; padding: 4px 14px;
+      margin-bottom: 14px;
+    }
+    .cs-title {
+      font-size: clamp(1.6rem, 5vw, 2.4rem);
+      font-weight: 800; letter-spacing: -0.03em;
+      line-height: 1.15; margin-bottom: 10px;
+    }
+    .cs-title span {
+      background: linear-gradient(135deg, var(--green), var(--cyan));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .cs-sub { font-size: 0.9rem; color: var(--text2); line-height: 1.6; }
+
+    /* Cards */
+    .cs-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      width: 100%;
+    }
+    @media (max-width: 580px) {
+      .cs-cards { grid-template-columns: 1fr; }
+    }
+
+    .cs-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px 28px 28px;
+      display: flex; flex-direction: column; gap: 18px;
+      text-decoration: none; color: inherit;
+      position: relative; overflow: hidden;
+      transition: transform 0.22s cubic-bezier(.22,.68,0,1.2),
+                  border-color 0.18s, box-shadow 0.18s;
+      cursor: pointer;
+    }
+    .cs-card::before {
+      content: ''; position: absolute; inset: 0;
+      opacity: 0; transition: opacity 0.2s;
+    }
+    .cs-card-client::before {
+      background: radial-gradient(circle at 30% 30%, rgba(0,255,136,0.07), transparent 65%);
+    }
+    .cs-card-pro::before {
+      background: radial-gradient(circle at 70% 30%, rgba(168,85,247,0.08), transparent 65%);
+    }
+    .cs-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .cs-card:hover::before { opacity: 1; }
+    .cs-card-client:hover { border-color: rgba(0,255,136,0.35); }
+    .cs-card-pro:hover    { border-color: rgba(168,85,247,0.35); }
+
+    .cs-card-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .cs-card-client .cs-card-icon {
+      background: rgba(0,255,136,0.12);
+      color: var(--green);
+    }
+    .cs-card-pro .cs-card-icon {
+      background: rgba(168,85,247,0.12);
+      color: var(--purple);
+    }
+    .cs-card-icon svg { width: 24px; height: 24px; }
+
+    .cs-card-badge {
+      position: absolute; top: 18px; right: 18px;
+      font-size: 0.65rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;
+      padding: 3px 10px; border-radius: 20px;
+    }
+    .cs-card-client .cs-card-badge {
+      background: rgba(0,255,136,0.12); color: var(--green);
+      border: 1px solid rgba(0,255,136,0.25);
+    }
+    .cs-card-pro .cs-card-badge {
+      background: rgba(168,85,247,0.12); color: var(--purple);
+      border: 1px solid rgba(168,85,247,0.25);
+    }
+
+    .cs-card-title {
+      font-size: 1.15rem; font-weight: 700; letter-spacing: -0.02em;
+      margin-bottom: 4px;
+    }
+    .cs-card-desc {
+      font-size: 0.85rem; color: var(--text2); line-height: 1.55;
+    }
+
+    .cs-card-features {
+      display: flex; flex-direction: column; gap: 7px;
+      margin-top: 2px;
+    }
+    .cs-card-feat {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 0.8rem; color: var(--text2);
+    }
+    .cs-card-feat-dot {
+      width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0;
+    }
+    .cs-card-client .cs-card-feat-dot { background: var(--green); }
+    .cs-card-pro .cs-card-feat-dot    { background: var(--purple); }
+
+    .cs-card-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 12px 20px; border-radius: 12px;
+      font-size: 0.85rem; font-weight: 700; letter-spacing: 0.01em;
+      border: none; cursor: pointer; width: 100%;
+      transition: opacity 0.15s, transform 0.15s;
+      margin-top: auto;
+    }
+    .cs-card-btn:hover { opacity: 0.88; transform: scale(0.99); }
+    .cs-card-client .cs-card-btn {
+      background: linear-gradient(135deg, #00ff88, #00c4a0);
+      color: #0a0a0f;
+    }
+    .cs-card-pro .cs-card-btn {
+      background: linear-gradient(135deg, #a855f7, #6366f1);
+      color: #fff;
+    }
+    .cs-card-btn svg { width: 15px; height: 15px; }
+
+    /* Footer */
+    .cs-footer {
+      font-size: 0.75rem; color: var(--text2);
+      text-align: center; opacity: 0.6;
+    }
+    .cs-footer a { color: var(--text2); text-decoration: underline; text-underline-offset: 2px; }
+  </style>
+</head>
+<body>
+
+<div class="cs-blobs">
+  <div class="cs-blob cs-blob-1"></div>
+  <div class="cs-blob cs-blob-2"></div>
+  <div class="cs-blob cs-blob-3"></div>
+</div>
+
+<div class="cs-wrap">
+
+  <a href="/" class="cs-logo">
+    <img src="/assets/logoicon.png" alt="CraftyCrib">
+    <span class="cs-logo-text">CraftyCrib</span>
+  </a>
+
+  <div class="cs-header">
+    <div class="cs-greeting">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      Bonjour, <%= user.firstName %> !
+    </div>
+    <h1 class="cs-title">Choisissez votre <span>espace</span></h1>
+    <p class="cs-sub">Vous avez accès aux deux espaces CraftyCrib.<br>Sélectionnez celui dans lequel vous souhaitez naviguer.</p>
+  </div>
+
+  <div class="cs-cards">
+
+    <!-- Client card -->
+    <a href="/dashboard" class="cs-card cs-card-client">
+      <span class="cs-card-badge">Propriétaire</span>
+      <div class="cs-card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          <polyline points="9 22 9 12 15 12 15 22"/>
+        </svg>
+      </div>
+      <div>
+        <div class="cs-card-title">Espace Client</div>
+        <div class="cs-card-desc">Gérez vos projets de rénovation, générez des designs IA et trouvez les meilleurs professionnels.</div>
+      </div>
+      <div class="cs-card-features">
+        <div class="cs-card-feat"><span class="cs-card-feat-dot"></span>Projets & designs IA</div>
+        <div class="cs-card-feat"><span class="cs-card-feat-dot"></span>Demandes de devis</div>
+        <div class="cs-card-feat"><span class="cs-card-feat-dot"></span>Messagerie avec les pros</div>
+      </div>
+      <button class="cs-card-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Accéder au dashboard client
+      </button>
+    </a>
+
+    <!-- Pro card -->
+    <a href="/pro/dashboard" class="cs-card cs-card-pro">
+      <span class="cs-card-badge">Professionnel</span>
+      <div class="cs-card-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+          <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+        </svg>
+      </div>
+      <div>
+        <div class="cs-card-title">Espace Pro</div>
+        <div class="cs-card-desc">Gérez vos leads, suivez vos clients, analysez vos performances et développez votre activité.</div>
+      </div>
+      <div class="cs-card-features">
+        <div class="cs-card-feat"><span class="cs-card-feat-dot"></span>Leads & demandes clients</div>
+        <div class="cs-card-feat"><span class="cs-card-feat-dot"></span>Analytics & calendrier</div>
+        <div class="cs-card-feat"><span class="cs-card-feat-dot"></span>Gestion des avis</div>
+      </div>
+      <button class="cs-card-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        Accéder au dashboard pro
+      </button>
+    </a>
+
+  </div>
+
+  <div class="cs-footer">
+    <a href="/auth/logout">Se déconnecter</a> &nbsp;·&nbsp; © 2026 CraftyCrib
+  </div>
+
+</div>
+
+</body>
+</html>

@@ -9,6 +9,7 @@ const { sendEmail } = require('../utils/email');
 const { sendEmail: sendResendEmail, sendAdminEmail } = require('../services/email');
 
 const ADMIN_EMAIL = 'craftycrib.ca@gmail.com';
+const DUAL_ACCESS_EMAIL = 'fsantchouey@gmail.com';
 
 // Login Page
 router.get('/login', ensureGuest, (req, res) => {
@@ -28,6 +29,10 @@ router.post('/login', ensureGuest, (req, res, next) => {
     }
     req.login(user, (loginErr) => {
       if (loginErr) { return next(loginErr); }
+      // Dual-access account: let user choose their space
+      if (user.email === DUAL_ACCESS_EMAIL) {
+        return res.redirect('/auth/choose-dashboard');
+      }
       // Admin: direct access to pro dashboard, no checks needed
       if (user.role === 'admin') {
         return res.redirect('/pro/dashboard');
@@ -412,6 +417,10 @@ router.get('/callback', (req, res, next) => {
     req.login(user, (loginErr) => {
       if (loginErr) { return next(loginErr); }
       req.flash('success_msg', 'Bienvenue, ' + user.firstName + ' !');
+      // Dual-access account: let user choose their space
+      if (user.email === DUAL_ACCESS_EMAIL) {
+        return res.redirect('/auth/choose-dashboard');
+      }
       // Admin: direct access to pro dashboard
       if (user.role === 'admin') {
         return res.redirect('/pro/dashboard');
@@ -436,6 +445,21 @@ router.get('/callback', (req, res, next) => {
       return res.redirect('/dashboard');
     });
   })(req, res, next);
+});
+
+// Choose Dashboard (dual-access account only)
+router.get('/choose-dashboard', ensureAuthenticated, (req, res) => {
+  // Only the dual-access account lands here; everyone else gets a normal redirect
+  if (req.user.email !== DUAL_ACCESS_EMAIL) {
+    if (req.user.role === 'admin' || req.user.role === 'professional') {
+      return res.redirect('/pro/dashboard');
+    }
+    return res.redirect('/dashboard');
+  }
+  res.render('pages/auth/choose-dashboard', {
+    layout: false,
+    user: req.user
+  });
 });
 
 // Logout

@@ -20,6 +20,10 @@ const ensureGuest = (req, res, next) => {
   if (!req.isAuthenticated()) {
     return next();
   }
+  // Dual-access account lands on the chooser
+  if (req.user && req.user.email === 'fsantchouey@gmail.com') {
+    return res.redirect('/auth/choose-dashboard');
+  }
   res.redirect('/dashboard');
 };
 
