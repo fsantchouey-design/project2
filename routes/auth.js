@@ -6,6 +6,7 @@ const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const { ensureGuest, ensureAuthenticated } = require('../middleware/auth');
 const { sendEmail } = require('../utils/email');
+const { sendEmail: sendResendEmail } = require('../services/email');
 
 const ADMIN_EMAIL = 'craftycrib.ca@gmail.com';
 
@@ -123,6 +124,47 @@ router.post('/register', ensureGuest, [
     });
 
     await user.save();
+
+    // Welcome email via Resend (non-blocking)
+    try {
+      await sendResendEmail({
+        to: user.email,
+        subject: 'Bienvenue sur CraftyCrib',
+        html: `<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: 'Segoe UI', Arial, sans-serif; background: #0a0a0f; color: #ffffff; margin: 0; padding: 0; }
+    .container { max-width: 600px; margin: 0 auto; padding: 40px 20px; }
+    .logo { font-size: 28px; font-weight: bold; background: linear-gradient(135deg, #00ff88, #00d4ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; display: block; margin-bottom: 32px; }
+    .card { background: linear-gradient(135deg, rgba(255,255,255,0.08), rgba(255,255,255,0.04)); border: 1px solid rgba(255,255,255,0.12); border-radius: 16px; padding: 40px; }
+    h1 { color: #ffffff; font-size: 22px; margin: 0 0 16px; }
+    p { color: #a0a0a0; line-height: 1.6; margin: 0 0 16px; }
+    .button { display: inline-block; background: linear-gradient(135deg, #00ff88, #00d4ff); color: #000000; text-decoration: none; padding: 14px 36px; border-radius: 50px; font-weight: bold; font-size: 15px; }
+    .footer { text-align: center; color: #555; font-size: 12px; margin-top: 32px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <span class="logo">CraftyCrib</span>
+    <div class="card">
+      <h1>Bienvenue, ${user.firstName} !</h1>
+      <p>Votre compte CraftyCrib a été créé avec succès. Vous pouvez maintenant utiliser nos outils IA pour transformer vos espaces en designs professionnels.</p>
+      <p>Pour commencer, créez votre premier projet et laissez l'IA faire le reste.</p>
+      <center style="margin-top: 24px;">
+        <a href="${process.env.APP_URL || 'https://craftycrib.ca'}/dashboard" class="button">Accéder à mon tableau de bord</a>
+      </center>
+    </div>
+    <div class="footer">
+      <p>© ${new Date().getFullYear()} CraftyCrib. Tous droits réservés.</p>
+    </div>
+  </div>
+</body>
+</html>`
+      });
+    } catch (emailErr) {
+      console.error('Welcome email failed:', emailErr);
+    }
 
     // Auto-login after registration
     req.login(user, (err) => {
