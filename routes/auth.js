@@ -261,15 +261,49 @@ router.post('/forgot-password', ensureGuest, [
     user.resetPasswordExpires = Date.now() + 30 * 60 * 1000; // 30 minutes
     await user.save();
 
-    // Send reset email
+    // Send reset email via Resend
     const resetUrl = `${process.env.APP_URL}/auth/reset-password/${resetToken}`;
-    await sendEmail(user.email, 'resetPassword', [user.firstName, resetUrl]);
+    await sendResendEmail({
+      to: user.email,
+      subject: 'Réinitialisation de votre mot de passe CraftyCrib',
+      html: `<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body{font-family:'Segoe UI',Arial,sans-serif;background:#0a0a0f;color:#fff;margin:0;padding:0}
+    .c{max-width:600px;margin:0 auto;padding:40px 20px}
+    .logo{font-size:26px;font-weight:bold;background:linear-gradient(135deg,#00ff88,#00d4ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center;display:block;margin-bottom:28px}
+    .card{background:linear-gradient(135deg,rgba(255,255,255,.08),rgba(255,255,255,.04));border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:36px}
+    h1{color:#fff;font-size:20px;margin:0 0 14px}
+    p{color:#a0a0a0;line-height:1.6;margin:0 0 12px}
+    .btn{display:inline-block;background:linear-gradient(135deg,#ff6b6b,#ff8e53);color:#fff;text-decoration:none;padding:13px 34px;border-radius:50px;font-weight:bold;font-size:14px}
+    .footer{text-align:center;color:#555;font-size:12px;margin-top:28px}
+  </style>
+</head>
+<body>
+  <div class="c">
+    <span class="logo">CraftyCrib</span>
+    <div class="card">
+      <h1>Réinitialisation du mot de passe</h1>
+      <p>Bonjour ${user.firstName},</p>
+      <p>Nous avons reçu une demande de réinitialisation de mot de passe pour votre compte CraftyCrib.</p>
+      <p>Cliquez sur le bouton ci-dessous pour créer un nouveau mot de passe. Ce lien expire dans <strong>30 minutes</strong>.</p>
+      <center style="margin-top:22px">
+        <a href="${resetUrl}" class="btn">Réinitialiser mon mot de passe</a>
+      </center>
+      <p style="margin-top:20px">Si vous n'êtes pas à l'origine de cette demande, ignorez simplement cet email.</p>
+    </div>
+    <div class="footer"><p>© ${new Date().getFullYear()} CraftyCrib. Tous droits réservés.</p></div>
+  </div>
+</body>
+</html>`
+    });
 
     req.flash('success_msg', 'If an account exists with that email, a reset link has been sent.');
     res.redirect('/auth/forgot-password');
   } catch (err) {
-    console.error('Forgot password error:', err);
-    req.flash('error_msg', 'An error occurred. Please try again.');
+    console.error('Forgot password error:', err.message);
+    req.flash('error_msg', 'Impossible d\'envoyer l\'email de réinitialisation. Veuillez réessayer.');
     res.redirect('/auth/forgot-password');
   }
 });
