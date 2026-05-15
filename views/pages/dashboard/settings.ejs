@@ -14,22 +14,22 @@
 
   <div class="settings-layout">
     <nav class="settings-nav" aria-label="Navigation paramètres">
-      <a href="#profile" class="settings-nav-item active"><i data-lucide="user"></i>Profil</a>
-      <a href="#security" class="settings-nav-item"><i data-lucide="shield-check"></i>Sécurité</a>
-      <a href="#preferences" class="settings-nav-item"><i data-lucide="sliders-horizontal"></i>Préférences</a>
-      <a href="#notifications" class="settings-nav-item"><i data-lucide="bell"></i>Notifications</a>
-      <a href="#billing" class="settings-nav-item"><i data-lucide="credit-card"></i>Facturation</a>
-      <a href="#data" class="settings-nav-item"><i data-lucide="lock-keyhole"></i>Données</a>
+      <a href="#profile" class="settings-nav-item active"><i data-lucide="user"></i><span data-i18n="nav.profile">Profil</span></a>
+      <a href="#security" class="settings-nav-item"><i data-lucide="shield-check"></i><span data-i18n="nav.security">Sécurité</span></a>
+      <a href="#preferences" class="settings-nav-item"><i data-lucide="sliders-horizontal"></i><span data-i18n="nav.preferences">Préférences</span></a>
+      <a href="#notifications" class="settings-nav-item"><i data-lucide="bell"></i><span data-i18n="nav.notifications">Notifications</span></a>
+      <a href="#billing" class="settings-nav-item"><i data-lucide="credit-card"></i><span data-i18n="nav.billing">Facturation</span></a>
+      <a href="#data" class="settings-nav-item"><i data-lucide="lock-keyhole"></i><span data-i18n="nav.data">Données</span></a>
     </nav>
 
     <main class="settings-content">
       <section class="settings-section" id="profile">
         <div class="settings-section-header">
           <div>
-            <span class="settings-kicker">Compte</span>
-            <h2>Profil</h2>
+            <span class="settings-kicker" data-i18n="kicker.profile">Compte</span>
+            <h2 data-i18n="section.profile">Profil</h2>
           </div>
-          <span class="settings-status-pill">Connecté</span>
+          <span class="settings-status-pill" data-i18n="status.connected">Connecté</span>
         </div>
 
         <!-- Avatar upload (standalone form, cannot be nested) -->
@@ -60,23 +60,23 @@
         <form action="/dashboard/settings" method="POST" class="settings-form">
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Prénom</label>
+              <label class="form-label" data-i18n="label.firstname">Prénom</label>
               <input type="text" name="firstName" class="form-input" value="<%= user.firstName %>" required>
             </div>
             <div class="form-group">
-              <label class="form-label">Nom</label>
+              <label class="form-label" data-i18n="label.lastname">Nom</label>
               <input type="text" name="lastName" class="form-input" value="<%= user.lastName %>" required>
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label">Email</label>
+              <label class="form-label" data-i18n="label.email">Email</label>
               <input type="email" class="form-input" value="<%= user.email %>" disabled>
-              <p class="form-hint">L’email est lié à l’authentification du compte.</p>
+              <p class="form-hint" data-i18n="hint.email">L’email est lié à l’authentification du compte.</p>
             </div>
             <div class="form-group">
-              <label class="form-label">Téléphone</label>
+              <label class="form-label" data-i18n="label.phone">Téléphone</label>
               <input type="tel" name="phone" class="form-input" value="<%= user.phone || '' %>" placeholder="+1 514 000 0000">
             </div>
           </div>
@@ -84,7 +84,7 @@
           <div class="form-actions">
             <button type="submit" class="settings-primary-btn">
               <i data-lucide="save"></i>
-              Sauvegarder
+              <span data-i18n="btn.save">Sauvegarder</span>
             </button>
           </div>
         </form>
@@ -93,30 +93,30 @@
       <section class="settings-section" id="security">
         <div class="settings-section-header">
           <div>
-            <span class="settings-kicker">Protection</span>
-            <h2>Sécurité</h2>
+            <span class="settings-kicker" data-i18n="kicker.security">Protection</span>
+            <h2 data-i18n="section.security">Sécurité</h2>
           </div>
         </div>
 
         <div class="settings-form">
           <div class="form-row">
             <div class="form-group">
-              <label class="form-label" for="current-password">Ancien mot de passe</label>
+              <label class="form-label" for="current-password" data-i18n="label.old_password">Ancien mot de passe</label>
               <input type="password" id="current-password" class="form-input" autocomplete="current-password" placeholder="••••••••">
             </div>
             <div class="form-group">
-              <label class="form-label" for="new-password">Nouveau mot de passe</label>
+              <label class="form-label" for="new-password" data-i18n="label.new_password">Nouveau mot de passe</label>
               <input type="password" id="new-password" class="form-input" autocomplete="new-password" placeholder="Minimum 6 caractères">
             </div>
           </div>
           <div class="form-group">
-            <label class="form-label" for="confirm-password">Confirmation</label>
+            <label class="form-label" for="confirm-password" data-i18n="label.confirm_password">Confirmation</label>
             <input type="password" id="confirm-password" class="form-input" autocomplete="new-password" placeholder="Confirmer le nouveau mot de passe">
           </div>
           <div id="password-feedback" style="display:none; margin-bottom:12px; font-size:14px;"></div>
           <button type="button" id="change-password-btn" class="settings-secondary-btn">
             <i data-lucide="key-round"></i>
-            Changer mot de passe
+            <span data-i18n="btn.change_password">Changer mot de passe</span>
           </button>
         </div>
 
@@ -132,28 +132,28 @@
       <section class="settings-section" id="preferences">
         <div class="settings-section-header">
           <div>
-            <span class="settings-kicker">Expérience</span>
-            <h2>Préférences</h2>
+            <span class="settings-kicker" data-i18n="kicker.preferences">Expérience</span>
+            <h2 data-i18n="section.preferences">Préférences</h2>
           </div>
         </div>
 
         <div class="preference-grid">
           <div class="preference-card">
-            <h4>Langue</h4>
+            <h4 data-i18n="label.lang">Langue</h4>
             <div class="segmented-control" data-setting="language">
               <button type="button" class="segment active" data-value="fr">FR</button>
               <button type="button" class="segment" data-value="en">EN</button>
             </div>
           </div>
           <div class="preference-card">
-            <h4>Thème</h4>
+            <h4 data-i18n="label.theme">Thème</h4>
             <div class="segmented-control" data-setting="theme">
               <button type="button" class="segment active" data-value="dark">Dark</button>
               <button type="button" class="segment" data-value="light">Light</button>
             </div>
           </div>
           <div class="preference-card">
-            <h4>Interface</h4>
+            <h4 data-i18n="label.interface">Interface</h4>
             <label class="compact-toggle">
               <span>Animations légères</span>
               <input type="checkbox" class="settings-toggle-input" data-local-setting="softAnimations" checked>
@@ -166,67 +166,11 @@
         </div>
       </section>
 
-      <section class="settings-section" id="notifications">
-        <div class="settings-section-header">
-          <div>
-            <span class="settings-kicker">Alertes</span>
-            <h2>Notifications</h2>
-          </div>
-          <span class="settings-save-hint" id="notification-save-hint">Sauvegarde locale</span>
-        </div>
-
-        <div class="notification-options">
-          <div class="notification-item">
-            <div class="notification-info">
-              <h4>Email Notifications</h4>
-              <p>Receive updates about your projects via email</p>
-            </div>
-            <label class="toggle">
-              <input type="checkbox" data-notification="emailNotifications" checked>
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-
-          <div class="notification-item">
-            <div class="notification-info">
-              <h4>Project Updates</h4>
-              <p>Get notified when your designs are ready</p>
-            </div>
-            <label class="toggle">
-              <input type="checkbox" data-notification="projectUpdates" checked>
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-
-          <div class="notification-item">
-            <div class="notification-info">
-              <h4>Contractor Messages</h4>
-              <p>Receive notifications for new messages</p>
-            </div>
-            <label class="toggle">
-              <input type="checkbox" data-notification="contractorMessages" checked>
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-
-          <div class="notification-item">
-            <div class="notification-info">
-              <h4>Marketing Emails</h4>
-              <p>Tips, features, and promotional content</p>
-            </div>
-            <label class="toggle">
-              <input type="checkbox" data-notification="marketingEmails">
-              <span class="toggle-slider"></span>
-            </label>
-          </div>
-        </div>
-      </section>
-
       <section class="settings-section" id="billing">
         <div class="settings-section-header">
           <div>
-            <span class="settings-kicker">Abonnement</span>
-            <h2>Facturation &amp; Crédits IA</h2>
+            <span class="settings-kicker" data-i18n="kicker.billing">Abonnement</span>
+            <h2 data-i18n="section.billing">Facturation &amp; Crédits IA</h2>
           </div>
           <span class="settings-status-pill" id="billing-sub-pill">
             <span id="billing-sub-pill-text">Chargement…</span>
@@ -260,11 +204,11 @@
         <div class="billing-actions">
           <a href="/pricing" class="settings-primary-btn" id="billing-get-credits-btn">
             <i data-lucide="zap"></i>
-            Obtenir plus de crédits
+            <span data-i18n="btn.get_credits">Obtenir plus de crédits</span>
           </a>
           <a href="#" class="settings-secondary-btn" id="billing-stripe-btn" style="display:none;">
             <i data-lucide="credit-card"></i>
-            Gérer via Stripe
+            <span data-i18n="btn.manage_stripe">Gérer via Stripe</span>
           </a>
         </div>
       </section>
@@ -272,8 +216,8 @@
       <section class="settings-section" id="data">
         <div class="settings-section-header">
           <div>
-            <span class="settings-kicker">Confidentialité</span>
-            <h2>Données</h2>
+            <span class="settings-kicker" data-i18n="kicker.data">Confidentialité</span>
+            <h2 data-i18n="section.data">Données</h2>
           </div>
         </div>
 
@@ -284,7 +228,7 @@
           </div>
           <button type="button" class="settings-secondary-btn" data-toast="Export de données à connecter côté backend.">
             <i data-lucide="download"></i>
-            Télécharger
+            <span data-i18n="btn.download">Télécharger</span>
           </button>
         </div>
 
@@ -295,7 +239,7 @@
           </div>
           <button type="button" class="settings-danger-btn" onclick="confirmAccountDelete()">
             <i data-lucide="trash-2"></i>
-            Supprimer
+            <span data-i18n="btn.delete">Supprimer</span>
           </button>
         </div>
 
@@ -625,69 +569,6 @@
     accent-color: var(--accent-primary);
   }
 
-  .notification-options {
-    border: 1px solid var(--border-color);
-    border-radius: 14px;
-    overflow: hidden;
-    background: var(--bg-secondary);
-  }
-
-  .notification-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 18px;
-    padding: 18px;
-    border-bottom: 1px solid var(--border-color);
-  }
-
-  .notification-item:last-child {
-    border-bottom: none;
-  }
-
-  .toggle {
-    position: relative;
-    width: 50px;
-    height: 26px;
-    flex: 0 0 auto;
-    cursor: pointer;
-  }
-
-  .toggle input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-  }
-
-  .toggle-slider {
-    position: absolute;
-    inset: 0;
-    background: var(--bg-tertiary);
-    border-radius: var(--radius-full);
-    transition: var(--transition-base);
-  }
-
-  .toggle-slider::before {
-    content: '';
-    position: absolute;
-    width: 20px;
-    height: 20px;
-    left: 3px;
-    bottom: 3px;
-    background: var(--text-muted);
-    border-radius: 50%;
-    transition: var(--transition-base);
-  }
-
-  .toggle input:checked + .toggle-slider {
-    background: var(--accent-primary);
-  }
-
-  .toggle input:checked + .toggle-slider::before {
-    transform: translateX(24px);
-    background: #00140e;
-  }
-
   .current-plan {
     display: flex;
     align-items: center;
@@ -925,7 +806,6 @@
     .profile-card,
     .settings-row-card,
     .current-plan,
-    .notification-item,
     .billing-credits-card {
       align-items: flex-start;
       flex-direction: column;
@@ -940,100 +820,125 @@
 <script>
   (() => {
     const localPrefsKey = 'craftycrib.settings.preferences';
-    const notificationKey = 'craftycrib.settings.notifications';
-    const avatarFileInput = document.getElementById('avatar-file-input');
-    const avatarPreview = document.getElementById('avatar-preview');
-    const avatarInitials = document.getElementById('avatar-initials-circle');
-    const avatarUploadForm = document.getElementById('avatar-upload-form');
-    const notificationHint = document.getElementById('notification-save-hint');
+
+    // ── i18n dictionary ───────────────────────────────────────────────────────
+    const I18N = {
+      fr: {
+        'nav.profile': 'Profil', 'nav.security': 'Sécurité', 'nav.preferences': 'Préférences',
+        'nav.notifications': 'Notifications', 'nav.billing': 'Facturation', 'nav.data': 'Données',
+        'kicker.profile': 'Compte', 'section.profile': 'Profil',
+        'kicker.security': 'Protection', 'section.security': 'Sécurité',
+        'kicker.preferences': 'Expérience', 'section.preferences': 'Préférences',
+        'kicker.billing': 'Abonnement', 'section.billing': 'Facturation & Crédits IA',
+        'kicker.data': 'Confidentialité', 'section.data': 'Données',
+        'status.connected': 'Connecté',
+        'label.firstname': 'Prénom', 'label.lastname': 'Nom',
+        'label.email': 'Email', 'label.phone': 'Téléphone',
+        'hint.email': "L'email est lié à l'authentification du compte.",
+        'label.old_password': 'Ancien mot de passe', 'label.new_password': 'Nouveau mot de passe',
+        'label.confirm_password': 'Confirmation',
+        'label.lang': 'Langue', 'label.theme': 'Thème', 'label.interface': 'Interface',
+        'btn.save': 'Sauvegarder', 'btn.change_password': 'Changer mot de passe',
+        'btn.download': 'Télécharger', 'btn.delete': 'Supprimer',
+        'btn.get_credits': 'Obtenir plus de crédits', 'btn.manage_stripe': 'Gérer via Stripe',
+      },
+      en: {
+        'nav.profile': 'Profile', 'nav.security': 'Security', 'nav.preferences': 'Preferences',
+        'nav.notifications': 'Notifications', 'nav.billing': 'Billing', 'nav.data': 'Data',
+        'kicker.profile': 'Account', 'section.profile': 'Profile',
+        'kicker.security': 'Protection', 'section.security': 'Security',
+        'kicker.preferences': 'Experience', 'section.preferences': 'Preferences',
+        'kicker.billing': 'Subscription', 'section.billing': 'Billing & AI Credits',
+        'kicker.data': 'Privacy', 'section.data': 'Data',
+        'status.connected': 'Connected',
+        'label.firstname': 'First name', 'label.lastname': 'Last name',
+        'label.email': 'Email', 'label.phone': 'Phone',
+        'hint.email': 'Email is linked to account authentication.',
+        'label.old_password': 'Current password', 'label.new_password': 'New password',
+        'label.confirm_password': 'Confirm password',
+        'label.lang': 'Language', 'label.theme': 'Theme', 'label.interface': 'Interface',
+        'btn.save': 'Save', 'btn.change_password': 'Change password',
+        'btn.download': 'Download', 'btn.delete': 'Delete',
+        'btn.get_credits': 'Get more credits', 'btn.manage_stripe': 'Manage via Stripe',
+      }
+    };
+
+    function applyLanguage(lang) {
+      const dict = I18N[lang] || I18N.fr;
+      document.documentElement.lang = lang;
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n;
+        if (dict[key] !== undefined) el.textContent = dict[key];
+      });
+    }
 
     function readJson(key, fallback) {
-      try {
-        return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback));
-      } catch (error) {
-        return fallback;
-      }
+      try { return JSON.parse(localStorage.getItem(key) || JSON.stringify(fallback)); }
+      catch { return fallback; }
     }
 
     function saveJson(key, value) {
       localStorage.setItem(key, JSON.stringify(value));
     }
 
-    // Avatar: preview then submit
+    // ── Avatar: preview then submit ───────────────────────────────────────────
+    const avatarFileInput = document.getElementById('avatar-file-input');
+    const avatarPreview = document.getElementById('avatar-preview');
+    const avatarInitials = document.getElementById('avatar-initials-circle');
+    const avatarUploadForm = document.getElementById('avatar-upload-form');
+
     avatarFileInput?.addEventListener('change', () => {
       const file = avatarFileInput.files && avatarFileInput.files[0];
       if (!file) return;
       const reader = new FileReader();
       reader.onload = event => {
-        if (avatarPreview) {
-          avatarPreview.src = event.target.result;
-          avatarPreview.style.display = 'block';
-        }
+        if (avatarPreview) { avatarPreview.src = event.target.result; avatarPreview.style.display = 'block'; }
         if (avatarInitials) avatarInitials.style.display = 'none';
       };
       reader.readAsDataURL(file);
-      // Auto-submit after preview
       setTimeout(() => avatarUploadForm?.submit(), 400);
     });
 
-    // ===== Load real billing/credits data =====
+    // ── Billing/credits data ──────────────────────────────────────────────────
     (async function loadBillingData() {
       const creditCountEl = document.getElementById('billing-credits-count');
       const creditDescEl = document.getElementById('billing-credits-desc');
       const subPillText = document.getElementById('billing-sub-pill-text');
       const plansGrid = document.getElementById('billing-plans-grid');
       const stripeBtn = document.getElementById('billing-stripe-btn');
-
       try {
         const resp = await fetch('/api/user/profile', { credentials: 'same-origin' });
         if (!resp.ok) throw new Error('HTTP ' + resp.status);
         const data = await resp.json();
-
         const credits = data.credits ?? 0;
         const sub = data.subscription || {};
         const subType = sub.type || 'free';
         const subLabels = { free: 'Gratuit', partner: 'Partner', advanced: 'Advanced', credits: 'Crédits' };
-        const subLabel = subLabels[subType] || 'Gratuit';
-
-        // Credits count
-        if (creditCountEl) {
-          creditCountEl.innerHTML = '<span class="billing-credits-number">' + credits + '</span>';
-        }
+        if (creditCountEl) creditCountEl.innerHTML = '<span class="billing-credits-number">' + credits + '</span>';
         if (creditDescEl) {
           const used = data.creditsUsed ?? 0;
           creditDescEl.textContent = used > 0
             ? used + ' crédit(s) utilisé(s) · ' + credits + ' restant(s)'
             : credits + ' crédit(s) disponible(s) sur votre compte';
         }
-
-        // Sub pill
-        if (subPillText) subPillText.textContent = subLabel;
-
-        // Stripe button
-        if (stripeBtn && sub.stripeCustomerId) {
-          stripeBtn.style.display = 'inline-flex';
-          stripeBtn.href = '/dashboard/settings/stripe-portal';
-        }
-
-        // Plans grid
+        if (subPillText) subPillText.textContent = subLabels[subType] || 'Gratuit';
+        if (stripeBtn && sub.stripeCustomerId) { stripeBtn.style.display = 'inline-flex'; stripeBtn.href = '/dashboard/settings/stripe-portal'; }
         if (plansGrid) {
-          var plans = [
+          const plans = [
             { type: 'free', label: 'Gratuit', desc: '3 crédits offerts pour démarrer.', color: '#64748b' },
             { type: 'credits', label: 'Crédits', desc: 'Achetez des crédits à la carte.', color: '#3b82f6' },
             { type: 'partner', label: 'Partner', desc: 'Gratuit avec un contrat artisan.', color: '#10b981' },
             { type: 'advanced', label: 'Advanced', desc: 'Générations illimitées + priorité.', color: '#8b5cf6' },
           ];
-          plansGrid.innerHTML = plans.map(function(p) {
-            var isActive = subType === p.type;
-            var currentBadge = isActive ? '<span class="billing-plan-current">Actuel</span>' : '';
+          plansGrid.innerHTML = plans.map(p => {
+            const isActive = subType === p.type;
             return '<div class="billing-plan-card ' + (isActive ? 'active' : '') + '">' +
               '<span class="billing-plan-dot" style="background:' + p.color + '"></span>' +
               '<div><strong>' + p.label + '</strong><p>' + p.desc + '</p></div>' +
-              currentBadge +
+              (isActive ? '<span class="billing-plan-current">Actuel</span>' : '') +
               '</div>';
           }).join('');
         }
-
         if (typeof lucide !== 'undefined') lucide.createIcons();
       } catch (err) {
         if (creditCountEl) creditCountEl.innerHTML = '<span class="billing-credits-error">Erreur de chargement</span>';
@@ -1042,25 +947,49 @@
       }
     })();
 
+    // ── Segmented controls (language + theme) ─────────────────────────────────
     document.querySelectorAll('.segmented-control').forEach(group => {
       const setting = group.dataset.setting;
-      const prefs = readJson(localPrefsKey, {});
-      if (prefs[setting]) {
-        group.querySelectorAll('.segment').forEach(button => {
-          button.classList.toggle('active', button.dataset.value === prefs[setting]);
+
+      // Read current value from dedicated storage
+      let currentValue;
+      if (setting === 'theme') {
+        currentValue = localStorage.getItem('theme') || 'dark';
+      } else if (setting === 'language') {
+        currentValue = localStorage.getItem('craftycrib.lang') || 'fr';
+      } else {
+        currentValue = readJson(localPrefsKey, {})[setting];
+      }
+
+      // Sync button active state
+      if (currentValue) {
+        group.querySelectorAll('.segment').forEach(btn => {
+          btn.classList.toggle('active', btn.dataset.value === currentValue);
         });
       }
+
       group.addEventListener('click', event => {
         const button = event.target.closest('.segment');
         if (!button) return;
-        group.querySelectorAll('.segment').forEach(item => item.classList.remove('active'));
+        group.querySelectorAll('.segment').forEach(b => b.classList.remove('active'));
         button.classList.add('active');
-        const nextPrefs = readJson(localPrefsKey, {});
-        nextPrefs[setting] = button.dataset.value;
-        saveJson(localPrefsKey, nextPrefs);
+        const value = button.dataset.value;
+
+        if (setting === 'theme') {
+          localStorage.setItem('theme', value);
+          document.documentElement.setAttribute('data-theme', value);
+        } else if (setting === 'language') {
+          localStorage.setItem('craftycrib.lang', value);
+          applyLanguage(value);
+        } else {
+          const nextPrefs = readJson(localPrefsKey, {});
+          nextPrefs[setting] = value;
+          saveJson(localPrefsKey, nextPrefs);
+        }
       });
     });
 
+    // ── Local toggles (animations, compact cards) ─────────────────────────────
     document.querySelectorAll('.settings-toggle-input').forEach(input => {
       const prefs = readJson(localPrefsKey, {});
       if (Object.prototype.hasOwnProperty.call(prefs, input.dataset.localSetting)) {
@@ -1073,27 +1002,11 @@
       });
     });
 
-    document.querySelectorAll('[data-notification]').forEach(input => {
-      const saved = readJson(notificationKey, {});
-      if (Object.prototype.hasOwnProperty.call(saved, input.dataset.notification)) {
-        input.checked = !!saved[input.dataset.notification];
-      }
-      input.addEventListener('change', () => {
-        const next = readJson(notificationKey, {});
-        next[input.dataset.notification] = input.checked;
-        saveJson(notificationKey, next);
-        if (notificationHint) {
-          notificationHint.textContent = 'Sauvegardé';
-          setTimeout(() => { notificationHint.textContent = 'Sauvegarde locale'; }, 1200);
-        }
-      });
-    });
-
     document.querySelectorAll('[data-toast]').forEach(button => {
       button.addEventListener('click', () => alert(button.dataset.toast));
     });
 
-    // Password change
+    // ── Password change ───────────────────────────────────────────────────────
     const changePasswordBtn = document.getElementById('change-password-btn');
     if (changePasswordBtn) {
       changePasswordBtn.addEventListener('click', async () => {
@@ -1101,17 +1014,14 @@
         const newPassword = document.getElementById('new-password').value;
         const confirmPassword = document.getElementById('confirm-password').value;
         const feedback = document.getElementById('password-feedback');
-
         const showFeedback = (msg, ok) => {
           feedback.textContent = msg;
           feedback.style.display = 'block';
           feedback.style.color = ok ? '#00ff88' : '#ff6b6b';
         };
-
         if (!currentPassword || !newPassword || !confirmPassword) {
           return showFeedback('Veuillez remplir tous les champs.', false);
         }
-
         changePasswordBtn.disabled = true;
         try {
           const res = await fetch('/dashboard/settings/password', {
@@ -1133,6 +1043,10 @@
         }
       });
     }
+
+    // ── Apply saved language on load ──────────────────────────────────────────
+    const savedLang = localStorage.getItem('craftycrib.lang') || 'fr';
+    applyLanguage(savedLang);
   })();
 
   function confirmAccountDelete() {
