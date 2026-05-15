@@ -206,9 +206,9 @@
             <i data-lucide="zap"></i>
             <span data-i18n="btn.get_credits">Obtenir plus de crédits</span>
           </a>
-          <a href="#" class="settings-secondary-btn" id="billing-stripe-btn" style="display:none;">
-            <i data-lucide="credit-card"></i>
-            <span data-i18n="btn.manage_stripe">Gérer via Stripe</span>
+          <a href="/dashboard/settings/stripe-portal" class="settings-secondary-btn" id="billing-stripe-btn">
+            <i data-lucide="credit-card" id="billing-stripe-icon"></i>
+            <span id="billing-stripe-label" data-i18n="btn.manage_stripe">Gérer via Stripe</span>
           </a>
         </div>
       </section>
@@ -945,6 +945,20 @@
         if (creditDescEl) creditDescEl.textContent = 'Impossible de récupérer vos crédits. Réessayez.';
         if (subPillText) subPillText.textContent = '—';
       }
+    })();
+
+    // ── Stripe portal loading state ──────────────────────────────────────────
+    (function() {
+      const btn = document.getElementById('billing-stripe-btn');
+      if (!btn) return;
+      btn.addEventListener('click', function() {
+        const label = document.getElementById('billing-stripe-label');
+        const icon = document.getElementById('billing-stripe-icon');
+        btn.style.pointerEvents = 'none';
+        btn.style.opacity = '0.7';
+        if (label) label.textContent = 'Redirection…';
+        if (icon) { icon.setAttribute('data-lucide', 'loader'); if (typeof lucide !== 'undefined') lucide.createIcons(); }
+      });
     })();
 
     // ── Segmented controls (language + theme) ─────────────────────────────────
