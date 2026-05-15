@@ -277,7 +277,7 @@ router.post('/forgot-password', ensureGuest, [
     await user.save();
 
     // Send reset email via Resend
-    const resetUrl = `${process.env.APP_URL}/auth/reset-password/${resetToken}`;
+    const resetUrl = `${process.env.APP_URL || 'https://craftycrib.ca'}/auth/reset-password/${resetToken}`;
     await sendResendEmail({
       to: user.email,
       subject: 'Réinitialisation de votre mot de passe CraftyCrib',
@@ -324,7 +324,7 @@ router.post('/forgot-password', ensureGuest, [
 });
 
 // Reset Password Page
-router.get('/reset-password/:token', ensureGuest, async (req, res) => {
+router.get('/reset-password/:token', async (req, res) => {
   try {
     const hashedToken = crypto.createHash('sha256').update(req.params.token).digest('hex');
     const user = await User.findOne({
@@ -350,7 +350,7 @@ router.get('/reset-password/:token', ensureGuest, async (req, res) => {
 });
 
 // Reset Password Handler
-router.post('/reset-password/:token', ensureGuest, [
+router.post('/reset-password/:token', [
   body('password').isLength({ min: 6 }).withMessage('Password must be at least 6 characters'),
   body('confirmPassword').custom((value, { req }) => {
     if (value !== req.body.password) {
