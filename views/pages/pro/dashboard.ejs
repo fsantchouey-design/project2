@@ -2247,30 +2247,28 @@
   <div class="pro-page-header">
     <div>
       <div class="pro-page-title">Analytics</div>
-      <div class="pro-page-sub">Statistiques plateforme · <%= moisLabel %></div>
+      <div class="pro-page-sub">Statistiques · <span id="ana-period-label">Ce mois</span></div>
     </div>
     <div class="pro-page-actions">
-      <button class="pro-btn pro-btn-secondary"><i data-lucide="calendar"></i> Ce mois</button>
+      <div class="pro-cal-views" id="ana-period-sel">
+        <button class="pro-cal-view-btn" data-period="week">Cette semaine</button>
+        <button class="pro-cal-view-btn active" data-period="month">Ce mois</button>
+        <button class="pro-cal-view-btn" data-period="year">Cette année</button>
+      </div>
       <button class="pro-btn pro-btn-secondary"><i data-lucide="download"></i> Export</button>
     </div>
   </div>
 
   <div class="pro-analytics-kpi">
     <div class="pro-analytics-kpi-card">
-      <div class="pro-analytics-kpi-value"><%= ana.leadsThisMonth %></div>
-      <div class="pro-analytics-kpi-label">Leads ce mois</div>
-      <% if (ana.monthlyTrend > 0) { %>
-        <div class="pro-analytics-kpi-change up"><i data-lucide="trending-up"></i> +<%= ana.monthlyTrend %>% vs mois dernier</div>
-      <% } else if (ana.monthlyTrend < 0) { %>
-        <div class="pro-analytics-kpi-change down"><i data-lucide="trending-down"></i> <%= ana.monthlyTrend %>% vs mois dernier</div>
-      <% } else { %>
-        <div class="pro-analytics-kpi-change"><i data-lucide="minus"></i> Stable vs mois dernier</div>
-      <% } %>
+      <div class="pro-analytics-kpi-value" id="ana-leads-val">…</div>
+      <div class="pro-analytics-kpi-label">Leads reçus</div>
+      <div class="pro-analytics-kpi-change" id="ana-leads-change"><i data-lucide="inbox"></i> Leads acceptés</div>
     </div>
     <div class="pro-analytics-kpi-card">
-      <div class="pro-analytics-kpi-value"><%= ana.leadsThisYear %></div>
-      <div class="pro-analytics-kpi-label">Leads cette année</div>
-      <div class="pro-analytics-kpi-change up"><i data-lucide="bar-chart-2"></i> Total <%= anaToday.getFullYear() %></div>
+      <div class="pro-analytics-kpi-value" id="ana-done-val">…</div>
+      <div class="pro-analytics-kpi-label">Leads terminés</div>
+      <div class="pro-analytics-kpi-change up" id="ana-done-change"><i data-lucide="check-circle"></i> Marqués comme terminés</div>
     </div>
     <div class="pro-analytics-kpi-card">
       <div class="pro-analytics-kpi-value">—</div>
@@ -2278,9 +2276,9 @@
       <div class="pro-analytics-kpi-change"><i data-lucide="eye"></i> Bientôt disponible</div>
     </div>
     <div class="pro-analytics-kpi-card">
-      <div class="pro-analytics-kpi-value"><%= ana.conversionRate %>%</div>
-      <div class="pro-analytics-kpi-label">Leads convertis</div>
-      <div class="pro-analytics-kpi-change up"><i data-lucide="check-circle"></i> Leads gagnés / total</div>
+      <div class="pro-analytics-kpi-value" id="ana-reviews-val">…</div>
+      <div class="pro-analytics-kpi-label">Avis reçus</div>
+      <div class="pro-analytics-kpi-change up"><i data-lucide="star"></i> Avis clients</div>
     </div>
   </div>
 
@@ -2394,6 +2392,47 @@
       </div>
     </div>
   </div>
+
+  <script>
+  (function(){
+    var PERIOD_LABELS = { week:'Cette semaine', month:'Ce mois', year:'Cette année' };
+    var currentPeriod = 'month';
+
+    function anaFetch(period) {
+      currentPeriod = period;
+      document.getElementById('ana-period-label').textContent = PERIOD_LABELS[period] || period;
+      ['ana-leads-val','ana-done-val','ana-reviews-val'].forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent='…'; });
+      fetch('/pro/analytics?period='+period, { credentials:'same-origin' })
+        .then(function(r){ return r.json(); })
+        .then(function(d){
+          if (!d.success) return;
+          var leadsEl   = document.getElementById('ana-leads-val');
+          var doneEl    = document.getElementById('ana-done-val');
+          var reviewsEl = document.getElementById('ana-reviews-val');
+          var changeEl  = document.getElementById('ana-leads-change');
+          if (leadsEl)   leadsEl.textContent   = d.leadsReceived;
+          if (doneEl)    doneEl.textContent    = d.leadsDone;
+          if (reviewsEl) reviewsEl.textContent = d.reviewsCount;
+          if (changeEl) {
+            var rate = d.leadsReceived > 0 ? Math.round(d.leadsDone / d.leadsReceived * 100) : 0;
+            changeEl.innerHTML = '<i data-lucide="inbox"></i> ' + rate + '% complétés';
+            if (typeof lucide !== 'undefined') lucide.createIcons();
+          }
+        })
+        .catch(function(){ ['ana-leads-val','ana-done-val','ana-reviews-val'].forEach(function(id){ var el=document.getElementById(id); if(el) el.textContent='—'; }); });
+    }
+
+    document.querySelectorAll('#ana-period-sel .pro-cal-view-btn').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        document.querySelectorAll('#ana-period-sel .pro-cal-view-btn').forEach(function(b){ b.classList.remove('active'); });
+        this.classList.add('active');
+        anaFetch(this.getAttribute('data-period'));
+      });
+    });
+
+    anaFetch('month');
+  })();
+  </script>
 </div>
 
 <!-- ===================== REVIEWS ===================== -->

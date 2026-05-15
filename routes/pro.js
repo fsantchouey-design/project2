@@ -790,6 +790,47 @@ router.post('/checkout-session', ensureProfessional, async function(req, res) {
   }
 });
 
+// ─── ANALYTICS API ────────────────────────────────────────────────────────────
+
+router.get('/analytics', ensureProfessional, async function(req, res) {
+  try {
+    var period = req.query.period || 'month';
+    var now = new Date();
+    var start;
+    if (period === 'week') {
+      var dow = now.getDay();
+      var diff = dow === 0 ? -6 : 1 - dow;
+      start = new Date(now.getFullYear(), now.getMonth(), now.getDate() + diff);
+    } else if (period === 'year') {
+      start = new Date(now.getFullYear(), 0, 1);
+    } else {
+      start = new Date(now.getFullYear(), now.getMonth(), 1);
+    }
+
+    var proId = req.user._id;
+
+    var myLeads = await QuoteRequest.find({
+      claimedByProUserId: proId,
+      createdAt: { $gte: start, $lte: now }
+    }).lean();
+
+    var leadsReceived = myLeads.length;
+    var leadsDone = myLeads.filter(function(l) { return l.proLeadStatus === 'done'; }).length;
+
+    var contractor = await Contractor.findOne({ user: proId }).select('reviews').lean();
+    var reviewsCount = 0;
+    if (contractor && contractor.reviews) {
+      reviewsCount = contractor.reviews.filter(function(r) {
+        return new Date(r.createdAt) >= start && new Date(r.createdAt) <= now;
+      }).length;
+    }
+
+    res.json({ success: true, period: period, leadsReceived: leadsReceived, leadsDone: leadsDone, reviewsCount: reviewsCount });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── CALENDAR EVENTS ──────────────────────────────────────────────────────────
 
 router.get('/calendar/events', ensureAuthenticated, async function(req, res) {
