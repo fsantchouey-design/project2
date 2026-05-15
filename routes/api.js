@@ -55,6 +55,8 @@ router.get('/user/profile', ensureAuthenticated, async (req, res) => {
     const subType = sub.type || 'free';
     const subLabels = { free: 'Gratuit', partner: 'Partner', advanced: 'Advanced', credits: 'Crédits' };
 
+    const hasStripeCustomer = !!(sub.stripeCustomerId || user.proSubscription?.stripeCustomerId);
+
     res.json({
       firstName: user.firstName,
       lastName: user.lastName,
@@ -62,6 +64,7 @@ router.get('/user/profile', ensureAuthenticated, async (req, res) => {
       avatar: user.avatar || null,
       credits: sub.credits ?? 3,
       creditsUsed: sub.creditsUsed ?? 0,
+      hasStripeCustomer,
       subscription: {
         type: subType,
         label: subLabels[subType] || 'Gratuit',

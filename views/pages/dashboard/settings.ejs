@@ -206,7 +206,7 @@
             <i data-lucide="zap"></i>
             <span data-i18n="btn.get_credits">Obtenir plus de crédits</span>
           </a>
-          <a href="/dashboard/settings/stripe-portal" class="settings-secondary-btn" id="billing-stripe-btn">
+          <a href="/dashboard/settings/stripe-portal" class="settings-secondary-btn" id="billing-stripe-btn" title="Aucun abonnement Stripe actif" style="opacity:0.45;pointer-events:none;cursor:not-allowed;">
             <i data-lucide="credit-card" id="billing-stripe-icon"></i>
             <span id="billing-stripe-label" data-i18n="btn.manage_stripe">Gérer via Stripe</span>
           </a>
@@ -922,7 +922,12 @@
             : credits + ' crédit(s) disponible(s) sur votre compte';
         }
         if (subPillText) subPillText.textContent = subLabels[subType] || 'Gratuit';
-        if (stripeBtn && sub.stripeCustomerId) { stripeBtn.style.display = 'inline-flex'; stripeBtn.href = '/dashboard/settings/stripe-portal'; }
+        if (stripeBtn && data.hasStripeCustomer) {
+          stripeBtn.style.opacity = '';
+          stripeBtn.style.pointerEvents = '';
+          stripeBtn.style.cursor = '';
+          stripeBtn.removeAttribute('title');
+        }
         if (plansGrid) {
           const plans = [
             { type: 'free', label: 'Gratuit', desc: '3 crédits offerts pour démarrer.', color: '#64748b' },
