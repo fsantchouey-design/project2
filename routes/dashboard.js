@@ -172,6 +172,33 @@ router.post('/settings/password', ensureAuthenticated, [
   }
 });
 
+// Stripe Customer Portal
+router.get('/settings/stripe-portal', ensureAuthenticated, async (req, res) => {
+  try {
+    const User = require('../models/User');
+    const user = await User.findById(req.user._id).select('subscription proSubscription').lean();
+
+    const customerId = user?.subscription?.stripeCustomerId || user?.proSubscription?.stripeCustomerId;
+
+    if (!customerId) {
+      req.flash('error_msg', 'Aucun abonnement Stripe actif trouvé sur ce compte.');
+      return res.redirect('/dashboard/settings#billing');
+    }
+
+    const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+    const session = await stripe.billingPortal.sessions.create({
+      customer: customerId,
+      return_url: `${process.env.APP_URL || 'https://craftycrib.ca'}/dashboard/settings#billing`
+    });
+
+    res.redirect(session.url);
+  } catch (err) {
+    console.error('Stripe portal error:', err.message);
+    req.flash('error_msg', 'Impossible d\'accéder au portail Stripe. Veuillez réessayer.');
+    res.redirect('/dashboard/settings#billing');
+  }
+});
+
 // Messages
 router.get('/messages', ensureAuthenticated, async (req, res) => {
   try {
