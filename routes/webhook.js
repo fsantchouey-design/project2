@@ -3,6 +3,42 @@ const StripeEvent = require('../models/StripeEvent');
 const PricingConfig = require('../models/PricingConfig');
 const UnlockedLead = require('../models/UnlockedLead');
 const QuoteRequest = require('../models/QuoteRequest');
+const { sendEmail: sendResendEmail } = require('../services/email');
+
+const PLAN_LABELS = { essential: 'Essential', creator: 'Creator', studioPro: 'Studio Pro' };
+const PRO_LABELS  = { pro: 'Pro', premium: 'Premium', elite: 'Elite' };
+
+function paymentEmailHtml(firstName, lines) {
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body{font-family:'Segoe UI',Arial,sans-serif;background:#0a0a0f;color:#fff;margin:0;padding:0}
+    .c{max-width:600px;margin:0 auto;padding:40px 20px}
+    .logo{font-size:26px;font-weight:bold;background:linear-gradient(135deg,#00ff88,#00d4ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center;display:block;margin-bottom:28px}
+    .card{background:linear-gradient(135deg,rgba(255,255,255,.08),rgba(255,255,255,.04));border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:36px}
+    h1{color:#fff;font-size:20px;margin:0 0 14px}
+    p{color:#a0a0a0;line-height:1.6;margin:0 0 12px}
+    .btn{display:inline-block;background:linear-gradient(135deg,#00ff88,#00d4ff);color:#000;text-decoration:none;padding:13px 34px;border-radius:50px;font-weight:bold;font-size:14px}
+    .footer{text-align:center;color:#555;font-size:12px;margin-top:28px}
+  </style>
+</head>
+<body>
+  <div class="c">
+    <span class="logo">CraftyCrib</span>
+    <div class="card">
+      <h1>Paiement confirmé</h1>
+      <p>Bonjour ${firstName},</p>
+      ${lines.map(l => `<p>${l}</p>`).join('')}
+      <center style="margin-top:22px">
+        <a href="${process.env.APP_URL || 'https://craftycrib.ca'}/dashboard" class="btn">Accéder à mon tableau de bord</a>
+      </center>
+    </div>
+    <div class="footer"><p>© ${new Date().getFullYear()} CraftyCrib. Tous droits réservés.</p></div>
+  </div>
+</body>
+</html>`;
+}
 
 const PLAN_CREDITS = {
   essential: 250,
@@ -193,6 +229,16 @@ async function handleCheckoutCompleted(stripe, session) {
     const updated = await User.findByIdAndUpdate(userId, { $set: update }, { new: true });
     if (!updated) { console.error(`[Webhook] ❌ User not found: ${userId}`); return; }
     console.log(`[Webhook] ✅ Pro plan → "${proType}" for user ${userId}`);
+    try {
+      await sendResendEmail({
+        to: updated.email,
+        subject: 'Votre abonnement professionnel CraftyCrib est actif',
+        html: paymentEmailHtml(updated.firstName, [
+          `Votre abonnement professionnel <strong>${PRO_LABELS[proType] || proType}</strong> est désormais actif.`,
+          'Vous pouvez accéder aux leads et à toutes les fonctionnalités pro depuis votre tableau de bord.'
+        ])
+      });
+    } catch (e) { console.error('[Webhook] Welcome email failed (pro plan):', e.message); }
     return;
   }
   if (proType === 'lead') {
@@ -239,6 +285,17 @@ async function handleCheckoutCompleted(stripe, session) {
 
     console.log(`[Webhook] ✅ Pack +${credits} crédits → user ${userId} | balance: ${updated.subscription.credits}`);
     console.log('[Webhook] database updated successfully');
+    try {
+      await sendResendEmail({
+        to: updated.email,
+        subject: 'Votre achat de crédits IA CraftyCrib est confirmé',
+        html: paymentEmailHtml(updated.firstName, [
+          `Votre achat de <strong>${credits} crédits IA</strong> a bien été pris en compte.`,
+          `Solde actuel : <strong>${updated.subscription.credits} crédits</strong>.`,
+          'Vous pouvez maintenant générer de nouveaux designs depuis votre tableau de bord.'
+        ])
+      });
+    } catch (e) { console.error('[Webhook] Payment email failed (credit pack):', e.message); }
     return;
   }
 
@@ -282,6 +339,17 @@ async function handleCheckoutCompleted(stripe, session) {
     console.log(`[Webhook]    subscription.credits: ${updated.subscription.credits}`);
     console.log(`[Webhook]    subscription.status:  ${updated.subscription.status}`);
     console.log('[Webhook] database updated successfully');
+    try {
+      await sendResendEmail({
+        to: updated.email,
+        subject: 'Votre abonnement CraftyCrib est actif',
+        html: paymentEmailHtml(updated.firstName, [
+          `Votre abonnement <strong>${PLAN_LABELS[resolvedPlanKey] || resolvedPlanKey}</strong> (${isAnnual ? 'annuel' : 'mensuel'}) est désormais actif.`,
+          `Vous disposez de <strong>${credits} crédits IA</strong> pour ce cycle.`,
+          'Transformez vos espaces dès maintenant depuis votre tableau de bord.'
+        ])
+      });
+    } catch (e) { console.error('[Webhook] Payment email failed (subscription):', e.message); }
   }
 }
 
@@ -333,4 +401,14 @@ async function handleInvoicePaymentSucceeded(invoice) {
   console.log(`[Webhook] ✅ Renewal ${planKey} → ${credits} crédits → user ${user._id}`);
   console.log(`[Webhook]    subscription.credits: ${updated.subscription.credits}`);
   console.log('[Webhook] database updated successfully');
+  try {
+    await sendResendEmail({
+      to: user.email,
+      subject: 'Votre abonnement CraftyCrib a été renouvelé',
+      html: paymentEmailHtml(user.firstName, [
+        `Votre abonnement <strong>${PLAN_LABELS[planKey] || planKey}</strong> a été renouvelé avec succès.`,
+        `Vos <strong>${credits} crédits IA</strong> ont été réinitialisés pour ce nouveau cycle.`
+      ])
+    });
+  } catch (e) { console.error('[Webhook] Payment email failed (renewal):', e.message); }
 }
