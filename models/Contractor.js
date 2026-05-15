@@ -1,14 +1,15 @@
 const mongoose = require('mongoose');
 
 const reviewSchema = new mongoose.Schema({
-  user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  project: { type: mongoose.Schema.Types.ObjectId, ref: 'Project' },
-  rating: { type: Number, min: 1, max: 5, required: true },
-  title: String,
-  comment: String,
-  response: String,
-  isVerified: { type: Boolean, default: false },
-  createdAt: { type: Date, default: Date.now }
+  user:           { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  project:        { type: mongoose.Schema.Types.ObjectId, ref: 'Project' },
+  quoteRequestId: { type: mongoose.Schema.Types.ObjectId, ref: 'QuoteRequest' },
+  rating:         { type: Number, min: 1, max: 5, required: true },
+  title:          String,
+  comment:        String,
+  response:       String,
+  isVerified:     { type: Boolean, default: false },
+  createdAt:      { type: Date, default: Date.now }
 });
 
 const portfolioItemSchema = new mongoose.Schema({

@@ -2437,57 +2437,85 @@
 
 <!-- ===================== REVIEWS ===================== -->
 <div class="pro-section" id="sec-reviews">
+  <%
+    var pc = typeof proContractor !== 'undefined' ? proContractor : null;
+    var pcReviews = (pc && pc.reviews) ? pc.reviews.slice().reverse() : [];
+    var pcAvg = (pc && pc.rating && pc.rating.average) ? pc.rating.average : 0;
+    var pcCount = (pc && pc.rating && pc.rating.count) ? pc.rating.count : 0;
+    var pcDist = [0, 0, 0, 0, 0];
+    pcReviews.forEach(function(r) { if (r.rating >= 1 && r.rating <= 5) pcDist[r.rating - 1]++; });
+    var pcDistMax = Math.max.apply(null, pcDist.concat([1]));
+    var pcStars = '';
+    for (var si = 0; si < Math.round(pcAvg); si++) pcStars += '★';
+    for (var si = Math.round(pcAvg); si < 5; si++) pcStars += '☆';
+  %>
   <div class="pro-page-header">
     <div>
       <div class="pro-page-title">Reviews</div>
-      <div class="pro-page-sub">47 avis · Note globale 4.9★</div>
+      <div class="pro-page-sub">
+        <% if (pcCount > 0) { %>
+          <%= pcCount %> avis · Note globale <%= pcAvg %>★
+        <% } else { %>
+          Aucun avis pour le moment
+        <% } %>
+      </div>
     </div>
     <button class="pro-btn pro-btn-secondary"><i data-lucide="share-2"></i> Partager</button>
   </div>
 
-  <div class="pro-reviews-header">
-    <div class="pro-rating-big">
-      <div class="pro-rating-score">4.9</div>
-      <div class="pro-rating-stars">★★★★★</div>
-      <div class="pro-rating-count">47 avis clients</div>
+  <% if (pcCount === 0) { %>
+    <div style="text-align:center;padding:52px 24px;background:var(--pro-card);border:1px solid var(--pro-border);border-radius:var(--pro-radius-lg);">
+      <div style="font-size:36px;margin-bottom:12px;opacity:0.4;">⭐</div>
+      <div style="font-size:15px;font-weight:600;color:var(--pro-text);margin-bottom:8px;">Aucun avis pour le moment</div>
+      <div style="font-size:13px;color:var(--pro-text3);max-width:360px;margin:0 auto;">Les avis apparaîtront ici lorsqu'un client aura évalué une prestation terminée.</div>
     </div>
-    <div style="background:var(--pro-card);border:1px solid var(--pro-border);border-radius:var(--pro-radius-lg);padding:20px;flex:1;">
-      <div class="pro-rating-bars">
-        <% [['5', 82], ['4', 12], ['3', 4], ['2', 1], ['1', 1]].forEach(function(r) { %>
-        <div class="pro-rating-bar-row">
-          <span class="pro-rating-bar-label"><%= r[0] %></span>
-          <div class="pro-rating-bar-outer"><div class="pro-rating-bar-inner" style="width:<%= r[1] %>%;"></div></div>
-          <span class="pro-rating-bar-count"><%= Math.round(47 * r[1] / 100) %></span>
+  <% } else { %>
+    <div class="pro-reviews-header">
+      <div class="pro-rating-big">
+        <div class="pro-rating-score"><%= pcAvg %></div>
+        <div class="pro-rating-stars"><%= pcStars %></div>
+        <div class="pro-rating-count"><%= pcCount %> avis clients</div>
+      </div>
+      <div style="background:var(--pro-card);border:1px solid var(--pro-border);border-radius:var(--pro-radius-lg);padding:20px;flex:1;">
+        <div class="pro-rating-bars">
+          <% [5,4,3,2,1].forEach(function(star) { %>
+          <div class="pro-rating-bar-row">
+            <span class="pro-rating-bar-label"><%= star %></span>
+            <div class="pro-rating-bar-outer"><div class="pro-rating-bar-inner" style="width:<%= pcDistMax > 0 ? Math.round(pcDist[star-1]/pcDistMax*100) : 0 %>%;"></div></div>
+            <span class="pro-rating-bar-count"><%= pcDist[star-1] %></span>
+          </div>
+          <% }); %>
         </div>
-        <% }); %>
       </div>
     </div>
-  </div>
 
-  <% var reviews = [
-    { name: 'Julie P.', date: '8 mai 2026', stars: 5, text: 'Travail exceptionnel ! La rénovation de notre salle de bain est magnifique. Chaque détail a été soigné, le rendu IA correspondait exactement au résultat final. Je recommande vivement.', color: '#10b981' },
-    { name: 'Marc D.', date: '2 mai 2026', stars: 5, text: 'Très professionnel, excellent écoute, et les rendus IA avant travaux nous ont vraiment aidés à visualiser le projet. La cuisine est parfaite, merci !', color: '#06b6d4' },
-    { name: 'Antoine B.', date: '24 avr. 2026', stars: 5, text: 'Conception du loft au-delà de nos espérances. Le suivi projet a été impeccable du début à la fin. Criby AI a vraiment facilité notre prise de décision.', color: '#8b5cf6' }
-  ]; %>
-  <% reviews.forEach(function(r) { %>
-  <div class="pro-review-card">
-    <div class="pro-review-header">
-      <div class="pro-review-user">
-        <div class="pro-review-avatar" style="background:<%= r.color %>"><%= r.name.charAt(0) %></div>
-        <div>
-          <div class="pro-review-name"><%= r.name %></div>
-          <div class="pro-review-date"><%= r.date %></div>
+    <% pcReviews.forEach(function(r) { %>
+      <%
+        var rUser = r.user;
+        var rName = rUser ? ((rUser.firstName || '') + ' ' + ((rUser.lastName || '').charAt(0) + '.')).trim() : 'Client';
+        var rInitial = rName.charAt(0).toUpperCase();
+        var rDate = new Date(r.createdAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+        var rStars = '';
+        for (var ri = 0; ri < r.rating; ri++) rStars += '★';
+        var avatarColors = ['#10b981','#06b6d4','#8b5cf6','#f59e0b','#3b82f6'];
+        var rColor = avatarColors[rName.charCodeAt(0) % avatarColors.length] || '#10b981';
+      %>
+      <div class="pro-review-card">
+        <div class="pro-review-header">
+          <div class="pro-review-user">
+            <div class="pro-review-avatar" style="background:<%= rColor %>"><%= rInitial %></div>
+            <div>
+              <div class="pro-review-name"><%= rName %></div>
+              <div class="pro-review-date"><%= rDate %></div>
+            </div>
+          </div>
+          <% if (r.isVerified) { %><span class="pro-review-verified"><i data-lucide="shield-check"></i> Client vérifié</span><% } %>
         </div>
+        <div class="pro-review-stars"><%= rStars %></div>
+        <% if (r.comment) { %><div class="pro-review-text"><%- r.comment.replace(/</g,'&lt;').replace(/>/g,'&gt;') %></div><% } %>
       </div>
-      <span class="pro-review-verified"><i data-lucide="shield-check"></i> Client vérifié</span>
-    </div>
-    <div class="pro-review-stars"><% for(var i=0;i<r.stars;i++){%>★<%}%></div>
-    <div class="pro-review-text"><%= r.text %></div>
-    <div style="margin-top:10px;">
-      <button class="pro-btn pro-btn-ghost pro-btn-sm"><i data-lucide="reply"></i> Répondre</button>
-    </div>
-  </div>
-  <% }); %>
+    <% }); %>
+  <% } %>
 </div>
 
 <!-- ===================== BILLING ===================== -->

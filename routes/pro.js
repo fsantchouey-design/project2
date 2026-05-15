@@ -500,6 +500,10 @@ router.get('/dashboard', ensureProfessional, async function(req, res) {
       return q.claimedByProUserId && q.claimedByProUserId.toString() === req.user.id.toString();
     });
 
+    var proContractor = await Contractor.findOne({ user: req.user._id })
+      .populate('reviews.user', 'firstName lastName')
+      .lean();
+
     res.render('pages/pro/dashboard', {
       title: 'Pro Dashboard — CraftyCrib',
       layout: 'layouts/pro-dashboard',
@@ -508,6 +512,7 @@ router.get('/dashboard', ensureProfessional, async function(req, res) {
       availableLeads: availableLeads,
       myLeads: myLeads,
       hasMonthlySubscription: hasMonthlySubscription,
+      proContractor: proContractor || null,
       analytics: {
         leadsThisMonth: leadsThisMonth,
         leadsLastMonth: leadsLastMonth,
@@ -556,7 +561,7 @@ router.put('/leads/:id/lead-status', ensureAuthenticated, async function(req, re
       try {
         var contractor = await Contractor.findOne({ user: req.user._id }).select('companyName slug').lean();
         if (contractor && contractor.slug) {
-          var reviewUrl = (process.env.APP_URL || 'https://craftycrib.ca') + '/contractors/' + contractor.slug;
+          var reviewUrl = (process.env.APP_URL || 'https://craftycrib.ca') + '/dashboard/notifications';
           await sendResendEmail({
             to: quote.email,
             subject: 'Votre avis compte — CraftyCrib',
@@ -571,9 +576,31 @@ router.put('/leads/:id/lead-status', ensureAuthenticated, async function(req, re
 <a href="${reviewUrl}" style="display:inline-block;background:#3b82f6;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-size:0.9rem;font-weight:600;">Laisser un avis</a>
 <p style="color:#475569;font-size:0.78rem;margin:28px 0 0;">CraftyCrib — Connectez-vous avec les meilleurs professionnels</p>
 </div></body></html>`
-          });
+          }).catch(function(e){ console.error('[Lead done] Review email failed:', e.message); });
+          // Create in-app notification for the client (if they have an account)
+          try {
+            var User = require('../models/User');
+            var Notification = require('../models/Notification');
+            var clientUser = await User.findOne({ email: quote.email }).select('_id').lean();
+            if (clientUser) {
+              await Notification.updateOne(
+                { userId: clientUser._id, quoteRequestId: quote._id },
+                { $setOnInsert: {
+                    userId: clientUser._id, quoteRequestId: quote._id,
+                    type: 'review_request',
+                    message: 'Laissez un avis sur votre expérience.',
+                    contractorId: contractor._id,
+                    contractorName: contractor.companyName,
+                    contractorSlug: contractor.slug,
+                    status: 'pending'
+                  }
+                },
+                { upsert: true }
+              );
+            }
+          } catch (e) { console.error('[Lead done] Notification create failed:', e.message); }
         }
-      } catch (e) { console.error('[Lead done] Review email failed:', e.message); }
+      } catch (e) { console.error('[Lead done] Review handling failed:', e.message); }
     }
 
     res.json({ success: true, proLeadStatus: quote.proLeadStatus });

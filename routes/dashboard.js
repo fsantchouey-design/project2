@@ -291,13 +291,28 @@ router.post('/messages/:id', ensureAuthenticated, async (req, res) => {
 });
 
 // Notifications
-router.get('/notifications', ensureAuthenticated, (req, res) => {
-  res.render('pages/dashboard/notifications', {
-    title: 'Notifications - CraftyCrib',
-    layout: 'layouts/dashboard',
-    activePage: 'notifications',
-    pageTitle: 'Notifications'
-  });
+router.get('/notifications', ensureAuthenticated, async (req, res) => {
+  try {
+    const Notification = require('../models/Notification');
+    const notifications = await Notification.find({ userId: req.user._id })
+      .sort({ createdAt: -1 });
+    res.render('pages/dashboard/notifications', {
+      title: 'Notifications - CraftyCrib',
+      layout: 'layouts/dashboard',
+      activePage: 'notifications',
+      pageTitle: 'Notifications',
+      notifications
+    });
+  } catch (err) {
+    console.error('Notifications error:', err);
+    res.render('pages/dashboard/notifications', {
+      title: 'Notifications - CraftyCrib',
+      layout: 'layouts/dashboard',
+      activePage: 'notifications',
+      pageTitle: 'Notifications',
+      notifications: []
+    });
+  }
 });
 
 // AI Tools page

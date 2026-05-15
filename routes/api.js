@@ -1028,4 +1028,57 @@ router.get('/me/credits', ensureAuthenticated, async (req, res) => {
   }
 });
 
+// ─── REVIEWS ──────────────────────────────────────────────────────────────────
+router.post('/reviews', ensureAuthenticated, async (req, res) => {
+  try {
+    const { quoteRequestId, rating, comment } = req.body;
+    const r = parseInt(rating);
+    if (!quoteRequestId || !r || r < 1 || r > 5) {
+      return res.status(400).json({ error: 'Données invalides. Note requise entre 1 et 5.' });
+    }
+
+    const QuoteRequest = require('../models/QuoteRequest');
+    const quote = await QuoteRequest.findById(quoteRequestId).lean();
+    if (!quote) return res.status(404).json({ error: 'Demande introuvable.' });
+    if (quote.proLeadStatus !== 'done') {
+      return res.status(400).json({ error: 'La demande n\'est pas encore terminée.' });
+    }
+    if (!quote.claimedByProUserId) {
+      return res.status(400).json({ error: 'Aucun professionnel associé à cette demande.' });
+    }
+
+    const contractor = await Contractor.findOne({ user: quote.claimedByProUserId });
+    if (!contractor) return res.status(404).json({ error: 'Professionnel introuvable.' });
+
+    const alreadyReviewed = contractor.reviews.some(function(rv) {
+      return rv.quoteRequestId && rv.quoteRequestId.toString() === quoteRequestId.toString();
+    });
+    if (alreadyReviewed) {
+      return res.status(400).json({ error: 'Vous avez déjà laissé un avis pour cette demande.' });
+    }
+
+    contractor.reviews.push({
+      user:           req.user._id,
+      quoteRequestId: quoteRequestId,
+      rating:         r,
+      comment:        (comment || '').trim().slice(0, 2000),
+      isVerified:     true,
+      createdAt:      new Date()
+    });
+    contractor.updateRating();
+    await contractor.save();
+
+    const Notification = require('../models/Notification');
+    await Notification.updateOne(
+      { userId: req.user._id, quoteRequestId: quoteRequestId },
+      { status: 'published' }
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Review submit error:', err);
+    res.status(500).json({ error: 'Une erreur est survenue. Veuillez réessayer.' });
+  }
+});
+
 module.exports = router;
