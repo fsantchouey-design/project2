@@ -39,7 +39,7 @@ const QuoteRequestSchema = new mongoose.Schema({
   statusUpdatedAt: { type: Date },
   proLeadStatus: {
     type: String,
-    enum: ['new_lead', 'contacted', 'won', 'lost', 'archived'],
+    enum: ['new_lead', 'done', 'archived'],
     default: 'new_lead'
   },
   createdAt: { type: Date, default: Date.now }

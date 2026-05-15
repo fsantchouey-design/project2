@@ -10,6 +10,7 @@ const User = require('../models/User');
 const Note = require('../models/Note');
 const QuoteRequest = require('../models/QuoteRequest');
 const UnlockedLead = require('../models/UnlockedLead');
+const Contractor = require('../models/Contractor');
 const { sendRawEmail, transporter } = require('../utils/email');
 const { sendEmail: sendResendEmail, sendAdminEmail } = require('../services/email');
 
@@ -540,7 +541,7 @@ router.get('/dashboard', ensureProfessional, async function(req, res) {
 router.put('/leads/:id/lead-status', ensureAuthenticated, async function(req, res) {
   try {
     var proLeadStatus = req.body.proLeadStatus;
-    var allowed = ['new_lead', 'contacted', 'won', 'lost', 'archived'];
+    var allowed = ['new_lead', 'done', 'archived'];
     if (!allowed.includes(proLeadStatus)) return res.status(400).json({ error: 'Statut invalide' });
     var quote = await QuoteRequest.findByIdAndUpdate(
       req.params.id,
@@ -548,6 +549,32 @@ router.put('/leads/:id/lead-status', ensureAuthenticated, async function(req, re
       { new: true }
     );
     if (!quote) return res.status(404).json({ error: 'Lead introuvable' });
+
+    // When marked done, invite the client to leave a review
+    if (proLeadStatus === 'done' && quote.email) {
+      try {
+        var contractor = await Contractor.findOne({ user: req.user._id }).select('companyName slug').lean();
+        if (contractor && contractor.slug) {
+          var reviewUrl = (process.env.APP_URL || 'https://craftycrib.ca') + '/contractors/' + contractor.slug;
+          await sendResendEmail({
+            to: quote.email,
+            subject: 'Votre avis compte — CraftyCrib',
+            html: `<!DOCTYPE html><html><body style="margin:0;padding:0;background:#0f172a;font-family:sans-serif;">
+<div style="max-width:520px;margin:40px auto;background:#1e293b;border-radius:12px;padding:36px 32px;color:#e2e8f0;">
+<h2 style="margin:0 0 8px;font-size:1.2rem;color:#f8fafc;">Votre projet est terminé !</h2>
+<p style="color:#94a3b8;font-size:0.9rem;margin:0 0 20px;">Bonjour ${quote.firstName},</p>
+<p style="color:#cbd5e1;font-size:0.9rem;margin:0 0 24px;">
+  <strong style="color:#f8fafc;">${contractor.companyName}</strong> a marqué votre demande comme terminée.
+  Prenez un moment pour laisser un avis — cela aide d'autres clients à choisir les meilleurs professionnels.
+</p>
+<a href="${reviewUrl}" style="display:inline-block;background:#3b82f6;color:#fff;text-decoration:none;padding:12px 24px;border-radius:8px;font-size:0.9rem;font-weight:600;">Laisser un avis</a>
+<p style="color:#475569;font-size:0.78rem;margin:28px 0 0;">CraftyCrib — Connectez-vous avec les meilleurs professionnels</p>
+</div></body></html>`
+          });
+        }
+      } catch (e) { console.error('[Lead done] Review email failed:', e.message); }
+    }
+
     res.json({ success: true, proLeadStatus: quote.proLeadStatus });
   } catch (err) {
     res.status(500).json({ error: err.message });

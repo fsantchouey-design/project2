@@ -697,9 +697,7 @@
   .pll-row:last-child { border-bottom: none; }
   .pll-row:hover { background: rgba(255,255,255,0.02); }
   .pll-row[data-status="new_lead"]  { border-left-color: var(--pro-blue); }
-  .pll-row[data-status="contacted"] { border-left-color: var(--pro-cyan); }
-  .pll-row[data-status="won"]       { border-left-color: var(--pro-green); }
-  .pll-row[data-status="lost"]      { border-left-color: #f87171; }
+  .pll-row[data-status="done"]      { border-left-color: var(--pro-green); }
   .pll-row[data-status="archived"]  { border-left-color: var(--pro-text3); opacity: 0.55; }
   .pll-cell {
     font-size: 0.8rem;
@@ -737,9 +735,7 @@
   }
   .pll-status-sel option { background: #1a2332; color: #e2e8f0; }
   .pll-row[data-status="new_lead"]  .pll-status-sel { border-color: rgba(59,130,246,0.5);  color: #60a5fa; }
-  .pll-row[data-status="contacted"] .pll-status-sel { border-color: rgba(6,182,212,0.5);   color: var(--pro-cyan); }
-  .pll-row[data-status="won"]       .pll-status-sel { border-color: rgba(16,185,129,0.5);  color: var(--pro-green); }
-  .pll-row[data-status="lost"]      .pll-status-sel { border-color: rgba(239,68,68,0.4);   color: #f87171; }
+  .pll-row[data-status="done"]      .pll-status-sel { border-color: rgba(16,185,129,0.5);  color: var(--pro-green); }
   .pll-row[data-status="archived"]  .pll-status-sel { border-color: rgba(255,255,255,0.15); color: rgba(255,255,255,0.3); }
   .pll-btn-voir {
     display: inline-flex;
@@ -953,9 +949,7 @@
     };
 
     var countNew      = acceptedLeads.filter(function(q) { return (q.proLeadStatus || 'new_lead') === 'new_lead'; }).length;
-    var countContact  = acceptedLeads.filter(function(q) { return q.proLeadStatus === 'contacted'; }).length;
-    var countWon      = acceptedLeads.filter(function(q) { return q.proLeadStatus === 'won'; }).length;
-    var countLost     = acceptedLeads.filter(function(q) { return q.proLeadStatus === 'lost'; }).length;
+    var countDone     = acceptedLeads.filter(function(q) { return q.proLeadStatus === 'done'; }).length;
     var countArchived = acceptedLeads.filter(function(q) { return q.proLeadStatus === 'archived'; }).length;
   %>
 
@@ -963,9 +957,7 @@
   <div class="pll-filters" id="pll-filters">
     <button class="pll-tab active" data-filter="">Tous <span class="pll-tab-count"><%= acceptedLeads.length %></span></button>
     <button class="pll-tab" data-filter="new_lead">Nouveau lead <span class="pll-tab-count"><%= countNew %></span></button>
-    <button class="pll-tab" data-filter="contacted">Contacté <span class="pll-tab-count"><%= countContact %></span></button>
-    <button class="pll-tab" data-filter="won">Client gagné <span class="pll-tab-count"><%= countWon %></span></button>
-    <button class="pll-tab" data-filter="lost">Client perdu <span class="pll-tab-count"><%= countLost %></span></button>
+    <button class="pll-tab" data-filter="done">Terminé <span class="pll-tab-count"><%= countDone %></span></button>
     <button class="pll-tab" data-filter="archived">Archivé <span class="pll-tab-count"><%= countArchived %></span></button>
   </div>
 
@@ -1022,9 +1014,7 @@
       <div class="pll-cell">
         <select class="pll-status-sel" onchange="proLeadSetStatus('<%= q._id %>', this.value)">
           <option value="new_lead"  <% if (leadStatus === 'new_lead')  { %>selected<% } %>>Nouveau lead</option>
-          <option value="contacted" <% if (leadStatus === 'contacted') { %>selected<% } %>>Contacté</option>
-          <option value="won"       <% if (leadStatus === 'won')       { %>selected<% } %>>Client gagné</option>
-          <option value="lost"      <% if (leadStatus === 'lost')      { %>selected<% } %>>Client perdu</option>
+          <option value="done"      <% if (leadStatus === 'done')      { %>selected<% } %>>Terminé</option>
           <option value="archived"  <% if (leadStatus === 'archived')  { %>selected<% } %>>Archivé</option>
         </select>
       </div>
@@ -1066,11 +1056,9 @@
       flexible: 'Flexible'
     };
     var STATUS_LABELS = {
-      new_lead:  'Nouveau lead',
-      contacted: 'Contacté',
-      won:       'Client gagné',
-      lost:      'Client perdu',
-      archived:  'Archivé'
+      new_lead: 'Nouveau lead',
+      done:     'Terminé',
+      archived: 'Archivé'
     };
 
     function escHtml(s) {
@@ -1145,9 +1133,7 @@
       var counts = {};
       counts[''] = 0;
       counts['new_lead'] = 0;
-      counts['contacted'] = 0;
-      counts['won'] = 0;
-      counts['lost'] = 0;
+      counts['done'] = 0;
       counts['archived'] = 0;
       rows.forEach(function(row) {
         var s = row.getAttribute('data-status');
@@ -1243,9 +1229,7 @@
       html += '<select id="pll-modal-status-select" data-id="' + escHtml(q._id) + '" onchange="proLeadSetStatus(this.getAttribute(\'data-id\'), this.value)">';
       var opts = [
         ['new_lead', 'Nouveau lead'],
-        ['contacted', 'Contacté'],
-        ['won', 'Client gagné'],
-        ['lost', 'Client perdu'],
+        ['done', 'Terminé'],
         ['archived', 'Archivé']
       ];
       opts.forEach(function(opt) {
