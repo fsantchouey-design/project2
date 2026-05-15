@@ -11,6 +11,7 @@ const Note = require('../models/Note');
 const QuoteRequest = require('../models/QuoteRequest');
 const UnlockedLead = require('../models/UnlockedLead');
 const { sendRawEmail, transporter } = require('../utils/email');
+const { sendEmail: sendResendEmail } = require('../services/email');
 
 // Ensure uploads directory exists
 const uploadsDir = path.join(__dirname, '../public/uploads/pro-applications');
@@ -569,6 +570,48 @@ router.put('/quotes/:id/status', ensureAuthenticated, async function(req, res) {
       { new: true }
     );
     if (!quote) return res.status(404).json({ error: 'Demande introuvable' });
+
+    if (status === 'accepted' && quote.email) {
+      try {
+        await sendResendEmail({
+          to: quote.email,
+          subject: 'Un professionnel a accepté votre demande — CraftyCrib',
+          html: `<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body{font-family:'Segoe UI',Arial,sans-serif;background:#0a0a0f;color:#fff;margin:0;padding:0}
+    .c{max-width:600px;margin:0 auto;padding:40px 20px}
+    .logo{font-size:26px;font-weight:bold;background:linear-gradient(135deg,#00ff88,#00d4ff);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center;display:block;margin-bottom:28px}
+    .card{background:linear-gradient(135deg,rgba(255,255,255,.08),rgba(255,255,255,.04));border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:36px}
+    h1{color:#fff;font-size:20px;margin:0 0 14px}
+    p{color:#a0a0a0;line-height:1.6;margin:0 0 12px}
+    .btn{display:inline-block;background:linear-gradient(135deg,#00ff88,#00d4ff);color:#000;text-decoration:none;padding:13px 34px;border-radius:50px;font-weight:bold;font-size:14px}
+    .footer{text-align:center;color:#555;font-size:12px;margin-top:28px}
+  </style>
+</head>
+<body>
+  <div class="c">
+    <span class="logo">CraftyCrib</span>
+    <div class="card">
+      <h1>Votre demande a été acceptée</h1>
+      <p>Bonjour ${quote.firstName},</p>
+      <p>Un professionnel CraftyCrib a accepté votre demande. Il va vous contacter prochainement pour convenir des prochaines étapes.</p>
+      <p>Vous pouvez dès maintenant consulter votre tableau de bord pour suivre l'avancement de votre projet.</p>
+      <center style="margin-top:22px">
+        <a href="${process.env.APP_URL || 'https://craftycrib.ca'}/dashboard" class="btn">Voir mon tableau de bord</a>
+      </center>
+    </div>
+    <div class="footer"><p>© ${new Date().getFullYear()} CraftyCrib. Tous droits réservés.</p></div>
+  </div>
+</body>
+</html>`
+        });
+      } catch (emailErr) {
+        console.error('[Pro] Acceptance email failed:', emailErr.message);
+      }
+    }
+
     res.json({ success: true, status: quote.status });
   } catch (err) {
     res.status(500).json({ error: err.message });
