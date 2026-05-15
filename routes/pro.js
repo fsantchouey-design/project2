@@ -11,6 +11,7 @@ const Note = require('../models/Note');
 const QuoteRequest = require('../models/QuoteRequest');
 const UnlockedLead = require('../models/UnlockedLead');
 const Contractor = require('../models/Contractor');
+const CalendarEvent = require('../models/CalendarEvent');
 const { sendRawEmail, transporter } = require('../utils/email');
 const { sendEmail: sendResendEmail, sendAdminEmail } = require('../services/email');
 
@@ -786,6 +787,69 @@ router.post('/checkout-session', ensureProfessional, async function(req, res) {
   } catch (err) {
     console.error('[ProStripe] ❌ Checkout error:', err.message);
     res.status(500).json({ error: err.message || 'Erreur lors de la création de la session de paiement.' });
+  }
+});
+
+// ─── CALENDAR EVENTS ──────────────────────────────────────────────────────────
+
+router.get('/calendar/events', ensureAuthenticated, async function(req, res) {
+  try {
+    var query = { proUserId: req.user._id };
+    if (req.query.start || req.query.end) {
+      query.date = {};
+      if (req.query.start) query.date.$gte = new Date(req.query.start);
+      if (req.query.end)   query.date.$lte = new Date(req.query.end);
+    }
+    var events = await CalendarEvent.find(query).sort({ date: 1, startTime: 1 });
+    res.json({ success: true, events: events });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/calendar/events', ensureAuthenticated, async function(req, res) {
+  try {
+    var { title, description, date, startTime, endTime, color } = req.body;
+    if (!title || !date) return res.status(400).json({ error: 'Titre et date requis' });
+    var event = await CalendarEvent.create({
+      proUserId:   req.user._id,
+      title:       title,
+      description: description || '',
+      date:        new Date(date),
+      startTime:   startTime || '',
+      endTime:     endTime   || '',
+      color:       color     || 'green'
+    });
+    res.json({ success: true, event: event });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.put('/calendar/events/:id', ensureAuthenticated, async function(req, res) {
+  try {
+    var { title, description, date, startTime, endTime, color } = req.body;
+    if (!title || !date) return res.status(400).json({ error: 'Titre et date requis' });
+    var event = await CalendarEvent.findOneAndUpdate(
+      { _id: req.params.id, proUserId: req.user._id },
+      { title: title, description: description || '', date: new Date(date),
+        startTime: startTime || '', endTime: endTime || '', color: color || 'green' },
+      { new: true }
+    );
+    if (!event) return res.status(404).json({ error: 'Événement introuvable' });
+    res.json({ success: true, event: event });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.delete('/calendar/events/:id', ensureAuthenticated, async function(req, res) {
+  try {
+    var event = await CalendarEvent.findOneAndDelete({ _id: req.params.id, proUserId: req.user._id });
+    if (!event) return res.status(404).json({ error: 'Événement introuvable' });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 });
 

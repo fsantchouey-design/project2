@@ -1864,73 +1864,373 @@
 
 <!-- ===================== CALENDAR ===================== -->
 <div class="pro-section" id="sec-calendar">
+  <style>
+    #cal-modal-overlay,#cal-detail-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.65);z-index:1000;align-items:center;justify-content:center;}
+    #cal-modal-overlay.open,#cal-detail-overlay.open{display:flex;}
+    .cal-modal{background:#1e293b;border:1px solid var(--pro-border);border-radius:14px;padding:28px 26px;width:100%;max-width:430px;position:relative;max-height:90vh;overflow-y:auto;}
+    .cal-modal-title{font-size:1rem;font-weight:700;color:#f1f5f9;margin-bottom:18px;}
+    .cal-modal-close{position:absolute;top:14px;right:14px;background:none;border:none;color:rgba(255,255,255,0.4);cursor:pointer;font-size:18px;line-height:1;padding:0;}
+    .cal-modal-close:hover{color:#fff;}
+    .cal-form-row{margin-bottom:13px;}
+    .cal-form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:13px;}
+    .cal-form-label{font-size:10.5px;font-weight:700;color:rgba(255,255,255,0.35);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:5px;display:block;}
+    .cal-form-input,.cal-form-textarea{width:100%;background:#0f172a;border:1px solid var(--pro-border);border-radius:8px;color:#e2e8f0;font-family:inherit;font-size:0.84rem;padding:8px 11px;outline:none;box-sizing:border-box;}
+    .cal-form-input:focus,.cal-form-textarea:focus{border-color:rgba(16,185,129,0.5);}
+    .cal-form-textarea{resize:vertical;min-height:65px;}
+    .cal-color-btns{display:flex;gap:8px;}
+    .cal-color-btn{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:border-color 0.15s;padding:0;}
+    .cal-color-btn.selected{border-color:#fff;}
+    .cal-modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:20px;}
+    .cal-detail-row{display:flex;align-items:baseline;gap:8px;margin-bottom:8px;font-size:0.83rem;}
+    .cal-detail-lbl{color:rgba(255,255,255,0.35);min-width:60px;font-size:0.75rem;}
+    .cal-detail-val{color:#e2e8f0;}
+    /* Week / Day view */
+    .cal-wv-header{display:grid;grid-template-columns:48px repeat(7,1fr);margin-bottom:4px;}
+    .cal-dv-header{display:grid;grid-template-columns:48px 1fr;margin-bottom:4px;}
+    .cal-wv-col-head,.cal-dv-col-head{text-align:center;font-size:11px;font-weight:700;color:var(--pro-text3);text-transform:uppercase;letter-spacing:0.05em;padding:6px 0;}
+    .cal-wv-col-head.today-col,.cal-dv-col-head.today-col{color:var(--pro-green);}
+    .cal-week-grid{display:grid;grid-template-columns:48px repeat(7,1fr);}
+    .cal-day-grid{display:grid;grid-template-columns:48px 1fr;}
+    .cal-time-label{font-size:10px;color:rgba(255,255,255,0.22);text-align:right;padding-right:8px;height:44px;display:flex;align-items:flex-start;padding-top:3px;}
+    .cal-wv-cell,.cal-dv-cell{border-top:1px solid rgba(255,255,255,0.05);height:44px;position:relative;cursor:pointer;transition:background 0.12s;overflow:hidden;}
+    .cal-wv-cell:hover,.cal-dv-cell:hover{background:rgba(255,255,255,0.025);}
+    .cal-wv-cell.today-col{background:rgba(16,185,129,0.03);}
+    .cal-wv-event,.cal-dv-event{position:absolute;left:2px;right:2px;top:2px;border-radius:4px;font-size:10px;font-weight:500;padding:2px 4px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;z-index:1;}
+    .cal-wv-event.green,.cal-dv-event.green{background:rgba(16,185,129,0.2);color:var(--pro-green);}
+    .cal-wv-event.cyan,.cal-dv-event.cyan{background:rgba(6,182,212,0.2);color:var(--pro-cyan);}
+    .cal-wv-event.purple,.cal-dv-event.purple{background:rgba(139,92,246,0.2);color:var(--pro-purple);}
+    .cal-wv-event.amber,.cal-dv-event.amber{background:rgba(245,158,11,0.2);color:var(--pro-amber);}
+  </style>
+
   <div class="pro-page-header">
     <div>
       <div class="pro-page-title">Calendar</div>
-      <div class="pro-page-sub">3 rendez-vous cette semaine · 1 deadline projet</div>
+      <div class="pro-page-sub" id="cal-subtitle">Chargement…</div>
     </div>
     <div class="pro-page-actions">
-      <button class="pro-btn pro-btn-secondary"><i data-lucide="sync"></i> Synchroniser</button>
-      <button class="pro-btn pro-btn-primary"><i data-lucide="plus"></i> Nouveau RDV</button>
+      <button class="pro-btn pro-btn-secondary" id="cal-sync-btn"><i data-lucide="refresh-cw"></i> Synchroniser</button>
+      <button class="pro-btn pro-btn-primary" id="cal-new-btn"><i data-lucide="plus"></i> Nouveau RDV</button>
     </div>
   </div>
 
   <div class="pro-cal-header">
     <div class="pro-cal-nav">
-      <button class="pro-btn pro-btn-ghost pro-btn-sm"><i data-lucide="chevron-left"></i></button>
-      <span class="pro-cal-month">Mai 2026</span>
-      <button class="pro-btn pro-btn-ghost pro-btn-sm"><i data-lucide="chevron-right"></i></button>
+      <button class="pro-btn pro-btn-ghost pro-btn-sm" id="cal-prev"><i data-lucide="chevron-left"></i></button>
+      <span class="pro-cal-month" id="cal-period-label"></span>
+      <button class="pro-btn pro-btn-ghost pro-btn-sm" id="cal-next"><i data-lucide="chevron-right"></i></button>
     </div>
     <div class="pro-cal-views">
-      <button class="pro-cal-view-btn active">Mois</button>
-      <button class="pro-cal-view-btn">Semaine</button>
-      <button class="pro-cal-view-btn">Jour</button>
+      <button class="pro-cal-view-btn active" data-view="month">Mois</button>
+      <button class="pro-cal-view-btn" data-view="week">Semaine</button>
+      <button class="pro-cal-view-btn" data-view="day">Jour</button>
     </div>
   </div>
 
-  <div class="pro-cal-grid-header">
-    <% ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'].forEach(function(d) { %>
-    <div class="pro-cal-day-label"><%= d %></div>
-    <% }); %>
+  <!-- Month view -->
+  <div id="cal-month-view">
+    <div class="pro-cal-grid-header">
+      <% ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'].forEach(function(d){ %>
+      <div class="pro-cal-day-label"><%= d %></div>
+      <% }); %>
+    </div>
+    <div class="pro-cal-grid" id="cal-month-grid"></div>
   </div>
 
-  <div class="pro-cal-grid">
-    <div class="pro-cal-cell other-month"><div class="pro-cal-date">28</div></div>
-    <div class="pro-cal-cell other-month"><div class="pro-cal-date">29</div></div>
-    <div class="pro-cal-cell other-month"><div class="pro-cal-date">30</div></div>
-    <div class="pro-cal-cell"><div class="pro-cal-date">1</div></div>
-    <div class="pro-cal-cell"><div class="pro-cal-date">2</div></div>
-    <div class="pro-cal-cell"><div class="pro-cal-date">3</div></div>
-    <div class="pro-cal-cell"><div class="pro-cal-date">4</div></div>
-    <div class="pro-cal-cell"><div class="pro-cal-date">5</div></div>
-    <div class="pro-cal-cell"><div class="pro-cal-date">6</div><div class="pro-cal-event cyan">Marc D. — Appel</div></div>
-    <div class="pro-cal-cell"><div class="pro-cal-date">7</div></div>
-    <div class="pro-cal-cell"><div class="pro-cal-date">8</div></div>
-    <div class="pro-cal-cell today"><div class="pro-cal-date">9</div><div class="pro-cal-event green">Thomas R. — Lead</div></div>
-    <div class="pro-cal-cell"><div class="pro-cal-date">10</div></div>
-    <div class="pro-cal-cell"><div class="pro-cal-date">11</div></div>
-    <div class="pro-cal-cell"><div class="pro-cal-date">12</div><div class="pro-cal-event purple">Visite Bernard</div></div>
-    <div class="pro-cal-cell"><div class="pro-cal-date">13</div></div>
-    <div class="pro-cal-cell"><div class="pro-cal-date">14</div></div>
-    <div class="pro-cal-cell"><div class="pro-cal-date">15</div><div class="pro-cal-event amber">Deadline Dupont</div></div>
-    <div class="pro-cal-cell"><div class="pro-cal-date">16</div></div>
-    <div class="pro-cal-cell"><div class="pro-cal-date">17</div></div>
-    <div class="pro-cal-cell"><div class="pro-cal-date">18</div></div>
-    <div class="pro-cal-cell"><div class="pro-cal-date">19</div><div class="pro-cal-event green">Julie P. — Appel</div></div>
-    <div class="pro-cal-cell"><div class="pro-cal-date">20</div></div>
-    <div class="pro-cal-cell"><div class="pro-cal-date">21</div></div>
-    <div class="pro-cal-cell"><div class="pro-cal-date">22</div></div>
-    <div class="pro-cal-cell"><div class="pro-cal-date">23</div></div>
-    <div class="pro-cal-cell"><div class="pro-cal-date">24</div></div>
-    <div class="pro-cal-cell"><div class="pro-cal-date">25</div></div>
-    <div class="pro-cal-cell"><div class="pro-cal-date">26</div></div>
-    <div class="pro-cal-cell"><div class="pro-cal-date">27</div></div>
-    <div class="pro-cal-cell"><div class="pro-cal-date">28</div></div>
-    <div class="pro-cal-cell"><div class="pro-cal-date">29</div></div>
-    <div class="pro-cal-cell"><div class="pro-cal-date">30</div></div>
-    <div class="pro-cal-cell"><div class="pro-cal-date">31</div></div>
-    <div class="pro-cal-cell other-month"><div class="pro-cal-date">1</div></div>
+  <!-- Week view -->
+  <div id="cal-week-view" style="display:none">
+    <div class="cal-wv-header" id="cal-week-header"></div>
+    <div class="cal-week-grid" id="cal-week-grid"></div>
   </div>
+
+  <!-- Day view -->
+  <div id="cal-day-view" style="display:none">
+    <div class="cal-dv-header" id="cal-day-header"></div>
+    <div class="cal-day-grid" id="cal-day-grid"></div>
+  </div>
+
+  <!-- Create / Edit modal -->
+  <div id="cal-modal-overlay">
+    <div class="cal-modal">
+      <div class="cal-modal-title" id="cal-modal-title">Nouveau rendez-vous</div>
+      <button class="cal-modal-close" id="cal-modal-close">✕</button>
+      <input type="hidden" id="cal-edit-id">
+      <div class="cal-form-row">
+        <label class="cal-form-label">Titre *</label>
+        <input class="cal-form-input" id="cal-f-title" placeholder="Ex : Appel client, Visite chantier…">
+      </div>
+      <div class="cal-form-row">
+        <label class="cal-form-label">Date *</label>
+        <input class="cal-form-input" type="date" id="cal-f-date">
+      </div>
+      <div class="cal-form-row-2">
+        <div><label class="cal-form-label">Début</label><input class="cal-form-input" type="time" id="cal-f-start"></div>
+        <div><label class="cal-form-label">Fin</label><input class="cal-form-input" type="time" id="cal-f-end"></div>
+      </div>
+      <div class="cal-form-row">
+        <label class="cal-form-label">Description</label>
+        <textarea class="cal-form-textarea" id="cal-f-desc" placeholder="Notes, adresse, détails…"></textarea>
+      </div>
+      <div class="cal-form-row">
+        <label class="cal-form-label">Couleur</label>
+        <div class="cal-color-btns" id="cal-color-btns">
+          <button class="cal-color-btn selected" data-color="green"  style="background:var(--pro-green)"></button>
+          <button class="cal-color-btn"          data-color="cyan"   style="background:var(--pro-cyan)"></button>
+          <button class="cal-color-btn"          data-color="purple" style="background:var(--pro-purple)"></button>
+          <button class="cal-color-btn"          data-color="amber"  style="background:var(--pro-amber)"></button>
+        </div>
+      </div>
+      <div class="cal-modal-actions">
+        <button class="pro-btn pro-btn-ghost" id="cal-modal-cancel">Annuler</button>
+        <button class="pro-btn pro-btn-primary" id="cal-modal-save">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail modal -->
+  <div id="cal-detail-overlay">
+    <div class="cal-modal">
+      <div class="cal-modal-title" id="cal-detail-title"></div>
+      <button class="cal-modal-close" id="cal-detail-close">✕</button>
+      <div id="cal-detail-body" style="margin-bottom:4px"></div>
+      <div class="cal-modal-actions">
+        <button class="pro-btn pro-btn-ghost" style="color:#f87171;border-color:rgba(248,113,113,0.3)" id="cal-detail-delete">Supprimer</button>
+        <button class="pro-btn pro-btn-secondary" id="cal-detail-edit">Modifier</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function(){
+    var MONTHS = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+    var DAYS_S = ['Lun','Mar','Mer','Jeu','Ven','Sam','Dim'];
+    var HOURS  = [];
+    for (var h=7;h<=20;h++) HOURS.push(h);
+
+    var state = { view:'month', cursor:new Date(), events:[], selColor:'green', editId:null };
+
+    // ── Utils ──────────────────────────────────────────────────────────────
+    function isoDate(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+    function pad(n){ return String(n).padStart(2,'0'); }
+    function sameDay(a,b){ return isoDate(new Date(a))===isoDate(new Date(b)); }
+    function mondayOf(d){ var r=new Date(d),dow=r.getDay(),diff=dow===0?-6:1-dow; r.setDate(r.getDate()+diff); r.setHours(0,0,0,0); return r; }
+    function fmtFR(d){ return new Date(d).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}); }
+    function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    function timeH(t){ if(!t)return -1; var p=t.split(':'); return parseInt(p[0]); }
+    function evDay(iso){ return state.events.filter(function(e){ return isoDate(new Date(e.date))===iso; }); }
+    function evDayHour(iso,h){ return state.events.filter(function(e){ return isoDate(new Date(e.date))===iso && timeH(e.startTime)===h; }); }
+    function dowIdx(d){ var v=d.getDay(); return v===0?6:v-1; }
+
+    // ── Fetch ──────────────────────────────────────────────────────────────
+    function calFetch(cb){
+      var s,e;
+      if(state.view==='month'){ s=new Date(state.cursor.getFullYear(),state.cursor.getMonth(),1); e=new Date(state.cursor.getFullYear(),state.cursor.getMonth()+1,0,23,59,59); }
+      else if(state.view==='week'){ s=mondayOf(state.cursor); e=new Date(s); e.setDate(e.getDate()+6); e.setHours(23,59,59); }
+      else{ s=new Date(state.cursor); s.setHours(0,0,0,0); e=new Date(s); e.setHours(23,59,59); }
+      fetch('/pro/calendar/events?start='+s.toISOString()+'&end='+e.toISOString(),{credentials:'same-origin'})
+        .then(function(r){return r.json();})
+        .then(function(d){ state.events=d.events||[]; calRender(); if(cb)cb(); })
+        .catch(function(){ calRender(); if(cb)cb(); });
+    }
+
+    // ── Render ─────────────────────────────────────────────────────────────
+    function calRender(){
+      document.querySelectorAll('.pro-cal-view-btn').forEach(function(b){ b.classList.toggle('active',b.getAttribute('data-view')===state.view); });
+      if(state.view==='month') calMonth();
+      else if(state.view==='week') calWeek();
+      else calDay();
+      calSubtitle();
+      if(typeof lucide!=='undefined') lucide.createIcons();
+    }
+
+    function calSubtitle(){
+      var el=document.getElementById('cal-subtitle'); if(!el)return;
+      var n=state.events.length;
+      var lbl = state.view==='month'?'ce mois':state.view==='week'?'cette semaine':'aujourd\'hui';
+      el.textContent = n+' rendez-vous '+lbl;
+    }
+
+    // Month ─────────────────────────────────────────────────────────────────
+    function calMonth(){
+      document.getElementById('cal-month-view').style.display='';
+      document.getElementById('cal-week-view').style.display='none';
+      document.getElementById('cal-day-view').style.display='none';
+      var y=state.cursor.getFullYear(),m=state.cursor.getMonth();
+      document.getElementById('cal-period-label').textContent=MONTHS[m]+' '+y;
+      var first=new Date(y,m,1), last=new Date(y,m+1,0);
+      var offset=dowIdx(first);
+      var grid=document.getElementById('cal-month-grid'); grid.innerHTML='';
+      var today=new Date();
+      for(var i=0;i<offset;i++){ grid.appendChild(makeCell(new Date(y,m,1-(offset-i)),true)); }
+      for(var d=1;d<=last.getDate();d++){ grid.appendChild(makeCell(new Date(y,m,d),false,sameDay(new Date(y,m,d),today))); }
+      var total=offset+last.getDate(), trailing=(7-(total%7))%7;
+      for(var i=0;i<trailing;i++){ grid.appendChild(makeCell(new Date(y,m+1,i+1),true)); }
+    }
+
+    function makeCell(date,other,isToday){
+      var cell=document.createElement('div');
+      cell.className='pro-cal-cell'+(other?' other-month':'')+(isToday?' today':'');
+      var dd=document.createElement('div'); dd.className='pro-cal-date'; dd.textContent=date.getDate(); cell.appendChild(dd);
+      evDay(isoDate(date)).forEach(function(ev){
+        var el=document.createElement('div');
+        el.className='pro-cal-event '+(ev.color||'green');
+        el.textContent=(ev.startTime?ev.startTime+' ':'')+ev.title;
+        el.addEventListener('click',function(e){e.stopPropagation();calOpenDetail(ev);});
+        cell.appendChild(el);
+      });
+      cell.addEventListener('click',function(){ calOpenCreate(isoDate(date)); });
+      return cell;
+    }
+
+    // Week ──────────────────────────────────────────────────────────────────
+    function calWeek(){
+      document.getElementById('cal-month-view').style.display='none';
+      document.getElementById('cal-week-view').style.display='';
+      document.getElementById('cal-day-view').style.display='none';
+      var mon=mondayOf(state.cursor), days=[];
+      for(var i=0;i<7;i++){ var d=new Date(mon); d.setDate(d.getDate()+i); days.push(d); }
+      document.getElementById('cal-period-label').textContent=days[0].getDate()+' '+MONTHS[days[0].getMonth()].slice(0,3)+' – '+days[6].getDate()+' '+MONTHS[days[6].getMonth()].slice(0,3)+' '+days[6].getFullYear();
+      var today=new Date();
+      var hdr=document.getElementById('cal-week-header'); hdr.innerHTML='<div></div>';
+      days.forEach(function(d,i){ var h=document.createElement('div'); h.className='cal-wv-col-head'+(sameDay(d,today)?' today-col':''); h.textContent=DAYS_S[i]+' '+d.getDate(); hdr.appendChild(h); });
+      var grid=document.getElementById('cal-week-grid'); grid.innerHTML='';
+      HOURS.forEach(function(h){
+        var tl=document.createElement('div'); tl.className='cal-time-label'; tl.textContent=pad(h)+':00'; grid.appendChild(tl);
+        days.forEach(function(d){
+          var iso=isoDate(d), cell=document.createElement('div');
+          cell.className='cal-wv-cell'+(sameDay(d,today)?' today-col':'');
+          evDayHour(iso,h).forEach(function(ev){ grid.appendChild; var el=document.createElement('div'); el.className='cal-wv-event '+(ev.color||'green'); el.textContent=(ev.startTime||'')+(ev.endTime?'–'+ev.endTime:'')+' '+ev.title; el.addEventListener('click',function(e){e.stopPropagation();calOpenDetail(ev);}); cell.appendChild(el); });
+          cell.addEventListener('click',function(){ calOpenCreate(iso); });
+          grid.appendChild(cell);
+        });
+      });
+    }
+
+    // Day ───────────────────────────────────────────────────────────────────
+    function calDay(){
+      document.getElementById('cal-month-view').style.display='none';
+      document.getElementById('cal-week-view').style.display='none';
+      document.getElementById('cal-day-view').style.display='';
+      var d=state.cursor, today=new Date(), iso=isoDate(d);
+      document.getElementById('cal-period-label').textContent=DAYS_S[dowIdx(d)]+' '+d.getDate()+' '+MONTHS[d.getMonth()]+' '+d.getFullYear();
+      var hdr=document.getElementById('cal-day-header'); hdr.innerHTML='<div></div>';
+      var dh=document.createElement('div'); dh.className='cal-dv-col-head'+(sameDay(d,today)?' today-col':''); dh.textContent=DAYS_S[dowIdx(d)]+' '+d.getDate(); hdr.appendChild(dh);
+      var grid=document.getElementById('cal-day-grid'); grid.innerHTML='';
+      // All-day events (no startTime) shown at first slot
+      var allDay=state.events.filter(function(e){ return isoDate(new Date(e.date))===iso && !e.startTime; });
+      HOURS.forEach(function(h){
+        var tl=document.createElement('div'); tl.className='cal-time-label'; tl.textContent=pad(h)+':00'; grid.appendChild(tl);
+        var cell=document.createElement('div'); cell.className='cal-dv-cell'+(sameDay(d,today)?' today-col':'');
+        var evs = h===HOURS[0] ? allDay.concat(evDayHour(iso,h)) : evDayHour(iso,h);
+        evs.forEach(function(ev){ var el=document.createElement('div'); el.className='cal-dv-event '+(ev.color||'green'); el.textContent=(ev.startTime?ev.startTime+(ev.endTime?'–'+ev.endTime:'')+' ':'')+ev.title; el.addEventListener('click',function(e){e.stopPropagation();calOpenDetail(ev);}); cell.appendChild(el); });
+        cell.addEventListener('click',function(){ calOpenCreate(iso); });
+        grid.appendChild(cell);
+      });
+    }
+
+    // ── Navigation ─────────────────────────────────────────────────────────
+    function navigate(dir){
+      if(state.view==='month'){ state.cursor=new Date(state.cursor.getFullYear(),state.cursor.getMonth()+dir,1); }
+      else if(state.view==='week'){ state.cursor.setDate(state.cursor.getDate()+dir*7); }
+      else{ state.cursor.setDate(state.cursor.getDate()+dir); }
+      calFetch();
+    }
+    document.getElementById('cal-prev').addEventListener('click',function(){ navigate(-1); });
+    document.getElementById('cal-next').addEventListener('click',function(){ navigate(1); });
+    document.querySelectorAll('.pro-cal-view-btn').forEach(function(b){
+      b.addEventListener('click',function(){ state.view=this.getAttribute('data-view'); calFetch(); });
+    });
+    document.getElementById('cal-sync-btn').addEventListener('click',function(){
+      this.disabled=true; var self=this; calFetch(function(){ self.disabled=false; });
+    });
+    document.getElementById('cal-new-btn').addEventListener('click',function(){ calOpenCreate(); });
+
+    // ── Create / Edit modal ────────────────────────────────────────────────
+    function calOpenCreate(dateIso){
+      state.editId=null;
+      document.getElementById('cal-edit-id').value='';
+      document.getElementById('cal-modal-title').textContent='Nouveau rendez-vous';
+      document.getElementById('cal-f-title').value='';
+      document.getElementById('cal-f-date').value=dateIso||isoDate(new Date());
+      document.getElementById('cal-f-start').value='';
+      document.getElementById('cal-f-end').value='';
+      document.getElementById('cal-f-desc').value='';
+      setColor('green');
+      document.getElementById('cal-modal-overlay').classList.add('open');
+      setTimeout(function(){ document.getElementById('cal-f-title').focus(); },50);
+    }
+
+    function calOpenEdit(ev){
+      state.editId=ev._id;
+      document.getElementById('cal-edit-id').value=ev._id;
+      document.getElementById('cal-modal-title').textContent='Modifier le rendez-vous';
+      document.getElementById('cal-f-title').value=ev.title||'';
+      document.getElementById('cal-f-date').value=isoDate(new Date(ev.date));
+      document.getElementById('cal-f-start').value=ev.startTime||'';
+      document.getElementById('cal-f-end').value=ev.endTime||'';
+      document.getElementById('cal-f-desc').value=ev.description||'';
+      setColor(ev.color||'green');
+      document.getElementById('cal-detail-overlay').classList.remove('open');
+      document.getElementById('cal-modal-overlay').classList.add('open');
+      setTimeout(function(){ document.getElementById('cal-f-title').focus(); },50);
+    }
+
+    function setColor(c){
+      state.selColor=c;
+      document.querySelectorAll('#cal-color-btns .cal-color-btn').forEach(function(b){ b.classList.toggle('selected',b.getAttribute('data-color')===c); });
+    }
+    document.querySelectorAll('#cal-color-btns .cal-color-btn').forEach(function(b){ b.addEventListener('click',function(){ setColor(this.getAttribute('data-color')); }); });
+
+    function closeCreate(){ document.getElementById('cal-modal-overlay').classList.remove('open'); }
+    document.getElementById('cal-modal-close').addEventListener('click',closeCreate);
+    document.getElementById('cal-modal-cancel').addEventListener('click',closeCreate);
+    document.getElementById('cal-modal-overlay').addEventListener('click',function(e){ if(e.target===this)closeCreate(); });
+    document.addEventListener('keydown',function(e){ if(e.key==='Escape'){ closeCreate(); closeDetail(); } });
+
+    document.getElementById('cal-modal-save').addEventListener('click',function(){
+      var title=document.getElementById('cal-f-title').value.trim();
+      var date=document.getElementById('cal-f-date').value;
+      if(!title||!date){ alert('Le titre et la date sont requis.'); return; }
+      var payload={ title:title, date:date, startTime:document.getElementById('cal-f-start').value, endTime:document.getElementById('cal-f-end').value, description:document.getElementById('cal-f-desc').value.trim(), color:state.selColor };
+      var id=document.getElementById('cal-edit-id').value;
+      this.disabled=true; var self=this;
+      fetch(id?'/pro/calendar/events/'+id:'/pro/calendar/events',{
+        method:id?'PUT':'POST', credentials:'same-origin',
+        headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)
+      }).then(function(r){return r.json();}).then(function(d){
+        if(d.success){ closeCreate(); calFetch(); } else alert(d.error||'Erreur.');
+        self.disabled=false;
+      }).catch(function(){ alert('Erreur réseau.'); self.disabled=false; });
+    });
+
+    // ── Detail modal ───────────────────────────────────────────────────────
+    function calOpenDetail(ev){
+      document.getElementById('cal-detail-title').textContent=ev.title;
+      var html='';
+      html+='<div class="cal-detail-row"><span class="cal-detail-lbl">Date</span><span class="cal-detail-val">'+fmtFR(ev.date)+'</span></div>';
+      if(ev.startTime) html+='<div class="cal-detail-row"><span class="cal-detail-lbl">Horaire</span><span class="cal-detail-val">'+esc(ev.startTime)+(ev.endTime?' – '+esc(ev.endTime):'')+'</span></div>';
+      if(ev.description) html+='<div class="cal-detail-row" style="align-items:flex-start"><span class="cal-detail-lbl">Note</span><span class="cal-detail-val" style="white-space:pre-line">'+esc(ev.description)+'</span></div>';
+      document.getElementById('cal-detail-body').innerHTML=html;
+      document.getElementById('cal-detail-edit').onclick=function(){ calOpenEdit(ev); };
+      document.getElementById('cal-detail-delete').onclick=function(){ calDelete(ev._id); };
+      document.getElementById('cal-detail-overlay').classList.add('open');
+    }
+
+    function closeDetail(){ document.getElementById('cal-detail-overlay').classList.remove('open'); }
+    document.getElementById('cal-detail-close').addEventListener('click',closeDetail);
+    document.getElementById('cal-detail-overlay').addEventListener('click',function(e){ if(e.target===this)closeDetail(); });
+
+    function calDelete(id){
+      if(!confirm('Supprimer ce rendez-vous ?')) return;
+      fetch('/pro/calendar/events/'+id,{method:'DELETE',credentials:'same-origin'})
+        .then(function(r){return r.json();})
+        .then(function(d){ if(d.success){ closeDetail(); calFetch(); } else alert(d.error||'Erreur.'); })
+        .catch(function(){ alert('Erreur réseau.'); });
+    }
+
+    // ── Init ───────────────────────────────────────────────────────────────
+    calFetch();
+  })();
+  </script>
 </div>
 
 <!-- ===================== ANALYTICS ===================== -->
