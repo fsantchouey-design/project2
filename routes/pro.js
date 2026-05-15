@@ -858,6 +858,62 @@ router.get('/analytics', ensureProfessional, async function(req, res) {
   }
 });
 
+// ─── PRO NOTIFICATIONS ───────────────────────────────────────────────────────
+
+router.get('/notifications', ensureAuthenticated, ensureProfessional, async function(req, res) {
+  try {
+    var contractor = await Contractor.findOne({ user: req.user._id });
+    var lastLeadSeen   = contractor && contractor.lastLeadSeen   ? contractor.lastLeadSeen   : new Date(0);
+    var lastReviewSeen = contractor && contractor.lastReviewSeen ? contractor.lastReviewSeen : new Date(0);
+
+    var newLeadCount = await QuoteRequest.countDocuments({
+      visibility: 'contractors',
+      claimedByProUserId: null,
+      createdAt: { $gt: lastLeadSeen }
+    });
+
+    var newReviewCount = contractor
+      ? contractor.reviews.filter(function(r) { return new Date(r.createdAt) > lastReviewSeen; }).length
+      : 0;
+
+    var items = [];
+    if (newLeadCount > 0) {
+      items.push({
+        type: 'leads',
+        count: newLeadCount,
+        label: newLeadCount === 1 ? '1 nouvelle demande client' : newLeadCount + ' nouvelles demandes clients',
+        section: 'leads'
+      });
+    }
+    if (newReviewCount > 0) {
+      items.push({
+        type: 'reviews',
+        count: newReviewCount,
+        label: newReviewCount === 1 ? '1 nouvel avis client' : newReviewCount + ' nouveaux avis clients',
+        section: 'reviews'
+      });
+    }
+
+    res.json({ success: true, items: items, totalUnread: newLeadCount + newReviewCount });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post('/notifications/read', ensureAuthenticated, ensureProfessional, async function(req, res) {
+  try {
+    var type = req.body.type;
+    var update = {};
+    var now = new Date();
+    if (type === 'leads'   || type === 'all') update.lastLeadSeen   = now;
+    if (type === 'reviews' || type === 'all') update.lastReviewSeen = now;
+    await Contractor.updateOne({ user: req.user._id }, { $set: update });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ─── CALENDAR EVENTS ──────────────────────────────────────────────────────────
 
 router.get('/calendar/events', ensureAuthenticated, async function(req, res) {

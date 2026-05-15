@@ -133,10 +133,19 @@
         <button class="pro-topbar-btn" title="Aide">
           <i data-lucide="help-circle"></i>
         </button>
-        <button class="pro-topbar-btn" title="Notifications">
-          <i data-lucide="bell"></i>
-          <span class="pro-topbar-notif-dot"></span>
-        </button>
+        <div class="pro-notif-wrap" id="pro-notif-wrap">
+          <button class="pro-topbar-btn" id="pro-notif-btn" title="Notifications">
+            <i data-lucide="bell"></i>
+            <span class="pro-notif-badge" id="pro-notif-badge"></span>
+          </button>
+          <div class="pro-notif-dropdown" id="pro-notif-dropdown">
+            <div class="pro-notif-head">
+              <span class="pro-notif-head-title">Notifications</span>
+              <button class="pro-notif-mark-all" id="pro-notif-mark-all">Tout lire</button>
+            </div>
+            <div class="pro-notif-list" id="pro-notif-list"></div>
+          </div>
+        </div>
         <div class="pro-topbar-avatar">
           <% if (typeof user !== 'undefined' && user && user.avatar) { %>
             <img src="<%= user.avatar %>" alt="Avatar">
@@ -236,6 +245,9 @@
     closeSidebar();
     if (typeof lucide !== 'undefined') lucide.createIcons();
   }
+
+  // Expose globally for notification click handlers
+  window.activateSection = activateSection;
 
   navItems.forEach(function(item) {
     item.addEventListener('click', function() {
@@ -338,6 +350,90 @@
       this.classList.toggle('done');
     });
   });
+
+  // ── Notification bell ──────────────────────────────────────────────────────
+  (function() {
+    var notifBtn   = document.getElementById('pro-notif-btn');
+    var notifDrop  = document.getElementById('pro-notif-dropdown');
+    var notifBadge = document.getElementById('pro-notif-badge');
+    var notifList  = document.getElementById('pro-notif-list');
+    var markAllBtn = document.getElementById('pro-notif-mark-all');
+    var dropOpen   = false;
+
+    function renderNotifs(data) {
+      var total = data.totalUnread || 0;
+      if (total > 0) {
+        notifBadge.textContent = total > 9 ? '9+' : String(total);
+        notifBadge.style.display = 'flex';
+      } else {
+        notifBadge.style.display = 'none';
+      }
+      notifList.innerHTML = '';
+      if (!data.items || data.items.length === 0) {
+        notifList.innerHTML = '<div class="pro-notif-empty">Aucune nouvelle notification</div>';
+        return;
+      }
+      data.items.forEach(function(item) {
+        var el = document.createElement('div');
+        el.className = 'pro-notif-item';
+        var iconSvg = item.type === 'leads'
+          ? '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>'
+          : '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>';
+        el.innerHTML =
+          '<div class="pro-notif-item-icon">' + iconSvg + '</div>' +
+          '<div class="pro-notif-item-label">' + item.label + '</div>';
+        el.addEventListener('click', function() {
+          markRead(item.type, function() {
+            closeDropdown();
+            activateSection(item.section);
+          });
+        });
+        notifList.appendChild(el);
+      });
+    }
+
+    function fetchNotifs() {
+      fetch('/pro/notifications', { credentials: 'same-origin' })
+        .then(function(r) { return r.json(); })
+        .then(function(data) { if (data.success) renderNotifs(data); })
+        .catch(function() {});
+    }
+
+    function markRead(type, cb) {
+      fetch('/pro/notifications/read', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ type: type })
+      })
+      .then(function() { fetchNotifs(); if (cb) cb(); })
+      .catch(function() { if (cb) cb(); });
+    }
+
+    function openDropdown()  { notifDrop.classList.add('open'); dropOpen = true; }
+    function closeDropdown() { notifDrop.classList.remove('open'); dropOpen = false; }
+
+    if (notifBtn) {
+      notifBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        dropOpen ? closeDropdown() : openDropdown();
+      });
+    }
+
+    document.addEventListener('click', function(e) {
+      if (dropOpen && !document.getElementById('pro-notif-wrap').contains(e.target)) closeDropdown();
+    });
+
+    if (markAllBtn) {
+      markAllBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        markRead('all', closeDropdown);
+      });
+    }
+
+    fetchNotifs();
+    setInterval(fetchNotifs, 60000);
+  })();
 
 })();
 </script>

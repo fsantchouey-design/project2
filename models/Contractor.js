@@ -130,6 +130,8 @@ const contractorSchema = new mongoose.Schema({
     projectsAccepted: { type: Number, default: 0 },
     responseRate: { type: Number, default: 0 }
   },
+  lastLeadSeen:   { type: Date, default: null },
+  lastReviewSeen: { type: Date, default: null },
   createdAt: {
     type: Date,
     default: Date.now
