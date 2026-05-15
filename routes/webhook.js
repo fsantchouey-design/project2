@@ -3,7 +3,7 @@ const StripeEvent = require('../models/StripeEvent');
 const PricingConfig = require('../models/PricingConfig');
 const UnlockedLead = require('../models/UnlockedLead');
 const QuoteRequest = require('../models/QuoteRequest');
-const { sendEmail: sendResendEmail } = require('../services/email');
+const { sendEmail: sendResendEmail, sendAdminEmail } = require('../services/email');
 
 const PLAN_LABELS = { essential: 'Essential', creator: 'Creator', studioPro: 'Studio Pro' };
 const PRO_LABELS  = { pro: 'Pro', premium: 'Premium', elite: 'Elite' };
@@ -239,6 +239,18 @@ async function handleCheckoutCompleted(stripe, session) {
         ])
       });
     } catch (e) { console.error('[Webhook] Welcome email failed (pro plan):', e.message); }
+    try {
+      await sendAdminEmail({
+        subject: `[CraftyCrib] Paiement — Abonnement pro ${PRO_LABELS[proType] || proType}`,
+        title: 'Paiement abonnement professionnel',
+        rows: [
+          ['Utilisateur', `${updated.firstName} ${updated.lastName}`],
+          ['Email', updated.email],
+          ['Plan', PRO_LABELS[proType] || proType],
+          ['Date', new Date().toLocaleString('fr-CA')]
+        ]
+      });
+    } catch (e) { console.error('[Admin] Payment email failed (pro plan):', e.message); }
     return;
   }
   if (proType === 'lead') {
@@ -296,6 +308,19 @@ async function handleCheckoutCompleted(stripe, session) {
         ])
       });
     } catch (e) { console.error('[Webhook] Payment email failed (credit pack):', e.message); }
+    try {
+      await sendAdminEmail({
+        subject: `[CraftyCrib] Paiement — Pack ${credits} crédits`,
+        title: 'Achat de crédits IA',
+        rows: [
+          ['Utilisateur', `${updated.firstName} ${updated.lastName}`],
+          ['Email', updated.email],
+          ['Crédits achetés', String(credits)],
+          ['Solde', String(updated.subscription.credits)],
+          ['Date', new Date().toLocaleString('fr-CA')]
+        ]
+      });
+    } catch (e) { console.error('[Admin] Payment email failed (credit pack):', e.message); }
     return;
   }
 
@@ -350,6 +375,20 @@ async function handleCheckoutCompleted(stripe, session) {
         ])
       });
     } catch (e) { console.error('[Webhook] Payment email failed (subscription):', e.message); }
+    try {
+      await sendAdminEmail({
+        subject: `[CraftyCrib] Paiement — Abonnement ${PLAN_LABELS[resolvedPlanKey] || resolvedPlanKey}`,
+        title: 'Nouvel abonnement activé',
+        rows: [
+          ['Utilisateur', `${updated.firstName} ${updated.lastName}`],
+          ['Email', updated.email],
+          ['Plan', PLAN_LABELS[resolvedPlanKey] || resolvedPlanKey],
+          ['Facturation', isAnnual ? 'Annuelle' : 'Mensuelle'],
+          ['Crédits', String(credits)],
+          ['Date', new Date().toLocaleString('fr-CA')]
+        ]
+      });
+    } catch (e) { console.error('[Admin] Payment email failed (subscription):', e.message); }
   }
 }
 
@@ -411,4 +450,17 @@ async function handleInvoicePaymentSucceeded(invoice) {
       ])
     });
   } catch (e) { console.error('[Webhook] Payment email failed (renewal):', e.message); }
+  try {
+    await sendAdminEmail({
+      subject: `[CraftyCrib] Renouvellement — ${PLAN_LABELS[planKey] || planKey}`,
+      title: 'Renouvellement d\'abonnement',
+      rows: [
+        ['Utilisateur', `${user.firstName} ${user.lastName}`],
+        ['Email', user.email],
+        ['Plan', PLAN_LABELS[planKey] || planKey],
+        ['Crédits', String(credits)],
+        ['Date', new Date().toLocaleString('fr-CA')]
+      ]
+    });
+  } catch (e) { console.error('[Admin] Payment email failed (renewal):', e.message); }
 }

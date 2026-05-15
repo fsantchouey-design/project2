@@ -6,6 +6,7 @@ const { ensureAuthenticated, ensureContractor } = require('../middleware/auth');
 const Contractor = require('../models/Contractor');
 const Project = require('../models/Project');
 const slugify = require('slugify');
+const { sendAdminEmail } = require('../services/email');
 
 // Configure multer
 const storage = multer.diskStorage({
@@ -145,6 +146,23 @@ router.post('/quote', quoteUpload.array('photos', 5), async (req, res) => {
       altPhone: altPhone || '',
       email
     });
+
+    // Admin notification — new lead created (non-blocking)
+    try {
+      await sendAdminEmail({
+        subject: `[CraftyCrib] Nouveau lead — ${firstName} ${lastName}`,
+        title: 'Nouvelle demande client reçue',
+        rows: [
+          ['Client', `${firstName} ${lastName}`],
+          ['Email', email],
+          ['Téléphone', phone],
+          ['Service', service],
+          ['Spécialité', specialty],
+          ['Ville', city],
+          ['Date', new Date().toLocaleString('fr-CA')]
+        ]
+      });
+    } catch (e) { console.error('[Admin] New lead email failed:', e.message); }
 
     // Return matching contractors
     const contractors = await Contractor.find({ specialties: specialty })

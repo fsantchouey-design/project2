@@ -11,7 +11,7 @@ const Note = require('../models/Note');
 const QuoteRequest = require('../models/QuoteRequest');
 const UnlockedLead = require('../models/UnlockedLead');
 const { sendRawEmail, transporter } = require('../utils/email');
-const { sendEmail: sendResendEmail } = require('../services/email');
+const { sendEmail: sendResendEmail, sendAdminEmail } = require('../services/email');
 
 // Ensure uploads directory exists
 const uploadsDir = path.join(__dirname, '../public/uploads/pro-applications');
@@ -269,6 +269,22 @@ router.post('/signup', upload.fields([
       '</div></body></html>';
 
     await sendRawEmail('craftycrib.ca@gmail.com', subject, html);
+
+    // Admin notification via Resend (non-blocking)
+    try {
+      await sendAdminEmail({
+        subject: `[CraftyCrib] Nouvelle demande pro — ${app.companyName || (app.firstName + ' ' + app.lastName)}`,
+        title: 'Nouvelle inscription professionnelle',
+        rows: [
+          ['Nom', `${app.firstName} ${app.lastName}`],
+          ['Entreprise', app.companyName],
+          ['Email', app.email],
+          ['Téléphone', app.phone],
+          ['Ville', app.city],
+          ['Date', new Date().toLocaleString('fr-CA')]
+        ]
+      });
+    } catch (e) { console.error('[Admin] Pro signup email failed:', e.message); }
 
     // Auto-login
     req.login(user, function(err) {
@@ -610,6 +626,22 @@ router.put('/quotes/:id/status', ensureAuthenticated, async function(req, res) {
       } catch (emailErr) {
         console.error('[Pro] Acceptance email failed:', emailErr.message);
       }
+
+      // Admin notification — pro accepted a lead (non-blocking)
+      try {
+        await sendAdminEmail({
+          subject: `[CraftyCrib] Lead accepté — ${quote.firstName} ${quote.lastName}`,
+          title: 'Un professionnel a accepté un lead',
+          rows: [
+            ['Client', `${quote.firstName} ${quote.lastName}`],
+            ['Email client', quote.email],
+            ['Service', quote.service || quote.specialty],
+            ['Ville', quote.city],
+            ['Pro (ID)', req.user.id.toString()],
+            ['Date', new Date().toLocaleString('fr-CA')]
+          ]
+        });
+      } catch (e) { console.error('[Admin] Lead acceptance email failed:', e.message); }
     }
 
     res.json({ success: true, status: quote.status });

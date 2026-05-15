@@ -6,7 +6,7 @@ const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const { ensureGuest, ensureAuthenticated } = require('../middleware/auth');
 const { sendEmail } = require('../utils/email');
-const { sendEmail: sendResendEmail } = require('../services/email');
+const { sendEmail: sendResendEmail, sendAdminEmail } = require('../services/email');
 
 const ADMIN_EMAIL = 'craftycrib.ca@gmail.com';
 
@@ -165,6 +165,21 @@ router.post('/register', ensureGuest, [
     } catch (emailErr) {
       console.error('Welcome email failed:', emailErr);
     }
+
+    // Admin notification — new user signup (non-blocking)
+    try {
+      await sendAdminEmail({
+        subject: `[CraftyCrib] Nouvel utilisateur — ${user.firstName} ${user.lastName}`,
+        title: 'Nouvel utilisateur inscrit',
+        rows: [
+          ['Prénom', user.firstName],
+          ['Nom', user.lastName],
+          ['Email', user.email],
+          ['Rôle', user.role],
+          ['Date', new Date().toLocaleString('fr-CA')]
+        ]
+      });
+    } catch (e) { console.error('[Admin] New user email failed:', e.message); }
 
     // Auto-login after registration
     req.login(user, (err) => {
